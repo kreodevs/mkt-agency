@@ -30,7 +30,7 @@ export class OnboardingService {
       productId: productId || null,
       status: 'pending',
     });
-    const saved = await this.onboardingRepo.save(onboarding);
+    const saved = await this.onboardingRepo.save(onboarding) as unknown as Onboarding;
 
     const tasks = DEFAULT_CHECKLIST.map((item) =>
       this.taskRepo.create({

@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # === PostgreSQL ===
+  postgres:
+    image: postgres:16-alpine
+    container_name: mktos-pg
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: mktos
+      POSTGRES_USER: mktos
+      POSTGRES_PASSWORD: mktos_secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mktos -d mktos']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # === Backend (NestJS + hot-reload) ===
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: backend
+    container_name: mktos-backend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mktos
+      DB_USER: mktos
+      DB_PASSWORD: mktos_secret
+      JWT_SECRET: dev_secret_change_in_production
+      JWT_EXPIRES_IN: 7d
+      CORS_ORIGIN: '*'
+    volumes:
+      - ./backend/src:/app/backend/src
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # === Frontend (Vite Dev Server + hot-reload) ===
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: frontend
+    container_name: mktos-frontend
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/index.html:/app/frontend/index.html
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:
