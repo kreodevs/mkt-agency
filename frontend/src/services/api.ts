@@ -117,3 +117,20 @@ export const seoRankings = {
     api.get(`/tenants/${tenantId}/seo-rankings/latest`, { params }),
   create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/seo-rankings`, data),
 };
+
+// === Settings / Connections ===
+export const settings = {
+  get: (tenantId: string, productId: string) =>
+    api.get(`/tenants/${tenantId}/products/${productId}/settings`),
+  update: (tenantId: string, productId: string, data: any) =>
+    api.patch(`/tenants/${tenantId}/products/${productId}/settings`, data),
+  upload: (tenantId: string, productId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/tenants/${tenantId}/products/${productId}/settings/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getUploads: (tenantId: string, productId: string) =>
+    api.get(`/tenants/${tenantId}/products/${productId}/settings/uploads`),
+};

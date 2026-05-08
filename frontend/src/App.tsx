@@ -12,6 +12,7 @@ import CompetitorsPage from './pages/competitors/CompetitorsPage';
 import SeoPagesPage from './pages/seo/SeoPagesPage';
 import AdminPage from './pages/admin/AdminPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
+import SettingsPage from './pages/settings/SettingsPage';
 import HelpPage from './pages/help/HelpPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="content" element={<ContentPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="onboarding" element={<OnboardingPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="competitors" element={<CompetitorsPage />} />
           <Route path="seo" element={<SeoPagesPage />} />

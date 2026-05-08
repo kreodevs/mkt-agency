@@ -72,6 +72,12 @@ export default function MainLayout() {
       command: () => navigate('/help'),
       className: location.pathname === '/help' ? 'p-highlight' : '',
     },
+    {
+      label: 'Conexiones',
+      icon: 'pi pi-plug',
+      command: () => navigate('/settings'),
+      className: location.pathname === '/settings' ? 'p-highlight' : '',
+    },
   ];
 
   return (
