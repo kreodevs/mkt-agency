@@ -1,0 +1,90 @@
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+api.interceptors.request.use((config) => {
+  const stored = localStorage.getItem('auth-storage');
+  if (stored) {
+    try {
+      const { state } = JSON.parse(stored);
+      if (state?.token) {
+        config.headers.Authorization = `Bearer ${state.token}`;
+      }
+    } catch {}
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('auth-storage');
+      window.location.href = '/login';
+    }
+    return Promise.reject(err);
+  },
+);
+
+export default api;
+
+// === Auth ===
+export const auth = {
+  login: (data: { email: string; password: string }) => api.post('/auth/login', data),
+  register: (data: { name: string; email: string; password: string; tenantName: string }) =>
+    api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
+};
+
+// === Tenants ===
+export const tenants = {
+  list: () => api.get('/tenants'),
+  get: (id: string) => api.get(`/tenants/${id}`),
+  create: (data: { name: string }) => api.post('/tenants', data),
+};
+
+// === Products ===
+export const products = {
+  list: (tenantId: string) => api.get(`/tenants/${tenantId}/products`),
+  create: (tenantId: string, data: { name: string; type: string }) =>
+    api.post(`/tenants/${tenantId}/products`, data),
+};
+
+// === Leads ===
+export const leads = {
+  list: (tenantId: string, productId?: string) =>
+    api.get(`/tenants/${tenantId}/leads`, { params: { productId } }),
+  get: (tenantId: string, id: string) => api.get(`/tenants/${tenantId}/leads/${id}`),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/leads`, data),
+  createForProduct: (tenantId: string, productId: string, data: any) =>
+    api.post(`/tenants/${tenantId}/leads/product/${productId}`, data),
+  updateStage: (tenantId: string, id: string, stage: string) =>
+    api.patch(`/tenants/${tenantId}/leads/${id}/stage`, { stage }),
+};
+
+// === Posts ===
+export const posts = {
+  list: (tenantId: string, productId?: string) =>
+    api.get(`/tenants/${tenantId}/posts`, { params: { productId } }),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/posts`, data),
+  approve: (tenantId: string, id: string, data: { action: string; reason?: string; feedbackText?: string }) =>
+    api.post(`/tenants/${tenantId}/posts/${id}/approve`, data),
+  createV2: (tenantId: string, id: string, data: any) =>
+    api.post(`/tenants/${tenantId}/posts/${id}/v2`, data),
+};
+
+// === Campaigns ===
+export const campaigns = {
+  list: (tenantId: string, productId?: string) =>
+    api.get(`/tenants/${tenantId}/campaigns`, { params: { productId } }),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/campaigns`, data),
+  addKeyword: (tenantId: string, id: string, text: string, cpc?: number) =>
+    api.post(`/tenants/${tenantId}/campaigns/${id}/keywords`, { text, cpc }),
+  pauseKeyword: (tenantId: string, keywordId: string) =>
+    api.patch(`/tenants/${tenantId}/campaigns/keywords/${keywordId}/pause`),
+};
