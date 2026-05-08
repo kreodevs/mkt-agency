@@ -17,6 +17,6 @@ CMD ["npx", "--prefix", "backend", "nest", "start", "--watch"]
 # ---- Frontend Dev ----
 FROM base AS frontend
 COPY frontend/ ./frontend/
-EXPOSE 5173
-ENV VITE_API_URL=http://localhost:3000/api
-CMD ["npx", "--prefix", "frontend", "vite", "--host", "0.0.0.0", "--port", "5173"]
+EXPOSE 80
+ENV VITE_API_URL=/api
+CMD ["npx", "--prefix", "frontend", "vite", "--host", "0.0.0.0", "--port", "80"]

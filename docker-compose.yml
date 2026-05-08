@@ -55,7 +55,7 @@ services:
     container_name: mktos-frontend
     restart: unless-stopped
     expose:
-      - '5173'
+      - '80'
     environment:
       VITE_API_URL: /api
     volumes:
