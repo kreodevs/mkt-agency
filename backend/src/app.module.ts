@@ -15,6 +15,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { SeoPagesModule } from './seo-pages/seo-pages.module';
 import { CompetitorsModule } from './competitors/competitors.module';
 import { SeoRankingsModule } from './seo-rankings/seo-rankings.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SeoRankingsModule } from './seo-rankings/seo-rankings.module';
     SeoPagesModule,
     CompetitorsModule,
     SeoRankingsModule,
+    OnboardingModule,
   ],
 })
 export class AppModule {}

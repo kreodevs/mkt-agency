@@ -103,6 +103,14 @@ export const seoPages = {
   create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/seo-pages`, data),
 };
 
+// === Onboarding ===
+export const onboarding = {
+  list: (tenantId: string) => api.get(`/tenants/${tenantId}/onboarding`),
+  create: (tenantId: string) => api.post(`/tenants/${tenantId}/onboarding`),
+  updateTask: (tenantId: string, id: string, taskKey: string, status: string) =>
+    api.patch(`/tenants/${tenantId}/onboarding/${id}/tasks/${taskKey}`, { status }),
+};
+
 // === SEO Rankings ===
 export const seoRankings = {
   list: (tenantId: string, params?: any) =>

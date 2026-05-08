@@ -50,6 +50,12 @@ export default function MainLayout() {
       command: () => navigate('/seo'),
       className: location.pathname === '/seo' ? 'p-highlight' : '',
     },
+    {
+      label: 'Onboarding',
+      icon: 'pi pi-check-circle',
+      command: () => navigate('/onboarding'),
+      className: location.pathname === '/onboarding' ? 'p-highlight' : '',
+    },
     ...(user?.isSuperAdmin
       ? [
           {
@@ -60,6 +66,12 @@ export default function MainLayout() {
           },
         ]
       : []),
+    {
+      label: 'Ayuda',
+      icon: 'pi pi-question-circle',
+      command: () => navigate('/help'),
+      className: location.pathname === '/help' ? 'p-highlight' : '',
+    },
   ];
 
   return (

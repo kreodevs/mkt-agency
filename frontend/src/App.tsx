@@ -11,6 +11,8 @@ import CampaignsPage from './pages/campaigns/CampaignsPage';
 import CompetitorsPage from './pages/competitors/CompetitorsPage';
 import SeoPagesPage from './pages/seo/SeoPagesPage';
 import AdminPage from './pages/admin/AdminPage';
+import OnboardingPage from './pages/onboarding/OnboardingPage';
+import HelpPage from './pages/help/HelpPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="crm/:id" element={<LeadDetailPage />} />
           <Route path="content" element={<ContentPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
+          <Route path="onboarding" element={<OnboardingPage />} />
+          <Route path="help" element={<HelpPage />} />
           <Route path="competitors" element={<CompetitorsPage />} />
           <Route path="seo" element={<SeoPagesPage />} />
           <Route path="admin" element={<AdminPage />} />
