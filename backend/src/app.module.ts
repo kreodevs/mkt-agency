@@ -12,6 +12,9 @@ import { AlertsModule } from './alerts/alerts.module';
 import { ChatModule } from './chat/chat.module';
 import { TrialsModule } from './trials/trials.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { SeoPagesModule } from './seo-pages/seo-pages.module';
+import { CompetitorsModule } from './competitors/competitors.module';
+import { SeoRankingsModule } from './seo-rankings/seo-rankings.module';
 
 @Module({
   imports: [
@@ -37,6 +40,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ChatModule,
     TrialsModule,
     WebhooksModule,
+    SeoPagesModule,
+    CompetitorsModule,
+    SeoRankingsModule,
   ],
 })
 export class AppModule {}

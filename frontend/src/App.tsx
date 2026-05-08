@@ -8,6 +8,8 @@ import CrmPage from './pages/crm/CrmPage';
 import LeadDetailPage from './pages/crm/LeadDetailPage';
 import ContentPage from './pages/content/ContentPage';
 import CampaignsPage from './pages/campaigns/CampaignsPage';
+import CompetitorsPage from './pages/competitors/CompetitorsPage';
+import SeoPagesPage from './pages/seo/SeoPagesPage';
 import AdminPage from './pages/admin/AdminPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="crm/:id" element={<LeadDetailPage />} />
           <Route path="content" element={<ContentPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
+          <Route path="competitors" element={<CompetitorsPage />} />
+          <Route path="seo" element={<SeoPagesPage />} />
           <Route path="admin" element={<AdminPage />} />
         </Route>
       </Routes>

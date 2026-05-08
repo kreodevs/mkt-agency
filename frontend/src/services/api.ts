@@ -88,3 +88,24 @@ export const campaigns = {
   pauseKeyword: (tenantId: string, keywordId: string) =>
     api.patch(`/tenants/${tenantId}/campaigns/keywords/${keywordId}/pause`),
 };
+
+// === Competitors ===
+export const competitors = {
+  list: (tenantId: string) =>
+    api.get(`/tenants/${tenantId}/competitors`),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/competitors`, data),
+};
+
+// === SEO Pages ===
+export const seoPages = {
+  list: (tenantId: string) =>
+    api.get(`/tenants/${tenantId}/seo-pages`),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/seo-pages`, data),
+};
+
+// === SEO Rankings ===
+export const seoRankings = {
+  list: (tenantId: string, params?: any) =>
+    api.get(`/tenants/${tenantId}/seo-rankings/latest`, { params }),
+  create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/seo-rankings`, data),
+};

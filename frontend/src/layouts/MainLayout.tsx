@@ -38,6 +38,18 @@ export default function MainLayout() {
       command: () => navigate('/campaigns'),
       className: location.pathname === '/campaigns' ? 'p-highlight' : '',
     },
+    {
+      label: 'Competencia',
+      icon: 'pi pi-eye',
+      command: () => navigate('/competitors'),
+      className: location.pathname === '/competitors' ? 'p-highlight' : '',
+    },
+    {
+      label: 'SEO Local',
+      icon: 'pi pi-map',
+      command: () => navigate('/seo'),
+      className: location.pathname === '/seo' ? 'p-highlight' : '',
+    },
     ...(user?.isSuperAdmin
       ? [
           {
