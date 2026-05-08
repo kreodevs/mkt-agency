@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # === PostgreSQL ===
   postgres:
@@ -29,7 +27,7 @@ services:
     container_name: mktos-backend
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '3001:3000'
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -59,7 +57,7 @@ services:
     ports:
       - '5173:5173'
     environment:
-      VITE_API_URL: http://localhost:3000/api
+      VITE_API_URL: /api
     volumes:
       - ./frontend/src:/app/frontend/src
       - ./frontend/index.html:/app/frontend/index.html
