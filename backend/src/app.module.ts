@@ -10,6 +10,8 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { ChatModule } from './chat/chat.module';
+import { TrialsModule } from './trials/trials.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { ChatModule } from './chat/chat.module';
     ActivitiesModule,
     AlertsModule,
     ChatModule,
+    TrialsModule,
+    WebhooksModule,
   ],
 })
 export class AppModule {}
