@@ -26,8 +26,8 @@ services:
       target: backend
     container_name: mktos-backend
     restart: unless-stopped
-    ports:
-      - '3001:3000'
+    expose:
+      - '3000'
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -54,8 +54,8 @@ services:
       target: frontend
     container_name: mktos-frontend
     restart: unless-stopped
-    ports:
-      - '5173:5173'
+    expose:
+      - '5173'
     environment:
       VITE_API_URL: /api
     volumes:
