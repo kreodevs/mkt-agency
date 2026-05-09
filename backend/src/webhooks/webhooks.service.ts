@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Trial } from '../trials/entities/trial.entity';
 import { Lead } from '../leads/entities/lead.entity';
+import { Proposal } from '../proposals/entities/proposal.entity';
 import { ProposalsService } from '../proposals/proposals.service';
 
 @Injectable()
@@ -14,6 +15,8 @@ export class WebhooksService {
     private readonly trialRepo: Repository<Trial>,
     @InjectRepository(Lead)
     private readonly leadRepo: Repository<Lead>,
+    @InjectRepository(Proposal)
+    private readonly proposalRepo: Repository<Proposal>,
     private readonly proposalsService: ProposalsService,
   ) {}
 
@@ -60,6 +63,29 @@ export class WebhooksService {
 
     this.logger.log(`Hermes proposal created: ${proposal.id} (${actionType})`);
     return { received: true, proposalId: proposal.id, status: 'pending' };
+  }
+
+  async getProposalsDebug(tenantId?: string): Promise<any> {
+    if (!tenantId) {
+      const count = await this.proposalRepo.count();
+      return { totalProposals: count, message: 'Proporciona ?tenantId=... para filtrar' };
+    }
+    const proposals = await this.proposalRepo.find({
+      where: { tenantId },
+      order: { createdAt: 'DESC' },
+    });
+    return {
+      tenantId,
+      total: proposals.length,
+      proposals: proposals.map(p => ({
+        id: p.id,
+        actionType: p.actionType,
+        status: p.status,
+        productId: p.productId,
+        rationale: p.rationale?.substring(0, 80),
+        createdAt: p.createdAt,
+      })),
+    };
   }
 
   private async handleTrialStarted(body: any) {
