@@ -1,10 +1,14 @@
 import { Panel } from 'primereact/panel';
+import { useNavigate } from 'react-router-dom';
+import { Button } from 'primereact/button';
+import { Chip } from 'primereact/chip';
 
 const sections = [
   {
     icon: 'pi-question-circle',
     title: '¿Qué es MarketingOS?',
-    content: (
+    defaultExpanded: true,
+    content: (navigate: any) => (
       <div>
         <p>
           <strong>MarketingOS</strong> es un sistema CRM combinado con un
@@ -22,236 +26,219 @@ const sections = [
           panel de aprobación, haz ajustes si es necesario, y confirma para
           que se ejecuten.
         </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Chip label="Multi-producto" icon="pi pi-box" />
+          <Chip label="Multi-tenant" icon="pi pi-building" />
+          <Chip label="IA + Humano" icon="pi pi-robot" />
+          <Chip label="Auto-reportes" icon="pi pi-file" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    icon: 'pi-plug',
+    title: '1. Conexiones — Conecta tus cuentas',
+    content: (navigate: any) => (
+      <div>
+        <p>
+          Antes de empezar, necesitas conectar las plataformas que MarketingOS usará.
+          Cada <strong>producto</strong> tiene sus propias conexiones.
+        </p>
+        <div className="flex flex-column gap-2 mb-3">
+          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
+            <i className="pi pi-twitter text-xl" style={{ color: '#1DA1F2' }} />
+            <div className="flex-1">
+              <strong>X (Twitter)</strong>
+              <div className="text-sm text-500">API Key + API Secret + Access Token + Access Secret del Developer Portal</div>
+            </div>
+          </div>
+          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
+            <i className="pi pi-google text-xl" style={{ color: '#4285F4' }} />
+            <div className="flex-1">
+              <strong>Google Ads</strong>
+              <div className="text-sm text-500">Developer Token + Client ID + Client Secret</div>
+            </div>
+          </div>
+          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
+            <i className="pi pi-whatsapp text-xl" style={{ color: '#25D366' }} />
+            <div className="flex-1">
+              <strong>WhatsApp</strong>
+              <div className="text-sm text-500">Phone Number ID + Token (Cloud API)</div>
+            </div>
+          </div>
+        </div>
+        <Button label="Ir a Conexiones" icon="pi pi-arrow-right" onClick={() => navigate('/settings')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-users',
-    title: 'CRM — Gestión de Leads',
-    content: (
+    title: '2. CRM — Captura y gestiona leads',
+    content: (navigate: any) => (
       <div>
         <p>
           El CRM organiza tus prospectos en un <strong>pipeline</strong> de
           cinco etapas:
         </p>
-        <ol>
-          <li><strong>Prospecto</strong> — Contacto inicial captado.</li>
-          <li><strong>Contactado</strong> — Se ha establecido comunicación.</li>
-          <li><strong>Interesado</strong> — Muestra interés en el producto.</li>
-          <li><strong>Trial</strong> — Está en período de prueba.</li>
-          <li><strong>Cliente</strong> — Conversión completada.</li>
-        </ol>
-        <p>
-          Cada lead recibe un <strong>Score</strong> calculado
-          automáticamente con base en cuatro factores:
-        </p>
+        <div className="flex flex-wrap gap-1 mb-3">
+          <Chip label="🟣 Prospecto" />
+          <Chip label="🔵 Contactado" />
+          <Chip label="🟡 Interesado" />
+          <Chip label="🟠 Trial" />
+          <Chip label="🟢 Cliente" />
+        </div>
+        <p>Puedes:</p>
         <ul>
-          <li><strong>Pain Points</strong> — 40%</li>
-          <li><strong>Oportunidad</strong> — 30%</li>
-          <li><strong>Tamaño</strong> — 20%</li>
-          <li><strong>Accesibilidad</strong> — 10%</li>
+          <li><strong>Agregar leads manualmente</strong> — datos del prospecto</li>
+          <li><strong>Cambiar etapa</strong> — arrastra o selecciona la etapa actual</li>
+          <li><strong>Ver score automático</strong> — IA calcula calidad del lead</li>
+          <li><strong>Filtrar por producto</strong> — leads de OralTrack vs NutriTrack</li>
         </ul>
-        <p>
-          Los leads con score ≥ 80 se consideran <em>calientes</em> y
-          aparecen destacados en el Dashboard.
-        </p>
+        <Button label="Ir a CRM" icon="pi pi-arrow-right" onClick={() => navigate('/crm')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-calendar',
-    title: 'Contenido — Calendario X/Twitter',
-    content: (
+    title: '3. Contenido — Publicaciones en X/Twitter',
+    content: (navigate: any) => (
       <div>
         <p>
-          <strong>Hermes</strong> redacta publicaciones para X (antes
-          Twitter) con base en tu calendario editorial. Cada post incluye
-          texto y arte generado por IA.
+          <strong>Hermes</strong> redacta publicaciones para X con base en tu calendario editorial.
+          Cada post incluye texto y arte generado por IA.
         </p>
-        <p>
-          Tú revisas cada publicación en el panel de contenido y decides si
-          <strong>apruebas</strong> o <strong>rechazas</strong>. Solo los
-          posts aprobados se publican automáticamente en la fecha
-          programada.
-        </p>
-        <p><strong>Brand Safety — Reglas de oro:</strong></p>
+        <p><strong>Flujo de aprobación:</strong></p>
         <ol>
-          <li>Siempre mantener un tono profesional y respetuoso.</li>
-          <li>No hacer comentarios políticos ni religiosos.</li>
-          <li>No menospreciar a competidores, clientes o personas.</li>
-          <li>No usar lenguaje ofensivo o contenido sensible.</li>
-          <li>Verificar datos y estadísticas antes de publicar.</li>
-          <li>Incluir llamado a la acción claro cuando aplique.</li>
-          <li>Respetar la identidad visual de la marca.</li>
+          <li>Hermes te sugiere un post → aparece en <strong>Contenido</strong></li>
+          <li>Lo revisas, editas si quieres</li>
+          <li><strong>Apruebas</strong> o <strong>Rechazas</strong></li>
+          <li>Si apruebas, se publica automáticamente en la fecha programada</li>
         </ol>
+        <p className="text-sm text-500 mt-2">
+          ⚡ Necesitas tener configurada tu cuenta de X en Conexiones para que funcione.
+        </p>
+        <Button label="Ir a Contenido" icon="pi pi-arrow-right" onClick={() => navigate('/content')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-megaphone',
-    title: 'Google Ads — Campañas',
-    content: (
+    title: '4. Google Ads — Campañas de pago',
+    content: (navigate: any) => (
       <div>
         <p>
-          Desde MarketingOS puedes <strong>crear campañas de
-          búsqueda (Search)</strong> en Google Ads. El sistema te guía
-          para definir:
+          Crea campañas de <strong>búsqueda (Search)</strong> en Google Ads.
         </p>
-        <ul>
-          <li><strong>Palabras clave</strong> con su CPC estimado.</li>
-          <li><strong>Presupuesto diario</strong> y duración de la campaña.</li>
-          <li><strong>Segmentación</strong> por ubicación geográfica.</li>
-        </ul>
-        <p>
-          Una vez activa, la campaña se monitorea en tiempo real. Puedes
-          consultar el <strong>gasto acumulado vs. presupuesto</strong> y
-          ajustar pausas o montos desde el panel de campañas.
-        </p>
-        <p>
-          Recibirás alertas cuando el gasto alcance el 80% y 100% del
-          presupuesto asignado.
-        </p>
+        <p><strong>¿Qué necesitas?</strong></p>
+        <ol>
+          <li>Conectar Google Ads en <strong>Configuración → Google Ads</strong></li>
+          <li>Ir a <strong>Campañas</strong></li>
+          <li>Crear campaña: palabras clave + presupuesto diario + duración</li>
+          <li>MarketingOS monitorea gasto vs presupuesto y te alerta al 80% y 100%</li>
+        </ol>
+        <Button label="Ir a Campañas" icon="pi pi-arrow-right" onClick={() => navigate('/campaigns')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-eye',
-    title: 'Competencia — Monitoreo',
-    content: (
+    title: '5. Competencia — Monitoreo automático',
+    content: (navigate: any) => (
       <div>
         <p>
-          Registra a tus <strong>competidores</strong> en el panel
-          correspondiente para que el sistema rastree automáticamente:
+          Registra a tus <strong>competidores</strong> y el sistema rastrea:
         </p>
         <ul>
-          <li>
-            <strong>Menciones</strong> en redes sociales y medios
-            digitales.
-          </li>
-          <li>
-            <strong>Análisis de sentimiento</strong> (positivo, neutral,
-            negativo).
-          </li>
-          <li>
-            <strong>Frecuencia de publicación</strong> y temas
-            recurrentes.
-          </li>
+          <li><strong>Menciones</strong> en redes sociales y medios digitales</li>
+          <li><strong>Análisis de sentimiento</strong> (positivo, neutral, negativo)</li>
+          <li><strong>Frecuencia de publicación</strong> y temas recurrentes</li>
         </ul>
-        <p>
-          Cada semana recibirás un <strong>brief automático</strong>
-          con un resumen ejecutivo de la actividad de tus competidores,
-          tendencias detectadas y recomendaciones de acción.
+        <p className="text-sm text-500">
+          ⚡ Esta función requiere que Hermes esté activo (conexión webhook configurada).
         </p>
+        <Button label="Ir a Competencia" icon="pi pi-arrow-right" onClick={() => navigate('/competitors')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-map',
-    title: 'SEO Local — Páginas por Ciudad',
-    content: (
+    title: '6. SEO Local — Landing pages por ciudad',
+    content: (navigate: any) => (
       <div>
         <p>
           MarketingOS genera <strong>landing pages</strong> optimizadas
-          para SEO local en las siguientes ciudades:
+          para SEO local en ciudades clave:
         </p>
-        <ul>
-          <li>Ciudad de México (CDMX)</li>
-          <li>Monterrey (MTY)</li>
-          <li>Guadalajara (GDL)</li>
-          <li>Puebla</li>
-          <li>Querétaro (Qro)</li>
-          <li>Mérida</li>
-        </ul>
+        <div className="flex flex-wrap gap-1 mb-3">
+          <Chip label="CDMX" />
+          <Chip label="Monterrey" />
+          <Chip label="Guadalajara" />
+          <Chip label="Puebla" />
+          <Chip label="Querétaro" />
+          <Chip label="Mérida" />
+        </div>
         <p>
-          Cada página incluye contenido adaptado a la localidad, datos de
-          contacto y mapa interactivo. El sistema monitorea
-          <strong>posiciones en Google</strong> para las palabras clave
-          objetivo en cada ciudad.
+          El sistema monitorea <strong>posiciones en Google</strong> para palabras clave
+          y te alerta si alguna página baja de ranking.
         </p>
-        <p>
-          Recibirás alertas cuando alguna página baje de posición para que
-          tomes acción.
-        </p>
+        <Button label="Ir a SEO" icon="pi pi-arrow-right" onClick={() => navigate('/seo')} size="small" />
       </div>
     ),
   },
   {
     icon: 'pi-check-circle',
-    title: 'Onboarding — Checklist',
-    content: (
+    title: '7. Onboarding — Checklist de configuración',
+    content: (navigate: any) => (
       <div>
         <p>
-          Para cada nuevo <strong>tenant</strong> o <strong>producto</strong>,
-          el sistema presenta un checklist de 8 pasos:
+          Por cada nuevo producto, el sistema tiene un checklist de 8 pasos
+          para asegurar que no te saltes nada importante:
         </p>
         <ol>
           <li>Crear perfil del negocio</li>
-          <li>Conectar cuenta de X (Twitter)</li>
-          <li>Configurar Google Ads (opcional)</li>
+          <li>Conectar cuenta de X</li>
+          <li>Configurar Google Ads</li>
           <li>Agregar palabras clave objetivo</li>
           <li>Registrar competidores</li>
           <li>Definir ciudades para SEO Local</li>
           <li>Invitar miembros del equipo</li>
           <li>Revisar y aprobar primer contenido sugerido</li>
         </ol>
-        <p>
-          Puedes dar seguimiento al progreso desde el panel de
-          administración. Cada paso completado se marca con un visto.
-        </p>
+        <Button label="Ir a Onboarding" icon="pi pi-arrow-right" onClick={() => navigate('/onboarding')} size="small" />
       </div>
     ),
   },
   {
-    icon: 'pi-info-circle',
-    title: 'Preguntas Frecuentes',
-    content: (
+    icon: 'pi-cog',
+    title: '8. Administración — Gestión general',
+    content: (navigate: any) => (
       <div>
-        <dl>
-          <dt><strong>¿Cómo agrego un producto?</strong></dt>
-          <dd>
-            Ve al panel de administración, selecciona "Productos" y da clic
-            en "Agregar producto". Ingresa el nombre, descripción y
-            configuración inicial.
-          </dd>
-
-          <dt><strong>¿Cómo invito a mi equipo?</strong></dt>
-          <dd>
-            En la sección de administración, elige "Miembros" y usa el botón
-            "Invitar". Ingresa el correo electrónico y selecciona el rol
-            (admin, editor, lector).
-          </dd>
-
-          <dt><strong>¿Cómo rechazo un post sugerido?</strong></dt>
-          <dd>
-            En el calendario de contenido, cada post tiene botones de
-            "Aprobar" y "Rechazar". Al rechazar, puedes agregar un comentario
-            para que Hermes ajuste la propuesta.
-          </dd>
-
-          <dt><strong>¿Cuánto cuestan los anuncios de Google Ads?</strong></dt>
-          <dd>
-            Tú defines el presupuesto diario al crear la campaña. MarketingOS
-            no cobra comisión sobre el gasto publicitario; solo pagas lo que
-            inviertas en Google Ads.
-          </dd>
-
-          <dt><strong>¿Cómo configuro las credenciales de X?</strong></dt>
-          <dd>
-            En la sección de administración, ve a "Conexiones" y selecciona
-            X/Twitter. Sigue el flujo de autorización de OAuth para conectar
-            tu cuenta. Solo los administradores pueden realizar esta
-            configuración.
-          </dd>
-        </dl>
+        <p>Desde el panel de Admin puedes:</p>
+        <ul>
+          <li><strong>Crear tenants</strong> — nuevas empresas/clientes</li>
+          <li><strong>Agregar productos</strong> — SAAS dentro de cada tenant</li>
+          <li><strong>Ver usuarios</strong> — quién tiene acceso a cada tenant</li>
+          <li><strong>Eliminar tenants</strong> — borrado completo con todos sus datos</li>
+        </ul>
+        <Button label="Ir a Admin" icon="pi pi-arrow-right" onClick={() => navigate('/admin')} size="small" />
       </div>
     ),
   },
 ];
 
 export default function HelpPage() {
+  const navigate = useNavigate();
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <h2 className="mt-0">Manual de Ayuda</h2>
+      <div className="flex align-items-center gap-2 mb-3">
+        <h2 className="mt-0">Manual de Ayuda</h2>
+      </div>
+
+      <p className="text-600 mb-4">
+        Selecciona una sección para ver instrucciones paso a paso.
+        Cada sección tiene un botón para ir directamente a la página correspondiente.
+      </p>
 
       <div className="flex flex-column gap-3">
         {sections.map((sec, i) => (
@@ -259,19 +246,23 @@ export default function HelpPage() {
             key={i}
             header={
               <span>
-                <i
-                  className={`pi ${sec.icon}`}
-                  style={{ marginRight: 10 }}
-                />
+                <i className={`pi ${sec.icon}`} style={{ marginRight: 10 }} />
                 {sec.title}
               </span>
             }
             toggleable
-            collapsed
+            collapsed={!sec.defaultExpanded}
           >
-            <div style={{ lineHeight: 1.7 }}>{sec.content}</div>
+            <div style={{ lineHeight: 1.7 }}>{sec.content(navigate)}</div>
           </Panel>
         ))}
+      </div>
+
+      <div className="mt-5 p-3 border-round" style={{ background: 'var(--highlight-bg)' }}>
+        <p className="text-sm m-0">
+          💡 <strong>¿Dudas más específicas?</strong> Pregúntale a Hermes directamente en el chat de Telegram.
+          Hermes conoce toda la arquitectura de MarketingOS.
+        </p>
       </div>
     </div>
   );
