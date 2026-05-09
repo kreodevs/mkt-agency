@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: mktos
       POSTGRES_USER: mktos
-      POSTGRES_PASSWORD: mktos_secret
+      POSTGRES_PASSWORD: b8a200ab5a5ddcfdceef3a878361d5215cb3f72c4c1c71d6
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -30,8 +30,8 @@ services:
       DB_PORT: 5432
       DB_NAME: mktos
       DB_USER: mktos
-      DB_PASSWORD: mktos_secret
-      JWT_SECRET: dev_secret_change_in_production
+      DB_PASSWORD: b8a200ab5a5ddcfdceef3a878361d5215cb3f72c4c1c71d6
+      JWT_SECRET: ee21996eb4f45304098667815c8dad9ada518b2f008df4eadd61541c4f9c03de
       JWT_EXPIRES_IN: 7d
       CORS_ORIGIN: '*'
     volumes:
