@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from './entities/tenant.entity';
 import { TenantUser } from '../users/entities/tenant-user.entity';
+import { Product } from '../products/entities/product.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 
 @Injectable()
@@ -12,11 +13,31 @@ export class TenantsService {
     private readonly tenantRepo: Repository<Tenant>,
     @InjectRepository(TenantUser)
     private readonly tenantUserRepo: Repository<TenantUser>,
+    @InjectRepository(Product)
+    private readonly productRepo: Repository<Product>,
   ) {}
 
   async create(dto: CreateTenantDto, ownerId: string): Promise<Tenant> {
     const tenant = this.tenantRepo.create({ ...dto, ownerId });
-    return this.tenantRepo.save(tenant);
+    const saved = await this.tenantRepo.save(tenant);
+
+    // Create default product
+    const defaultProduct = this.productRepo.create({
+      tenantId: saved.id,
+      name: 'Producto Principal',
+      type: 'saas',
+    });
+    await this.productRepo.save(defaultProduct);
+
+    // Assign owner as admin
+    const tenantUser = this.tenantUserRepo.create({
+      tenantId: saved.id,
+      userId: ownerId,
+      role: 'admin' as any,
+    });
+    await this.tenantUserRepo.save(tenantUser);
+
+    return saved;
   }
 
   async findAll(): Promise<Tenant[]> {

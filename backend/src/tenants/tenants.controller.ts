@@ -14,7 +14,7 @@ export class TenantsController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Req() req: any) {
     return this.tenantsService.findAll();
   }
 
