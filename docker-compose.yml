@@ -8,8 +8,10 @@ services:
       POSTGRES_DB: mktos
       POSTGRES_USER: mktos
       POSTGRES_PASSWORD: b8a200ab5a5ddcfdceef3a878361d5215cb3f72c4c1c71d6
+    # TEMPORAL: volumen fresco para el próximo deployment (reset DB)
+    # TODO: revertir a "pgdata" después del deploy exitoso
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_fresh:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U mktos -d mktos']
       interval: 10s
@@ -51,5 +53,5 @@ services:
       - backend
 
 volumes:
-  pgdata:
+  pgdata_fresh:
   uploads:
