@@ -23,6 +23,11 @@ export class TenantsController {
     return this.tenantsService.findOne(id);
   }
 
+  @Get(':id/users')
+  findUsers(@Param('id') id: string) {
+    return this.tenantsService.findUsers(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() data: any) {
     return this.tenantsService.update(id, data);

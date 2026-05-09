@@ -49,6 +49,12 @@ export const tenants = {
   list: () => api.get('/tenants'),
   get: (id: string) => api.get(`/tenants/${id}`),
   create: (data: { name: string }) => api.post('/tenants', data),
+  remove: (id: string) => api.delete(`/tenants/${id}`),
+};
+
+// === Users ===
+export const users = {
+  list: (tenantId: string) => api.get(`/tenants/${tenantId}/users`),
 };
 
 // === Products ===

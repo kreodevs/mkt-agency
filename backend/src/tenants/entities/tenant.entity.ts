@@ -25,9 +25,9 @@ export class Tenant {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Product, (p) => p.tenant)
+  @OneToMany(() => Product, (p) => p.tenant, { cascade: true })
   products: Product[];
 
-  @OneToMany(() => TenantUser, (tu) => tu.tenant)
+  @OneToMany(() => TenantUser, (tu) => tu.tenant, { cascade: true })
   tenantUsers: TenantUser[];
 }
