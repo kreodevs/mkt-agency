@@ -8,12 +8,14 @@ interface Proposal {
   id: string;
   actionType: string;
   status: 'pending' | 'approved' | 'rejected' | 'executed';
+  productId?: string;
   rationale?: string;
   payload?: Record<string, any>;
   createdAt: string;
   reviewedAt?: string;
   feedback?: string;
   rejectionReason?: string;
+  resultSummary?: string;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -201,8 +203,8 @@ export default function ProposalsPage() {
         </div>
       )}
 
-      {!showActions && (proposal.feedback || proposal.rejectionReason) && (
-        <div className="mt-2 pt-2 border-t border-[var(--border)]">
+      {!showActions && (proposal.feedback || proposal.rejectionReason || proposal.resultSummary) && (
+        <div className="mt-2 pt-2 border-t border-[var(--border)] space-y-1">
           {proposal.rejectionReason && (
             <p className="text-xs text-red-600">
               <strong>Razón:</strong> {proposal.rejectionReason}
@@ -211,6 +213,11 @@ export default function ProposalsPage() {
           {proposal.feedback && (
             <p className="text-xs text-[var(--foreground-muted)]">
               <strong>Feedback:</strong> {proposal.feedback}
+            </p>
+          )}
+          {proposal.resultSummary && (
+            <p className="text-xs text-emerald-600">
+              <strong>Resultado:</strong> {proposal.resultSummary}
             </p>
           )}
         </div>
