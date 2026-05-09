@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
@@ -6,13 +6,23 @@ import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Message } from 'primereact/message';
 import { useAuthStore } from '../../stores/authStore';
+import { auth } from '../../services/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(true);
   const { login, loading } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    auth.hasUsers().then((r) => {
+      if (!r.data.hasUsers) {
+        navigate('/setup', { replace: true });
+      }
+    }).catch(() => {}).finally(() => setChecking(false));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +34,14 @@ export default function LoginPage() {
       setError(err.message);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="flex align-items-center justify-content-center min-h-screen" style={{ background: '#f0f2f5' }}>
+        <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex align-items-center justify-content-center min-h-screen" style={{ background: '#f0f2f5' }}>

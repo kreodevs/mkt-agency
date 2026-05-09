@@ -67,6 +67,19 @@ export class AuthService {
     return this.buildResponse(user);
   }
 
+  async hasUsers(): Promise<{ hasUsers: boolean }> {
+    const count = await this.userRepo.count();
+    return { hasUsers: count > 0 };
+  }
+
+  async setup(dto: RegisterDto) {
+    const count = await this.userRepo.count();
+    if (count > 0) {
+      throw new ConflictException('Ya existe un administrador. Usa el login.');
+    }
+    return this.register(dto);
+  }
+
   private async buildResponse(user: User) {
     const tenantUsers = await this.tenantUserRepo.find({
       where: { userId: user.id },

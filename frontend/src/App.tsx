@@ -13,6 +13,7 @@ import SeoPagesPage from './pages/seo/SeoPagesPage';
 import AdminPage from './pages/admin/AdminPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import SetupPage from './pages/auth/SetupPage';
 import HelpPage from './pages/help/HelpPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/setup" element={<SetupPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/"

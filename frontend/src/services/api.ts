@@ -38,6 +38,9 @@ export const auth = {
   login: (data: { email: string; password: string }) => api.post('/auth/login', data),
   register: (data: { name: string; email: string; password: string; tenantName: string }) =>
     api.post('/auth/register', data),
+  hasUsers: () => api.get('/auth/has-users'),
+  setup: (data: { name: string; email: string; password: string; tenantName: string }) =>
+    api.post('/auth/setup', data),
   me: () => api.get('/auth/me'),
 };
 

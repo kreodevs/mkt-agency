@@ -17,6 +17,16 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Get('has-users')
+  async hasUsers() {
+    return this.authService.hasUsers();
+  }
+
+  @Post('setup')
+  async setup(@Body() dto: RegisterDto) {
+    return this.authService.setup(dto);
+  }
+
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   async me(@Req() req: any) {
