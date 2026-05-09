@@ -204,6 +204,11 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                 )}
             </div>
 
+            {/* Version */}
+            <div className="px-[var(--spacing-md)] pb-[var(--spacing-md)] shrink-0">
+                <p className="text-[9px] text-[var(--foreground-subtle)] font-mono">v0.1.0</p>
+            </div>
+
             {/* Collapse Trigger */}
             {collapsible && (
                 <button

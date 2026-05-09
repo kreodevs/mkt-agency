@@ -68,6 +68,7 @@ export function useVersionPoll() {
         });
         const data = await res.json();
         if (cachedVersion && data.version !== cachedVersion) {
+          console.log(`[PWA] Nueva versión detectada: ${cachedVersion} → ${data.version}`);
           window.location.reload();
         }
       } catch {
