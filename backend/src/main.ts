@@ -8,7 +8,8 @@ import { existsSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.setGlobalPrefix('api');
+  // No global prefix — Dokploy manages routing with strip prefix
+  // app.setGlobalPrefix('api');
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
