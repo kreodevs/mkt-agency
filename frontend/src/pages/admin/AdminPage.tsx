@@ -9,6 +9,8 @@ import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
 import { tenants, products, users } from '../../services/api';
 import { useRef } from 'react';
+import { auth } from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function AdminPage() {
   const [tenantList, setTenantList] = useState([]);
@@ -23,6 +25,12 @@ export default function AdminPage() {
   const [showCreateTenant, setShowCreateTenant] = useState(false);
   const [newTenantName, setNewTenantName] = useState('');
   const toast = useRef<Toast>(null);
+  const setUser = useAuthStore((s) => s.setUser);
+
+  // Refrescar datos del usuario en el store (para que Settings vea los productos nuevos)
+  const refreshUserStore = () => {
+    auth.me().then(r => setUser(r.data)).catch(() => {});
+  };
 
   const fetchTenants = () => {
     setLoading(true);
@@ -36,6 +44,7 @@ export default function AdminPage() {
     await products.create(selectedTenant.id, { name: newProductName, type: newProductType });
     setShowProduct(false);
     setNewProductName('');
+    refreshUserStore();
     fetchTenants();
   };
 
@@ -75,6 +84,7 @@ export default function AdminPage() {
       toast.current?.show({ severity: 'success', summary: 'Creado', detail: `Tenant "${newTenantName}" creado` });
       setShowCreateTenant(false);
       setNewTenantName('');
+      refreshUserStore();
       fetchTenants();
     } catch (e: any) {
       toast.current?.show({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Error al crear tenant' });

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -12,6 +13,7 @@ export default function SettingsPage() {
   const product = getCurrentProduct();
   const productId = sessionStorage.getItem('currentProductId');
   const toast = useRef<Toast>(null);
+  const navigate = useNavigate();
 
   // Estado general de settings
   const [currentSettings, setCurrentSettings] = useState<any>(null);
@@ -261,6 +263,29 @@ export default function SettingsPage() {
       )}
     </div>
   );
+
+  // Si no hay producto seleccionado, mostrar mensaje
+  if (!productId) {
+    return (
+      <div>
+        <Toast ref={toast} />
+        <div className="flex justify-content-between align-items-center mb-3">
+          <h2 className="mt-0">Configuración</h2>
+        </div>
+        <Card>
+          <div className="text-center py-5">
+            <i className="pi pi-info-circle" style={{ fontSize: '3rem', color: 'var(--blue-500)' }} />
+            <h3 className="mt-3">Selecciona un producto</h3>
+            <p className="text-lg mb-4">
+              Ve a <strong>Administración</strong>, selecciona un tenant y agrega o elige un producto.
+              Las conexiones se configuran por producto.
+            </p>
+            <Button label="Ir a Admin" icon="pi pi-cog" onClick={() => navigate('/admin')} />
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
