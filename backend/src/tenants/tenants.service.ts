@@ -41,7 +41,7 @@ export class TenantsService {
   }
 
   async findAll(): Promise<Tenant[]> {
-    return this.tenantRepo.find({ where: { isActive: true } });
+    return this.tenantRepo.find({ where: { isActive: true }, relations: ['products'] });
   }
 
   async findOne(id: string): Promise<Tenant> {
