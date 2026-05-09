@@ -36,7 +36,7 @@ export class Post {
   @Column({ type: 'text', nullable: true })
   feedbackText: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   scheduledAt: Date | null;
 
   @Column({ nullable: true })
