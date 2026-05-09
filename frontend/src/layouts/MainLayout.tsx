@@ -5,14 +5,11 @@ import {
   LayoutDashboard, Users, Calendar, Megaphone, Eye, Map,
   CheckCircle, Settings, HelpCircle, Plug, LogOut,
 } from 'lucide-react';
-import { auth } from '../services/api';
-import { useAuthStore as useAuth } from '../stores/authStore';
 
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
-  const setUser = useAuth((s) => s.setUser);
   const tenant = getCurrentTenant();
   const product = getCurrentProduct();
 
@@ -45,9 +42,6 @@ export default function MainLayout() {
       ],
     },
   ];
-
-  const tenantLabel = tenant?.name || '';
-  const productLabel = product?.name || '';
 
   return (
     <AppLayout

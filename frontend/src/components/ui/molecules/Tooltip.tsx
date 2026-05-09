@@ -1,5 +1,5 @@
 import { Tooltip as PrimeTooltip, type TooltipProps as PrimeTooltipProps } from 'primereact/tooltip'
-import { forwardRef, ReactNode, useId } from 'react'
+import { forwardRef, type ReactNode, useId } from 'react'
 
 export interface TooltipInputProps extends Omit<PrimeTooltipProps, 'pt' | 'target'> {
   content: ReactNode

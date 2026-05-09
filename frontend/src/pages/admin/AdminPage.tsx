@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { InputText } from 'primereact/inputtext';
@@ -190,8 +189,6 @@ export default function AdminPage() {
             header: { className: '!bg-transparent' },
             bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)] transition-colors' },
             headerRow: { className: '!bg-transparent' },
-            headerCell: { className: '!bg-transparent !text-[var(--foreground-muted)] !text-xs !font-medium !uppercase !tracking-[0.05em] !px-3 !py-2 !border-b !border-[var(--border)]' },
-            bodyCell: { className: '!bg-transparent !px-3 !py-2.5 !border-b !border-[var(--border)]' },
             loadingOverlay: { className: '!bg-[var(--background)]/50' },
             wrapper: { className: '!bg-transparent' },
             emptyMessage: { className: '!text-[var(--foreground-muted)] !text-sm !py-6' },
@@ -267,10 +264,7 @@ export default function AdminPage() {
             root: { className: '!text-sm !text-[var(--foreground)]' },
             bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)]' },
             headerRow: { className: '!bg-transparent' },
-            headerCell: { className: '!bg-transparent !text-[var(--foreground-muted)] !text-xs !px-3 !py-2 !border-b !border-[var(--border)]' },
-            bodyCell: { className: '!bg-transparent !px-3 !py-2 !border-b !border-[var(--border)]' },
-          }}
-        >
+          }}>
           <Column field="name" header="Nombre" />
           <Column field="email" header="Email" />
           <Column field="role" header="Rol" />

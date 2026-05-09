@@ -11,7 +11,7 @@ const sections = [
     icon: HelpCircle,
     title: '¿Qué es MarketingOS?',
     defaultExpanded: true,
-    content: (navigate: any) => (
+    content: () => (
       <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
         <p className="text-[var(--foreground)] font-medium">MarketingOS es un sistema CRM + Motor de Marketing con IA.</p>
         <p>Hermes analiza datos, redacta contenido, sugiere campañas y monitorea competencia. <strong className="text-[var(--foreground)]">Tú apruebas antes de publicar.</strong></p>
@@ -201,7 +201,6 @@ export default function HelpPage() {
             pt={{
               root: { className: '!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)] overflow-hidden' },
               header: { className: '!bg-transparent !px-4 !py-3 hover:!bg-[var(--background-tertiary)] cursor-pointer' },
-              headerAction: { className: '!text-[var(--foreground)] !no-underline hover:!no-underline' },
               toggleableContent: { className: '!bg-transparent' },
               content: { className: '!bg-transparent !px-4 !pb-4 !pt-0 !border-t-0' },
             }}

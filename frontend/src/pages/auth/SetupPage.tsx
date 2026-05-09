@@ -9,7 +9,6 @@ import { useAuthStore } from '../../stores/authStore';
 
 export default function SetupPage() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +31,7 @@ export default function SetupPage() {
     setError('');
     try {
       const r = await auth.setup({ name, email, password, tenantName });
-      setAuth(r.data.token, r.data.user);
+      useAuthStore.setState({ token: r.data.token, user: r.data.user });
       navigate('/onboarding', { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al crear el administrador');
