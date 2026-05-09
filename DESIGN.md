@@ -1,64 +1,70 @@
 ---
 version: alpha
 name: MarketingOS
-description: MarketingOS — CRM + Marketing Automation multi-tenant. Tema Luxury/Corporate: negro profundo, carbón, dorado refinado. Basado en Kreo UI Corporate-UI-Lib.
+description: MarketingOS — CRM + Marketing Automation multi-tenant. Inspirado en Superhuman: parchment warm canvas, Ink text, Iris violet accent, Aubergine structural framing. Cinematic cockpit aesthetic.
 colors:
-  primary: "#C9A227"
-  primaryForeground: "#0A0A0A"
-  primaryHover: "#B8922A"
-  background: "#0A0A0A"
-  backgroundSecondary: "#111111"
-  backgroundTertiary: "#1C1C1C"
-  foreground: "#F5F5F5"
-  foregroundMuted: "#A3A3A3"
-  foregroundSubtle: "#6B6B6B"
-  accent: "#C9A227"
-  accentForeground: "#0A0A0A"
-  accentMuted: "#8B7018"
-  card: "#141414"
-  cardForeground: "#F5F5F5"
-  cardBorder: "#2A2A2A"
-  popover: "#1C1C1C"
-  popoverForeground: "#F5F5F5"
-  secondary: "#1C1C1C"
-  secondaryForeground: "#F5F5F5"
-  muted: "#262626"
-  mutedForeground: "#A3A3A3"
+  primary: "#714cb6"
+  primaryForeground: "#ffffff"
+  primaryHover: "#5a3a9e"
+  background: "#f2f0eb"
+  backgroundSecondary: "#ffffff"
+  backgroundTertiary: "#f7f6f3"
+  foreground: "#292827"
+  foregroundMuted: "#666666"
+  foregroundSubtle: "#999999"
+  accent: "#714cb6"
+  accentForeground: "#ffffff"
+  accentMuted: "#d4c7ff"
+  card: "#ffffff"
+  cardForeground: "#292827"
+  cardBorder: "#e3e3e2"
+  popover: "#ffffff"
+  popoverForeground: "#292827"
+  secondary: "#ffffff"
+  secondaryForeground: "#292827"
+  muted: "#e3e3e2"
+  mutedForeground: "#666666"
   destructive: "#DC2626"
   success: "#16A34A"
   warning: "#CA8A04"
   info: "#0EA5E9"
-  border: "#2A2A2A"
-  borderHover: "#3A3A3A"
-  input: "#1C1C1C"
-  inputBorder: "#2A2A2A"
-  inputFocus: "#C9A227"
-  ring: "#C9A227"
+  border: "#e3e3e2"
+  borderHover: "#dcd7d3"
+  input: "#ffffff"
+  inputBorder: "#e3e3e2"
+  inputFocus: "#714cb6"
+  ring: "#714cb6"
+  aubergine: "#421d24"
+  aubergineDeep: "#4e242c"
+  lavenderChip: "#d4c7ff"
 typography:
   h1:
     fontFamily: Inter
     fontSize: 1.75rem
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.2
+    letterSpacing: "-0.02em"
   h2:
     fontFamily: Inter
     fontSize: 1.5rem
     fontWeight: 600
-    lineHeight: 1.3
+    lineHeight: 1.25
+    letterSpacing: "-0.014em"
   h3:
     fontFamily: Inter
     fontSize: 1.25rem
     fontWeight: 600
-    lineHeight: 1.4
+    lineHeight: 1.3
+    letterSpacing: "-0.008em"
   body:
     fontFamily: Inter
     fontSize: 0.875rem
-    fontWeight: 400
-    lineHeight: 1.6
+    fontWeight: 460
+    lineHeight: 1.5
   body-sm:
     fontFamily: Inter
     fontSize: 0.75rem
-    fontWeight: 400
+    fontWeight: 460
     lineHeight: 1.5
   label:
     fontFamily: Inter
@@ -67,10 +73,10 @@ typography:
     lineHeight: 1.4
     letterSpacing: "0.01em"
 rounded:
-  sm: 4px
-  md: 8px
-  lg: 12px
-  xl: 16px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 24px
 spacing:
   xs: 4px
   sm: 8px
@@ -82,21 +88,23 @@ components:
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.primaryForeground}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.sm}"
     padding: 8px 16px
     typography: "{typography.label}"
   button-primary-hover:
     backgroundColor: "{colors.primaryHover}"
   button-ghost:
     backgroundColor: transparent
-    textColor: "{colors.foregroundMuted}"
-    rounded: "{rounded.md}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.sm}"
     padding: 8px 16px
+    borderColor: "{colors.primary}"
   card-default:
     backgroundColor: "{colors.card}"
     textColor: "{colors.cardForeground}"
     rounded: "{rounded.lg}"
     padding: "{spacing.lg}"
+    borderColor: "{colors.cardBorder}"
   input-default:
     backgroundColor: "{colors.input}"
     textColor: "{colors.foreground}"
@@ -109,7 +117,7 @@ components:
     rounded: "{rounded.md}"
     padding: 10px 16px
   sidebar-item-active:
-    backgroundColor: "{colors.secondary}"
+    backgroundColor: "{colors.muted}"
     textColor: "{colors.primary}"
   tab-active:
     textColor: "{colors.primary}"
@@ -121,55 +129,57 @@ components:
 
 ## Overview
 
-MarketingOS es un sistema CRM + Marketing Automation con diseño Luxury/Corporate. La paleta combina negro profundo con acentos dorados para transmitir exclusividad y confianza. El espaciado generoso (16px base) asegura que el contenido respire. Los bordes de tarjetas (#2A2A2A) son sutiles pero definidos. Los rings de focus son dorados para mantener consistencia visual.
+MarketingOS adopta la estética del sistema Superhuman — un cockpit de productividad cinematográfico sobre un lienzo de pergamino cálido. La paleta combina un fondo crema (#f2f0eb) con acentos violeta (#714cb6) y texto tinta (#292827). Las tarjetas blancas (#ffffff) flotan sobre el pergamino. El violeta es el ÚNICO acento cromático — aparece en botones outline, rings de focus y links. El diseño es ligero, espacioso y sin sombras — la profundidad se logra con bordes sutiles (#e3e3e2) y superposición de capas, no con elevación.
 
 ## Colors
 
-- **Primary (#C9A227):** Dorado refinado — el único color de interacción. Botones, links, rings de focus, tabs activos.
-- **Background (#0A0A0A):** Negro profundo — fondo principal. Crea el contraste dramático.
-- **Foreground (#F5F5F5):** Texto principal — casi blanco sobre fondo negro.
-- **Card (#141414):** Negro ligeramente más claro que el fondo para jerarquía de superficie.
-- **Destructive (#DC2626):** Solo para eliminar datos. Sin roces — borrar es irreversible.
-- **Success (#16A34A):** Indicadores de estado completado.
-- **Warning (#CA8A04):** Advertencias y notificaciones de atención.
+- **Primary / Iris (#714cb6):** Único acento cromático — botones primarios, rings de focus, links, bordes outline. Nunca como fondo de botón relleno en superficies claras (solo botón primario sobre blanco).
+- **Parchment Canvas (#f2f0eb):** Fondo principal de toda la app — distingue MarketingOS del SaaS blanco genérico.
+- **Bone (#ffffff):** Superficies de tarjetas y paneles que se elevan sobre el pergamino.
+- **Ink (#292827):** Texto principal con subtono marrón cálido, no negro puro.
+- **Fog (#e3e3e2):** Bordes y divisores sutiles.
+- **Graphite (#666666):** Texto secundario para descripciones y metadatos.
+- **Aubergine (#421d24):** Solo para elementos estructurales (futuro: banner y footer).
+- **Lavender Chip (#d4c7ff):** Fondo de botón SignUp, badges.
 
 ## Typography
 
-Inter (sans-serif) para todo. Sin fuentes decorativas excepto `font-display` (Playfair Display) para landing pages externas. El tamaño base es 14px (0.875rem). Los Labels son 13px con tracking suave.
+Inter (sans-serif) para todo. El peso 460 es el default para body. 600 para headings. Tracking negativo progresivo: -0.02em en h1, -0.014em en h2, -0.008em en h3. Sin tracking positivo.
 
 ## Layout & Spacing
 
-- **Grid base:** 16px (md). Todo el espaciado escala desde aquí.
-- **Contenido principal:** padding `p-4` (16px) que se expande a `md:p-6` (24px) en desktop.
+- **Grid base:** 16px. Espaciado generoso entre secciones.
+- **Contenido principal:** padding `p-4` (16px), expande a `md:p-6` (24px) en desktop.
 - **Sidebar:** 280px en desktop, overlay en mobile (<768px).
-- **Max content width:** 1200px para páginas de listados.
+- **Max content width:** 1200px.
+- **Sin sombras.** La profundidad se logra con bordes de 1px #e3e3e2 y capas de fondo superpuestas.
 
 ## Components
 
 ### Button
-El `button-primary` es la única acción de alto énfasis por vista. Usar `button-ghost` para acciones secundarias. Los botones eliminar usan `button-primary` con foreground blanco sobre fondo red. Sin variedad de tamaños — solo `default` y `sm` (para tablas).
+Botón primario con fondo Iris (#714cb6) y texto blanco. 8px radius. Para acciones ghost/outline: borde Iris 1px, texto Iris, fondo transparente. Sin variantes de tamaño — solo `default` (h-10) y `sm` (h-8).
 
 ### Card
-Todas las tarjetas usan `card-default`. El título va dentro de la tarjeta con `h3`. El padding interno es `lg` (24px).
+Fondo blanco (#ffffff), borde 1px Fog (#e3e3e2), 16px radius. Padding `lg` (24px). Sin sombra.
 
 ### Input
-Inputs en modo dark con fondo `#1C1C1C` y borde `#2A2A2A`. El focus ring es dorado. Placeholder en `foregroundSubtle`.
+Inputs en modo light con fondo blanco y borde Fog. Focus ring Iris (#714cb6). Placeholder en foregroundSubtle.
 
 ### Sidebar
-Items con padding de 10px 16px. El item activo se ilumina con fondo secondary y texto primary (dorado). Iconos en `foregroundMuted` (16x16). El logo va en la parte superior con `font-display`.
+Fondo Bone (#ffffff) con borde derecho Fog. Items con padding 10px 16px. Item activo con fondo Fog y texto Iris.
 
 ### DataTable
-Tablas sin bordes verticales. Filas con hover en `muted`. Paginación minimalista solo con números. El header en `foregroundMuted` con tamaño `body-sm`.
+Tablas sin bordes verticales. Filas con hover en Fog. Header en foregroundMuted (tamaño body-sm).
 
 ### Dialog
-Fondo `popover` (#1C1C1C) con borde `cardBorder`. Backdrop semitransparente (#000 a 60%). Footer alineado a la derecha con botones ghost + primary.
+Fondo Bone (#ffffff), borde Fog. Backdrop semitransparente. Footer alineado a la derecha.
 
 ## Do's and Don'ts
 
-- **DO** usar `text-[var(--primary)]` para texto decorativo/destacado.
-- **DON'T** usar colores hardcodeados. Siempre CSS variable.
-- **DO** usar Lucide icons (16x16 en tablas, 20x20 en sidebar, 24x24 en estados vacíos).
-- **DON'T** usar PrimeIcons (`pi pi-*`).
-- **DO** mantener espaciado generoso entre secciones (al menos `gap-4`).
-- **DON'T** poner botones primarios duplicados en una misma vista.
-- **DO** usar breadcrumb con `< en gris muted para navegación secundaria.
+- **DO** usar `text-[var(--primary)]` para acentos violeta (links, iconos decorativos).
+- **DON'T** usar #f2f0eb como fondo de tarjetas — las tarjetas son blancas.
+- **DO** usar #714cb6 como borde outline en botones ghost.
+- **DON'T** usar sombras en tarjetas — ni box-shadow ni drop-shadow.
+- **DO** mantener espaciado generoso (al menos `gap-4` entre secciones).
+- **DON'T** usar colores hardcodeados — siempre CSS variable.
+- **DO** usar Lucide icons con tint Iris en superficies claras.

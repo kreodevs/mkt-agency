@@ -1,80 +1,76 @@
-/* MarketingOS — Kreo Theme: Luxury/Corporate
-   Based on Kreo UI Corporate-UI-Lib
-   Palette: Negro, Carbón, Dorado refinado
+/* MarketingOS — Superhuman Theme (Cinematic Cockpit / Warm Parchment)
+   Inspired by Superhuman's design system: https://superhuman.com
+   Palette: Parchment canvas, Ink text, Iris accent, Aubergine frame
 */
-:root {
-  /* === Primary Colors === */
-  --primary: #C9A227;
-  --primary-foreground: #0A0A0A;
-  --primary-hover: #B8922A;
 
-  /* === Background Colors === */
-  --background: #0A0A0A;
-  --background-secondary: #111111;
-  --background-tertiary: #1C1C1C;
+:root {
+  /* === Primary / Accent === */
+  --primary: #714cb6;              /* Iris — único acento cromático */
+  --primary-foreground: #ffffff;   /* Bone — texto sobre iris */
+  --primary-hover: #5a3a9e;        /* Iris oscuro para hover */
+
+  /* === Background Canvas === */
+  --background: #f2f0eb;           /* Parchment Canvas — fondo principal */
+  --background-secondary: #ffffff;  /* Bone — tarjetas y paneles */
+  --background-tertiary: #f7f6f3;  /* Parchment ligeramente más oscuro */
 
   /* === Foreground / Text === */
-  --foreground: #F5F5F5;
-  --foreground-muted: #A3A3A3;
-  --foreground-subtle: #6B6B6B;
+  --foreground: #292827;           /* Ink — texto principal */
+  --foreground-muted: #666666;     /* Graphite — texto secundario */
+  --foreground-subtle: #999999;    /* Texto terciario */
 
   /* === Accent Colors === */
-  --accent: #C9A227;
-  --accent-foreground: #0A0A0A;
-  --accent-muted: #8B7018;
+  --accent: #714cb6;               /* Iris */
+  --accent-foreground: #ffffff;
+  --accent-muted: #d4c7ff;         /* Lavender Chip */
 
-  /* === Surface / Card Colors === */
-  --card: #141414;
-  --card-foreground: #F5F5F5;
-  --card-border: #2A2A2A;
-  --popover: #1C1C1C;
-  --popover-foreground: #F5F5F5;
+  /* === Surface / Card === */
+  --card: #ffffff;                 /* Bone — fondo de tarjetas */
+  --card-foreground: #292827;      /* Ink — texto en tarjetas */
+  --card-border: #e3e3e2;          /* Fog — bordes de tarjetas */
+  --popover: #ffffff;
+  --popover-foreground: #292827;
 
   /* === Secondary / Muted === */
-  --secondary: #1C1C1C;
-  --secondary-foreground: #F5F5F5;
-  --muted: #262626;
-  --muted-foreground: #A3A3A3;
+  --secondary: #ffffff;            /* Bone para fondos secundarios */
+  --secondary-foreground: #292827;
+  --muted: #e3e3e2;                /* Fog */
+  --muted-foreground: #666666;
 
   /* === Semantic Colors === */
   --destructive: #DC2626;
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: #ffffff;
   --success: #16A34A;
-  --success-foreground: #FFFFFF;
+  --success-foreground: #ffffff;
   --warning: #CA8A04;
-  --warning-foreground: #0A0A0A;
+  --warning-foreground: #292827;
   --info: #0EA5E9;
-  --info-foreground: #FFFFFF;
+  --info-foreground: #ffffff;
 
   /* === Border & Input === */
-  --border: #2A2A2A;
-  --border-hover: #3A3A3A;
-  --input: #1C1C1C;
-  --input-border: #2A2A2A;
-  --input-focus: #C9A227;
+  --border: #e3e3e2;               /* Fog */
+  --border-hover: #dcd7d3;         /* Driftwood */
+  --input: #ffffff;
+  --input-border: #e3e3e2;
+  --input-focus: #714cb6;          /* Iris */
 
   /* === Ring / Focus === */
-  --ring: #C9A227;
-  --ring-offset: #0A0A0A;
+  --ring: #714cb6;                  /* Iris */
+  --ring-offset: #ffffff;
 
-  /* === Radius === */
-  --radius: 0.5rem;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* === Radius (Superhuman: min 8px) === */
+  --radius: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 
-  /* === Shadows === */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
-  --shadow-gold: 0 0 20px rgba(201, 162, 39, 0.15);
+  /* === Shadows (sin elevation, solo inset ring) === */
+  --shadow-subtle: rgb(113, 76, 182) 0px 0px 0px 1px inset;
 
   /* === Typography === */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-display: 'Playfair Display', Georgia, serif;
 
   /* === Transitions === */
   --transition-fast: 150ms ease;
@@ -90,71 +86,29 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
 
-  /* === Chart Colors === */
-  --chart-1: #C9A227;
-  --chart-2: #64748B;
-  --chart-3: #10B981;
-  --chart-4: #3B82F6;
-  --chart-5: #E11D48;
-  --chart-6: #A855F7;
-  --chart-7: #F59E0B;
-  --chart-8: #0D9488;
-  --chart-9: #B45309;
-  --chart-10: #475569;
+  /* === Chart Colors (Superhuman palette) === */
+  --chart-1: #714cb6;
+  --chart-2: #666666;
+  --chart-3: #16A34A;
+  --chart-4: #0EA5E9;
+  --chart-5: #DC2626;
+  --chart-6: #d4c7ff;
+  --chart-7: #CA8A04;
+  --chart-8: #292827;
+  --chart-9: #e3e3e2;
+  --chart-10: #421d24;
 }
 
-/* === Light Mode === */
-.light {
-  --primary: #9A7B1A;
-  --primary-foreground: #FFFFFF;
-  --primary-hover: #7D6315;
-  --background: #FAFAFA;
-  --background-secondary: #F5F5F5;
-  --background-tertiary: #EEEEEE;
-  --foreground: #171717;
-  --foreground-muted: #525252;
-  --foreground-subtle: #A3A3A3;
-  --accent: #9A7B1A;
-  --accent-foreground: #FFFFFF;
-  --accent-muted: #C9A227;
-  --card: #FFFFFF;
-  --card-foreground: #171717;
-  --card-border: #E5E5E5;
-  --popover: #FFFFFF;
-  --popover-foreground: #171717;
-  --secondary: #F5F5F5;
-  --secondary-foreground: #171717;
-  --muted: #E5E5E5;
-  --muted-foreground: #737373;
-  --border: #E5E5E5;
-  --border-hover: #D4D4D4;
-  --input: #FFFFFF;
-  --input-border: #D4D4D4;
-  --input-focus: #9A7B1A;
-  --ring: #9A7B1A;
-  --ring-offset: #FFFFFF;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-gold: 0 0 20px rgba(154, 123, 26, 0.2);
-  --chart-1: #9A7B1A;
-  --chart-2: #475569;
-  --chart-3: #059669;
-  --chart-4: #2563EB;
-  --chart-5: #E11D48;
-  --chart-6: #9333EA;
-  --chart-7: #D97706;
-  --chart-8: #0F766E;
-  --chart-9: #92400E;
-  --chart-10: #64748B;
+/* === Global Styles === */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* === Global Styles (solo para páginas migradas — se aplican via clases Tailwind) ===
-   Nota: Los estilos globales de body/* se eliminaron para no afectar páginas no migradas.
-   Las páginas migradas usan bg-[var(--background)] text-[var(--foreground)] explícitamente. */
-
-/* === Selection (no conflictivo) === */
+/* === Selection === */
 ::selection {
   background-color: var(--accent);
   color: var(--accent-foreground);
@@ -162,9 +116,9 @@
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--background-secondary); }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--muted);
   border-radius: var(--radius);
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
