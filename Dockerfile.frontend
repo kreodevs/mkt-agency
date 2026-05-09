@@ -9,6 +9,7 @@ COPY frontend/ ./frontend/
 ENV VITE_API_URL=/api
 WORKDIR /app/frontend
 RUN npx vite build
+RUN echo "{\"version\":\"$(date -Iseconds)\",\"name\":\"mkt-agency-os\"}" > dist/version.json
 
 # Stage 2: Nginx
 FROM nginx:alpine

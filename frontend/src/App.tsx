@@ -16,6 +16,8 @@ import SettingsPage from './pages/settings/SettingsPage';
 import ProposalsPage from './pages/proposals/ProposalsPage';
 import SetupPage from './pages/auth/SetupPage';
 import HelpPage from './pages/help/HelpPage';
+import { UpdateBanner } from './components/UpdateBanner';
+import { useVersionPoll } from './hooks/usePwaUpdate';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -24,6 +26,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useVersionPoll();
   return (
     <BrowserRouter>
       <Routes>
@@ -53,6 +56,7 @@ export default function App() {
           <Route path="proposals" element={<ProposalsPage />} />
         </Route>
       </Routes>
+      <UpdateBanner />
     </BrowserRouter>
   );
 }
