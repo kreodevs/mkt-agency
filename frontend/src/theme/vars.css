@@ -150,18 +150,11 @@
   --chart-10: #64748B;
 }
 
-/* === Global Styles === */
-* {
-  border-color: var(--border);
-}
+/* === Global Styles (solo para páginas migradas — se aplican via clases Tailwind) ===
+   Nota: Los estilos globales de body/* se eliminaron para no afectar páginas no migradas.
+   Las páginas migradas usan bg-[var(--background)] text-[var(--foreground)] explícitamente. */
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-}
-
-/* === Selection === */
+/* === Selection (no conflictivo) === */
 ::selection {
   background-color: var(--accent);
   color: var(--accent-foreground);
