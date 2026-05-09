@@ -50,6 +50,7 @@ export const tenants = {
   get: (id: string) => api.get(`/tenants/${id}`),
   create: (data: { name: string }) => api.post('/tenants', data),
   remove: (id: string) => api.delete(`/tenants/${id}`),
+  create: (data: { name: string }) => api.post('/tenants', data),
 };
 
 // === Users ===

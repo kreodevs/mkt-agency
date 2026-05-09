@@ -20,6 +20,8 @@ export default function AdminPage() {
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
+  const [showCreateTenant, setShowCreateTenant] = useState(false);
+  const [newTenantName, setNewTenantName] = useState('');
   const toast = useRef<Toast>(null);
 
   const fetchTenants = () => {
@@ -66,6 +68,19 @@ export default function AdminPage() {
     }
   };
 
+  const handleCreateTenant = async () => {
+    if (!newTenantName) return;
+    try {
+      await tenants.create({ name: newTenantName });
+      toast.current?.show({ severity: 'success', summary: 'Creado', detail: `Tenant "${newTenantName}" creado` });
+      setShowCreateTenant(false);
+      setNewTenantName('');
+      fetchTenants();
+    } catch (e: any) {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Error al crear tenant' });
+    }
+  };
+
   const actionBodyTemplate = (row: any) => (
     <div className="flex gap-2">
       <Button icon="pi pi-users" rounded text size="small" tooltip="Usuarios"
@@ -82,7 +97,13 @@ export default function AdminPage() {
 
       <h2 className="mt-0">Administración</h2>
 
-      <Card title="Empresas / Tenants">
+      <Card title="Empresas / Tenants"
+        pt={{ title: (opts: any) => (
+          <div className="flex align-items-center justify-content-between w-full">
+            <span>{opts.props.title}</span>
+            <Button icon="pi pi-plus" label="Nuevo" size="small" onClick={() => setShowCreateTenant(true)} />
+          </div>
+        )}}>
         <DataTable value={tenantList} loading={loading} size="small" stripedRows>
           <Column field="name" header="Nombre" />
           <Column field="ownerId" header="Dueño" />
@@ -123,6 +144,15 @@ export default function AdminPage() {
           <Column field="email" header="Email" />
           <Column field="role" header="Rol" />
         </DataTable>
+      </Dialog>
+
+      <Dialog header="Nuevo Tenant" visible={showCreateTenant}
+        onHide={() => setShowCreateTenant(false)} style={{ width: '400px' }}>
+        <div className="flex flex-column gap-2">
+          <InputText placeholder="Nombre del tenant" value={newTenantName}
+            onChange={e => setNewTenantName(e.target.value)} />
+          <Button label="Crear" onClick={handleCreateTenant} disabled={!newTenantName} />
+        </div>
       </Dialog>
     </div>
   );
