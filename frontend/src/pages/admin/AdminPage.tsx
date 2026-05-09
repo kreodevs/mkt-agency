@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
@@ -26,6 +27,8 @@ export default function AdminPage() {
   const [newTenantName, setNewTenantName] = useState('');
   const toast = useRef<Toast>(null);
   const setUser = useAuthStore((s) => s.setUser);
+  const navigate = useNavigate();
+  const currentProductId = sessionStorage.getItem('currentProductId');
 
   // Refrescar datos del usuario en el store (para que Settings vea los productos nuevos)
   const refreshUserStore = () => {
@@ -121,11 +124,29 @@ export default function AdminPage() {
             header="Productos"
             body={(row: any) => (
               <div className="flex flex-wrap gap-1">
-                {(row.products || []).map((p: any) => (
-                  <span key={p.id} className="border-round px-2 py-1 text-sm" style={{ background: '#e3f2fd' }}>
-                    {p.name} ({p.type})
-                  </span>
-                ))}
+                {(row.products || []).map((p: any) => {
+                  const isSelected = p.id === currentProductId;
+                  return (
+                    <span
+                      key={p.id}
+                      className="border-round px-2 py-1 text-sm cursor-pointer transition-colors"
+                      style={{
+                        background: isSelected ? 'var(--primary-color)' : '#e3f2fd',
+                        color: isSelected ? 'white' : 'inherit',
+                        fontWeight: isSelected ? 'bold' : 'normal',
+                        border: isSelected ? '2px solid var(--primary-color)' : '1px solid transparent',
+                      }}
+                      onClick={() => {
+                        sessionStorage.setItem('currentProductId', p.id);
+                        sessionStorage.setItem('currentTenantId', row.id);
+                        navigate('/settings');
+                      }}
+                    >
+                      {isSelected && <i className="pi pi-check mr-1" style={{ fontSize: '0.7rem' }} />}
+                      {p.name} ({p.type})
+                    </span>
+                  );
+                })}
                 <Button
                   icon="pi pi-plus"
                   rounded
