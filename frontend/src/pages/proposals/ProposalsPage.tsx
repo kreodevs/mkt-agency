@@ -81,10 +81,14 @@ export default function ProposalsPage() {
   ];
 
   const fetchData = () => {
-    if (!tenant) return;
+    if (!tenant) {
+      console.log('[Proposals] tenant is null');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const tenantId = tenant.id;
-    // Temporal: usar endpoint debug sin auth mientras JWT está roto
+    console.log('[Proposals] Fetching with tenantId:', tenantId);
     fetch(`/api/webhooks/proposals-debug?tenantId=${tenantId}`)
       .then(r => r.json())
       .then(data => {
@@ -235,6 +239,11 @@ export default function ProposalsPage() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-[var(--foreground)]">Propuestas</h2>
+      </div>
+
+      {/* Debug info */}
+      <div className="text-[10px] text-[var(--foreground-subtle)] mb-2 font-mono">
+        tenantId: {tenant?.id || 'null'} | productos: {tenant?.products?.length || 0}
       </div>
 
       <TabView
