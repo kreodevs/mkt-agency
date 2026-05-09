@@ -61,6 +61,7 @@ export default function MainLayout() {
               {tenant.products?.map((p) => (
                 <button
                   key={p.id}
+                  title={`ID: ${p.id}`}
                   onClick={() => setProduct(p.id)}
                   className={`inline-flex items-center px-1.5 py-0.5 text-[10px] rounded-[var(--radius-sm)] border transition-colors cursor-pointer bg-transparent ${
                     p.id === product?.id
