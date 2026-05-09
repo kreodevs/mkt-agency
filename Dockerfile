@@ -1,11 +1,20 @@
 # Stage 1: Build Backend
 FROM node:20-alpine AS builder
 WORKDIR /app
-# Need root workspace + lockfile for npm ci
+
+# Copy ALL package.json files for workspace resolution
 COPY package*.json ./
 COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# Install ALL dependencies (workspaces hoist to /app/node_modules)
 RUN npm ci
+
+# Copy source code
 COPY backend/ ./backend/
+COPY frontend/ ./frontend/
+
+# Build backend
 WORKDIR /app/backend
 RUN npx nest build
 
@@ -13,9 +22,13 @@ RUN npx nest build
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy built backend
+# Copy built dist
 COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/backend/node_modules ./node_modules
+
+# Copy node_modules from ROOT (workspaces hoist everything there)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy backend package.json for runtime resolution
 COPY --from=builder /app/backend/package*.json ./
 
 # Create uploads directory
