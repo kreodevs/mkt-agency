@@ -33,4 +33,14 @@ export class WebhooksController {
   async proposalReject(@Body() body: { proposalId: string; reason?: string }) {
     return this.webhooksService.rejectProposal(body.proposalId, body.reason);
   }
+
+  @Get('tenants-debug')
+  async tenantsDebug() {
+    return this.webhooksService.getTenantsDebug();
+  }
+
+  @Get('my-tenant')
+  async myTenant(@Query('userId') userId: string) {
+    return this.webhooksService.getMyTenant(userId);
+  }
 }

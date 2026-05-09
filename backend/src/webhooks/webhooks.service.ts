@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { Trial } from '../trials/entities/trial.entity';
 import { Lead } from '../leads/entities/lead.entity';
 import { Proposal } from '../proposals/entities/proposal.entity';
+import { Tenant } from '../tenants/entities/tenant.entity';
+import { TenantUser } from '../users/entities/tenant-user.entity';
+import { Product } from '../products/entities/product.entity';
 import { ProposalsService } from '../proposals/proposals.service';
 
 @Injectable()
@@ -17,6 +20,12 @@ export class WebhooksService {
     private readonly leadRepo: Repository<Lead>,
     @InjectRepository(Proposal)
     private readonly proposalRepo: Repository<Proposal>,
+    @InjectRepository(Tenant)
+    private readonly tenantRepo: Repository<Tenant>,
+    @InjectRepository(TenantUser)
+    private readonly tenantUserRepo: Repository<TenantUser>,
+    @InjectRepository(Product)
+    private readonly productRepo: Repository<Product>,
     private readonly proposalsService: ProposalsService,
   ) {}
 
@@ -174,5 +183,35 @@ export class WebhooksService {
       await this.trialRepo.save(trial);
     }
     return { received: true };
+  }
+
+  async getTenantsDebug(): Promise<any> {
+    const tenants = await this.tenantRepo.find({ relations: ['products', 'tenantUsers'] });
+    return tenants.map(t => ({
+      id: t.id,
+      name: t.name,
+      ownerId: t.ownerId,
+      products: t.products?.map(p => ({ id: p.id, name: p.name })) || [],
+      users: t.tenantUsers?.map(tu => ({ userId: tu.userId, role: tu.role })) || [],
+      totalProducts: t.products?.length || 0,
+      totalUsers: t.tenantUsers?.length || 0,
+    }));
+  }
+
+  async getMyTenant(userId: string): Promise<any> {
+    if (!userId) return { error: 'Provide ?userId=...' };
+    // Find all tenant-user relationships for this user
+    const memberships = await this.tenantUserRepo.find({
+      where: { userId },
+      relations: ['tenant'],
+    });
+    const userTenants = memberships.map(tu => ({
+      tenantId: tu.tenantId,
+      tenantName: tu.tenant.name,
+      role: tu.role,
+      products: tu.tenant.products || [],
+      isOwner: tu.tenant.ownerId === userId,
+    }));
+    return { userId, tenants: userTenants };
   }
 }
