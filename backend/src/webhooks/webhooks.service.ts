@@ -43,7 +43,7 @@ export class WebhooksService {
   }
 
   async handleHermesProposal(body: any): Promise<any> {
-    const { tenantId, actionType, payload } = body;
+    const { tenantId, actionType, payload, productId, rationale } = body;
 
     if (!tenantId || !actionType || !payload) {
       this.logger.warn('Hermes proposal missing required fields');
@@ -52,9 +52,10 @@ export class WebhooksService {
 
     const proposal = await this.proposalsService.create({
       tenantId,
+      productId,
       actionType,
       payload,
-      rationale: body.rationale,
+      rationale,
     });
 
     this.logger.log(`Hermes proposal created: ${proposal.id} (${actionType})`);
