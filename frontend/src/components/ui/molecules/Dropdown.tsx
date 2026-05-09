@@ -13,7 +13,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
       flex h-10 items-center justify-between
       rounded-[var(--radius)]
       border border-[var(--input-border)]
-      bg-[var(--input)] px-3 py-2
+      bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)]
       text-sm text-[var(--foreground)]
       transition-all duration-[var(--transition-base)]
       focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] focus:border-[var(--input-focus)]
@@ -29,7 +29,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
     const widthStyles = fullWidth ? 'w-full' : ''
 
     const panelStyles = `
-      mt-1 overflow-hidden
+      mt-[var(--spacing-xs)] overflow-hidden
       rounded-[var(--radius)]
       border border-[var(--border)]
       bg-[var(--popover)]
@@ -39,7 +39,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
 
     const itemStyles = `
       relative flex items-center justify-between
-      px-3 py-2 text-sm
+      px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm
       text-[var(--foreground)]
       cursor-pointer
       transition-colors duration-[var(--transition-fast)]
@@ -50,7 +50,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
     `
 
     const emptyStyles = `
-      px-3 py-6 text-center text-sm text-[var(--foreground-muted)]
+      px-[var(--spacing-md)] py-[var(--spacing-lg)] text-center text-sm text-[var(--foreground-muted)]
     `
 
     return (
@@ -66,7 +66,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
             className: 'flex-1 text-left truncate',
           },
           trigger: {
-            className: 'flex items-center justify-center ml-2',
+            className: 'flex items-center justify-center ml-[var(--spacing-sm)]',
           },
           panel: {
             className: panelStyles,
@@ -75,7 +75,7 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
             className: 'max-h-60 overflow-auto',
           },
           list: {
-            className: 'py-1',
+            className: 'py-[var(--spacing-xs)]',
           },
           item: {
             className: itemStyles,
@@ -84,13 +84,13 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownInputProps>(
             className: emptyStyles,
           },
           header: {
-            className: 'px-3 py-2 border-b border-[var(--border)]',
+            className: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] border-b border-[var(--border)]',
           },
           filterInput: {
             className: `
               w-full h-9 rounded-[var(--radius-sm)]
               border border-[var(--input-border)]
-              bg-[var(--input)] px-3
+              bg-[var(--input)] px-[var(--spacing-md)]
               text-sm text-[var(--foreground)]
               placeholder:text-[var(--foreground-muted)]
               focus:outline-none focus:ring-1 focus:ring-[var(--ring)]

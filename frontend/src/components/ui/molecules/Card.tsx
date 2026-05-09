@@ -21,9 +21,9 @@ const variantStyles: Record<string, string> = {
 
 const paddingStyles: Record<string, { header: string; content: string; footer: string }> = {
   none: { header: 'p-0', content: 'p-0', footer: 'p-0' },
-  sm: { header: 'px-3 py-2', content: 'px-3 py-2', footer: 'px-3 py-2' },
-  md: { header: 'px-4 py-3', content: 'px-4 py-3', footer: 'px-4 py-3' },
-  lg: { header: 'px-6 py-4', content: 'px-6 py-4', footer: 'px-6 py-4' },
+  sm: { header: 'px-[var(--spacing-md)] py-[var(--spacing-sm)]', content: 'px-[var(--spacing-md)] py-[var(--spacing-sm)]', footer: 'px-[var(--spacing-md)] py-[var(--spacing-sm)]' },
+  md: { header: 'px-[var(--spacing-md)] py-[var(--spacing-md)]', content: 'px-[var(--spacing-md)] py-[var(--spacing-md)]', footer: 'px-[var(--spacing-md)] py-[var(--spacing-md)]' },
+  lg: { header: 'px-[var(--spacing-lg)] py-[var(--spacing-md)]', content: 'px-[var(--spacing-lg)] py-[var(--spacing-md)]', footer: 'px-[var(--spacing-lg)] py-[var(--spacing-md)]' },
 }
 
 export const Card = forwardRef<HTMLDivElement, CardInputProps>(
@@ -56,7 +56,7 @@ export const Card = forwardRef<HTMLDivElement, CardInputProps>(
       if (!header && !title && !headerActions) return null
 
       return (
-        <div className={`flex items-start justify-between gap-4 border-b border-[var(--border)] ${padStyles.header}`}>
+        <div className={`flex items-start justify-between gap-[var(--spacing-md)] border-b border-[var(--border)] ${padStyles.header}`}>
           <div className="flex-1 min-w-0">
             {header || (
               <>
@@ -66,7 +66,7 @@ export const Card = forwardRef<HTMLDivElement, CardInputProps>(
                   </h3>
                 )}
                 {subTitle && (
-                  <p className="text-sm text-[var(--foreground-muted)] mt-0.5">
+                  <p className="text-sm text-[var(--foreground-muted)] mt-[var(--spacing-xxs)]">
                     {subTitle as any}
                   </p>
                 )}
@@ -74,7 +74,7 @@ export const Card = forwardRef<HTMLDivElement, CardInputProps>(
             )}
           </div>
           {headerActions && (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-[var(--spacing-sm)] shrink-0">
               {headerActions}
             </div>
           )}
@@ -111,19 +111,19 @@ Card.displayName = 'Card'
 
 // Simple Card subcomponents for flexibility
 export const CardHeader = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`px-4 py-3 border-b border-[var(--border)] ${className}`}>
+  <div className={`px-[var(--spacing-md)] py-[var(--spacing-md)] border-b border-[var(--border)] ${className}`}>
     {children}
   </div>
 )
 
 export const CardContent = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`px-4 py-3 ${className}`}>
+  <div className={`px-[var(--spacing-md)] py-[var(--spacing-md)] ${className}`}>
     {children}
   </div>
 )
 
 export const CardFooter = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`px-4 py-3 border-t border-[var(--border)] ${className}`}>
+  <div className={`px-[var(--spacing-md)] py-[var(--spacing-md)] border-t border-[var(--border)] ${className}`}>
     {children}
   </div>
 )

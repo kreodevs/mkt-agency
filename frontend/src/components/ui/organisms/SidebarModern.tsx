@@ -78,8 +78,8 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
             )}
         >
             {/* Brand / Logo */}
-            <div className="h-20 flex items-center px-6 mb-4 overflow-hidden shrink-0">
-                <div className="flex items-center gap-3">
+            <div className="h-20 flex items-center px-[var(--spacing-lg)] mb-[var(--spacing-md)] overflow-hidden shrink-0">
+                <div className="flex items-center gap-[var(--spacing-md)]">
                     <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-[var(--primary-foreground)] font-black text-xl shrink-0">
                         K
                     </div>
@@ -92,16 +92,16 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)] custom-scrollbar">
                 {groups.map((group, idx) => (
-                    <div key={idx} className="mb-8">
+                    <div key={idx} className="mb-[var(--spacing-xl)]">
                         {!collapsed && group.title && (
-                            <h3 className="px-4 mb-4 text-[10px] font-black text-[var(--foreground-subtle)] uppercase tracking-[0.2em] animate-fade-in">
+                            <h3 className="px-[var(--spacing-md)] mb-[var(--spacing-md)] text-[10px] font-black text-[var(--foreground-subtle)] uppercase tracking-[0.2em] animate-fade-in">
                                 {group.title}
                             </h3>
                         )}
 
-                        <div className="space-y-1">
+                        <div className="space-y-[var(--spacing-xs)]">
                             {group.items.map((item, i) => {
                                 const isActive = activeHref === item.href;
                                 const Icon = item.icon;
@@ -112,7 +112,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                                     <div
                                         onClick={() => hasChildren ? toggleSubmenu(item.label) : null}
                                         className={cn(
-                                            "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] cursor-pointer transition-all duration-200 group relative",
+                                            "flex items-center gap-[var(--spacing-md)] px-[var(--spacing-md)] py-2.5 rounded-[var(--radius)] cursor-pointer transition-all duration-200 group relative",
                                             isActive
                                                 ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md"
                                                 : "text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]"
@@ -125,7 +125,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                                                 <span className="flex-1 font-semibold text-sm whitespace-nowrap animate-fade-in">{item.label}</span>
                                                 {item.badge && (
                                                     <span className={cn(
-                                                        "px-1.5 py-0.5 text-[10px] font-black rounded-md",
+                                                        "px-1.5 py-[var(--spacing-xxs)] text-[10px] font-black rounded-md",
                                                         isActive ? "bg-black/20 text-white" : "bg-[var(--primary)]/10 text-[var(--primary)]"
                                                     )}>
                                                         {item.badge}
@@ -154,13 +154,13 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                                         )}
 
                                         {!collapsed && hasChildren && isMenuOpen && (
-                                            <div className="mt-1 ml-9 space-y-1 animate-slide-down">
+                                            <div className="mt-[var(--spacing-xs)] ml-9 space-y-[var(--spacing-xs)] animate-slide-down">
                                                 {item.children?.map((child, j) => (
                                                     <a
                                                         key={j}
                                                         href={child.href}
                                                         className={cn(
-                                                            "block py-2 px-3 text-sm text-[var(--foreground-muted)] hover:text-[var(--primary)] transition-colors relative",
+                                                            "block py-[var(--spacing-sm)] px-[var(--spacing-md)] text-sm text-[var(--foreground-muted)] hover:text-[var(--primary)] transition-colors relative",
                                                             "before:content-[''] before:absolute before:left-[-1.5rem] before:top-1/2 before:w-1.5 before:h-1.5 before:border-l before:border-b before:border-[var(--border)]"
                                                         )}
                                                     >
@@ -178,9 +178,9 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
             </div>
 
             {/* User / Logout Section */}
-            <div className="p-4 mt-auto border-t border-[var(--border)] shrink-0">
+            <div className="p-[var(--spacing-md)] mt-auto border-t border-[var(--border)] shrink-0">
                 {user && !collapsed ? (
-                    <div className="flex items-center gap-3 p-2 rounded-[var(--radius-lg)] hover:bg-[var(--secondary)] transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-[var(--spacing-md)] p-[var(--spacing-sm)] rounded-[var(--radius-lg)] hover:bg-[var(--secondary)] transition-colors cursor-pointer group">
                         <Avatar src={user.avatar} name={user.name} size="sm" />
                         <div className="flex-1 min-w-0 overflow-hidden">
                             <p className="text-sm font-bold text-[var(--foreground)] truncate">{user.name}</p>
@@ -189,7 +189,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                         <LogOut className="w-4 h-4 text-[var(--foreground-subtle)] group-hover:text-[var(--destructive)] transition-colors" />
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-[var(--spacing-md)]">
                         {user && (
                             <Tooltip content={`${user.name} - Perfil`}>
                                 <div className="cursor-pointer group">
@@ -197,7 +197,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                                 </div>
                             </Tooltip>
                         )}
-                        <button className="p-2 text-[var(--foreground-muted)] hover:text-[var(--destructive)] transition-colors">
+                        <button className="p-[var(--spacing-sm)] text-[var(--foreground-muted)] hover:text-[var(--destructive)] transition-colors">
                             <LogOut className="w-5 h-5" />
                         </button>
                     </div>

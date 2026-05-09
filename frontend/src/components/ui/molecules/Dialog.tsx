@@ -36,7 +36,7 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
     const ptStyles = {
       root: {
         className: `
-          fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4
+          fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-[var(--spacing-md)]
         `,
       },
       mask: {
@@ -58,8 +58,8 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
       },
       header: {
         className: `
-          flex items-start justify-between gap-4
-          px-6 py-4
+          flex items-start justify-between gap-[var(--spacing-md)]
+          px-[var(--spacing-lg)] py-[var(--spacing-md)]
           border-b border-[var(--border)]
         `,
       },
@@ -67,7 +67,7 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
         className: 'text-lg font-semibold text-[var(--foreground)]',
       },
       headerIcons: {
-        className: 'flex items-center gap-2',
+        className: 'flex items-center gap-[var(--spacing-sm)]',
       },
       closeButton: {
         className: `
@@ -83,8 +83,8 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
       },
       footer: {
         className: `
-          flex items-center justify-end gap-3
-          px-6 py-4
+          flex items-center justify-end gap-[var(--spacing-md)]
+          px-[var(--spacing-lg)] py-[var(--spacing-md)]
           border-t border-[var(--border)]
           bg-[var(--secondary)]/50
         `,
@@ -96,7 +96,7 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
         <div className="flex-1 min-w-0">
           {title && <h2 className={ptStyles.headerTitle.className}>{title}</h2>}
           {description && (
-            <p className="mt-1 text-sm text-[var(--foreground-muted)]">{description}</p>
+            <p className="mt-[var(--spacing-xs)] text-sm text-[var(--foreground-muted)]">{description}</p>
           )}
         </div>
         {showClose && (
@@ -137,7 +137,7 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
           footer: { className: 'hidden' },
         }}
       >
-        <div className="px-6 py-4">
+        <div className="px-[var(--spacing-lg)] py-[var(--spacing-md)]">
           {children}
         </div>
       </PrimeDialog>
@@ -192,13 +192,13 @@ export const AlertDialog = ({
         <>
           <button
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium rounded-[var(--radius)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
+            className="px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm font-medium rounded-[var(--radius)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
           >
             {cancelLabel}
           </button>
           <button
             onClick={handleConfirm}
-            className={`px-4 py-2 text-sm font-medium rounded-[var(--radius)] ${confirmButtonStyles} transition-colors`}
+            className={`px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm font-medium rounded-[var(--radius)] ${confirmButtonStyles} transition-colors`}
           >
             {confirmLabel}
           </button>

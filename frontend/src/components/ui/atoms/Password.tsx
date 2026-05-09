@@ -13,7 +13,7 @@ export const Password = forwardRef<HTMLInputElement, PasswordInputProps>(
     const inputStyles = `
       flex h-10 w-full rounded-[var(--radius)]
       border border-[var(--input-border)]
-      bg-[var(--input)] px-3 py-2 pr-10
+      bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)] pr-[var(--spacing-2xl)]
       text-sm text-[var(--foreground)]
       placeholder:text-[var(--foreground-muted)]
       transition-all duration-[var(--transition-base)]
@@ -28,17 +28,17 @@ export const Password = forwardRef<HTMLInputElement, PasswordInputProps>(
     const widthStyles = fullWidth ? 'w-full' : ''
 
     const panelStyles = `
-      mt-2 p-4 rounded-[var(--radius)]
+      mt-[var(--spacing-sm)] p-[var(--spacing-md)] rounded-[var(--radius)]
       bg-[var(--popover)] border border-[var(--border)]
       shadow-lg
     `
 
     const meterStyles = `
-      h-2 rounded-full bg-[var(--muted)] overflow-hidden mt-2
+      h-2 rounded-full bg-[var(--muted)] overflow-hidden mt-[var(--spacing-sm)]
     `
 
     const meterLabelStyles = `
-      text-xs text-[var(--foreground-muted)] mt-1
+      text-xs text-[var(--foreground-muted)] mt-[var(--spacing-xs)]
     `
 
     return (
@@ -73,7 +73,7 @@ export const Password = forwardRef<HTMLInputElement, PasswordInputProps>(
               className: meterLabelStyles,
             },
             info: {
-              className: 'text-xs text-[var(--foreground-muted)] mt-2',
+              className: 'text-xs text-[var(--foreground-muted)] mt-[var(--spacing-sm)]',
             },
           }}
           promptLabel="Ingresa una contraseña"

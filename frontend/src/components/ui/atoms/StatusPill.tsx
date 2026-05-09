@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const statusPillVariants = cva(
-    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-all duration-[var(--transition-base)]",
+    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-[var(--spacing-xxs)] text-xs font-semibold border transition-all duration-[var(--transition-base)]",
     {
         variants: {
             status: {
@@ -15,9 +15,9 @@ const statusPillVariants = cva(
                 luxury: "bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/20 shadow-gold",
             },
             size: {
-                sm: "px-2 py-0.25 text-[10px]",
-                md: "px-2.5 py-0.5 text-xs",
-                lg: "px-3 py-1 text-sm",
+                sm: "px-[var(--spacing-sm)] py-0.25 text-[10px]",
+                md: "px-2.5 py-[var(--spacing-xxs)] text-xs",
+                lg: "px-[var(--spacing-md)] py-[var(--spacing-xs)] text-sm",
             }
         },
         defaultVariants: {

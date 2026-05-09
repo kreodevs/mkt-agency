@@ -82,29 +82,29 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Header */}
-                <header className="h-20 bg-[var(--card)] border-b border-[var(--border)] flex items-center justify-between px-6 shrink-0 z-20">
-                    <div className="flex items-center gap-4">
+                <header className="h-20 bg-[var(--card)] border-b border-[var(--border)] flex items-center justify-between px-[var(--spacing-lg)] shrink-0 z-20">
+                    <div className="flex items-center gap-[var(--spacing-md)]">
                         <button
                             onClick={() => setMobileMenuOpen(true)}
-                            className="lg:hidden p-2 rounded-[var(--radius)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)]"
+                            className="lg:hidden p-[var(--spacing-sm)] rounded-[var(--radius)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)]"
                         >
                             <MenuIcon className="w-5 h-5" />
                         </button>
 
                         {/* Breadcrumb / Search Trigger Placeholder */}
-                        <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-[var(--radius-lg)] w-64 lg:w-96 text-[var(--foreground-subtle)] cursor-text hover:border-[var(--primary)]/50 transition-colors group">
+                        <div className="hidden md:flex items-center gap-[var(--spacing-sm)] px-[var(--spacing-md)] py-[var(--spacing-sm)] bg-[var(--background)] border border-[var(--border)] rounded-[var(--radius-lg)] w-64 lg:w-96 text-[var(--foreground-subtle)] cursor-text hover:border-[var(--primary)]/50 transition-colors group">
                             <Search className="w-4 h-4 group-hover:text-[var(--primary)] transition-colors" />
                             <span className="text-sm font-medium">Buscar en la plataforma...</span>
-                            <kbd className="ml-auto hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-[var(--secondary)] px-1.5 font-mono text-[10px] font-medium opacity-100">
+                            <kbd className="ml-auto hidden sm:inline-flex h-5 select-none items-center gap-[var(--spacing-xs)] rounded border bg-[var(--secondary)] px-1.5 font-mono text-[10px] font-medium opacity-100">
                                 <span className="text-xs">⌘</span>K
                             </kbd>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-[var(--spacing-sm)] sm:gap-4">
                         {headerActions}
 
-                        <div className="flex items-center gap-1 sm:gap-2 mr-2 border-r border-[var(--border)] pr-2 sm:pr-4">
+                        <div className="flex items-center gap-[var(--spacing-xs)] sm:gap-2 mr-[var(--spacing-sm)] border-r border-[var(--border)] pr-[var(--spacing-sm)] sm:pr-4">
                             <Button variant="ghost" size="icon" className="text-[var(--foreground-muted)] relative">
                                 <Bell className="w-5 h-5" />
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-[var(--primary)] rounded-full border-2 border-[var(--card)]" />
@@ -115,7 +115,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(({
                         </div>
 
                         {/* Basic Mobile Header actions could go here */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-[var(--spacing-sm)]">
                             <Button variant="ghost" size="icon" className="text-[var(--foreground-muted)]">
                                 <Moon className="w-5 h-5 hidden dark:block" />
                                 <Sun className="w-5 h-5 block dark:hidden" />
@@ -125,7 +125,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(({
                 </header>
 
                 {/* Content Viewport */}
-                <main className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar scroll-smooth">
+                <main className="flex-1 overflow-y-auto p-[var(--spacing-lg)] lg:p-10 custom-scrollbar scroll-smooth">
                     <div className="max-w-[1600px] mx-auto animate-fade-in">
                         {children}
                     </div>

@@ -26,7 +26,7 @@ const variantStyles = {
     tab: 'border-b-2 border-[var(--border)] last:border-b-0',
   },
   separated: {
-    root: 'space-y-2',
+    root: 'space-y-[var(--spacing-sm)]',
     tab: 'rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] overflow-hidden',
   },
 }
@@ -45,7 +45,7 @@ export const Accordion = forwardRef<HTMLDivElement, AccordionInputProps>(
         },
         header: {
           className: `
-            flex items-center w-full px-4 py-3
+            flex items-center w-full px-[var(--spacing-md)] py-[var(--spacing-md)]
             text-left font-medium text-[var(--foreground)]
             bg-[var(--card)] hover:bg-[var(--secondary)]
             transition-colors cursor-pointer
@@ -54,7 +54,7 @@ export const Accordion = forwardRef<HTMLDivElement, AccordionInputProps>(
           `,
         },
         headerAction: {
-          className: 'flex items-center justify-between w-full gap-3',
+          className: 'flex items-center justify-between w-full gap-[var(--spacing-md)]',
         },
         headerIcon: {
           className: `
@@ -69,7 +69,7 @@ export const Accordion = forwardRef<HTMLDivElement, AccordionInputProps>(
         },
         content: {
           className: `
-            px-4 py-3
+            px-[var(--spacing-md)] py-[var(--spacing-md)]
             text-sm text-[var(--foreground-muted)]
             bg-[var(--background)]
             border-t border-[var(--border)]
@@ -86,7 +86,7 @@ export const Accordion = forwardRef<HTMLDivElement, AccordionInputProps>(
           disabled={item.disabled}
         >
           <div className={ptStyles.tab.headerAction.className}>
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-[var(--spacing-md)] min-w-0">
               {item.icon && (
                 <span className="shrink-0 text-[var(--accent)]">
                   {item.icon}

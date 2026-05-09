@@ -64,23 +64,23 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
       closable,
       content: (
         <div className={`
-          flex items-start gap-3 w-full p-4
+          flex items-start gap-[var(--spacing-md)] w-full p-[var(--spacing-md)]
           rounded-[var(--radius)] border
           ${config.bgColor}
           bg-[var(--card)]
           shadow-lg
         `}>
-          <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${config.iconColor}`} />
+          <Icon className={`w-5 h-5 shrink-0 mt-[var(--spacing-xxs)] ${config.iconColor}`} />
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-medium ${config.title}`}>{summary}</p>
             {detail && (
-              <p className="mt-1 text-sm text-[var(--foreground-muted)]">{detail}</p>
+              <p className="mt-[var(--spacing-xs)] text-sm text-[var(--foreground-muted)]">{detail}</p>
             )}
           </div>
           {closable && (
             <button
               onClick={() => toastRef.current?.clear()}
-              className="p-1 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
+              className="p-[var(--spacing-xs)] rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -121,7 +121,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
             className: 'z-[var(--z-tooltip)] fixed top-4 right-4',
           },
           message: {
-            className: 'mb-2',
+            className: 'mb-[var(--spacing-sm)]',
           },
           content: {
             className: '',
@@ -158,22 +158,22 @@ export const Toast = ({ visible, onHide, severity = 'info', summary, detail }: T
   return (
     <div className="fixed top-4 right-4 z-[var(--z-tooltip)] animate-slide-in">
       <div className={`
-        flex items-start gap-3 w-80 p-4
+        flex items-start gap-[var(--spacing-md)] w-80 p-[var(--spacing-md)]
         rounded-[var(--radius)] border
         ${config.bgColor}
         bg-[var(--card)]
         shadow-lg
       `}>
-        <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${config.iconColor}`} />
+        <Icon className={`w-5 h-5 shrink-0 mt-[var(--spacing-xxs)] ${config.iconColor}`} />
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-medium ${config.title}`}>{summary}</p>
           {detail && (
-            <p className="mt-1 text-sm text-[var(--foreground-muted)]">{detail}</p>
+            <p className="mt-[var(--spacing-xs)] text-sm text-[var(--foreground-muted)]">{detail}</p>
           )}
         </div>
         <button
           onClick={onHide}
-          className="p-1 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
+          className="p-[var(--spacing-xs)] rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

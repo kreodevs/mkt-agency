@@ -1,5 +1,4 @@
-import { InputText as PrimeInputText } from 'primereact/inputtext'
-import type { InputTextProps as PrimeInputTextProps } from 'primereact/inputtext'
+import { InputText as PrimeInputText, type InputTextProps as PrimeInputTextProps } from 'primereact/inputtext'
 import { forwardRef } from 'react'
 
 export interface InputTextProps extends Omit<PrimeInputTextProps, 'pt'> {
@@ -12,7 +11,7 @@ export const InputText = forwardRef<HTMLInputElement, InputTextProps>(
     const baseStyles = `
       flex h-10 w-full rounded-[var(--radius)]
       border border-[var(--input-border)]
-      bg-[var(--input)] px-3 py-2
+      bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)]
       text-sm text-[var(--foreground)]
       placeholder:text-[var(--foreground-muted)]
       transition-all duration-[var(--transition-base)]

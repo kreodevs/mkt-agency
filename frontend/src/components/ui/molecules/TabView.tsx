@@ -18,9 +18,9 @@ export interface TabViewInputProps extends Omit<PrimeTabViewProps, 'pt'> {
 }
 
 const sizeStyles = {
-  sm: { tab: 'px-3 py-1.5 text-xs', icon: 'w-3 h-3', badge: 'text-[10px] px-1.5 py-0.5' },
-  md: { tab: 'px-4 py-2 text-sm', icon: 'w-4 h-4', badge: 'text-xs px-2 py-0.5' },
-  lg: { tab: 'px-5 py-2.5 text-base', icon: 'w-5 h-5', badge: 'text-xs px-2 py-1' },
+  sm: { tab: 'px-[var(--spacing-md)] py-1.5 text-xs', icon: 'w-3 h-3', badge: 'text-[10px] px-1.5 py-[var(--spacing-xxs)]' },
+  md: { tab: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm', icon: 'w-4 h-4', badge: 'text-xs px-[var(--spacing-sm)] py-[var(--spacing-xxs)]' },
+  lg: { tab: 'px-[var(--spacing-lg)] py-2.5 text-base', icon: 'w-5 h-5', badge: 'text-xs px-[var(--spacing-sm)] py-[var(--spacing-xs)]' },
 }
 
 const variantStyles = {
@@ -40,7 +40,7 @@ const variantStyles = {
       [&[data-p-highlight=true]]:after:bg-[var(--accent)]
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-4 bg-[var(--card)]',
+    content: 'p-[var(--spacing-md)] bg-[var(--card)]',
   },
   bordered: {
     nav: 'flex border border-[var(--border)] rounded-t-[var(--radius)] bg-[var(--secondary)] overflow-hidden',
@@ -53,10 +53,10 @@ const variantStyles = {
       [&[data-p-highlight=true]]:bg-[var(--card)]
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-4 border border-t-0 border-[var(--border)] rounded-b-[var(--radius)] bg-[var(--card)]',
+    content: 'p-[var(--spacing-md)] border border-t-0 border-[var(--border)] rounded-b-[var(--radius)] bg-[var(--card)]',
   },
   pills: {
-    nav: 'flex gap-2 p-1 rounded-[var(--radius)] bg-[var(--secondary)]',
+    nav: 'flex gap-[var(--spacing-sm)] p-[var(--spacing-xs)] rounded-[var(--radius)] bg-[var(--secondary)]',
     tab: `
       font-medium rounded-[var(--radius-sm)]
       text-[var(--foreground-muted)]
@@ -67,12 +67,12 @@ const variantStyles = {
       [&[data-p-highlight=true]]:shadow-sm
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-4 mt-2',
+    content: 'p-[var(--spacing-md)] mt-[var(--spacing-sm)]',
   },
   underline: {
-    nav: 'flex gap-4',
+    nav: 'flex gap-[var(--spacing-md)]',
     tab: `
-      relative font-medium pb-2
+      relative font-medium pb-[var(--spacing-sm)]
       text-[var(--foreground-muted)]
       hover:text-[var(--foreground)]
       transition-colors
@@ -86,7 +86,7 @@ const variantStyles = {
       [&[data-p-highlight=true]]:after:rounded-full
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-4 border-t border-[var(--border)]',
+    content: 'p-[var(--spacing-md)] border-t border-[var(--border)]',
   },
 }
 
@@ -112,7 +112,7 @@ export const TabView = forwardRef<HTMLDivElement, TabViewInputProps>(
           className: `${styles.tab} ${sizes.tab} ${fullWidthStyles}`.trim(),
         },
         headerAction: {
-          className: 'flex items-center gap-2 outline-none',
+          className: 'flex items-center gap-[var(--spacing-sm)] outline-none',
         },
         headerTitle: {
           className: 'whitespace-nowrap',
@@ -124,7 +124,7 @@ export const TabView = forwardRef<HTMLDivElement, TabViewInputProps>(
     }
 
     const renderTabHeader = (item: TabItemProps) => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-[var(--spacing-sm)]">
         {item.icon && (
           <span className={sizes.icon}>
             {item.icon}
@@ -162,7 +162,7 @@ export const TabView = forwardRef<HTMLDivElement, TabViewInputProps>(
               disabled={tab.disabled}
               pt={{
                 header: { className: `${styles.tab} ${sizes.tab} ${fullWidthStyles}`.trim() },
-                headerAction: { className: 'flex items-center gap-2 outline-none' },
+                headerAction: { className: 'flex items-center gap-[var(--spacing-sm)] outline-none' },
                 content: { className: '' },
               }}
             >

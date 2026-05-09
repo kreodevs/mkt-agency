@@ -31,7 +31,7 @@ const ptStyles = {
     className: 'rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] overflow-hidden',
   },
   header: {
-    className: 'px-4 py-3 bg-[var(--secondary)] border-b border-[var(--border)]',
+    className: 'px-[var(--spacing-md)] py-[var(--spacing-md)] bg-[var(--secondary)] border-b border-[var(--border)]',
   },
   wrapper: {
     className: 'overflow-auto',
@@ -47,7 +47,7 @@ const ptStyles = {
   },
   headerCell: {
     className: `
-      px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider
+      px-[var(--spacing-md)] py-2.5 text-left text-xs font-semibold uppercase tracking-wider
       text-[var(--foreground-muted)] bg-[var(--secondary)]
       border-b border-[var(--border)]
       transition-colors
@@ -57,10 +57,10 @@ const ptStyles = {
     `,
   },
   sortIcon: {
-    className: 'ml-1 inline-flex text-[var(--foreground-muted)]',
+    className: 'ml-[var(--spacing-xs)] inline-flex text-[var(--foreground-muted)]',
   },
   sortBadge: {
-    className: 'ml-1 text-[10px] text-[var(--accent)]',
+    className: 'ml-[var(--spacing-xs)] text-[10px] text-[var(--accent)]',
   },
   tbody: {
     className: 'divide-y divide-[var(--border)]',
@@ -74,16 +74,16 @@ const ptStyles = {
     `,
   },
   bodyCell: {
-    className: 'px-3 py-2 text-sm text-[var(--foreground)] whitespace-nowrap',
+    className: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm text-[var(--foreground)] whitespace-nowrap',
   },
   footerRow: {
     className: 'border-t border-[var(--border)] bg-[var(--secondary)]',
   },
   footerCell: {
-    className: 'px-3 py-2 text-sm font-medium text-[var(--foreground)]',
+    className: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm font-medium text-[var(--foreground)]',
   },
   footer: {
-    className: 'px-4 py-3 bg-[var(--secondary)] border-t border-[var(--border)]',
+    className: 'px-[var(--spacing-md)] py-[var(--spacing-md)] bg-[var(--secondary)] border-t border-[var(--border)]',
   },
   loadingOverlay: {
     className: 'absolute inset-0 bg-[var(--background)]/80 flex items-center justify-center z-10',
@@ -92,15 +92,15 @@ const ptStyles = {
     className: 'w-8 h-8 text-[var(--accent)] animate-spin',
   },
   emptyMessage: {
-    className: 'text-center py-8 text-[var(--foreground-muted)]',
+    className: 'text-center py-[var(--spacing-xl)] text-[var(--foreground-muted)]',
   },
   emptyMessageCell: {
-    className: 'p-8 text-center text-[var(--foreground-muted)]',
+    className: 'p-[var(--spacing-xl)] text-center text-[var(--foreground-muted)]',
   },
   // Paginator
   paginator: {
     root: {
-      className: 'flex items-center justify-between px-4 py-3 bg-[var(--secondary)] border-t border-[var(--border)]',
+      className: 'flex items-center justify-between px-[var(--spacing-md)] py-[var(--spacing-md)] bg-[var(--secondary)] border-t border-[var(--border)]',
     },
     first: {
       className: `
@@ -139,11 +139,11 @@ const ptStyles = {
       `,
     },
     pages: {
-      className: 'flex items-center gap-1',
+      className: 'flex items-center gap-[var(--spacing-xs)]',
     },
     page: {
       className: `
-        min-w-[32px] h-8 px-2
+        min-w-[32px] h-8 px-[var(--spacing-sm)]
         text-sm font-medium
         rounded-[var(--radius-sm)]
         text-[var(--foreground-muted)]
@@ -158,7 +158,7 @@ const ptStyles = {
     rowPerPageDropdown: {
       root: {
         className: `
-          h-8 px-2 rounded-[var(--radius-sm)]
+          h-8 px-[var(--spacing-sm)] rounded-[var(--radius-sm)]
           border border-[var(--border)]
           bg-[var(--input)] text-sm text-[var(--foreground)]
           focus:outline-none focus:ring-1 focus:ring-[var(--ring)]
@@ -169,7 +169,7 @@ const ptStyles = {
   // Column filter
   filterInput: {
     className: `
-      w-full h-8 px-2 rounded-[var(--radius-sm)]
+      w-full h-8 px-[var(--spacing-sm)] rounded-[var(--radius-sm)]
       border border-[var(--border)]
       bg-[var(--input)] text-sm text-[var(--foreground)]
       placeholder:text-[var(--foreground-muted)]
@@ -178,7 +178,7 @@ const ptStyles = {
   },
   filterMenuButton: {
     className: `
-      p-1 rounded-[var(--radius-sm)]
+      p-[var(--spacing-xs)] rounded-[var(--radius-sm)]
       text-[var(--foreground-muted)]
       hover:bg-[var(--muted)] hover:text-[var(--foreground)]
       transition-colors
@@ -186,21 +186,21 @@ const ptStyles = {
   },
   filterOverlay: {
     className: `
-      mt-1 p-3 rounded-[var(--radius)]
+      mt-[var(--spacing-xs)] p-[var(--spacing-md)] rounded-[var(--radius)]
       border border-[var(--border)]
       bg-[var(--popover)] shadow-lg
       z-[var(--z-dropdown)]
     `,
   },
   filterConstraint: {
-    className: 'mb-2',
+    className: 'mb-[var(--spacing-sm)]',
   },
   filterButtonbar: {
-    className: 'flex justify-end gap-2 mt-3 pt-3 border-t border-[var(--border)]',
+    className: 'flex justify-end gap-[var(--spacing-sm)] mt-[var(--spacing-md)] pt-[var(--spacing-md)] border-t border-[var(--border)]',
   },
   filterClearButton: {
     className: `
-      px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)]
+      px-[var(--spacing-md)] py-1.5 text-xs font-medium rounded-[var(--radius-sm)]
       border border-[var(--border)]
       text-[var(--foreground)] bg-transparent
       hover:bg-[var(--secondary)]
@@ -209,7 +209,7 @@ const ptStyles = {
   },
   filterApplyButton: {
     className: `
-      px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)]
+      px-[var(--spacing-md)] py-1.5 text-xs font-medium rounded-[var(--radius-sm)]
       bg-[var(--primary)] text-[var(--primary-foreground)]
       hover:bg-[var(--primary-hover)]
       transition-colors
@@ -221,7 +221,7 @@ const densePtStyles = {
   ...ptStyles,
   headerCell: {
     className: `
-      px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider
+      px-[var(--spacing-sm)] py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider
       text-[var(--foreground-muted)] bg-[var(--secondary)]
       border-b border-[var(--border)]
       transition-colors
@@ -231,7 +231,7 @@ const densePtStyles = {
     `,
   },
   bodyCell: {
-    className: 'px-2 py-1.5 text-xs text-[var(--foreground)] whitespace-nowrap',
+    className: 'px-[var(--spacing-sm)] py-1.5 text-xs text-[var(--foreground)] whitespace-nowrap',
   },
 }
 
@@ -260,14 +260,14 @@ export const DataTable = forwardRef<HTMLDivElement, DataTableInputProps>(
       if (!globalFilterEnabled) return null
 
       return (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-[var(--spacing-md)]">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-muted)]" />
             <InputText
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={globalFilterPlaceholder}
-              className="w-full h-9 pl-9 pr-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              className="w-full h-9 pl-9 pr-[var(--spacing-md)] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
             />
           </div>
           <div className="text-xs text-[var(--foreground-muted)]">

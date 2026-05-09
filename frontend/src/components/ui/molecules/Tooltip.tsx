@@ -33,7 +33,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipInputProps>(
       root: {
         className: `
           z-[var(--z-tooltip)]
-          px-3 py-1.5
+          px-[var(--spacing-md)] py-1.5
           text-xs font-medium
           rounded-[var(--radius)]
           bg-[var(--foreground)] text-[var(--background)]
