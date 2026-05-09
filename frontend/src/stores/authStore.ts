@@ -18,6 +18,7 @@ interface AuthState {
     isSuperAdmin: boolean;
     tenants: TenantInfo[];
   } | null;
+  currentProductId: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, tenantName: string) => Promise<void>;
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       user: null,
+      currentProductId: null,
       loading: false,
       login: async (email: string, password: string) => {
         set({ loading: true });
@@ -55,10 +57,16 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => set({ token: null, user: null }),
       setUser: (user: any) => set({ user }),
-      setTenant: (tenantId: string) => sessionStorage.setItem('currentTenantId', tenantId),
-      setProduct: (productId: string) => sessionStorage.setItem('currentProductId', productId),
+      setTenant: (tenantId: string) => {
+        sessionStorage.setItem('currentTenantId', tenantId);
+        set({ currentProductId: null });
+      },
+      setProduct: (productId: string) => {
+        sessionStorage.setItem('currentProductId', productId);
+        set({ currentProductId: productId });
+      },
     }),
-    { name: 'auth-storage', partialize: (state: any) => ({ token: state.token, user: state.user }) },
+    { name: 'auth-storage', partialize: (state: any) => ({ token: state.token, user: state.user, currentProductId: state.currentProductId }) },
   ),
 );
 
@@ -77,6 +85,7 @@ export const getCurrentTenant = (): TenantInfo | null => {
 
 export const getCurrentProduct = () => {
   const tenant = getCurrentTenant();
-  const productId = sessionStorage.getItem('currentProductId');
+  const state = useAuthStore.getState();
+  const productId = state.currentProductId || sessionStorage.getItem('currentProductId');
   return tenant?.products?.find((p) => p.id === productId) || tenant?.products?.[0] || null;
 };

@@ -9,6 +9,7 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, setProduct } = useAuthStore();
+  const currentProductId = useAuthStore((s) => s.currentProductId);
   const tenant = getCurrentTenant();
   const product = getCurrentProduct();
 
@@ -45,6 +46,7 @@ export default function MainLayout() {
 
   return (
     <AppLayout
+      key={currentProductId}
       navigationGroups={navigationGroups}
       activeHref={activePath}
       user={user ? { name: user.name, email: user.email } : undefined}
