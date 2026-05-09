@@ -2,13 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { PrimeReactProvider } from 'primereact/api';
 import App from './App';
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primeicons/primeicons.css';
-import 'primeflex/primeflex.css';
+import './theme/vars.css';
+import './index.css';
+
+const primeReactConfig = {
+  unstyled: true,
+  pt: {},
+};
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <PrimeReactProvider>
+    <PrimeReactProvider value={primeReactConfig}>
       <App />
     </PrimeReactProvider>
   </React.StrictMode>,
