@@ -18,6 +18,7 @@ import { CompetitorsModule } from './competitors/competitors.module';
 import { SeoRankingsModule } from './seo-rankings/seo-rankings.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { SettingsModule } from './settings/settings.module';
+import { ProposalsModule } from './proposals/proposals.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { SettingsModule } from './settings/settings.module';
     SeoRankingsModule,
     OnboardingModule,
     SettingsModule,
+    ProposalsModule,
   ],
 })
 export class AppModule {}

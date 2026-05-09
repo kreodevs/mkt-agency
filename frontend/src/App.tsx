@@ -13,6 +13,7 @@ import SeoPagesPage from './pages/seo/SeoPagesPage';
 import AdminPage from './pages/admin/AdminPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import ProposalsPage from './pages/proposals/ProposalsPage';
 import SetupPage from './pages/auth/SetupPage';
 import HelpPage from './pages/help/HelpPage';
 
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="competitors" element={<CompetitorsPage />} />
           <Route path="seo" element={<SeoPagesPage />} />
           <Route path="admin" element={<AdminPage />} />
+          <Route path="proposals" element={<ProposalsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

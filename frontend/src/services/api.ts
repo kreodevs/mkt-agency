@@ -127,6 +127,17 @@ export const seoRankings = {
   create: (tenantId: string, data: any) => api.post(`/tenants/${tenantId}/seo-rankings`, data),
 };
 
+// === Proposals ===
+export const proposals = {
+  list: (tenantId: string, params?: { status?: string; productId?: string }) =>
+    api.get(`/tenants/${tenantId}/proposals`, { params }),
+  get: (tenantId: string, id: string) => api.get(`/tenants/${tenantId}/proposals/${id}`),
+  approve: (tenantId: string, id: string, data?: { feedback?: string }) =>
+    api.post(`/tenants/${tenantId}/proposals/${id}/approve`, data || {}),
+  reject: (tenantId: string, id: string, data?: { reason?: string }) =>
+    api.post(`/tenants/${tenantId}/proposals/${id}/reject`, data || {}),
+};
+
 // === Settings / Connections ===
 export const settings = {
   get: (tenantId: string, productId: string) =>

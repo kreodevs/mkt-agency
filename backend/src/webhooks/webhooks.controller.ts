@@ -10,4 +10,10 @@ export class WebhooksController {
   async oralTrack(@Body() body: any) {
     return this.webhooksService.handleOralTrackEvent(body);
   }
+
+  @Post('hermes-proposal')
+  @HttpCode(200)
+  async hermesProposal(@Body() body: any) {
+    return this.webhooksService.handleHermesProposal(body);
+  }
 }

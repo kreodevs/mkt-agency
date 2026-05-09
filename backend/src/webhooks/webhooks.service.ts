@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Trial } from '../trials/entities/trial.entity';
 import { Lead } from '../leads/entities/lead.entity';
+import { ProposalsService } from '../proposals/proposals.service';
 
 @Injectable()
 export class WebhooksService {
@@ -13,6 +14,7 @@ export class WebhooksService {
     private readonly trialRepo: Repository<Trial>,
     @InjectRepository(Lead)
     private readonly leadRepo: Repository<Lead>,
+    private readonly proposalsService: ProposalsService,
   ) {}
 
   async handleOralTrackEvent(body: any): Promise<any> {
@@ -38,6 +40,25 @@ export class WebhooksService {
         this.logger.warn(`Tipo de evento desconocido: ${body.type}`);
         return { received: true, unknown: true };
     }
+  }
+
+  async handleHermesProposal(body: any): Promise<any> {
+    const { tenantId, actionType, payload } = body;
+
+    if (!tenantId || !actionType || !payload) {
+      this.logger.warn('Hermes proposal missing required fields');
+      return { received: false, error: 'tenantId, actionType, and payload are required' };
+    }
+
+    const proposal = await this.proposalsService.create({
+      tenantId,
+      actionType,
+      payload,
+      rationale: body.rationale,
+    });
+
+    this.logger.log(`Hermes proposal created: ${proposal.id} (${actionType})`);
+    return { received: true, proposalId: proposal.id, status: 'pending' };
   }
 
   private async handleTrialStarted(body: any) {

@@ -3,7 +3,7 @@ import { AppLayout, type SidebarGroup } from '../components/ui';
 import { useAuthStore, getCurrentTenant, getCurrentProduct } from '../stores/authStore';
 import {
   LayoutDashboard, Users, Calendar, Megaphone, Eye, Map,
-  CheckCircle, Settings, HelpCircle, Plug, LogOut,
+  CheckCircle, Settings, HelpCircle, Plug, LogOut, MessageSquare,
 } from 'lucide-react';
 
 export default function MainLayout() {
@@ -23,6 +23,7 @@ export default function MainLayout() {
         { label: 'CRM', href: '/crm', icon: Users },
         { label: 'Contenido', href: '/content', icon: Calendar },
         { label: 'Anuncios', href: '/campaigns', icon: Megaphone },
+        { label: 'Propuestas', href: '/proposals', icon: MessageSquare },
       ],
     },
     {
