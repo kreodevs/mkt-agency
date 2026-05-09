@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, HttpCode } from '@nestjs/common';
 import { WebhooksService } from './webhooks.service';
 
 @Controller('webhooks')
@@ -20,5 +20,17 @@ export class WebhooksController {
   @Get('proposals-debug')
   async proposalsDebug(@Query('tenantId') tenantId: string) {
     return this.webhooksService.getProposalsDebug(tenantId);
+  }
+
+  @Post('proposal-approve')
+  @HttpCode(200)
+  async proposalApprove(@Body() body: { proposalId: string; feedback?: string }) {
+    return this.webhooksService.approveProposal(body.proposalId, body.feedback);
+  }
+
+  @Post('proposal-reject')
+  @HttpCode(200)
+  async proposalReject(@Body() body: { proposalId: string; reason?: string }) {
+    return this.webhooksService.rejectProposal(body.proposalId, body.reason);
   }
 }

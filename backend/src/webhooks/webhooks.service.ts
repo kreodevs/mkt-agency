@@ -65,6 +65,26 @@ export class WebhooksService {
     return { received: true, proposalId: proposal.id, status: 'pending' };
   }
 
+  async approveProposal(proposalId: string, feedback?: string): Promise<any> {
+    try {
+      const result = await this.proposalsService.approve(proposalId, 'hermes-webhook', feedback);
+      return { approved: true, proposalId: result.id, status: result.status };
+    } catch (err: any) {
+      this.logger.error(`Error approving proposal ${proposalId}: ${err.message}`);
+      return { approved: false, error: err.message };
+    }
+  }
+
+  async rejectProposal(proposalId: string, reason?: string): Promise<any> {
+    try {
+      const result = await this.proposalsService.reject(proposalId, reason);
+      return { rejected: true, proposalId: result.id, status: result.status };
+    } catch (err: any) {
+      this.logger.error(`Error rejecting proposal ${proposalId}: ${err.message}`);
+      return { rejected: false, error: err.message };
+    }
+  }
+
   async getProposalsDebug(tenantId?: string): Promise<any> {
     if (!tenantId) {
       const count = await this.proposalRepo.count();
@@ -82,7 +102,10 @@ export class WebhooksService {
         actionType: p.actionType,
         status: p.status,
         productId: p.productId,
-        rationale: p.rationale?.substring(0, 80),
+        payload: p.payload,
+        rationale: p.rationale?.substring(0, 120),
+        rejectionReason: p.rejectionReason,
+        resultSummary: p.resultSummary,
         createdAt: p.createdAt,
       })),
     };
