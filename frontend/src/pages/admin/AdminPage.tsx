@@ -8,10 +8,10 @@ import { InputText } from 'primereact/inputtext';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
-import { tenants, products, users } from '../../services/api';
 import { useRef } from 'react';
-import { auth } from '../../services/api';
+import { tenants, products, users, auth } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
+import { Plus, Trash2, Users, Check, Store, Package } from 'lucide-react';
 
 export default function AdminPage() {
   const [tenantList, setTenantList] = useState([]);
@@ -21,7 +21,6 @@ export default function AdminPage() {
   const [newProductName, setNewProductName] = useState('');
   const newProductType = 'saas';
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showCreateTenant, setShowCreateTenant] = useState(false);
   const [newTenantName, setNewTenantName] = useState('');
@@ -30,7 +29,6 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const currentProductId = sessionStorage.getItem('currentProductId');
 
-  // Refrescar datos del usuario en el store (para que Settings vea los productos nuevos)
   const refreshUserStore = () => {
     auth.me().then(r => setUser(r.data)).catch(() => {});
   };
@@ -94,95 +92,229 @@ export default function AdminPage() {
     }
   };
 
-  const actionBodyTemplate = (row: any) => (
-    <div className="flex gap-2">
-      <Button icon="pi pi-users" rounded text size="small" tooltip="Usuarios"
-        onClick={() => viewUsers(row)} />
-      <Button icon="pi pi-trash" rounded text severity="danger" size="small" tooltip="Eliminar"
-        onClick={() => confirmDeleteTenant(row)} />
+  const productBody = (row: any) => (
+    <div className="flex flex-wrap gap-1.5 items-center">
+      {(row.products || []).map((p: any) => {
+        const isSelected = p.id === currentProductId;
+        return (
+          <button
+            key={p.id}
+            onClick={() => {
+              sessionStorage.setItem('currentProductId', p.id);
+              sessionStorage.setItem('currentTenantId', row.id);
+              navigate('/settings');
+            }}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-[var(--radius-sm)] border transition-colors cursor-pointer ${
+              isSelected
+                ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-medium'
+                : 'bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)]'
+            }`}
+          >
+            {isSelected && <Check size={12} />}
+            <Package size={12} />
+            {p.name}
+          </button>
+        );
+      })}
+      <button
+        onClick={() => { setSelectedTenant(row); setShowProduct(true); }}
+        className="inline-flex items-center justify-center w-6 h-6 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:bg-[var(--background-tertiary)] hover:text-[var(--primary)] transition-colors cursor-pointer border-none bg-transparent"
+      >
+        <Plus size={14} />
+      </button>
+    </div>
+  );
+
+  const actionBody = (row: any) => (
+    <div className="flex gap-1">
+      <button
+        onClick={() => viewUsers(row)}
+        className="inline-flex items-center justify-center w-8 h-8 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:bg-[var(--background-tertiary)] hover:text-[var(--primary)] transition-colors cursor-pointer border-none bg-transparent"
+        title="Usuarios"
+      >
+        <Users size={16} />
+      </button>
+      <button
+        onClick={() => confirmDeleteTenant(row)}
+        className="inline-flex items-center justify-center w-8 h-8 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:bg-[var(--background-tertiary)] hover:text-[var(--destructive)] transition-colors cursor-pointer border-none bg-transparent"
+        title="Eliminar"
+      >
+        <Trash2 size={16} />
+      </button>
     </div>
   );
 
   return (
     <div>
       <Toast ref={toast} />
-      <ConfirmDialog />
+      <ConfirmDialog
+        pt={{
+          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]' },
+          header: { className: '!bg-transparent !text-[var(--foreground)] !p-4 !pb-0' },
+          content: { className: '!bg-transparent !text-[var(--foreground-muted)] !p-4 !text-sm' },
+          footer: { className: '!bg-transparent !p-4 !pt-0 !flex !justify-end !gap-2' },
+        }}
+      />
 
-      <h2 className="mt-0">Administración</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-[var(--foreground)] mt-0">Administración</h2>
+      </div>
 
-      <Card title="Empresas / Tenants"
-        pt={{ title: (opts: any) => (
-          <div className="flex align-items-center justify-content-between w-full">
-            <span>{opts.props.title}</span>
-            <Button icon="pi pi-plus" label="Nuevo" size="small" onClick={() => setShowCreateTenant(true)} />
+      <Card
+        className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]"
+        pt={{
+          title: { className: 'text-base font-semibold text-[var(--foreground)]' },
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Store size={18} className="text-[var(--primary)]" />
+            <span className="text-sm font-semibold text-[var(--foreground)]">Empresas / Tenants</span>
           </div>
-        )}}>
-        <DataTable value={tenantList} loading={loading} size="small" stripedRows>
+          <button
+            onClick={() => setShowCreateTenant(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-xs font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer border-none"
+          >
+            <Plus size={14} />
+            Nuevo
+          </button>
+        </div>
+
+        <DataTable
+          value={tenantList}
+          loading={loading}
+          size="small"
+          stripedRows
+          pt={{
+            root: { className: '!text-sm !text-[var(--foreground)]' },
+            header: { className: '!bg-transparent' },
+            bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)] transition-colors' },
+            headerRow: { className: '!bg-transparent' },
+            headerCell: { className: '!bg-transparent !text-[var(--foreground-muted)] !text-xs !font-medium !uppercase !tracking-[0.05em] !px-3 !py-2 !border-b !border-[var(--border)]' },
+            bodyCell: { className: '!bg-transparent !px-3 !py-2.5 !border-b !border-[var(--border)]' },
+            loadingOverlay: { className: '!bg-[var(--background)]/50' },
+            wrapper: { className: '!bg-transparent' },
+            emptyMessage: { className: '!text-[var(--foreground-muted)] !text-sm !py-6' },
+          }}
+        >
           <Column field="name" header="Nombre" />
           <Column field="ownerId" header="Dueño" />
-          <Column
-            header="Productos"
-            body={(row: any) => (
-              <div className="flex flex-wrap gap-1">
-                {(row.products || []).map((p: any) => {
-                  const isSelected = p.id === currentProductId;
-                  return (
-                    <span
-                      key={p.id}
-                      className="border-round px-2 py-1 text-sm cursor-pointer transition-colors"
-                      style={{
-                        background: isSelected ? 'var(--primary-color)' : '#e3f2fd',
-                        color: isSelected ? 'white' : 'inherit',
-                        fontWeight: isSelected ? 'bold' : 'normal',
-                        border: isSelected ? '2px solid var(--primary-color)' : '1px solid transparent',
-                      }}
-                      onClick={() => {
-                        sessionStorage.setItem('currentProductId', p.id);
-                        sessionStorage.setItem('currentTenantId', row.id);
-                        navigate('/settings');
-                      }}
-                    >
-                      {isSelected && <i className="pi pi-check mr-1" style={{ fontSize: '0.7rem' }} />}
-                      {p.name} ({p.type})
-                    </span>
-                  );
-                })}
-                <Button
-                  icon="pi pi-plus"
-                  rounded
-                  text
-                  size="small"
-                  onClick={() => { setSelectedTenant(row); setShowProduct(true); }}
-                />
-              </div>
-            )}
-          />
-          <Column header="Acciones" body={actionBodyTemplate} style={{ width: '120px' }} />
+          <Column header="Productos" body={productBody} />
+          <Column header="Acciones" body={actionBody} style={{ width: '100px' }} />
         </DataTable>
       </Card>
 
-      <Dialog header="Agregar Producto" visible={showProduct} onHide={() => setShowProduct(false)} style={{ width: '400px' }}>
-        <div className="flex flex-column gap-2">
-          <InputText placeholder="Nombre del producto" value={newProductName} onChange={e => setNewProductName(e.target.value)} />
-          <Button label="Agregar" onClick={handleAddProduct} disabled={!newProductName} />
+      {/* Add Product Dialog */}
+      <Dialog
+        header="Agregar Producto"
+        visible={showProduct}
+        onHide={() => setShowProduct(false)}
+        style={{ width: '400px' }}
+        pt={{
+          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
+          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
+          headerTitle: { className: '!text-sm !font-semibold' },
+          content: { className: '!bg-transparent !p-4' },
+          mask: { className: '!bg-black/60' },
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Nombre del producto</label>
+            <InputText
+              placeholder="Ej: OralTrack"
+              value={newProductName}
+              onChange={e => setNewProductName(e.target.value)}
+              className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)]"
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-1">
+            <button
+              onClick={() => setShowProduct(false)}
+              className="px-3 py-1.5 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] bg-transparent rounded-[var(--radius-md)] hover:bg-[var(--secondary)] transition-colors cursor-pointer border-none"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleAddProduct}
+              disabled={!newProductName}
+              className="px-3 py-1.5 text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none"
+            >
+              Agregar
+            </button>
+          </div>
         </div>
       </Dialog>
 
-      <Dialog header={`Usuarios — ${selectedTenant?.name || ''}`} visible={showUserDialog}
-        onHide={() => setShowUserDialog(false)} style={{ width: '500px' }}>
-        <DataTable value={userList} size="small" stripedRows>
+      {/* Users Dialog */}
+      <Dialog
+        header={`Usuarios — ${selectedTenant?.name || ''}`}
+        visible={showUserDialog}
+        onHide={() => setShowUserDialog(false)}
+        style={{ width: '500px' }}
+        pt={{
+          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
+          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
+          content: { className: '!bg-transparent !p-4' },
+          mask: { className: '!bg-black/60' },
+        }}
+      >
+        <DataTable
+          value={userList}
+          size="small"
+          stripedRows
+          pt={{
+            root: { className: '!text-sm !text-[var(--foreground)]' },
+            bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)]' },
+            headerRow: { className: '!bg-transparent' },
+            headerCell: { className: '!bg-transparent !text-[var(--foreground-muted)] !text-xs !px-3 !py-2 !border-b !border-[var(--border)]' },
+            bodyCell: { className: '!bg-transparent !px-3 !py-2 !border-b !border-[var(--border)]' },
+          }}
+        >
           <Column field="name" header="Nombre" />
           <Column field="email" header="Email" />
           <Column field="role" header="Rol" />
         </DataTable>
       </Dialog>
 
-      <Dialog header="Nuevo Tenant" visible={showCreateTenant}
-        onHide={() => setShowCreateTenant(false)} style={{ width: '400px' }}>
-        <div className="flex flex-column gap-2">
-          <InputText placeholder="Nombre del tenant" value={newTenantName}
-            onChange={e => setNewTenantName(e.target.value)} />
-          <Button label="Crear" onClick={handleCreateTenant} disabled={!newTenantName} />
+      {/* Create Tenant Dialog */}
+      <Dialog
+        header="Nuevo Tenant"
+        visible={showCreateTenant}
+        onHide={() => setShowCreateTenant(false)}
+        style={{ width: '400px' }}
+        pt={{
+          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
+          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
+          content: { className: '!bg-transparent !p-4' },
+          mask: { className: '!bg-black/60' },
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Nombre del tenant</label>
+            <InputText
+              placeholder="Ej: KreoDevs"
+              value={newTenantName}
+              onChange={e => setNewTenantName(e.target.value)}
+              className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)]"
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-1">
+            <button
+              onClick={() => setShowCreateTenant(false)}
+              className="px-3 py-1.5 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] bg-transparent rounded-[var(--radius-md)] hover:bg-[var(--secondary)] transition-colors cursor-pointer border-none"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleCreateTenant}
+              disabled={!newTenantName}
+              className="px-3 py-1.5 text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none"
+            >
+              Crear
+            </button>
+          </div>
         </div>
       </Dialog>
     </div>

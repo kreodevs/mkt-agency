@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { Card } from 'primereact/card';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
 import { getCurrentTenant, getCurrentProduct } from '../../stores/authStore';
 import { settings } from '../../services/api';
+import {
+  Twitter, Globe, MessageCircle, Image, Check, AlertCircle, Save,
+} from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 export default function SettingsPage() {
   const tenant = getCurrentTenant();
@@ -15,36 +19,34 @@ export default function SettingsPage() {
   const toast = useRef<Toast>(null);
   const navigate = useNavigate();
 
-  // Estado general de settings
   const [currentSettings, setCurrentSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Tab 1: Redes Sociales (X/Twitter)
+  // X/Twitter
   const [xApiKey, setXApiKey] = useState('');
   const [xApiSecret, setXApiSecret] = useState('');
   const [xAccessToken, setXAccessToken] = useState('');
   const [xAccessSecret, setXAccessSecret] = useState('');
   const [savingSocial, setSavingSocial] = useState(false);
 
-  // Tab 2: Google Ads
+  // Google Ads
   const [googleAdsDeveloperToken, setGoogleAdsDeveloperToken] = useState('');
   const [googleAdsClientId, setGoogleAdsClientId] = useState('');
   const [googleAdsClientSecret, setGoogleAdsClientSecret] = useState('');
   const [savingGoogleAds, setSavingGoogleAds] = useState(false);
 
-  // Tab 3: WhatsApp
+  // WhatsApp
   const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState('');
   const [whatsappToken, setWhatsappToken] = useState('');
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
 
-  // Tab 4: Marca
+  // Brand
   const [logoUrl, setLogoUrl] = useState('');
   const [assets, setAssets] = useState<any[]>([]);
   const [savingBrand, setSavingBrand] = useState(false);
 
   const productName = product?.name || 'MarketingOS';
 
-  // Cargar settings actuales
   const fetchSettings = () => {
     if (!tenant || !productId) return;
     setLoading(true);
@@ -53,23 +55,15 @@ export default function SettingsPage() {
       .then((r) => {
         const data = r.data || {};
         setCurrentSettings(data);
-
-        // X/Twitter
         setXApiKey(data.xApiKey || '');
         setXApiSecret(data.xApiSecret || '');
         setXAccessToken(data.xAccessToken || '');
         setXAccessSecret(data.xAccessSecret || '');
-
-        // Google Ads
         setGoogleAdsDeveloperToken(data.googleAdsDeveloperToken || '');
         setGoogleAdsClientId(data.googleAdsClientId || '');
         setGoogleAdsClientSecret(data.googleAdsClientSecret || '');
-
-        // WhatsApp
         setWhatsappPhoneNumberId(data.whatsappPhoneNumberId || '');
         setWhatsappToken(data.whatsappToken || '');
-
-        // Marca
         setLogoUrl(data.logoUrl || '');
       })
       .catch(() => {
@@ -78,11 +72,9 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   };
 
-  // Cargar assets
   const fetchAssets = () => {
     if (!tenant || !productId) return;
-    settings
-      .getUploads(tenant.id, productId)
+    settings.getUploads(tenant.id, productId)
       .then((r) => setAssets(r.data || []))
       .catch(() => {});
   };
@@ -91,21 +83,15 @@ export default function SettingsPage() {
     fetchSettings();
   }, [tenant?.id, productId]);
 
-  // Handlers de guardado
   const handleSaveSocial = async () => {
     if (!tenant || !productId) return;
     setSavingSocial(true);
     try {
-      await settings.update(tenant.id, productId, {
-        xApiKey,
-        xApiSecret,
-        xAccessToken,
-        xAccessSecret,
-      });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Configuración de redes sociales guardada', life: 2000 });
+      await settings.update(tenant.id, productId, { xApiKey, xApiSecret, xAccessToken, xAccessSecret });
+      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Redes sociales guardadas', life: 2000 });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
     } finally {
       setSavingSocial(false);
     }
@@ -115,15 +101,11 @@ export default function SettingsPage() {
     if (!tenant || !productId) return;
     setSavingGoogleAds(true);
     try {
-      await settings.update(tenant.id, productId, {
-        googleAdsDeveloperToken,
-        googleAdsClientId,
-        googleAdsClientSecret,
-      });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Configuración de Google Ads guardada', life: 2000 });
+      await settings.update(tenant.id, productId, { googleAdsDeveloperToken, googleAdsClientId, googleAdsClientSecret });
+      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Google Ads guardado', life: 2000 });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
     } finally {
       setSavingGoogleAds(false);
     }
@@ -133,14 +115,11 @@ export default function SettingsPage() {
     if (!tenant || !productId) return;
     setSavingWhatsapp(true);
     try {
-      await settings.update(tenant.id, productId, {
-        whatsappPhoneNumberId,
-        whatsappToken,
-      });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Configuración de WhatsApp guardada', life: 2000 });
+      await settings.update(tenant.id, productId, { whatsappPhoneNumberId, whatsappToken });
+      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'WhatsApp guardado', life: 2000 });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
     } finally {
       setSavingWhatsapp(false);
     }
@@ -151,172 +130,217 @@ export default function SettingsPage() {
     setSavingBrand(true);
     try {
       await settings.update(tenant.id, productId, { logoUrl });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Configuración de marca guardada', life: 2000 });
+      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Marca guardada', life: 2000 });
       fetchSettings();
       fetchAssets();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
     } finally {
       setSavingBrand(false);
     }
   };
 
-  // Helper: verificar si hay valores guardados
-  const hasSocialConfig = !!(
-    currentSettings?.xApiKey ||
-    currentSettings?.xApiSecret ||
-    currentSettings?.xAccessToken ||
-    currentSettings?.xAccessSecret
-  );
+  const hasSocialConfig = !!(currentSettings?.xApiKey);
 
-  // Render de cada tab
-  const renderSocialTab = () => (
-    <div className="flex flex-column gap-3">
-      {hasSocialConfig && (
-        <div className="text-green-600 font-bold flex align-items-center gap-1">
-          <span>✅ Conectado</span>
-        </div>
-      )}
-      <div className="field">
-        <label htmlFor="xApiKey" className="font-medium block mb-1">API Key</label>
-        <InputText id="xApiKey" type="password" value={xApiKey} onChange={(e) => setXApiKey(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <div className="field">
-        <label htmlFor="xApiSecret" className="font-medium block mb-1">API Secret</label>
-        <InputText id="xApiSecret" type="password" value={xApiSecret} onChange={(e) => setXApiSecret(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <div className="field">
-        <label htmlFor="xAccessToken" className="font-medium block mb-1">Access Token</label>
-        <InputText id="xAccessToken" type="password" value={xAccessToken} onChange={(e) => setXAccessToken(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <div className="field">
-        <label htmlFor="xAccessSecret" className="font-medium block mb-1">Access Secret</label>
-        <InputText id="xAccessSecret" type="password" value={xAccessSecret} onChange={(e) => setXAccessSecret(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <Button label="Guardar" icon="pi pi-check" onClick={handleSaveSocial} loading={savingSocial} className="w-full" />
-    </div>
-  );
-
-  const renderGoogleAdsTab = () => (
-    <div className="flex flex-column gap-3">
-      <div className="field">
-        <label htmlFor="googleAdsDeveloperToken" className="font-medium block mb-1">Developer Token</label>
-        <InputText id="googleAdsDeveloperToken" type="password" value={googleAdsDeveloperToken} onChange={(e) => setGoogleAdsDeveloperToken(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <div className="field">
-        <label htmlFor="googleAdsClientId" className="font-medium block mb-1">Client ID</label>
-        <InputText id="googleAdsClientId" value={googleAdsClientId} onChange={(e) => setGoogleAdsClientId(e.target.value)} className="w-full" placeholder="client-id.apps.googleusercontent.com" />
-      </div>
-      <div className="field">
-        <label htmlFor="googleAdsClientSecret" className="font-medium block mb-1">Client Secret</label>
-        <InputText id="googleAdsClientSecret" type="password" value={googleAdsClientSecret} onChange={(e) => setGoogleAdsClientSecret(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <Button label="Guardar" icon="pi pi-check" onClick={handleSaveGoogleAds} loading={savingGoogleAds} className="w-full" />
-    </div>
-  );
-
-  const renderWhatsappTab = () => (
-    <div className="flex flex-column gap-3">
-      <div className="field">
-        <label htmlFor="whatsappPhoneNumberId" className="font-medium block mb-1">Phone Number ID</label>
-        <InputText id="whatsappPhoneNumberId" value={whatsappPhoneNumberId} onChange={(e) => setWhatsappPhoneNumberId(e.target.value)} className="w-full" placeholder="123456789" />
-      </div>
-      <div className="field">
-        <label htmlFor="whatsappToken" className="font-medium block mb-1">Token</label>
-        <InputText id="whatsappToken" type="password" value={whatsappToken} onChange={(e) => setWhatsappToken(e.target.value)} className="w-full" placeholder="••••••••" />
-      </div>
-      <Button label="Guardar" icon="pi pi-check" onClick={handleSaveWhatsapp} loading={savingWhatsapp} className="w-full" />
-    </div>
-  );
-
-  const renderBrandTab = () => (
-    <div className="flex flex-column gap-3">
-      <div className="field">
-        <label htmlFor="logoUrl" className="font-medium block mb-1">URL del Logo</label>
-        <InputText id="logoUrl" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className="w-full" placeholder="https://ejemplo.com/logo.png" />
-      </div>
-      {logoUrl && (
-        <div className="flex align-items-center justify-content-center border-1 border-round p-3" style={{ minHeight: '120px', background: '#f8f9fa' }}>
-          <img src={logoUrl} alt="Logo preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none'; }} />
-        </div>
-      )}
-      <Button label="Guardar" icon="pi pi-check" onClick={handleSaveBrand} loading={savingBrand} className="w-full" />
-
-      <h4 className="mb-2 mt-3">Assets subidos</h4>
-      {assets.length === 0 ? (
-        <p className="text-500 text-sm">No hay archivos subidos aún.</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {assets.map((asset: any, i: number) => (
-            <a
-              key={i}
-              href={asset.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex align-items-center gap-1 border-1 border-round p-2 text-sm text-600 hover:text-primary"
-            >
-              <i className="pi pi-file" />
-              {asset.name || `Archivo ${i + 1}`}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // Si no hay producto seleccionado, mostrar mensaje
   if (!productId) {
     return (
       <div>
         <Toast ref={toast} />
-        <div className="flex justify-content-between align-items-center mb-3">
-          <h2 className="mt-0">Configuración</h2>
-        </div>
-        <Card>
-          <div className="text-center py-5">
-            <i className="pi pi-info-circle" style={{ fontSize: '3rem', color: 'var(--blue-500)' }} />
-            <h3 className="mt-3">Selecciona un producto</h3>
-            <p className="text-lg mb-4">
-              Ve a <strong>Administración</strong>, selecciona un tenant y agrega o elige un producto.
+        <h2 className="text-xl font-bold text-[var(--foreground)] mt-0 mb-4">Configuración</h2>
+        <Card className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]">
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <AlertCircle size={48} className="text-[var(--foreground-muted)]" />
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">Selecciona un producto</h3>
+            <p className="text-sm text-[var(--foreground-muted)] text-center max-w-md">
+              Ve a <strong className="text-[var(--primary)]">Administración</strong>, selecciona un tenant y agrega o elige un producto.
               Las conexiones se configuran por producto.
             </p>
-            <Button label="Ir a Admin" icon="pi pi-cog" onClick={() => navigate('/admin')} />
+            <button
+              onClick={() => navigate('/admin')}
+              className="px-4 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors cursor-pointer border-none"
+            >
+              Ir a Admin
+            </button>
           </div>
         </Card>
       </div>
     );
   }
 
+  const renderField = (label: string, value: string, onChange: (v: string) => void, placeholder = '') => (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">{label}</label>
+      <InputText
+        type="password"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
+      />
+    </div>
+  );
+
   return (
     <div>
       <Toast ref={toast} />
 
-      <div className="flex justify-content-between align-items-center mb-3">
-        <h2 className="mt-0">Configuración de {productName}</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-[var(--foreground)] mt-0">Configuración de {productName}</h2>
       </div>
 
-      <Card>
-        {loading ? (
-          <div className="flex align-items-center justify-content-center p-5">
-            <i className="pi pi-spin pi-spinner text-4xl text-primary" />
-          </div>
-        ) : (
-          <TabView>
-            <TabPanel header="Redes Sociales" leftIcon="pi pi-share-alt">
-              {renderSocialTab()}
+      {loading ? (
+        <div className="flex items-center justify-center py-10">
+          <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <Card className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]">
+          <TabView
+            pt={{
+              nav: { className: 'bg-transparent border-b border-[var(--border)]' },
+              tab: {
+                className: ({ context }: any) => cn(
+                  'bg-transparent border-none px-4 py-3 text-sm font-medium transition-colors cursor-pointer',
+                  context.active
+                    ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
+                    : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]',
+                ),
+              },
+              inkbar: { className: 'hidden' },
+            }}
+          >
+            <TabPanel
+              header={
+                <div className="flex items-center gap-2">
+                  <Twitter size={16} />
+                  <span>Redes Sociales</span>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4 pt-4">
+                {hasSocialConfig && (
+                  <div className="flex items-center gap-1.5 text-sm text-[var(--success)] font-medium">
+                    <Check size={16} />
+                    <span>Conectado</span>
+                  </div>
+                )}
+                {renderField('API Key', xApiKey, setXApiKey)}
+                {renderField('API Secret', xApiSecret, setXApiSecret)}
+                {renderField('Access Token', xAccessToken, setXAccessToken)}
+                {renderField('Access Secret', xAccessSecret, setXAccessSecret)}
+                <button
+                  onClick={handleSaveSocial}
+                  disabled={savingSocial}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                >
+                  <Save size={16} />
+                  {savingSocial ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </TabPanel>
-            <TabPanel header="Google Ads" leftIcon="pi pi-google">
-              {renderGoogleAdsTab()}
+
+            <TabPanel
+              header={
+                <div className="flex items-center gap-2">
+                  <Globe size={16} />
+                  <span>Google Ads</span>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4 pt-4">
+                {renderField('Developer Token', googleAdsDeveloperToken, setGoogleAdsDeveloperToken)}
+                {renderField('Client ID', googleAdsClientId, setGoogleAdsClientId, 'client-id.apps.googleusercontent.com')}
+                {renderField('Client Secret', googleAdsClientSecret, setGoogleAdsClientSecret)}
+                <button
+                  onClick={handleSaveGoogleAds}
+                  disabled={savingGoogleAds}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                >
+                  <Save size={16} />
+                  {savingGoogleAds ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </TabPanel>
-            <TabPanel header="WhatsApp" leftIcon="pi pi-whatsapp">
-              {renderWhatsappTab()}
+
+            <TabPanel
+              header={
+                <div className="flex items-center gap-2">
+                  <MessageCircle size={16} />
+                  <span>WhatsApp</span>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4 pt-4">
+                {renderField('Phone Number ID', whatsappPhoneNumberId, setWhatsappPhoneNumberId)}
+                {renderField('Token', whatsappToken, setWhatsappToken)}
+                <button
+                  onClick={handleSaveWhatsapp}
+                  disabled={savingWhatsapp}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                >
+                  <Save size={16} />
+                  {savingWhatsapp ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </TabPanel>
-            <TabPanel header="Marca" leftIcon="pi pi-image">
-              {renderBrandTab()}
+
+            <TabPanel
+              header={
+                <div className="flex items-center gap-2">
+                  <Image size={16} />
+                  <span>Marca</span>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4 pt-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">URL del Logo</label>
+                  <InputText
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/logo.png"
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
+                  />
+                </div>
+                {logoUrl && (
+                  <div className="flex items-center justify-center border border-[var(--border)] rounded-[var(--radius-md)] p-4 bg-[var(--background-tertiary)]" style={{ minHeight: '120px' }}>
+                    <img src={logoUrl} alt="Logo preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none'; }} />
+                  </div>
+                )}
+                <button
+                  onClick={handleSaveBrand}
+                  disabled={savingBrand}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                >
+                  <Save size={16} />
+                  {savingBrand ? 'Guardando...' : 'Guardar'}
+                </button>
+
+                <div className="mt-3">
+                  <h4 className="text-sm font-semibold text-[var(--foreground)] mb-2">Assets subidos</h4>
+                  {assets.length === 0 ? (
+                    <p className="text-xs text-[var(--foreground-subtle)]">No hay archivos subidos aún.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {assets.map((asset: any, i: number) => (
+                        <a
+                          key={i}
+                          href={asset.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-[var(--radius-sm)] border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors no-underline"
+                        >
+                          <Image size={14} />
+                          {asset.name || `Archivo ${i + 1}`}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </TabPanel>
           </TabView>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

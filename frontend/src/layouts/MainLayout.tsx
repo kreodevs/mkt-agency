@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Menubar } from 'primereact/menubar';
-import { PanelMenu } from 'primereact/panelmenu';
 import { Sidebar } from 'primereact/sidebar';
-import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { useAuthStore, getCurrentTenant, getCurrentProduct } from '../stores/authStore';
+import {
+  LayoutDashboard, Users, Calendar, Megaphone, Eye, Map,
+  CheckCircle, Settings, HelpCircle, Plug, LogOut, Menu,
+} from 'lucide-react';
+import { cn } from '../lib/utils';
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -17,6 +19,13 @@ function useIsMobile() {
   return isMobile;
 }
 
+interface NavItem {
+  label: string;
+  icon: React.ReactNode;
+  path: string;
+  visible?: boolean;
+}
+
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,116 +35,118 @@ export default function MainLayout() {
   const isMobile = useIsMobile();
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  const navItems = [
-    {
-      label: 'Dashboard',
-      icon: 'pi pi-chart-bar',
-      command: () => { navigate('/dashboard'); setSidebarVisible(false); },
-      className: location.pathname === '/dashboard' ? 'p-highlight' : '',
-    },
-    {
-      label: 'CRM',
-      icon: 'pi pi-users',
-      command: () => { navigate('/crm'); setSidebarVisible(false); },
-      className: location.pathname.startsWith('/crm') ? 'p-highlight' : '',
-    },
-    {
-      label: 'Contenido',
-      icon: 'pi pi-calendar',
-      command: () => { navigate('/content'); setSidebarVisible(false); },
-      className: location.pathname === '/content' ? 'p-highlight' : '',
-    },
-    {
-      label: 'Anuncios',
-      icon: 'pi pi-megaphone',
-      command: () => { navigate('/campaigns'); setSidebarVisible(false); },
-      className: location.pathname === '/campaigns' ? 'p-highlight' : '',
-    },
-    {
-      label: 'Competencia',
-      icon: 'pi pi-eye',
-      command: () => { navigate('/competitors'); setSidebarVisible(false); },
-      className: location.pathname === '/competitors' ? 'p-highlight' : '',
-    },
-    {
-      label: 'SEO Local',
-      icon: 'pi pi-map',
-      command: () => { navigate('/seo'); setSidebarVisible(false); },
-      className: location.pathname === '/seo' ? 'p-highlight' : '',
-    },
-    {
-      label: 'Onboarding',
-      icon: 'pi pi-check-circle',
-      command: () => { navigate('/onboarding'); setSidebarVisible(false); },
-      className: location.pathname === '/onboarding' ? 'p-highlight' : '',
-    },
-    ...(user?.isSuperAdmin
-      ? [
-          {
-            label: 'Admin',
-            icon: 'pi pi-cog',
-            command: () => { navigate('/admin'); setSidebarVisible(false); },
-            className: location.pathname === '/admin' ? 'p-highlight' : '',
-          },
-        ]
-      : []),
-    {
-      label: 'Ayuda',
-      icon: 'pi pi-question-circle',
-      command: () => { navigate('/help'); setSidebarVisible(false); },
-      className: location.pathname === '/help' ? 'p-highlight' : '',
-    },
-    {
-      label: 'Conexiones',
-      icon: 'pi pi-plug',
-      command: () => { navigate('/settings'); setSidebarVisible(false); },
-      className: location.pathname === '/settings' ? 'p-highlight' : '',
-    },
+  const activePath = location.pathname;
+
+  const navItems: NavItem[] = [
+    { label: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
+    { label: 'CRM', icon: <Users size={18} />, path: '/crm' },
+    { label: 'Contenido', icon: <Calendar size={18} />, path: '/content' },
+    { label: 'Anuncios', icon: <Megaphone size={18} />, path: '/campaigns' },
+    { label: 'Competencia', icon: <Eye size={18} />, path: '/competitors' },
+    { label: 'SEO Local', icon: <Map size={18} />, path: '/seo' },
+    { label: 'Onboarding', icon: <CheckCircle size={18} />, path: '/onboarding' },
+    { label: 'Admin', icon: <Settings size={18} />, path: '/admin', visible: user?.isSuperAdmin },
+    { label: 'Ayuda', icon: <HelpCircle size={18} />, path: '/help' },
+    { label: 'Conexiones', icon: <Plug size={18} />, path: '/settings' },
   ];
 
+  const renderNavItem = (item: NavItem) => {
+    if (item.visible === false) return null;
+    const isActive = item.path === '/'
+      ? activePath === '/'
+      : activePath.startsWith(item.path);
+    return (
+      <button
+        key={item.path}
+        onClick={() => { navigate(item.path); setSidebarVisible(false); }}
+        className={cn(
+          'w-full flex items-center gap-3 px-4 py-[10px] text-sm rounded-[var(--radius-md)] transition-all duration-[var(--transition-base)] text-left cursor-pointer border-none',
+          isActive
+            ? 'bg-[var(--secondary)] text-[var(--primary)] font-medium'
+            : 'bg-transparent text-[var(--foreground-muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]',
+        )}
+      >
+        <span className="shrink-0">{item.icon}</span>
+        <span>{item.label}</span>
+      </button>
+    );
+  };
+
   const sidebarContent = (
-    <PanelMenu model={navItems} className="h-full border-noround w-full" />
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="px-4 py-5 border-b border-[var(--card-border)]">
+        <div className="text-lg font-bold text-[var(--foreground)]">MktAgencyOS</div>
+        {tenant && (
+          <div className="text-xs text-[var(--foreground-muted)] mt-1">
+            {tenant.name}
+            {product && <span className="text-[var(--primary)]"> / {product.name}</span>}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+        {navItems.map(renderNavItem)}
+      </nav>
+
+      {/* Bottom */}
+      <div className="p-3 border-t border-[var(--card-border)]">
+        <div className="flex items-center gap-2 text-xs text-[var(--foreground-muted)] px-2">
+          <span>{user?.name}</span>
+        </div>
+      </div>
+    </div>
   );
 
   return (
-    <div className="flex flex-column min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       {/* Top Bar */}
-      <Menubar
-        start={
-          <div className="flex align-items-center gap-2 md:gap-3">
-            {isMobile && (
-              <Button
-                icon="pi pi-bars"
-                className="p-button-rounded p-button-text p-button-sm"
-                onClick={() => setSidebarVisible(true)}
-              />
-            )}
-            <span className="text-lg md:text-xl font-bold text-primary">MktAgencyOS</span>
-            {!isMobile && tenant && (
-              <span className="text-xs md:text-sm text-500 border-1 border-round p-1 px-2">
-                {tenant.name}
-                {product && ` / ${product.name}`}
-              </span>
-            )}
-          </div>
-        }
-        end={
-          <div className="flex align-items-center gap-1 md:gap-2">
-            <Avatar label={user?.name?.charAt(0) || 'U'} shape="circle" size={isMobile ? 'small' : 'normal'} />
-            {!isMobile && <span className="text-sm">{user?.name}</span>}
-            <i className="pi pi-sign-out cursor-pointer text-lg" onClick={() => { logout(); navigate('/login'); }} />
-          </div>
-        }
-        className="p-menubar-sm"
-      />
+      <header className="flex items-center h-14 px-3 md:px-4 border-b border-[var(--card-border)] bg-[var(--background)] shrink-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {isMobile && (
+            <button
+              onClick={() => setSidebarVisible(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] bg-transparent text-[var(--foreground-muted)] hover:bg-[var(--secondary)] cursor-pointer border-none"
+            >
+              <Menu size={20} />
+            </button>
+          )}
+          <span className="text-base md:text-lg font-bold text-[var(--primary)] truncate">
+            MktAgencyOS
+          </span>
+          {!isMobile && tenant && (
+            <span className="text-xs px-2 py-1 rounded-[var(--radius-sm)] border border-[var(--border)] text-[var(--foreground-muted)]">
+              {tenant.name}
+              {product && ` / ${product.name}`}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Avatar
+            label={user?.name?.charAt(0) || 'U'}
+            shape="circle"
+            size={isMobile ? 'small' as any : 'normal' as any}
+            className="bg-[var(--secondary)] text-[var(--foreground-muted)]"
+          />
+          {!isMobile && <span className="text-sm text-[var(--foreground-muted)]">{user?.name}</span>}
+          <button
+            onClick={() => { logout(); navigate('/login'); }}
+            className="flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] text-[var(--foreground-muted)] hover:text-[var(--destructive)] hover:bg-[var(--secondary)] cursor-pointer border-none bg-transparent"
+            title="Cerrar sesión"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </header>
 
       {/* Body */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <div className="w-15rem" style={{ minWidth: '15rem' }}>
+          <aside className="w-[280px] shrink-0 border-r border-[var(--card-border)] bg-[var(--background-secondary)] overflow-hidden">
             {sidebarContent}
-          </div>
+          </aside>
         )}
 
         {/* Mobile Overlay Sidebar */}
@@ -143,22 +154,18 @@ export default function MainLayout() {
           <Sidebar
             visible={sidebarVisible}
             onHide={() => setSidebarVisible(false)}
-            className="w-18rem"
+            className="!bg-[var(--background-secondary)] !border-r !border-[var(--card-border)]"
           >
-            {tenant && (
-              <div className="mb-3 pb-3 border-bottom-1 surface-border">
-                <div className="font-bold text-primary">{tenant.name}</div>
-                {product && <div className="text-sm text-500">{product.name}</div>}
-              </div>
-            )}
             {sidebarContent}
           </Sidebar>
         )}
 
-        {/* Content */}
-        <div className="flex-1 p-2 md:p-3 overflow-auto" style={{ background: '#f8f9fa' }}>
-          <Outlet />
-        </div>
+        {/* Content area */}
+        <main className="flex-1 overflow-auto bg-[var(--background)]">
+          <div className="p-4 md:p-6 max-w-[1200px] mx-auto">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );
