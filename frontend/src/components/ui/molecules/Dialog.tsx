@@ -134,7 +134,6 @@ export const Dialog = forwardRef<PrimeDialog, DialogInputProps>(
           mask: { className: ptStyles.mask.className },
           content: { className: `${ptStyles.content.className} overflow-hidden` },
           header: { className: 'hidden' },
-          footer: { className: 'hidden' },
         }}
       >
         <div className="px-[var(--spacing-lg)] py-[var(--spacing-md)]">
