@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Dialog } from 'primereact/dialog';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Tag } from 'primereact/tag';
-import { Dropdown } from 'primereact/dropdown';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Card, DataTable, Dialog, Dropdown, Textarea } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { posts } from '../../services/api';
 import { Check, X, RefreshCw, ExternalLink } from 'lucide-react';
 
-const STATUS_BODY: any = {
-  draft: <Tag severity="info" value="Borrador" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />,
-  approved: <Tag severity="success" value="Aprobado" className="!bg-[var(--success)]/20 !text-[var(--success)] !text-xs" />,
-  rejected: <Tag severity="danger" value="Rechazado" className="!bg-[var(--destructive)]/20 !text-[var(--destructive)] !text-xs" />,
-  published: <Tag severity="success" value="Publicado" className="!bg-[var(--success)]/20 !text-[var(--success)] !text-xs" />,
+const statusTag = (status: string) => {
+  const map: Record<string, { cls: string; label: string }> = {
+    draft: { cls: 'bg-purple-100 text-purple-800', label: 'Borrador' },
+    approved: { cls: 'bg-emerald-100 text-emerald-800', label: 'Aprobado' },
+    rejected: { cls: 'bg-red-100 text-red-800', label: 'Rechazado' },
+    published: { cls: 'bg-emerald-100 text-emerald-800', label: 'Publicado' },
+  };
+  const entry = map[status] || { cls: 'bg-gray-100 text-gray-800', label: status };
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${entry.cls}`}>
+      {entry.label}
+    </span>
+  );
 };
 
 const REJECT_REASONS = [
@@ -24,24 +26,6 @@ const REJECT_REASONS = [
   { label: 'Momento inoportuno', value: 'momento_inoportuno' },
   { label: 'Otro', value: 'otro' },
 ];
-
-const ptTable = {
-  root: { className: '!text-sm !text-[var(--foreground)]' },
-  bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)] transition-colors' },
-  headerRow: { className: '!bg-transparent' },
-  headerCell: { className: '!bg-transparent !text-[var(--foreground-muted)] !text-xs !font-medium !uppercase !tracking-[0.05em] !px-3 !py-2 !border-b !border-[var(--border)]' },
-  bodyCell: { className: '!bg-transparent !px-3 !py-2.5 !border-b !border-[var(--border)]' },
-  wrapper: { className: '!bg-transparent' },
-  emptyMessage: { className: '!text-[var(--foreground-muted)] !text-sm !py-6' },
-};
-
-const ptDialog = {
-  root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
-  header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
-  headerTitle: { className: '!text-sm !font-semibold' },
-  content: { className: '!bg-transparent !p-4' },
-  mask: { className: '!bg-black/60' },
-};
 
 export default function ContentPage() {
   const tenant = getCurrentTenant();
@@ -79,8 +63,6 @@ export default function ContentPage() {
   const contentBody = (row: any) => (
     <div className="text-sm text-[var(--foreground)] truncate max-w-md">{row.content}</div>
   );
-
-  const statusBody = (row: any) => STATUS_BODY[row.status] || <Tag value={row.status} />;
 
   const actionBody = (row: any) => (
     <div className="flex gap-1">
@@ -126,26 +108,27 @@ export default function ContentPage() {
     </div>
   );
 
+  const columns = [
+    { field: 'version', header: 'V', width: '50px' },
+    { field: 'content', header: 'Contenido', body: contentBody },
+    { field: 'status', header: 'Estado', width: '110px', body: (r: any) => statusTag(r.status) },
+    { field: 'rejectionReason', header: 'Motivo', width: '100px', body: (r: any) => r.rejectionReason ? <span className="text-xs text-[var(--warning)]">{r.rejectionReason}</span> : '-' },
+    { header: 'Acción', width: '160px', body: actionBody, field: '' },
+  ];
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[var(--foreground)] mt-0 mb-4">Content Calendar</h2>
 
       <Card className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]">
-        <DataTable value={postList} loading={loading} size="small" stripedRows pt={ptTable}>
-          <Column field="version" header="V" style={{ width: '50px' }} />
-          <Column header="Contenido" body={contentBody} />
-          <Column header="Estado" body={statusBody} style={{ width: '110px' }} />
-          <Column field="rejectionReason" header="Motivo" body={(r: any) => r.rejectionReason ? <span className="text-xs text-[var(--warning)]">{r.rejectionReason}</span> : '-'} style={{ width: '100px' }} />
-          <Column header="Acción" body={actionBody} style={{ width: '160px' }} />
-        </DataTable>
+        <DataTable data={postList} loading={loading} dense striped columns={columns} />
       </Card>
 
       <Dialog
         header={approveAction === 'approve' ? 'Aprobar Post' : 'Rechazar Post'}
         visible={showApprove}
         onHide={() => setShowApprove(false)}
-        style={{ width: '450px' }}
-        pt={ptDialog}
+        size="sm"
       >
         {approveAction === 'reject' && (
           <div className="flex flex-col gap-3">
@@ -157,18 +140,11 @@ export default function ContentPage() {
                 onChange={(e) => setReason(e.value)}
                 placeholder="Selecciona motivo"
                 className="!w-full"
-                pt={{
-                  root: { className: '!bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !text-sm' },
-                  input: { className: '!text-[var(--foreground)] !px-3 !py-2' },
-                  trigger: { className: '!text-[var(--foreground-muted)]' },
-                  panel: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-md)]' },
-                  item: { className: '!text-sm !px-3 !py-2 hover:!bg-[var(--secondary)]' },
-                }}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Feedback</label>
-              <InputTextarea
+              <Textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 rows={4}

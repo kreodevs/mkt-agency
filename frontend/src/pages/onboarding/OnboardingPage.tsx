@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { ProgressBar } from 'primereact/progressbar';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Card, DataTable, Progress } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { onboarding } from '../../services/api';
 
@@ -26,11 +21,28 @@ interface Onboarding {
 
 const TOTAL_TASKS = 8;
 
-const STATUS_SEVERITY: Record<string, 'success' | 'warning' | 'info' | 'secondary'> = {
-  pending: 'warning',
-  in_progress: 'info',
-  completed: 'success',
-  skipped: 'secondary',
+const statusTag = (status: string) => {
+  const map: Record<string, { cls: string; label: string }> = {
+    pending: { cls: 'bg-amber-100 text-amber-800', label: 'pending' },
+    in_progress: { cls: 'bg-purple-100 text-purple-800', label: 'in_progress' },
+    completed: { cls: 'bg-emerald-100 text-emerald-800', label: 'completed' },
+    skipped: { cls: 'bg-gray-100 text-gray-800', label: 'skipped' },
+  };
+  const entry = map[status] || { cls: 'bg-amber-100 text-amber-800', label: status };
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${entry.cls}`}>
+      {entry.label}
+    </span>
+  );
+};
+
+const onboardStatusTag = (status: string) => {
+  const isInProgress = status === 'in_progress';
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isInProgress ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}`}>
+      {status || 'pending'}
+    </span>
+  );
 };
 
 export default function OnboardingPage() {
@@ -105,7 +117,7 @@ export default function OnboardingPage() {
               label="🚀 Iniciar Onboarding"
               icon="pi pi-play"
               onClick={handleStart}
-              size="large"
+              size="lg"
             />
           </div>
         </Card>
@@ -119,7 +131,9 @@ export default function OnboardingPage() {
       <div>
         <div className="flex justify-content-between align-items-center mb-3">
           <h2 className="mt-0">Onboarding</h2>
-          <Tag severity="success" value="completado" />
+          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
+            completado
+          </span>
         </div>
         <Card>
           <div className="text-center py-5">
@@ -150,7 +164,7 @@ export default function OnboardingPage() {
       <Button
         label="✓ Completar"
         icon="pi pi-check"
-        size="small"
+        size="sm"
         severity="success"
         loading={completingKey === row.key}
         onClick={() => handleComplete(row.key)}
@@ -158,24 +172,25 @@ export default function OnboardingPage() {
     );
   };
 
-  const statusBody = (row: OnboardingTask) => (
-    <Tag severity={STATUS_SEVERITY[row.status] || 'warning'} value={row.status} />
-  );
+  const columns = [
+    { field: 'order', header: '#', width: '60px' },
+    { field: 'title', header: 'Tarea' },
+    { field: 'description', header: 'Descripción' },
+    { field: 'status', header: 'Estado', width: '120px', body: (row: OnboardingTask) => statusTag(row.status) },
+    { header: 'Acción', width: '140px', body: actionBody, field: '' },
+  ];
 
   return (
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">Onboarding</h2>
-        <Tag
-          severity={data?.status === 'in_progress' ? 'info' : 'warning'}
-          value={data?.status || 'pending'}
-        />
+        {onboardStatusTag(data?.status || 'pending')}
       </div>
 
       <Card className="mb-3">
         <div className="flex align-items-center gap-3">
           <span className="font-medium">Progreso:</span>
-          <ProgressBar value={progress} style={{ flex: 1, height: '1.5rem' }} />
+          <Progress value={progress} className="flex-1" />
           <span className="font-bold">
             {completedCount}/{TOTAL_TASKS}
           </span>
@@ -184,26 +199,12 @@ export default function OnboardingPage() {
 
       <Card>
         <DataTable
-          value={data?.tasks || []}
+          data={data?.tasks || []}
           loading={loading}
-          size="small"
-          stripedRows
-        >
-          <Column field="order" header="#" style={{ width: '60px' }} />
-          <Column field="title" header="Tarea" />
-          <Column field="description" header="Descripción" />
-          <Column
-            field="status"
-            header="Estado"
-            body={statusBody}
-            style={{ width: '120px' }}
-          />
-          <Column
-            header="Acción"
-            body={actionBody}
-            style={{ width: '140px' }}
-          />
-        </DataTable>
+          dense
+          striped
+          columns={columns}
+        />
       </Card>
     </div>
   );

@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { Tag } from 'primereact/tag';
+import { Button, Card, Dialog, InputText } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { leads } from '../../services/api';
 
@@ -69,7 +65,13 @@ export default function CrmPage() {
                   <div className="font-bold">{lead.name}</div>
                   {lead.clinic && <div className="text-sm text-500">{lead.clinic}</div>}
                   <div className="flex justify-content-between mt-1">
-                    {lead.score && <Tag severity={lead.score >= 80 ? 'danger' : lead.score >= 60 ? 'warning' : 'info'} value={lead.score} />}
+                    {lead.score && (
+                      <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                        lead.score >= 80 ? 'bg-red-100 text-red-800' : lead.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {lead.score}
+                      </span>
+                    )}
                     <span className="text-xs text-500">{lead.source}</span>
                   </div>
                 </div>

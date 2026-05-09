@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { Message } from 'primereact/message';
+import { Alert, Button, Card, InputText } from '@/components/ui';
 import { auth } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -59,7 +56,7 @@ export default function SetupPage() {
           </p>
         </div>
 
-        {error && <Message severity="error" text={error} className="w-full mb-3" />}
+        {error && <Alert variant="destructive" className="mb-3"><span>{error}</span></Alert>}
 
         <div className="flex flex-column gap-3">
           <div>

@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
-import { Tag } from 'primereact/tag';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Card, Dialog, InputText, DataTable } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { campaigns } from '../../services/api';
+
+const statusTag = (status: string) => {
+  const isActive = status === 'active';
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+      {status}
+    </span>
+  );
+};
 
 export default function CampaignsPage() {
   const tenant = getCurrentTenant();
@@ -37,50 +39,53 @@ export default function CampaignsPage() {
     fetchCampaigns();
   };
 
-  const statusBody = (row: any) => <Tag severity={row.status === 'active' ? 'success' : 'warning'} value={row.status} />;
+  const columns = [
+    { field: '', header: '', expander: true, width: '40px' },
+    { field: 'name', header: 'Nombre' },
+    { field: 'platform', header: 'Plataforma' },
+    { field: 'budget', header: 'Presupuesto', body: (r: any) => `$${Number(r.budget || 0).toLocaleString()}` },
+    { field: 'spent', header: 'Gastado', body: (r: any) => `$${Number(r.spent || 0).toLocaleString()}` },
+    { field: 'status', header: 'Estado', body: (r: any) => statusTag(r.status) },
+  ];
+
+  const keywordColumns = [
+    { field: 'text', header: 'Keyword' },
+    { field: 'cpc', header: 'CPC' },
+    { field: 'clicks', header: 'Clics' },
+    { field: 'impressions', header: 'Impresiones' },
+    { field: 'status', header: 'Estado', body: (r: any) => statusTag(r.status) },
+  ];
 
   return (
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">Google Ads</h2>
-        <Button label="Nueva Campaña" icon="pi pi-plus" onClick={() => setShowNew(true)} />
+        <Button label="Nueva Campaña" icon="pi pi-plus" onClick={() => setShowNew(true)}  />
       </div>
 
       <Card>
         <DataTable
-          value={campaignList}
+          data={campaignList}
           loading={loading}
-          size="small"
-          stripedRows
+          dense
+          striped
           expandedRows={expandedRows}
           onRowToggle={(e) => setExpandedRows(e.data)}
           rowExpansionTemplate={(row: any) => (
             <div className="p-3">
               <h5>Keywords</h5>
-              <DataTable value={row.keywords || []} size="small">
-                <Column field="text" header="Keyword" />
-                <Column field="cpc" header="CPC" />
-                <Column field="clicks" header="Clics" />
-                <Column field="impressions" header="Impresiones" />
-                <Column field="status" header="Estado" body={(r: any) => <Tag severity={r.status === 'active' ? 'success' : 'warning'} value={r.status} />} />
-              </DataTable>
+              <DataTable data={row.keywords || []} dense columns={keywordColumns} />
             </div>
           )}
-        >
-          <Column expander style={{ width: '40px' }} />
-          <Column field="name" header="Nombre" />
-          <Column field="platform" header="Plataforma" />
-          <Column field="budget" header="Presupuesto" body={(r: any) => `$${Number(r.budget || 0).toLocaleString()}`} />
-          <Column field="spent" header="Gastado" body={(r: any) => `$${Number(r.spent || 0).toLocaleString()}`} />
-          <Column field="status" header="Estado" body={statusBody} />
-        </DataTable>
+          columns={columns}
+        />
       </Card>
 
-      <Dialog header="Nueva Campaña" visible={showNew} onHide={() => setShowNew(false)} style={{ width: '400px' }}>
+      <Dialog header="Nueva Campaña" visible={showNew} onHide={() => setShowNew(false)} size="sm">
         <div className="flex flex-column gap-2">
-          <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)} />
-          <InputNumber placeholder="Presupuesto mensual" value={newBudget} onValueChange={e => setNewBudget(e.value)} mode="currency" currency="MXN" />
-          <Button label="Crear" onClick={handleCreate} disabled={!newName} />
+          <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)}  />
+          <InputText type="number" placeholder="Presupuesto mensual" value={newBudget} onChange={e => setNewBudget(Number(e.target.value))}  />
+          <Button label="Crear" onClick={handleCreate} disabled={!newName}  />
         </div>
       </Dialog>
     </div>

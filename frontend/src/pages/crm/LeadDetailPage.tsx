@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Dropdown } from 'primereact/dropdown';
+import { Button, Card, Dropdown, Textarea } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { leads } from '../../services/api';
 
@@ -56,7 +52,11 @@ export default function LeadDetailPage() {
           <div className="col-6">
             <div className="mb-2">
               <strong>Score:</strong>{' '}
-              <Tag severity={lead.score >= 80 ? 'danger' : lead.score >= 60 ? 'warning' : 'info'} value={lead.score || '-'} />
+              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                lead.score >= 80 ? 'bg-red-100 text-red-800' : lead.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+              }`}>
+                {lead.score || '-'}
+              </span>
             </div>
             <div className="mb-2">
               <strong>Etapa:</strong>{' '}
@@ -75,7 +75,7 @@ export default function LeadDetailPage() {
 
         <div className="mt-3">
           <strong>Notas:</strong>
-          <InputTextarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="w-full mt-1" />
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="w-full mt-1" />
         </div>
       </Card>
     </div>

@@ -1,6 +1,6 @@
+
 import { useNavigate } from 'react-router-dom';
-import { Panel } from 'primereact/panel';
-import { Chip } from 'primereact/chip';
+
 import {
   HelpCircle, Users, Calendar, Megaphone, Eye, Map,
   CheckCircle, Settings, Plug, ArrowRight, Twitter, Globe, MessageCircle,
@@ -16,10 +16,10 @@ const sections = [
         <p className="text-[var(--foreground)] font-medium">MarketingOS es un sistema CRM + Motor de Marketing con IA.</p>
         <p>Hermes analiza datos, redacta contenido, sugiere campañas y monitorea competencia. <strong className="text-[var(--foreground)]">Tú apruebas antes de publicar.</strong></p>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Chip label="Multi-producto" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
-          <Chip label="Multi-tenant" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
-          <Chip label="IA + Humano" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
-          <Chip label="Auto-reportes" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">Multi-producto</span> 
+          <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">Multi-tenant</span> 
+          <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">IA + Humano</span> 
+          <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">Auto-reportes</span> 
         </div>
       </div>
     ),
@@ -57,7 +57,7 @@ const sections = [
         <p>Pipeline de 5 etapas:</p>
         <div className="flex flex-wrap gap-1.5 my-2">
           {['Prospecto', 'Contactado', 'Interesado', 'Trial', 'Cliente'].map(s => (
-            <Chip key={s} label={s} className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+            <span key={s} className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">{s}</span>
           ))}
         </div>
         <ul className="list-disc pl-5 space-y-1 mt-2">
@@ -122,7 +122,7 @@ const sections = [
         <p>Landing pages optimizadas para:</p>
         <div className="flex flex-wrap gap-1.5 my-2">
           {['CDMX', 'Monterrey', 'Guadalajara', 'Puebla', 'Querétaro', 'Mérida'].map(c => (
-            <Chip key={c} label={c} className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+            <span key={c} className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium bg-[var(--background-tertiary)] text-[var(--foreground-muted)] border border-[var(--border)]">{c}</span>
           ))}
         </div>
         <NavButton label="Ir a SEO" path="/seo" navigate={navigate} />
@@ -188,25 +188,18 @@ export default function HelpPage() {
 
       <div className="flex flex-col gap-3">
         {sections.map((sec, i) => (
-          <Panel
+          <div
             key={i}
-            header={
-              <div className="flex items-center gap-2">
-                <sec.icon size={16} className="text-[var(--primary)]" />
-                <span className="text-sm font-medium text-[var(--foreground)]">{sec.title}</span>
-              </div>
-            }
-            toggleable
-            collapsed={!sec.defaultExpanded}
-            pt={{
-              root: { className: '!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)] overflow-hidden' },
-              header: { className: '!bg-transparent !px-4 !py-3 hover:!bg-[var(--background-tertiary)] cursor-pointer' },
-              toggleableContent: { className: '!bg-transparent' },
-              content: { className: '!bg-transparent !px-4 !pb-4 !pt-0 !border-t-0' },
-            }}
+            className="bg-[var(--card)] text-[var(--card-foreground)] border border-[var(--card-border)] rounded-[var(--radius-lg)] overflow-hidden"
           >
-            <div className="leading-relaxed">{sec.content(navigate)}</div>
-          </Panel>
+            <div className="flex items-center gap-2 px-4 py-3">
+              <sec.icon size={16} className="text-[var(--primary)]" />
+              <span className="text-sm font-medium text-[var(--foreground)]">{sec.title}</span>
+            </div>
+            <div className="px-4 pb-4 pt-0">
+              <div className="leading-relaxed">{sec.content(navigate)}</div>
+            </div>
+          </div>
         ))}
       </div>
 

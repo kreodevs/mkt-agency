@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
-import { Tag } from 'primereact/tag';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Card, DataTable, Dialog, Dropdown, InputText } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { seoPages } from '../../services/api';
 
@@ -14,6 +7,15 @@ const statusOptions = [
   { label: 'Draft', value: 'draft' },
   { label: 'Published', value: 'published' },
 ];
+
+const statusTag = (status: string) => {
+  const isPublished = status === 'published';
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+      {status}
+    </span>
+  );
+};
 
 export default function SeoPagesPage() {
   const tenant = getCurrentTenant();
@@ -44,10 +46,12 @@ export default function SeoPagesPage() {
     fetchPages();
   };
 
-  const statusBody = (row: any) => {
-    const severity = row.status === 'published' ? 'success' : 'warning';
-    return <Tag severity={severity} value={row.status} />;
-  };
+  const columns = [
+    { field: 'city', header: 'Ciudad' },
+    { field: 'slug', header: 'Slug' },
+    { field: 'title', header: 'Título' },
+    { field: 'status', header: 'Estado', body: (r: any) => statusTag(r.status) },
+  ];
 
   return (
     <div>
@@ -58,19 +62,15 @@ export default function SeoPagesPage() {
 
       <Card>
         <DataTable
-          value={pageList}
+          data={pageList}
           loading={loading}
-          size="small"
-          stripedRows
-        >
-          <Column field="city" header="Ciudad" />
-          <Column field="slug" header="Slug" />
-          <Column field="title" header="Título" />
-          <Column field="status" header="Estado" body={statusBody} />
-        </DataTable>
+          dense
+          striped
+          columns={columns}
+        />
       </Card>
 
-      <Dialog header="Nueva Página SEO" visible={showNew} onHide={() => setShowNew(false)} style={{ width: '400px' }}>
+      <Dialog header="Nueva Página SEO" visible={showNew} onHide={() => setShowNew(false)} size="sm">
         <div className="flex flex-column gap-2">
           <InputText placeholder="Ciudad" value={newCity} onChange={e => setNewCity(e.target.value)} />
           <InputText placeholder="Slug" value={newSlug} onChange={e => setNewSlug(e.target.value)} />

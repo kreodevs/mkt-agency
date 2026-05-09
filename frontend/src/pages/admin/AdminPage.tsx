@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Dialog } from 'primereact/dialog';
-import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { InputText } from 'primereact/inputtext';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Toast } from 'primereact/toast';
+import { Card, DataTable, Dialog, InputText } from '@/components/ui';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/molecules/AlertDialog';
+
 import { useRef } from 'react';
 import { tenants, products, users, auth } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -22,8 +18,10 @@ export default function AdminPage() {
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showCreateTenant, setShowCreateTenant] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [newTenantName, setNewTenantName] = useState('');
-  const toast = useRef<Toast>(null);
+  const [toastMsg, setToastMsg] = useState<any>(null);
+  const toast = useRef<any>(null);
   const setUser = useAuthStore((s) => s.setUser);
   const navigate = useNavigate();
   const currentProductId = sessionStorage.getItem('currentProductId');
@@ -49,21 +47,19 @@ export default function AdminPage() {
   };
 
   const confirmDeleteTenant = (row: any) => {
-    confirmDialog({
-      message: `¿Eliminar permanentemente "${row.name}"? Se borrarán todos sus productos, leads, campañas y datos.`,
-      header: 'Eliminar Tenant',
-      icon: 'pi pi-exclamation-triangle',
-      acceptClassName: 'p-button-danger',
-      accept: async () => {
-        try {
-          await tenants.remove(row.id);
-          toast.current?.show({ severity: 'success', summary: 'Eliminado', detail: `Tenant "${row.name}" eliminado` });
-          fetchTenants();
-        } catch (e: any) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Error al eliminar' });
-        }
-      },
-    });
+    setDeleteTarget(row);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      await tenants.remove(deleteTarget.id);
+      toast.current?.show({ severity: 'success', summary: 'Eliminado', detail: `Tenant "${deleteTarget.name}" eliminado` });
+      fetchTenants();
+    } catch (e: any) {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Error al eliminar' });
+    }
+    setDeleteTarget(null);
   };
 
   const viewUsers = async (row: any) => {
@@ -73,7 +69,7 @@ export default function AdminPage() {
       setSelectedTenant(row);
       setShowUserDialog(true);
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los usuarios' });
+      setToastMsg({severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los usuarios'});
     }
   };
 
@@ -145,26 +141,11 @@ export default function AdminPage() {
 
   return (
     <div>
-      <Toast ref={toast} />
-      <ConfirmDialog
-        pt={{
-          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]' },
-          header: { className: '!bg-transparent !text-[var(--foreground)] !p-4 !pb-0' },
-          content: { className: '!bg-transparent !text-[var(--foreground-muted)] !p-4 !text-sm' },
-          footer: { className: '!bg-transparent !p-4 !pt-0 !flex !justify-end !gap-2' },
-        }}
-      />
-
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-[var(--foreground)] mt-0">Administración</h2>
       </div>
 
-      <Card
-        className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]"
-        pt={{
-          title: { className: 'text-base font-semibold text-[var(--foreground)]' },
-        }}
-      >
+      <Card variant="bordered">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Store size={18} className="text-[var(--primary)]" />
@@ -180,25 +161,15 @@ export default function AdminPage() {
         </div>
 
         <DataTable
-          value={tenantList}
+          data={tenantList}
           loading={loading}
-          size="small"
-          stripedRows
-          pt={{
-            root: { className: '!text-sm !text-[var(--foreground)]' },
-            header: { className: '!bg-transparent' },
-            bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)] transition-colors' },
-            headerRow: { className: '!bg-transparent' },
-            loadingOverlay: { className: '!bg-[var(--background)]/50' },
-            wrapper: { className: '!bg-transparent' },
-            emptyMessage: { className: '!text-[var(--foreground-muted)] !text-sm !py-6' },
-          }}
-        >
-          <Column field="name" header="Nombre" />
-          <Column field="ownerId" header="Dueño" />
-          <Column header="Productos" body={productBody} />
-          <Column header="Acciones" body={actionBody} style={{ width: '100px' }} />
-        </DataTable>
+          columns={[
+            { field: 'name', header: 'Nombre' },
+            { field: 'ownerId', header: 'Dueño' },
+            { field: 'products', header: 'Productos', body: productBody },
+            { field: 'actions', header: 'Acciones', body: actionBody, width: '100px' },
+          ]}
+        />
       </Card>
 
       {/* Add Product Dialog */}
@@ -206,14 +177,8 @@ export default function AdminPage() {
         header="Agregar Producto"
         visible={showProduct}
         onHide={() => setShowProduct(false)}
-        style={{ width: '400px' }}
-        pt={{
-          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
-          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
-          headerTitle: { className: '!text-sm !font-semibold' },
-          content: { className: '!bg-transparent !p-4' },
-          mask: { className: '!bg-black/60' },
-        }}
+       
+size="md"
       >
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
@@ -248,27 +213,17 @@ export default function AdminPage() {
         header={`Usuarios — ${selectedTenant?.name || ''}`}
         visible={showUserDialog}
         onHide={() => setShowUserDialog(false)}
-        style={{ width: '500px' }}
-        pt={{
-          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
-          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
-          content: { className: '!bg-transparent !p-4' },
-          mask: { className: '!bg-black/60' },
-        }}
+       
+size="md"
       >
         <DataTable
-          value={userList}
-          size="small"
-          stripedRows
-          pt={{
-            root: { className: '!text-sm !text-[var(--foreground)]' },
-            bodyRow: { className: '!bg-transparent hover:!bg-[var(--muted)]' },
-            headerRow: { className: '!bg-transparent' },
-          }}>
-          <Column field="name" header="Nombre" />
-          <Column field="email" header="Email" />
-          <Column field="role" header="Rol" />
-        </DataTable>
+          data={userList}
+          columns={[
+            { field: 'name', header: 'Nombre' },
+            { field: 'email', header: 'Email' },
+            { field: 'role', header: 'Rol' },
+          ]}
+        />
       </Dialog>
 
       {/* Create Tenant Dialog */}
@@ -276,13 +231,8 @@ export default function AdminPage() {
         header="Nuevo Tenant"
         visible={showCreateTenant}
         onHide={() => setShowCreateTenant(false)}
-        style={{ width: '400px' }}
-        pt={{
-          root: { className: '!bg-[var(--popover)] !text-[var(--popover-foreground)]' },
-          header: { className: '!bg-transparent !text-[var(--foreground)] !text-sm !font-semibold !p-4 !pb-0' },
-          content: { className: '!bg-transparent !p-4' },
-          mask: { className: '!bg-black/60' },
-        }}
+       
+size="md"
       >
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
@@ -311,6 +261,32 @@ export default function AdminPage() {
           </div>
         </div>
       </Dialog>
+      {toastMsg && (
+        <div className="fixed bottom-4 right-4 z-[var(--z-toast)] bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-md)] shadow-lg px-4 py-3 text-sm text-[var(--foreground)] max-w-sm">
+          <span className="font-medium">{toastMsg.summary}: </span>
+          <span className="text-[var(--foreground-muted)]">{toastMsg.detail}</span>
+          <button onClick={() => setToastMsg(null)} className="ml-2 text-[var(--foreground-muted)] hover:text-[var(--foreground)] cursor-pointer border-none bg-transparent">&times;</button>
+        </div>
+      )}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? `¿Eliminar permanentemente "${deleteTarget.name}"? Se borrarán todos sus productos, leads, campañas y datos.` : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <button onClick={() => setDeleteTarget(null)} className="px-3 py-1.5 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] bg-transparent rounded-[var(--radius-md)] hover:bg-[var(--secondary)] transition-colors cursor-pointer border-none">
+              Cancelar
+            </button>
+            <button onClick={handleDeleteConfirm} className="px-3 py-1.5 text-xs font-medium bg-[var(--destructive)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-colors cursor-pointer border-none">
+              Eliminar
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import { Message } from 'primereact/message';
+import { Button, Card, InputText, Password } from '@/components/ui';
 import { useAuthStore } from '../../stores/authStore';
 
 export default function RegisterPage() {
@@ -30,7 +26,7 @@ export default function RegisterPage() {
   return (
     <div className="flex align-items-center justify-content-center min-h-screen" style={{ background: '#f0f2f5' }}>
       <Card title="MktAgencyOS" subTitle="Crear cuenta" className="w-25rem">
-        {error && <Message severity="error" text={error} className="mb-2 w-full" />}
+        {error && <div className="text-sm text-[var(--destructive)] bg-red-50 border border-red-200 rounded-[var(--radius-sm)] px-3 py-2 mb-3 w-full">{error}</div>}
         <form onSubmit={handleSubmit} className="flex flex-column gap-3">
           <div>
             <label className="block mb-1 text-sm">Nombre</label>

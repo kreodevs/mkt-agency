@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Tag } from 'primereact/tag';
+import { Card, DataTable } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { leads, campaigns } from '../../services/api';
 
@@ -24,12 +21,12 @@ export default function DashboardPage() {
 
   const hotLeads = leadList.filter((l: any) => l.score >= 80);
   const scoreBody = (row: any) => {
-    const color = row.score >= 80 ? 'danger' : row.score >= 60 ? 'warning' : 'info';
-    return <Tag severity={color} value={row.score || '-'} />;
+    const clr = row.score >= 80 ? 'bg-red-100 text-red-800' : row.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800';
+    return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${clr}`}>{row.score || '-'}</span>;
   };
   const stageBody = (row: any) => {
-    const map: any = { prospecto: 'info', contactado: 'warning', interesado: 'success', trial: 'help', cliente: 'success' };
-    return <Tag severity={map[row.stage] || 'info'} value={row.stage} />;
+    const colors: Record<string, string> = { prospecto: 'bg-purple-100 text-purple-800', contactado: 'bg-amber-100 text-amber-800', interesado: 'bg-emerald-100 text-emerald-800', trial: 'bg-indigo-100 text-indigo-800', cliente: 'bg-emerald-100 text-emerald-800' };
+    return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors[row.stage] || 'bg-purple-100 text-purple-800'}`}>{row.stage}</span>;
   };
 
   return (
@@ -64,24 +61,32 @@ export default function DashboardPage() {
 
       {/* Hot Leads */}
       <Card title="🔥 Leads Calientes" className="mt-3">
-        <DataTable value={hotLeads} loading={loading} size="small" stripedRows>
-          <Column field="name" header="Nombre" />
-          <Column field="clinic" header="Clínica" />
-          <Column field="score" header="Score" body={scoreBody} />
-          <Column field="source" header="Fuente" />
-          <Column field="stage" header="Etapa" body={stageBody} />
-        </DataTable>
+        <DataTable
+          data={hotLeads}
+          loading={loading}
+          columns={[
+            { field: 'name', header: 'Nombre' },
+            { field: 'clinic', header: 'Clínica' },
+            { field: 'score', header: 'Score', body: scoreBody },
+            { field: 'source', header: 'Fuente' },
+            { field: 'stage', header: 'Etapa', body: stageBody },
+          ]}
+        />
       </Card>
 
       {/* Campaigns */}
       <Card title="📢 Campañas" className="mt-3">
-        <DataTable value={campaignList} loading={loading} size="small" stripedRows>
-          <Column field="name" header="Nombre" />
-          <Column field="platform" header="Plataforma" />
-          <Column field="budget" header="Presupuesto" body={(r: any) => `$${Number(r.budget || 0).toLocaleString()}`} />
-          <Column field="spent" header="Gastado" body={(r: any) => `$${Number(r.spent || 0).toLocaleString()}`} />
-          <Column field="status" header="Estado" body={(r: any) => <Tag severity={r.status === 'active' ? 'success' : 'warning'} value={r.status} />} />
-        </DataTable>
+        <DataTable
+          data={campaignList}
+          loading={loading}
+          columns={[
+            { field: 'name', header: 'Nombre' },
+            { field: 'platform', header: 'Plataforma' },
+            { field: 'budget', header: 'Presupuesto', body: (r: any) => `$${Number(r.budget || 0).toLocaleString()}` },
+            { field: 'spent', header: 'Gastado', body: (r: any) => `$${Number(r.spent || 0).toLocaleString()}` },
+            { field: 'status', header: 'Estado', body: (r: any) => <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${r.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{r.status}</span> },
+          ]}
+        />
       </Card>
     </div>
   );

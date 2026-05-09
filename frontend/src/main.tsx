@@ -4,12 +4,12 @@ import { PrimeReactProvider } from 'primereact/api';
 import App from './App';
 import './theme/vars.css';
 import './index.css';
-import { superhumanPt } from './theme/pt';
 
-// Unstyled mode — Kreo components via Tailwind + PT Superhuman for non-migrated pages
+// Unstyled mode — Kreo components inyectan estilos vía Tailwind + CSS vars
+// Cada wrapper Kreo (Card, DataTable, Dialog, etc.) tiene su propio PT
 const primeReactConfig = {
   unstyled: true,
-  pt: superhumanPt,
+  pt: {},
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

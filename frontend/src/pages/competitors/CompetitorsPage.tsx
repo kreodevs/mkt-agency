@@ -1,13 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { Tag } from 'primereact/tag';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Card, DataTable, Dialog, InputText } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
 import { competitors } from '../../services/api';
+
+const statusTag = (status: string) => {
+  const isActive = status === 'active';
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+      {status}
+    </span>
+  );
+};
+
+const sentimentTag = (sentiment: string) => {
+  const classes: Record<string, string> = {
+    positive: 'bg-emerald-100 text-emerald-800',
+    negative: 'bg-red-100 text-red-800',
+  };
+  const cls = classes[sentiment] || 'bg-amber-100 text-amber-800';
+  return (
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}>
+      {sentiment}
+    </span>
+  );
+};
 
 export default function CompetitorsPage() {
   const tenant = getCurrentTenant();
@@ -37,17 +53,24 @@ export default function CompetitorsPage() {
     fetchCompetitors();
   };
 
-  const statusBody = (row: any) => <Tag severity={row.status === 'active' ? 'success' : 'warning'} value={row.status} />;
-
-  const sentimentBody = (row: any) => {
-    const severity = row.sentiment === 'positive' ? 'success' : row.sentiment === 'negative' ? 'danger' : 'warning';
-    return <Tag severity={severity} value={row.sentiment} />;
-  };
-
   const dateBody = (row: any) => {
     if (!row.date) return '';
     return new Date(row.date).toLocaleDateString();
   };
+
+  const mentionColumns = [
+    { field: 'source', header: 'Fuente' },
+    { field: 'title', header: 'Título' },
+    { field: 'sentiment', header: 'Sentimiento', body: (r: any) => sentimentTag(r.sentiment) },
+    { field: 'date', header: 'Fecha', body: dateBody },
+  ];
+
+  const columns = [
+    { field: '', header: '', expander: true, width: '40px' },
+    { field: 'name', header: 'Nombre' },
+    { field: 'website', header: 'Website' },
+    { field: 'status', header: 'Estado', body: (r: any) => statusTag(r.status) },
+  ];
 
   return (
     <div>
@@ -58,32 +81,23 @@ export default function CompetitorsPage() {
 
       <Card>
         <DataTable
-          value={competitorList}
+          data={competitorList}
           loading={loading}
-          size="small"
-          stripedRows
+          dense
+          striped
           expandedRows={expandedRows}
           onRowToggle={(e) => setExpandedRows(e.data)}
           rowExpansionTemplate={(row: any) => (
             <div className="p-3">
               <h5>Menciones</h5>
-              <DataTable value={row.mentions || []} size="small">
-                <Column field="source" header="Fuente" />
-                <Column field="title" header="Título" />
-                <Column field="sentiment" header="Sentimiento" body={sentimentBody} />
-                <Column field="date" header="Fecha" body={dateBody} />
-              </DataTable>
+              <DataTable data={row.mentions || []} dense columns={mentionColumns} />
             </div>
           )}
-        >
-          <Column expander style={{ width: '40px' }} />
-          <Column field="name" header="Nombre" />
-          <Column field="website" header="Website" />
-          <Column field="status" header="Estado" body={statusBody} />
-        </DataTable>
+          columns={columns}
+        />
       </Card>
 
-      <Dialog header="Nuevo Competidor" visible={showNew} onHide={() => setShowNew(false)} style={{ width: '400px' }}>
+      <Dialog header="Nuevo Competidor" visible={showNew} onHide={() => setShowNew(false)} size="sm">
         <div className="flex flex-column gap-2">
           <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)} />
           <InputText placeholder="Website" value={newWebsite} onChange={e => setNewWebsite(e.target.value)} />
