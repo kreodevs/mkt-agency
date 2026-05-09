@@ -161,7 +161,48 @@ export default function ProposalsPage() {
     setRejectDialogOpen(true);
   };
 
-  const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
+  function renderPayload(proposal: Proposal) {
+  const { payload, actionType } = proposal;
+  if (!payload) return null;
+
+  // For custom_message or generic payloads, show structured fields
+  const title = payload.title || payload.subject;
+  const description = payload.description || payload.message || payload.context || payload.content;
+  const product = payload.product || payload.productName;
+  const metaEntries = Object.entries(payload).filter(
+    ([k]) => !['title', 'subject', 'description', 'message', 'context', 'content', 'product', 'productName'].includes(k)
+  );
+
+  return (
+    <div className="bg-[var(--secondary)] rounded-md p-3 mb-3 space-y-2">
+      {title && (
+        <h4 className="text-sm font-semibold text-[var(--foreground)]">{title}</h4>
+      )}
+      {product && (
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center rounded bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5">
+            {product}
+          </span>
+        </div>
+      )}
+      {description && (
+        <p className="text-sm text-[var(--foreground)] leading-relaxed">{description}</p>
+      )}
+      {metaEntries.length > 0 && (
+        <div className="text-[11px] text-[var(--foreground-muted)] font-mono space-y-0.5 pt-1 border-t border-[var(--border)]">
+          {metaEntries.map(([key, val]) => (
+            <div key={key}>
+              <span className="text-[var(--foreground-subtle)]">{key}:</span>{' '}
+              {typeof val === 'string' ? val : JSON.stringify(val)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
     <Card key={proposal.id} className="mb-3" padding="md">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
@@ -185,13 +226,7 @@ export default function ProposalsPage() {
         </p>
       )}
 
-      {proposal.payload && (
-        <div className="bg-[var(--secondary)] rounded-md p-3 mb-3 overflow-x-auto">
-          <pre className="text-xs font-mono text-[var(--foreground)] whitespace-pre-wrap">
-            {JSON.stringify(proposal.payload, null, 2)}
-          </pre>
-        </div>
-      )}
+      {proposal.payload && renderPayload(proposal)}
 
       {showActions && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border)]">
