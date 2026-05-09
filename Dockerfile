@@ -1,30 +1,22 @@
-# Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ .
-RUN npx vite build
-
-# Stage 2: Build Backend
-FROM node:20-alpine AS backend-builder
+# Stage 1: Build Backend
+FROM node:20-alpine AS builder
 WORKDIR /app
-COPY backend/package*.json ./
+# Need root workspace + lockfile for npm ci
+COPY package*.json ./
+COPY backend/package*.json ./backend/
 RUN npm ci
-COPY backend/ .
+COPY backend/ ./backend/
+WORKDIR /app/backend
 RUN npx nest build
 
-# Stage 3: Production
+# Stage 2: Production
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy backend artifacts
-COPY --from=backend-builder /app/dist ./dist
-COPY --from=backend-builder /app/node_modules ./node_modules
-COPY --from=backend-builder /app/package*.json ./
-
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/dist ./public
+# Copy built backend
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=builder /app/backend/package*.json ./
 
 # Create uploads directory
 RUN mkdir -p uploads
@@ -32,6 +24,5 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 ENV NODE_ENV=production
-ENV FRONTEND_PATH=./public
 
 CMD ["node", "dist/main"]

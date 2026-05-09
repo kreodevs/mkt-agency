@@ -1,11 +1,9 @@
 services:
   # === PostgreSQL ===
-  postgres:
+  mkt-agency-db:
     image: postgres:16-alpine
-    container_name: mktos-pg
+    container_name: mkt-agency-db
     restart: unless-stopped
-    ports:
-      - '5432:5432'
     environment:
       POSTGRES_DB: mktos
       POSTGRES_USER: mktos
@@ -18,20 +16,17 @@ services:
       timeout: 5s
       retries: 5
 
-  # === Backend (NestJS + hot-reload) ===
+  # === Backend (NestJS production) ===
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-      target: backend
+      dockerfile: Dockerfile
     container_name: mktos-backend
     restart: unless-stopped
-    expose:
-      - '3000'
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      DB_HOST: postgres
+      DB_HOST: mkt-agency-db
       DB_PORT: 5432
       DB_NAME: mktos
       DB_USER: mktos
@@ -40,27 +35,18 @@ services:
       JWT_EXPIRES_IN: 7d
       CORS_ORIGIN: '*'
     volumes:
-      - ./backend/src:/app/backend/src
       - uploads:/app/uploads
     depends_on:
-      postgres:
+      mkt-agency-db:
         condition: service_healthy
 
-  # === Frontend (Vite Dev Server + hot-reload) ===
+  # === Frontend (Nginx) ===
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-      target: frontend
+      dockerfile: Dockerfile.frontend
     container_name: mktos-frontend
     restart: unless-stopped
-    expose:
-      - '80'
-    environment:
-      VITE_API_URL: /api
-    volumes:
-      - ./frontend/src:/app/frontend/src
-      - ./frontend/index.html:/app/frontend/index.html
     depends_on:
       - backend
 
