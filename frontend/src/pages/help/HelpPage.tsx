@@ -1,267 +1,219 @@
-import { Panel } from 'primereact/panel';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
+import { Panel } from 'primereact/panel';
 import { Chip } from 'primereact/chip';
+import {
+  HelpCircle, Users, Calendar, Megaphone, Eye, Map,
+  CheckCircle, Settings, Plug, ArrowRight, Twitter, Globe, MessageCircle,
+} from 'lucide-react';
 
 const sections = [
   {
-    icon: 'pi-question-circle',
+    icon: HelpCircle,
     title: '¿Qué es MarketingOS?',
     defaultExpanded: true,
     content: (navigate: any) => (
-      <div>
-        <p>
-          <strong>MarketingOS</strong> es un sistema CRM combinado con un
-          Motor de Marketing impulsado por inteligencia artificial.
-        </p>
-        <p>
-          Nuestro agente <strong>Hermes</strong> analiza tus datos, redacta
-          contenido para redes sociales, sugiere campañas de Google Ads y
-          monitorea a la competencia. Sin embargo, tú mantienes el control
-          total: <strong>Hermes propone, tú apruebas</strong>. Nada se publica
-          ni se ejecuta sin tu confirmación explícita.
-        </p>
-        <p>
-          El flujo de trabajo es simple: revisa las sugerencias en el
-          panel de aprobación, haz ajustes si es necesario, y confirma para
-          que se ejecuten.
-        </p>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <p className="text-[var(--foreground)] font-medium">MarketingOS es un sistema CRM + Motor de Marketing con IA.</p>
+        <p>Hermes analiza datos, redacta contenido, sugiere campañas y monitorea competencia. <strong className="text-[var(--foreground)]">Tú apruebas antes de publicar.</strong></p>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Chip label="Multi-producto" icon="pi pi-box" />
-          <Chip label="Multi-tenant" icon="pi pi-building" />
-          <Chip label="IA + Humano" icon="pi pi-robot" />
-          <Chip label="Auto-reportes" icon="pi pi-file" />
+          <Chip label="Multi-producto" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          <Chip label="Multi-tenant" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          <Chip label="IA + Humano" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          <Chip label="Auto-reportes" className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
         </div>
       </div>
     ),
   },
   {
-    icon: 'pi-plug',
+    icon: Plug,
     title: '1. Conexiones — Conecta tus cuentas',
     content: (navigate: any) => (
-      <div>
-        <p>
-          Antes de empezar, necesitas conectar las plataformas que MarketingOS usará.
-          Cada <strong>producto</strong> tiene sus propias conexiones.
-        </p>
-        <div className="flex flex-column gap-2 mb-3">
-          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
-            <i className="pi pi-twitter text-xl" style={{ color: '#1DA1F2' }} />
-            <div className="flex-1">
-              <strong>X (Twitter)</strong>
-              <div className="text-sm text-500">API Key + API Secret + Access Token + Access Secret del Developer Portal</div>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <p>Cada <strong className="text-[var(--foreground)]">producto</strong> tiene sus propias conexiones.</p>
+        <div className="flex flex-col gap-2 my-3">
+          {[
+            { icon: Twitter, color: '#1DA1F2', name: 'X (Twitter)', desc: 'API Key + Access Token del Developer Portal' },
+            { icon: Globe, color: '#4285F4', name: 'Google Ads', desc: 'Developer Token + Client ID + Client Secret' },
+            { icon: MessageCircle, color: '#25D366', name: 'WhatsApp', desc: 'Phone Number ID + Token (Cloud API)' },
+          ].map(item => (
+            <div key={item.name} className="flex items-center gap-2.5 p-2.5 rounded-[var(--radius-md)] bg-[var(--background-tertiary)] border border-[var(--border)]">
+              <item.icon size={18} style={{ color: item.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-[var(--foreground)]">{item.name}</div>
+                <div className="text-xs text-[var(--foreground-subtle)]">{item.desc}</div>
+              </div>
             </div>
-          </div>
-          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
-            <i className="pi pi-google text-xl" style={{ color: '#4285F4' }} />
-            <div className="flex-1">
-              <strong>Google Ads</strong>
-              <div className="text-sm text-500">Developer Token + Client ID + Client Secret</div>
-            </div>
-          </div>
-          <div className="flex align-items-center gap-2 p-2 border-1 border-round" style={{ background: '#f8f9fa' }}>
-            <i className="pi pi-whatsapp text-xl" style={{ color: '#25D366' }} />
-            <div className="flex-1">
-              <strong>WhatsApp</strong>
-              <div className="text-sm text-500">Phone Number ID + Token (Cloud API)</div>
-            </div>
-          </div>
+          ))}
         </div>
-        <Button label="Ir a Conexiones" icon="pi pi-arrow-right" onClick={() => navigate('/settings')} size="small" />
+        <NavButton label="Ir a Conexiones" path="/settings" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-users',
+    icon: Users,
     title: '2. CRM — Captura y gestiona leads',
     content: (navigate: any) => (
-      <div>
-        <p>
-          El CRM organiza tus prospectos en un <strong>pipeline</strong> de
-          cinco etapas:
-        </p>
-        <div className="flex flex-wrap gap-1 mb-3">
-          <Chip label="🟣 Prospecto" />
-          <Chip label="🔵 Contactado" />
-          <Chip label="🟡 Interesado" />
-          <Chip label="🟠 Trial" />
-          <Chip label="🟢 Cliente" />
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <p>Pipeline de 5 etapas:</p>
+        <div className="flex flex-wrap gap-1.5 my-2">
+          {['Prospecto', 'Contactado', 'Interesado', 'Trial', 'Cliente'].map(s => (
+            <Chip key={s} label={s} className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          ))}
         </div>
-        <p>Puedes:</p>
-        <ul>
-          <li><strong>Agregar leads manualmente</strong> — datos del prospecto</li>
-          <li><strong>Cambiar etapa</strong> — arrastra o selecciona la etapa actual</li>
-          <li><strong>Ver score automático</strong> — IA calcula calidad del lead</li>
-          <li><strong>Filtrar por producto</strong> — leads de OralTrack vs NutriTrack</li>
+        <ul className="list-disc pl-5 space-y-1 mt-2">
+          <li>Agrega leads manualmente</li>
+          <li>Cambia etapa con un clic</li>
+          <li>Score automático por IA (pain points, oportunidad, tamaño)</li>
+          <li>Filtra por producto</li>
         </ul>
-        <Button label="Ir a CRM" icon="pi pi-arrow-right" onClick={() => navigate('/crm')} size="small" />
+        <NavButton label="Ir a CRM" path="/crm" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-calendar',
-    title: '3. Contenido — Publicaciones en X/Twitter',
+    icon: Calendar,
+    title: '3. Contenido — Publicaciones en X',
     content: (navigate: any) => (
-      <div>
-        <p>
-          <strong>Hermes</strong> redacta publicaciones para X con base en tu calendario editorial.
-          Cada post incluye texto y arte generado por IA.
-        </p>
-        <p><strong>Flujo de aprobación:</strong></p>
-        <ol>
-          <li>Hermes te sugiere un post → aparece en <strong>Contenido</strong></li>
-          <li>Lo revisas, editas si quieres</li>
-          <li><strong>Apruebas</strong> o <strong>Rechazas</strong></li>
-          <li>Si apruebas, se publica automáticamente en la fecha programada</li>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <p>Hermes redacta posts. Tú apruebas o rechazas. Luego publicas <strong className="text-[var(--foreground)]">manualmente</strong> en X.</p>
+        <ol className="list-decimal pl-5 space-y-1 mt-2">
+          <li>Hermes sugiere un post → aparece en <strong className="text-[var(--foreground)]">Contenido</strong></li>
+          <li>Lo revisas y editas si quieres</li>
+          <li><strong className="text-[var(--primary)]">Apruebas</strong> o <strong className="text-[var(--destructive)]">Rechazas</strong></li>
+          <li>Si apruebas, ves el texto listo para copiar o publicar en X</li>
         </ol>
-        <p className="text-sm text-500 mt-2">
-          ⚡ Necesitas tener configurada tu cuenta de X en Conexiones para que funcione.
-        </p>
-        <Button label="Ir a Contenido" icon="pi pi-arrow-right" onClick={() => navigate('/content')} size="small" />
+        <NavButton label="Ir a Contenido" path="/content" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-megaphone',
-    title: '4. Google Ads — Campañas de pago',
+    icon: Megaphone,
+    title: '4. Google Ads — Campañas',
     content: (navigate: any) => (
-      <div>
-        <p>
-          Crea campañas de <strong>búsqueda (Search)</strong> en Google Ads.
-        </p>
-        <p><strong>¿Qué necesitas?</strong></p>
-        <ol>
-          <li>Conectar Google Ads en <strong>Configuración → Google Ads</strong></li>
-          <li>Ir a <strong>Campañas</strong></li>
-          <li>Crear campaña: palabras clave + presupuesto diario + duración</li>
-          <li>MarketingOS monitorea gasto vs presupuesto y te alerta al 80% y 100%</li>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <ol className="list-decimal pl-5 space-y-1">
+          <li>Conecta Google Ads en <strong className="text-[var(--foreground)]">Configuración</strong></li>
+          <li>Ve a <strong className="text-[var(--foreground)]">Anuncios</strong> y crea campaña (palabras clave + presupuesto)</li>
+          <li>MarketingOS monitorea gasto vs presupuesto</li>
         </ol>
-        <Button label="Ir a Campañas" icon="pi pi-arrow-right" onClick={() => navigate('/campaigns')} size="small" />
+        <NavButton label="Ir a Campañas" path="/campaigns" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-eye',
-    title: '5. Competencia — Monitoreo automático',
+    icon: Eye,
+    title: '5. Competencia — Monitoreo',
     content: (navigate: any) => (
-      <div>
-        <p>
-          Registra a tus <strong>competidores</strong> y el sistema rastrea:
-        </p>
-        <ul>
-          <li><strong>Menciones</strong> en redes sociales y medios digitales</li>
-          <li><strong>Análisis de sentimiento</strong> (positivo, neutral, negativo)</li>
-          <li><strong>Frecuencia de publicación</strong> y temas recurrentes</li>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <ul className="list-disc pl-5 space-y-1">
+          <li>Registra competidores → sistema rastrea menciones</li>
+          <li>Análisis de sentimiento (positivo/neutral/negativo)</li>
+          <li>Frecuencia de publicación y temas</li>
         </ul>
-        <p className="text-sm text-500">
-          ⚡ Esta función requiere que Hermes esté activo (conexión webhook configurada).
-        </p>
-        <Button label="Ir a Competencia" icon="pi pi-arrow-right" onClick={() => navigate('/competitors')} size="small" />
+        <NavButton label="Ir a Competencia" path="/competitors" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-map',
-    title: '6. SEO Local — Landing pages por ciudad',
+    icon: Map,
+    title: '6. SEO Local — Landing pages',
     content: (navigate: any) => (
-      <div>
-        <p>
-          MarketingOS genera <strong>landing pages</strong> optimizadas
-          para SEO local en ciudades clave:
-        </p>
-        <div className="flex flex-wrap gap-1 mb-3">
-          <Chip label="CDMX" />
-          <Chip label="Monterrey" />
-          <Chip label="Guadalajara" />
-          <Chip label="Puebla" />
-          <Chip label="Querétaro" />
-          <Chip label="Mérida" />
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <p>Landing pages optimizadas para:</p>
+        <div className="flex flex-wrap gap-1.5 my-2">
+          {['CDMX', 'Monterrey', 'Guadalajara', 'Puebla', 'Querétaro', 'Mérida'].map(c => (
+            <Chip key={c} label={c} className="!bg-[var(--background-tertiary)] !text-[var(--foreground-muted)] !text-xs !border !border-[var(--border)]" />
+          ))}
         </div>
-        <p>
-          El sistema monitorea <strong>posiciones en Google</strong> para palabras clave
-          y te alerta si alguna página baja de ranking.
-        </p>
-        <Button label="Ir a SEO" icon="pi pi-arrow-right" onClick={() => navigate('/seo')} size="small" />
+        <NavButton label="Ir a SEO" path="/seo" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-check-circle',
-    title: '7. Onboarding — Checklist de configuración',
+    icon: CheckCircle,
+    title: '7. Onboarding — Checklist',
     content: (navigate: any) => (
-      <div>
-        <p>
-          Por cada nuevo producto, el sistema tiene un checklist de 8 pasos
-          para asegurar que no te saltes nada importante:
-        </p>
-        <ol>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <ol className="list-decimal pl-5 space-y-1">
           <li>Crear perfil del negocio</li>
           <li>Conectar cuenta de X</li>
           <li>Configurar Google Ads</li>
-          <li>Agregar palabras clave objetivo</li>
+          <li>Agregar palabras clave</li>
           <li>Registrar competidores</li>
-          <li>Definir ciudades para SEO Local</li>
-          <li>Invitar miembros del equipo</li>
-          <li>Revisar y aprobar primer contenido sugerido</li>
+          <li>Definir ciudades SEO</li>
+          <li>Invitar miembros</li>
+          <li>Revisar primer contenido sugerido</li>
         </ol>
-        <Button label="Ir a Onboarding" icon="pi pi-arrow-right" onClick={() => navigate('/onboarding')} size="small" />
+        <NavButton label="Ir a Onboarding" path="/onboarding" navigate={navigate} />
       </div>
     ),
   },
   {
-    icon: 'pi-cog',
-    title: '8. Administración — Gestión general',
+    icon: Settings,
+    title: '8. Administración',
     content: (navigate: any) => (
-      <div>
-        <p>Desde el panel de Admin puedes:</p>
-        <ul>
-          <li><strong>Crear tenants</strong> — nuevas empresas/clientes</li>
-          <li><strong>Agregar productos</strong> — SAAS dentro de cada tenant</li>
-          <li><strong>Ver usuarios</strong> — quién tiene acceso a cada tenant</li>
-          <li><strong>Eliminar tenants</strong> — borrado completo con todos sus datos</li>
+      <div className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <ul className="list-disc pl-5 space-y-1">
+          <li><strong className="text-[var(--foreground)]">Crear tenants</strong> — nuevas empresas</li>
+          <li><strong className="text-[var(--foreground)]">Agregar productos</strong> — SAAS por tenant</li>
+          <li><strong className="text-[var(--foreground)]">Ver usuarios</strong> — quién accede a cada tenant</li>
         </ul>
-        <Button label="Ir a Admin" icon="pi pi-arrow-right" onClick={() => navigate('/admin')} size="small" />
+        <NavButton label="Ir a Admin" path="/admin" navigate={navigate} />
       </div>
     ),
   },
 ];
 
+function NavButton({ label, path, navigate }: { label: string; path: string; navigate: any }) {
+  return (
+    <button
+      onClick={() => navigate(path)}
+      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] transition-colors cursor-pointer border-none"
+    >
+      {label}
+      <ArrowRight size={14} />
+    </button>
+  );
+}
+
 export default function HelpPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div className="flex align-items-center gap-2 mb-3">
-        <h2 className="mt-0">Manual de Ayuda</h2>
-      </div>
-
-      <p className="text-600 mb-4">
-        Selecciona una sección para ver instrucciones paso a paso.
-        Cada sección tiene un botón para ir directamente a la página correspondiente.
+    <div className="max-w-[900px] mx-auto">
+      <h2 className="text-xl font-bold text-[var(--foreground)] mt-0 mb-2">Manual de Ayuda</h2>
+      <p className="text-sm text-[var(--foreground-muted)] mb-5">
+        Selecciona una sección para ver instrucciones paso a paso con botones de navegación directa.
       </p>
 
-      <div className="flex flex-column gap-3">
+      <div className="flex flex-col gap-3">
         {sections.map((sec, i) => (
           <Panel
             key={i}
             header={
-              <span>
-                <i className={`pi ${sec.icon}`} style={{ marginRight: 10 }} />
-                {sec.title}
-              </span>
+              <div className="flex items-center gap-2">
+                <sec.icon size={16} className="text-[var(--primary)]" />
+                <span className="text-sm font-medium text-[var(--foreground)]">{sec.title}</span>
+              </div>
             }
             toggleable
             collapsed={!sec.defaultExpanded}
+            pt={{
+              root: { className: '!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)] overflow-hidden' },
+              header: { className: '!bg-transparent !px-4 !py-3 hover:!bg-[var(--background-tertiary)] cursor-pointer' },
+              headerAction: { className: '!text-[var(--foreground)] !no-underline hover:!no-underline' },
+              toggleableContent: { className: '!bg-transparent' },
+              content: { className: '!bg-transparent !px-4 !pb-4 !pt-0 !border-t-0' },
+            }}
           >
-            <div style={{ lineHeight: 1.7 }}>{sec.content(navigate)}</div>
+            <div className="leading-relaxed">{sec.content(navigate)}</div>
           </Panel>
         ))}
       </div>
 
-      <div className="mt-5 p-3 border-round" style={{ background: 'var(--highlight-bg)' }}>
-        <p className="text-sm m-0">
-          💡 <strong>¿Dudas más específicas?</strong> Pregúntale a Hermes directamente en el chat de Telegram.
-          Hermes conoce toda la arquitectura de MarketingOS.
+      <div className="mt-6 p-4 rounded-[var(--radius-lg)] bg-[var(--background-tertiary)] border border-[var(--border)]">
+        <p className="text-xs text-[var(--foreground-muted)] m-0">
+          💡 <strong className="text-[var(--foreground)]">¿Dudas más específicas?</strong> Pregúntale a Hermes directamente en Telegram.
         </p>
       </div>
     </div>
