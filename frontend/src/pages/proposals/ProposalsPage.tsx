@@ -204,12 +204,12 @@ export default function ProposalsPage() {
 
 const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
     <Card key={proposal.id} className="mb-3" padding="md">
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-1 mb-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {actionBadge(proposal.actionType)}
           {statusBadge(proposal.status)}
         </div>
-        <span className="text-xs text-[var(--foreground-muted)] shrink-0">
+        <span className="text-xs text-[var(--foreground-muted)]">
           {new Date(proposal.createdAt).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'short',
@@ -229,10 +229,11 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
       {proposal.payload && renderPayload(proposal)}
 
       {showActions && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border)]">
+        <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-[var(--border)] sm:flex-row sm:items-center">
           <Button
             size="sm"
             variant="default"
+            className="w-full sm:w-auto"
             onClick={() => openApproveDialog(proposal)}
           >
             <Check className="w-4 h-4" /> Aprobar
@@ -240,7 +241,7 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
           <Button
             size="sm"
             variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50"
+            className="w-full sm:w-auto text-red-600 border-red-200 hover:bg-red-50"
             onClick={() => openRejectDialog(proposal)}
           >
             <X className="w-4 h-4" /> Rechazar
@@ -346,10 +347,11 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
         }
         size="md"
         footer={
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
             <Button
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setApproveDialogOpen(false);
                 setApproveTarget(null);
@@ -360,6 +362,7 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
             <Button
               variant="default"
               size="sm"
+              className="w-full sm:w-auto"
               loading={actionLoading}
               onClick={handleApprove}
             >
@@ -397,10 +400,11 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
         }
         size="md"
         footer={
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
             <Button
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setRejectDialogOpen(false);
                 setRejectTarget(null);
@@ -411,6 +415,7 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
             <Button
               variant="destructive"
               size="sm"
+              className="w-full sm:w-auto"
               loading={actionLoading}
               onClick={handleReject}
             >
