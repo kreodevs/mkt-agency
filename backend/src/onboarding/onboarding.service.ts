@@ -27,7 +27,7 @@ export class OnboardingService {
   async create(tenantId: string, productId?: string): Promise<Onboarding> {
     const onboarding = this.onboardingRepo.create({
       tenantId,
-      productId: productId || null,
+      productId: productId || undefined,
       status: 'pending',
     });
     const saved = await this.onboardingRepo.save(onboarding) as unknown as Onboarding;
@@ -70,7 +70,7 @@ export class OnboardingService {
     if (status === 'completed') {
       task.completedAt = new Date();
     } else {
-      task.completedAt = null;
+      task.completedAt = undefined as unknown as Date;
     }
     await this.taskRepo.save(task);
 

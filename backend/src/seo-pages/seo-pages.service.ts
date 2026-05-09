@@ -21,7 +21,7 @@ export class SeoPagesService {
     if (dto.status === 'published') {
       data.publishedAt = new Date();
     }
-    const page = this.seoPageRepo.create(data) as SeoPage;
+    const page = this.seoPageRepo.create(data) as unknown as SeoPage;
     return this.seoPageRepo.save(page) as unknown as Promise<SeoPage>;
   }
 
