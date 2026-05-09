@@ -24,6 +24,12 @@ export class Product {
   @Column({ type: 'jsonb', nullable: true })
   settings: Record<string, any>;
 
+  @Column({ nullable: true, type: 'text' })
+  description?: string;
+
+  @Column({ nullable: true, type: 'jsonb' })
+  brandContext?: Record<string, any>;
+
   @Column({ default: true })
   isActive: boolean;
 

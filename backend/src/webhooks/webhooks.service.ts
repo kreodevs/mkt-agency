@@ -214,4 +214,27 @@ export class WebhooksService {
     }));
     return { userId, tenants: userTenants };
   }
+
+  async getProductsDebug(tenantId: string): Promise<any> {
+    if (!tenantId) return { error: 'Provide ?tenantId=...' };
+    const products = await this.productRepo.find({
+      where: { tenantId, isActive: true },
+      select: ['id', 'name', 'description', 'brandContext', 'type', 'createdAt'],
+    });
+    return { tenantId, total: products.length, products };
+  }
+
+  async updateProduct(body: { productId: string; description?: string; brandContext?: Record<string, any> }): Promise<any> {
+    const { productId, description, brandContext } = body;
+    if (!productId) return { error: 'productId is required' };
+
+    const product = await this.productRepo.findOne({ where: { id: productId } });
+    if (!product) return { error: 'Producto no encontrado' };
+
+    if (description !== undefined) product.description = description;
+    if (brandContext !== undefined) product.brandContext = brandContext;
+
+    await this.productRepo.save(product);
+    return { updated: true, product: { id: product.id, name: product.name, description: product.description, brandContext: product.brandContext } };
+  }
 }

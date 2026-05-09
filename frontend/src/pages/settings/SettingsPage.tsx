@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { Card } from 'primereact/card';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
 import { getCurrentTenant, getCurrentProduct } from '../../stores/authStore';
 import { settings } from '../../services/api';
 import {
-  Twitter, Globe, MessageCircle, Image, Check, AlertCircle, Save,
+  Twitter, Globe, MessageCircle, Image, Check, AlertCircle, Save, Package,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -44,6 +45,14 @@ export default function SettingsPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [savingBrand, setSavingBrand] = useState(false);
 
+  // Product Context
+  const [productDescription, setProductDescription] = useState('');
+  const [productTarget, setProductTarget] = useState('');
+  const [productFeatures, setProductFeatures] = useState('');
+  const [productCompetitors, setProductCompetitors] = useState('');
+  const [productWebsite, setProductWebsite] = useState('');
+  const [savingProductContext, setSavingProductContext] = useState(false);
+
   const productName = product?.name || 'MarketingOS';
 
   const fetchSettings = () => {
@@ -71,6 +80,52 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   };
 
+  const loadProductInfo = () => {
+    if (!tenant || !productId) return;
+    fetch(`/api/webhooks/products-debug?tenantId=${tenant.id}`)
+      .then(r => r.json())
+      .then(data => {
+        const p = data.products?.find((p: any) => p.id === productId);
+        if (p) {
+          setProductDescription(p.description || '');
+          const ctx = p.brandContext || {};
+          setProductTarget(ctx.targetMarket || '');
+          setProductFeatures(ctx.features?.join('\n') || '');
+          setProductCompetitors(ctx.competitors?.join('\n') || '');
+          setProductWebsite(ctx.website || '');
+        }
+      })
+      .catch(() => {});
+  };
+
+  const handleSaveProductContext = async () => {
+    if (!productId) return;
+    setSavingProductContext(true);
+    try {
+      const brandContext = {
+        targetMarket: productTarget,
+        features: productFeatures.split('\n').filter(Boolean),
+        competitors: productCompetitors.split('\n').filter(Boolean),
+        website: productWebsite,
+      };
+      const res = await fetch('/api/webhooks/products-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, description: productDescription, brandContext }),
+      });
+      const data = await res.json();
+      if (data.updated) {
+        toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Contexto del producto actualizado', life: 2000 });
+      } else {
+        toast.current?.show({ severity: 'error', summary: 'Error', detail: data.error || 'No se pudo guardar', life: 3000 });
+      }
+    } catch {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error de conexión', life: 3000 });
+    } finally {
+      setSavingProductContext(false);
+    }
+  };
+
   const fetchAssets = () => {
     if (!tenant || !productId) return;
     settings.getUploads(tenant.id, productId)
@@ -80,6 +135,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+    fetchAssets();
+    loadProductInfo();
   }, [tenant?.id, productId]);
 
   const handleSaveSocial = async () => {
@@ -335,6 +392,81 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </TabPanel>
+
+            <TabPanel
+              header={
+                <div className="flex items-center gap-2">
+                  <Package size={16} />
+                  <span>Contexto del Producto</span>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4 pt-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Descripción del producto</label>
+                  <InputTextarea
+                    value={productDescription}
+                    onChange={(e) => setProductDescription(e.target.value)}
+                    placeholder="Ej: OralTrack es un SaaS de gestión de pacientes para clínicas dentales con recordatorios automáticos, historial clínico digital y facturación integrada."
+                    rows={4}
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                  />
+                  <p className="text-xs text-[var(--foreground-subtle)]">Esta descripción la usará Hermes para entender tu producto</p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Mercado objetivo</label>
+                  <InputTextarea
+                    value={productTarget}
+                    onChange={(e) => setProductTarget(e.target.value)}
+                    placeholder="Ej: Clínicas dentales pequeñas y medianas en México y Latinoamérica, dueños de clínicas de 1-5 consultorios."
+                    rows={2}
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Características clave (una por línea)</label>
+                  <InputTextarea
+                    value={productFeatures}
+                    onChange={(e) => setProductFeatures(e.target.value)}
+                    placeholder="Recordatorios automáticos vía WhatsApp&#10;Historial clínico digital&#10;Facturación electrónica integrada&#10;Dashboard de indicadores"
+                    rows={4}
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Competidores (uno por línea)</label>
+                  <InputTextarea
+                    value={productCompetitors}
+                    onChange={(e) => setProductCompetitors(e.target.value)}
+                    placeholder="Dentalink&#10;ClinicCloud&#10;DentiMax"
+                    rows={3}
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Sitio web</label>
+                  <InputText
+                    value={productWebsite}
+                    onChange={(e) => setProductWebsite(e.target.value)}
+                    placeholder="https://oraltrack.com"
+                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveProductContext}
+                  disabled={savingProductContext}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                >
+                  <Save size={16} />
+                  {savingProductContext ? 'Guardando...' : 'Guardar Contexto'}
+                </button>
               </div>
             </TabPanel>
           </TabView>

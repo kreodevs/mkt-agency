@@ -43,4 +43,15 @@ export class WebhooksController {
   async myTenant(@Query('userId') userId: string) {
     return this.webhooksService.getMyTenant(userId);
   }
+
+  @Get('products-debug')
+  async productsDebug(@Query('tenantId') tenantId: string) {
+    return this.webhooksService.getProductsDebug(tenantId);
+  }
+
+  @Post('products-update')
+  @HttpCode(200)
+  async updateProduct(@Body() body: { productId: string; description?: string; brandContext?: Record<string, any> }) {
+    return this.webhooksService.updateProduct(body);
+  }
 }

@@ -84,8 +84,17 @@ export class AiService {
     }
   }
 
-  async generatePost(tenantId: string, productName: string, topic?: string): Promise<string> {
-    const systemPrompt = `Eres un copywriter experto en marketing para SaaS B2B. 
+  async generatePost(tenantId: string, productName: string, topic?: string, productContext?: { description?: string; targetMarket?: string; features?: string[]; competitors?: string[]; website?: string }): Promise<string> {
+    const contextBlock = productContext ? `
+Contexto del producto:
+- Descripción: ${productContext.description || 'No disponible'}
+- Mercado objetivo: ${productContext.targetMarket || 'No especificado'}
+- Características clave: ${productContext.features?.join(', ') || 'No especificadas'}
+- Competidores: ${productContext.competitors?.join(', ') || 'No especificados'}
+- Sitio web: ${productContext.website || 'No disponible'}
+` : '';
+
+    const systemPrompt = `Eres un copywriter experto en marketing para SaaS B2B.${contextBlock}
 Genera un post corto para X/Twitter (máx 280 caracteres) sobre ${productName}.
 Usa un tono profesional pero cercano. Incluye 1-2 hashtags relevantes.
 NO uses emojis excesivos. Responde SOLO con el texto del post, sin explicaciones.`;
