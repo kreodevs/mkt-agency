@@ -1,4 +1,4 @@
-import { usePwaUpdate } from '../../hooks/usePwaUpdate';
+import { usePwaUpdate } from '../hooks/usePwaUpdate';
 
 export function UpdateBanner() {
   const { updateAvailable, applyUpdate } = usePwaUpdate();
