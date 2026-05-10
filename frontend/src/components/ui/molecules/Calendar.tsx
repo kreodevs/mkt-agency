@@ -1,7 +1,9 @@
+// REGISTRY: Calendar
+
 import { Calendar as PrimeCalendar, type CalendarProps as PrimeCalendarProps } from 'primereact/calendar'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { forwardRef } from 'react'
-import { type Nullable } from 'primereact/ts-helpers'
+import type { Nullable } from 'primereact/ts-helpers'
 
 export interface CalendarInputProps extends Omit<PrimeCalendarProps, 'pt' | 'variant' | 'selectionMode'> {
   error?: boolean
@@ -128,7 +130,6 @@ export const Calendar = forwardRef<any, CalendarInputProps>(
       dayLabel: {
         className: 'flex items-center justify-center w-full h-full',
       },
-      // Range selection styles
       monthPicker: {
         className: 'grid grid-cols-3 gap-[var(--spacing-sm)] p-[var(--spacing-sm)]',
       },
@@ -157,7 +158,6 @@ export const Calendar = forwardRef<any, CalendarInputProps>(
           [&[data-p-highlight=true]]:bg-[var(--primary)] [&[data-p-highlight=true]]:text-[var(--primary-foreground)]
         `,
       },
-      // Time picker
       timePicker: {
         className: 'flex items-center justify-center gap-[var(--spacing-sm)] pt-[var(--spacing-md)] mt-[var(--spacing-md)] border-t border-[var(--border)]',
       },
@@ -198,7 +198,6 @@ export const Calendar = forwardRef<any, CalendarInputProps>(
           hover:bg-[var(--secondary)]
         `,
       },
-      // Button bar
       buttonBar: {
         className: 'flex items-center justify-end gap-[var(--spacing-sm)] pt-[var(--spacing-md)] mt-[var(--spacing-md)] border-t border-[var(--border)]',
       },
@@ -221,14 +220,12 @@ export const Calendar = forwardRef<any, CalendarInputProps>(
           transition-colors
         `,
       },
-      // Group (multiple months)
       group: {
         className: 'flex gap-[var(--spacing-md)]',
       },
       groupPanel: {
         className: '',
       },
-      // Range styles
       datepickerMask: {
         className: 'fixed inset-0',
       },
@@ -271,7 +268,7 @@ export const DateRangePicker = forwardRef<HTMLSpanElement, DateRangePickerProps>
       <Calendar
         ref={ref}
         value={value as any}
-        onChange={(e) => onChange?.(e.value as Nullable<(Date | null)[]>)}
+        onChange={(e) => onChange?.(e.value as Nullable<(Date | null)[]>) as any}
         selectionMode="range"
         numberOfMonths={numberOfMonths}
         placeholder={placeholder}

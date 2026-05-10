@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from '@/components/atoms/Select'
+} from '../atoms/Select'
 
 export interface DropdownInputProps
   extends ComponentPropsWithoutRef<typeof SelectPrimitive.Root> {

@@ -1,69 +1,35 @@
+// REGISTRY: RichTextEditor
+
 import { forwardRef } from 'react'
-import ReactQuill from 'react-quill'
+import { Editor, type EditorProps } from 'primereact/editor'
 import { cn } from '@/lib/utils'
-import 'react-quill/dist/quill.snow.css'
 
-export interface RichTextEditorProps {
-    value?: string;
-    onChange?: (value: string) => void;
-    placeholder?: string;
-    label?: string;
+export interface RichTextEditorProps extends EditorProps {
     error?: string;
-    className?: string;
+    label?: string;
 }
 
-const modules = {
-    toolbar: [
-        [{ header: [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['blockquote', 'code-block'],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ align: [] }],
-        ['link', 'image'],
-        ['clean'],
-    ],
-}
-
-const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'blockquote', 'code-block',
-    'indent',
-    'align',
-    'link', 'image',
-]
-
-export const RichTextEditor = forwardRef<ReactQuill, RichTextEditorProps>(
-    ({ className, error, label, value, onChange, placeholder }, ref) => {
+export const RichTextEditor = forwardRef<Editor, RichTextEditorProps>(
+    ({ className, error, label, ...props }, ref) => {
         return (
             <div className="flex flex-col gap-1.5 w-full">
-                {label && (
-                    <label className="text-sm font-medium leading-none text-[var(--foreground)]">
-                        {label}
-                    </label>
-                )}
-                <div className={cn(
-                    "w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] overflow-hidden",
-                    error && "border-[var(--destructive)]",
-                    className
-                )}>
-                    <ReactQuill
-                        ref={ref}
-                        value={value ?? ''}
-                        onChange={onChange}
-                        placeholder={placeholder}
-                        modules={modules}
-                        formats={formats}
-                        theme="snow"
-                    />
-                </div>
-                {error && (
-                    <span className="text-[14px] text-[var(--destructive)] font-medium">
-                        {error}
-                    </span>
-                )}
+                {label && <label className="text-sm font-medium leading-none text-[var(--foreground)]">{label}</label>}
+                <Editor
+                    ref={ref}
+                    className={cn(
+                        "w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] ring-offset-[var(--background)] overflow-hidden",
+                        "pb-[var(--spacing-2xl)] /* Quill usually needs bottom spacing */ pb-0",
+                        error && "border-[var(--destructive)]",
+                        className
+                    )}
+                    pt={{
+                        toolbar: { className: "bg-[var(--secondary)] !border-0 !border-b !border-[var(--border)] flex flex-wrap gap-[var(--spacing-xs)] p-[var(--spacing-sm)]" },
+                        content: { className: "bg-[var(--background)] text-[var(--foreground)] !border-0 min-h-[150px]" },
+                        root: { className: "text-sm" }
+                    }}
+                    {...props}
+                />
+                {error && <span className="text-[14px] text-[var(--destructive)] font-medium">{error}</span>}
             </div>
         )
     }

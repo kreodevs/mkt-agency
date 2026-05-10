@@ -8,7 +8,8 @@ import {
     Sun,
     Maximize2
 } from "lucide-react";
-import { SidebarModern, SidebarGroup } from "./SidebarModern";
+import { SidebarModern } from "./SidebarModern";
+import type { SidebarGroup } from "./SidebarModern";
 import { Button } from '../atoms/Button';
 
 export interface AppLayoutProps {
