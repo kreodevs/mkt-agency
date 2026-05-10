@@ -34,29 +34,21 @@ export default function DashboardPage() {
       <h2 className="mt-0">Dashboard</h2>
 
       {/* Stats Cards */}
-      <div className="grid">
-        <div className="col-12 md:col-3">
-          <Card title="Leads Activos" className="text-center">
-            <span className="text-4xl font-bold">{loading ? '...' : leadList.length}</span>
-          </Card>
-        </div>
-        <div className="col-12 md:col-3">
-          <Card title="Calientes (80+)" className="text-center">
-            <span className="text-4xl font-bold text-red-500">{loading ? '...' : hotLeads.length}</span>
-          </Card>
-        </div>
-        <div className="col-12 md:col-3">
-          <Card title="Campañas" className="text-center">
-            <span className="text-4xl font-bold">{loading ? '...' : campaignList.length}</span>
-          </Card>
-        </div>
-        <div className="col-12 md:col-3">
-          <Card title="Gasto Total" className="text-center">
-            <span className="text-4xl font-bold">
-              ${loading ? '...' : campaignList.reduce((s: number, c: any) => s + Number(c.spent || 0), 0).toLocaleString()}
-            </span>
-          </Card>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <Card title="Leads Activos" className="text-center">
+          <span className="text-4xl font-bold">{loading ? '...' : leadList.length}</span>
+        </Card>
+        <Card title="Calientes (80+)" className="text-center">
+          <span className="text-4xl font-bold text-red-500">{loading ? '...' : hotLeads.length}</span>
+        </Card>
+        <Card title="Campañas" className="text-center">
+          <span className="text-4xl font-bold">{loading ? '...' : campaignList.length}</span>
+        </Card>
+        <Card title="Gasto Total" className="text-center">
+          <span className="text-4xl font-bold">
+            ${loading ? '...' : campaignList.reduce((s: number, c: any) => s + Number(c.spent || 0), 0).toLocaleString()}
+          </span>
+        </Card>
       </div>
 
       {/* Hot Leads */}
