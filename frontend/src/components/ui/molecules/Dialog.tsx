@@ -50,11 +50,11 @@ export const Dialog = forwardRef<HTMLDivElement, DialogInputProps>(
       >
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay
-            className="fixed inset-0 z-[var(--z-modal)] bg-black/60 backdrop-blur-sm transition-opacity duration-200 data-[state=entering]:animate-fade-in"
+            className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200"
           />
           <DialogPrimitive.Content
             ref={ref}
-            className={`relative w-full ${sizeClass} rounded-[var(--radius-lg)] bg-[var(--card)] border border-[var(--border)] shadow-xl animate-slide-in overflow-hidden ${className}`}
+            className={`fixed left-[50%] top-[50%] z-[var(--z-modal)] w-[calc(100%-2rem)] sm:w-full ${sizeClass} translate-x-[-50%] translate-y-[-50%] max-h-[85dvh] overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--card)] border border-[var(--border)] shadow-xl animate-in fade-in zoom-in-95 duration-200 ${className}`}
             {...props}
           >
             {/* Header */}

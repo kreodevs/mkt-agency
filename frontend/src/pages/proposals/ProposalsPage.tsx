@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card, Dialog, Button, TabView } from '@/components/ui';
 import { getCurrentTenant } from '../../stores/authStore';
-import { proposals } from '../../services/api';
 import { Check, X, Clock, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface Proposal {
@@ -162,7 +161,7 @@ export default function ProposalsPage() {
   };
 
   function renderPayload(proposal: Proposal) {
-  const { payload, actionType } = proposal;
+  const { payload } = proposal;
   if (!payload) return null;
 
   // For custom_message or generic payloads, show structured fields
@@ -203,7 +202,7 @@ export default function ProposalsPage() {
 }
 
 const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
-    <Card key={proposal.id} className="mb-3" padding="md">
+    <Card key={proposal.id} className="mb-3">
       <div className="flex flex-col gap-1 mb-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {actionBadge(proposal.actionType)}
