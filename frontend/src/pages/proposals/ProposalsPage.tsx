@@ -57,7 +57,7 @@ export default function ProposalsPage() {
   const tenant = getCurrentTenant();
   const [allProposals, setAllProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('pendientes');
 
   // Approve dialog
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -283,10 +283,11 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
       </div>
 
       <TabView
-        activeIndex={activeTab}
-        onTabChange={(e) => setActiveTab(e.index)}
+        activeIndex={activeTab === 'pendientes' ? 0 : 1}
+        onTabChange={(value) => setActiveTab(value)}
         tabs={[
           {
+            value: 'pendientes',
             label: 'Pendientes',
             badge: pending.length > 0 ? pending.length : undefined,
             children: (
@@ -309,6 +310,7 @@ const renderProposalCard = (proposal: Proposal, showActions: boolean) => (
             ),
           },
           {
+            value: 'historial',
             label: 'Historial',
             children: (
               <div>
