@@ -1,4 +1,4 @@
-import { forwardRef, useState, type ReactNode } from 'react'
+import { forwardRef, useState, ReactNode } from 'react'
 import { User } from 'lucide-react'
 
 // ============================================

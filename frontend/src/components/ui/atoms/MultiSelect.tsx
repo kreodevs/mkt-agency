@@ -1,169 +1,263 @@
-// REGISTRY: MultiSelect
+import * as React from 'react'
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
+import { ChevronDown, Check, X, Search } from 'lucide-react'
 
-import { MultiSelect as PrimeMultiSelect, type MultiSelectProps as PrimeMultiSelectProps } from 'primereact/multiselect'
-import { ChevronDown, Check, X } from 'lucide-react'
-import { forwardRef } from 'react'
+import { cn } from '@/lib/utils'
 
-export interface MultiSelectInputProps extends Omit<PrimeMultiSelectProps, 'pt'> {
-  error?: boolean
-  fullWidth?: boolean
+export interface MultiSelectOption {
+  label: string
+  value: any
 }
 
-export const MultiSelect = forwardRef<any, MultiSelectInputProps>(
-  ({ error, fullWidth, className = '', placeholder = 'Seleccionar...', ...props }, ref) => {
-    const triggerStyles = `
-      flex min-h-10 items-center justify-between
-      rounded-[var(--radius)]
-      border border-[var(--input-border)]
-      bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)]
-      text-sm text-[var(--foreground)]
-      transition-all duration-[var(--transition-base)]
-      focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] focus:border-[var(--input-focus)]
-      disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--muted)]
-      hover:border-[var(--border-hover)]
-      [&[data-p-focus=true]]:ring-2 [&[data-p-focus=true]]:ring-[var(--ring)]
-    `
+export interface MultiSelectInputProps {
+  /** Array de opciones disponibles */
+  options?: MultiSelectOption[]
+  /** Valores seleccionados */
+  value?: any[]
+  /** Callback cuando cambia la selección */
+  onChange?: (e: { value: any[] }) => void
+  /** Placeholder cuando no hay selección */
+  placeholder?: string
+  /** Estado de error */
+  error?: boolean
+  /** Modo de visualización: 'chip' (mostrar chips) */
+  display?: 'chip'
+  /** Clase CSS adicional */
+  className?: string
+  /** Deshabilitado */
+  disabled?: boolean
+  /** Ref al elemento trigger */
+  ref?: React.Ref<HTMLButtonElement>
+}
 
-    const errorStyles = error
-      ? 'border-[var(--destructive)] focus:ring-[var(--destructive)]'
-      : ''
+export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectInputProps>(
+  (
+    {
+      options = [],
+      value = [],
+      onChange,
+      placeholder = 'Seleccionar...',
+      error = false,
+      display,
+      className,
+      disabled = false,
+      ...props
+    },
+    ref
+  ) => {
+    const [open, setOpen] = React.useState(false)
+    const [search, setSearch] = React.useState('')
+    const searchInputRef = React.useRef<HTMLInputElement>(null)
 
-    const widthStyles = fullWidth ? 'w-full' : ''
+    // Limpiar búsqueda al cerrar
+    React.useEffect(() => {
+      if (!open) {
+        setSearch('')
+      }
+    }, [open])
 
-    const panelStyles = `
-      mt-[var(--spacing-xs)] overflow-hidden
-      rounded-[var(--radius)]
-      border border-[var(--border)]
-      bg-[var(--popover)]
-      shadow-lg
-      z-[var(--z-dropdown)]
-    `
+    // Enfocar input al abrir
+    React.useEffect(() => {
+      if (open && searchInputRef.current) {
+        setTimeout(() => searchInputRef.current?.focus(), 0)
+      }
+    }, [open])
 
-    const itemStyles = `
-      relative flex items-center gap-[var(--spacing-sm)]
-      px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm
-      text-[var(--foreground)]
-      cursor-pointer
-      transition-colors duration-[var(--transition-fast)]
-      hover:bg-[var(--secondary)]
-      focus:bg-[var(--secondary)] focus:outline-none
-      data-[p-highlight=true]:bg-[var(--secondary)]
-      data-[p-disabled=true]:pointer-events-none data-[p-disabled=true]:opacity-50
-    `
+    const selectedCount = value.length
+    const isSelected = (optionValue: any) => value.some((v) => v === optionValue)
 
-    const chipStyles = `
-      inline-flex items-center gap-[var(--spacing-xs)]
-      px-[var(--spacing-sm)] py-[var(--spacing-xxs)] mr-[var(--spacing-xs)] mb-[var(--spacing-xs)]
-      text-xs font-medium
-      rounded-[var(--radius-sm)]
-      bg-[var(--secondary)] text-[var(--foreground)]
-      border border-[var(--border)]
-    `
+    const toggleOption = (optionValue: any) => {
+      const newValue = isSelected(optionValue)
+        ? value.filter((v) => v !== optionValue)
+        : [...value, optionValue]
+      onChange?.({ value: newValue })
+    }
 
-    const checkboxStyles = `
-      flex items-center justify-center
-      !w-4 !h-4 !rounded-[var(--radius-sm)]
-      !border !border-[var(--input-border)]
-      !bg-[var(--input)]
-      !transition-all !duration-[var(--transition-fast)]
-      data-[p-highlight=true]:!bg-[var(--primary)] data-[p-highlight=true]:!border-[var(--primary)]
-      hover:!border-[var(--border-hover)]
-    `
+    const removeChip = (e: React.MouseEvent, optionValue: any) => {
+      e.stopPropagation()
+      const newValue = value.filter((v) => v !== optionValue)
+      onChange?.({ value: newValue })
+    }
 
-    const emptyStyles = `
-      px-[var(--spacing-md)] py-[var(--spacing-lg)] text-center text-sm text-[var(--foreground-muted)]
-    `
+    const filteredOptions = search.trim()
+      ? options.filter((opt) =>
+          opt.label.toLowerCase().includes(search.toLowerCase().trim())
+        )
+      : options
+
+    const selectedOptions = options.filter((opt) => isSelected(opt.value))
+
+    const triggerStyles = cn(
+      'flex min-h-10 w-full items-center justify-between gap-[var(--spacing-sm)]',
+      'rounded-[var(--radius)]',
+      'border border-[var(--input-border)]',
+      'bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)]',
+      'text-sm text-[var(--foreground)]',
+      'transition-all duration-[var(--transition-base)]',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ring-offset)]',
+      'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--muted)]',
+      'hover:border-[var(--border-hover)]',
+      'data-[state=open]:ring-2 data-[state=open]:ring-[var(--ring)]',
+      error && 'border-[var(--destructive)] focus-visible:ring-[var(--destructive)]',
+      className
+    )
+
+    const chipStyles =
+      'inline-flex items-center gap-[var(--spacing-xs)] px-[var(--spacing-sm)] py-[var(--spacing-xxs)] text-xs font-medium rounded-[var(--radius-sm)] bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)]'
 
     return (
-      <PrimeMultiSelect
-        ref={ref}
-        placeholder={placeholder}
-        display="chip"
-        {...props}
-        pt={{
-          root: {
-            className: `${triggerStyles} ${errorStyles} ${widthStyles} ${className}`.trim(),
-          },
-          labelContainer: {
-            className: 'flex-1 flex flex-wrap items-center gap-[var(--spacing-xs)]',
-          },
-          label: {
-            className: 'text-[var(--foreground-muted)]',
-          },
-          trigger: {
-            className: 'flex items-center justify-center ml-[var(--spacing-sm)] shrink-0',
-          },
-          panel: {
-            className: panelStyles,
-          },
-          wrapper: {
-            className: 'max-h-60 overflow-auto',
-          },
-          list: {
-            className: 'py-[var(--spacing-xs)]',
-          },
-          item: {
-            className: itemStyles,
-          },
-          checkboxContainer: {
-            className: 'mr-[var(--spacing-sm)]',
-          },
-          checkbox: {
-            root: { className: '!relative !flex !items-center !justify-center' },
-            box: { className: checkboxStyles },
-            input: { className: '!hidden' },
-            icon: { className: '!w-3 !h-3 !text-[var(--primary-foreground)]' }
-          },
-          token: {
-            className: chipStyles,
-          },
-          tokenLabel: {
-            className: 'text-xs',
-          },
-          removeTokenIcon: {
-            className: '!w-3 !h-3 !text-[var(--foreground-muted)] hover:!text-[var(--foreground)] !cursor-pointer !ml-1',
-          },
-          emptyMessage: {
-            className: emptyStyles,
-          },
-          header: {
-            className: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] border-b border-[var(--border)] flex items-center gap-[var(--spacing-sm)]',
-          },
-          headerCheckboxContainer: {
-            className: 'mr-[var(--spacing-sm)]',
-          },
-          headerCheckbox: {
-            root: { className: '!relative !flex !items-center !justify-center' },
-            box: { className: checkboxStyles },
-            input: { className: '!hidden' },
-            icon: { className: '!w-3 !h-3 !text-[var(--primary-foreground)]' }
-          },
-          filterInput: {
-            className: `
-              flex-1 h-9 rounded-[var(--radius-sm)]
-              border border-[var(--input-border)]
-              bg-[var(--input)] px-[var(--spacing-md)]
-              text-sm text-[var(--foreground)]
-              placeholder:text-[var(--foreground-muted)]
-              focus:outline-none focus:ring-1 focus:ring-[var(--ring)]
-            `,
-          },
-          filterIcon: {
-            className: 'w-4 h-4 text-[var(--foreground-muted)]',
-          },
-          closeButton: {
-            className: `
-              p-[var(--spacing-xs)] rounded-[var(--radius-sm)]
-              text-[var(--foreground-muted)]
-              hover:text-[var(--foreground)] hover:bg-[var(--secondary)]
-              transition-colors
-            `,
-          },
-        }}
-        dropdownIcon={<ChevronDown className="w-4 h-4 text-[var(--foreground-muted)]" />}
-        removeIcon={<X className="w-3 h-3" />}
-        checkboxIcon={<Check className="w-3 h-3" strokeWidth={3} />}
-      />
+      <PopoverPrimitive.Root open={open} onOpenChange={setOpen} modal={false}>
+        {/* ---- TRIGGER ---- */}
+        <PopoverPrimitive.Trigger asChild disabled={disabled}>
+          <button
+            ref={ref}
+            type="button"
+            disabled={disabled}
+            className={triggerStyles}
+            {...props}
+          >
+            <div className="flex-1 flex flex-wrap items-center gap-[var(--spacing-xs)] text-left">
+              {selectedCount > 0 ? (
+                display === 'chip' ? (
+                  <>
+                    {selectedOptions.slice(0, 3).map((opt) => (
+                      <span key={String(opt.value)} className={chipStyles}>
+                        <span className="text-xs">{opt.label}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => removeChip(e, opt.value)}
+                          className="flex items-center justify-center w-3.5 h-3.5 rounded-[var(--radius-sm)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors shrink-0"
+                          aria-label={`Quitar ${opt.label}`}
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ))}
+                    {selectedCount > 3 && (
+                      <span className="text-xs text-[var(--foreground-muted)]">
+                        +{selectedCount - 3} más
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-sm text-[var(--foreground)]">
+                    {selectedCount} seleccionado{selectedCount !== 1 ? 's' : ''}
+                  </span>
+                )
+              ) : (
+                <span className="text-sm text-[var(--foreground-muted)]">
+                  {placeholder}
+                </span>
+              )}
+            </div>
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 text-[var(--foreground-muted)] shrink-0 transition-transform duration-[var(--transition-base)]',
+                open && 'rotate-180'
+              )}
+            />
+          </button>
+        </PopoverPrimitive.Trigger>
+
+        {/* ---- POPOVER ---- */}
+        <PopoverPrimitive.Portal>
+          <PopoverPrimitive.Content
+            align="start"
+            sideOffset={4}
+            className={cn(
+              'z-[var(--z-dropdown)] w-[var(--radix-popover-trigger-width)] min-w-[200px]',
+              'overflow-hidden rounded-[var(--radius)]',
+              'border border-[var(--border)]',
+              'bg-[var(--popover)]',
+              'shadow-lg',
+              'data-[state=open]:animate-in data-[state=closed]:animate-out',
+              'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+              'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+              'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2'
+            )}
+          >
+            {/* Search Input */}
+            <div className="px-[var(--spacing-md)] pt-[var(--spacing-md)] pb-[var(--spacing-sm)] border-b border-[var(--border)]">
+              <div className="relative flex items-center">
+                <Search className="absolute left-[var(--spacing-sm)] w-4 h-4 text-[var(--foreground-muted)] pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar..."
+                  className={cn(
+                    'w-full h-9 rounded-[var(--radius-sm)]',
+                    'border border-[var(--input-border)]',
+                    'bg-[var(--input)] pl-[var(--spacing-xl)] pr-[var(--spacing-md)]',
+                    'text-sm text-[var(--foreground)]',
+                    'placeholder:text-[var(--foreground-muted)]',
+                    'focus:outline-none focus:ring-1 focus:ring-[var(--ring)] focus:border-[var(--input-focus)]'
+                  )}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-[var(--spacing-sm)] flex items-center justify-center w-4 h-4 text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors"
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Options List */}
+            <div className="max-h-60 overflow-auto py-[var(--spacing-xs)]">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => {
+                  const checked = isSelected(option.value)
+                  return (
+                    <label
+                      key={String(option.value)}
+                      className={cn(
+                        'relative flex items-center gap-[var(--spacing-sm)]',
+                        'px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm',
+                        'text-[var(--foreground)]',
+                        'cursor-pointer select-none',
+                        'transition-colors duration-[var(--transition-fast)]',
+                        'hover:bg-[var(--secondary)]',
+                        'has-[input:focus-visible]:bg-[var(--secondary)]'
+                      )}
+                    >
+                      <CheckboxPrimitive.Root
+                        checked={checked}
+                        onCheckedChange={() => toggleOption(option.value)}
+                        className={cn(
+                          'flex items-center justify-center',
+                          'w-4 h-4 rounded-[var(--radius-sm)]',
+                          'border border-[var(--input-border)]',
+                          'bg-[var(--input)]',
+                          'transition-all duration-[var(--transition-fast)]',
+                          'data-[state=checked]:bg-[var(--primary)] data-[state=checked]:border-[var(--primary)]',
+                          'hover:border-[var(--border-hover)]',
+                          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ring)]'
+                        )}
+                      >
+                        <CheckboxPrimitive.Indicator className="flex items-center justify-center">
+                          <Check className="w-3 h-3 text-[var(--primary-foreground)]" strokeWidth={3} />
+                        </CheckboxPrimitive.Indicator>
+                      </CheckboxPrimitive.Root>
+                      <span className="flex-1 text-sm">{option.label}</span>
+                    </label>
+                  )
+                })
+              ) : (
+                <div className="px-[var(--spacing-md)] py-[var(--spacing-lg)] text-center text-sm text-[var(--foreground-muted)]">
+                  {search ? 'Sin resultados' : 'No hay opciones disponibles'}
+                </div>
+              )}
+            </div>
+          </PopoverPrimitive.Content>
+        </PopoverPrimitive.Portal>
+      </PopoverPrimitive.Root>
     )
   }
 )

@@ -78,13 +78,13 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
             )}
         >
             {/* Brand / Logo */}
-            <div className="flex items-center px-[var(--spacing-lg)] pt-[var(--spacing-lg)] pb-[var(--spacing-sm)] shrink-0">
+            <div className="h-20 flex items-center px-[var(--spacing-lg)] mb-[var(--spacing-md)] overflow-hidden shrink-0">
                 <div className="flex items-center gap-[var(--spacing-md)]">
                     <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-[var(--primary-foreground)] font-black text-xl shrink-0">
                         K
                     </div>
                     {!collapsed && (
-                        <div className="animate-fade-in">
+                        <div className="animate-fade-in whitespace-nowrap">
                             {brand || <span className="text-xl font-black text-[var(--foreground)] tracking-tighter uppercase">KREO <span className="text-[var(--primary)]">ADMIN</span></span>}
                         </div>
                     )}
@@ -202,11 +202,6 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(({
                         </button>
                     </div>
                 )}
-            </div>
-
-            {/* Version */}
-            <div className="px-[var(--spacing-md)] pb-[var(--spacing-md)] shrink-0">
-                <p className="text-[9px] text-[var(--foreground-subtle)] font-mono">v0.1.0</p>
             </div>
 
             {/* Collapse Trigger */}

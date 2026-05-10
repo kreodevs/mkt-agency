@@ -1,15 +1,15 @@
-import { InputText as PrimeInputText, type InputTextProps as PrimeInputTextProps } from 'primereact/inputtext'
-import { forwardRef } from 'react'
+import { forwardRef, type ComponentPropsWithoutRef } from 'react'
 
-export interface InputTextProps extends Omit<PrimeInputTextProps, 'pt'> {
+export interface InputTextProps extends ComponentPropsWithoutRef<'input'> {
   error?: boolean
   fullWidth?: boolean
+  label?: string
 }
 
 export const InputText = forwardRef<HTMLInputElement, InputTextProps>(
-  ({ error, fullWidth, className = '', ...props }, ref) => {
+  ({ error, fullWidth, label, className = '', id, ...props }, ref) => {
     const baseStyles = `
-      flex h-10 w-full rounded-[var(--radius)]
+      flex h-10 rounded-[var(--radius)]
       border border-[var(--input-border)]
       bg-[var(--input)] px-[var(--spacing-md)] py-[var(--spacing-sm)]
       text-sm text-[var(--foreground)]
@@ -26,16 +26,29 @@ export const InputText = forwardRef<HTMLInputElement, InputTextProps>(
 
     const widthStyles = fullWidth ? 'w-full' : ''
 
-    return (
-      <PrimeInputText
+    const resolvedId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
+
+    const input = (
+      <input
         ref={ref}
+        id={resolvedId}
+        className={`${baseStyles} ${errorStyles} ${widthStyles} ${className}`.trim()}
         {...props}
-        pt={{
-          root: {
-            className: `${baseStyles} ${errorStyles} ${widthStyles} ${className}`.trim(),
-          },
-        }}
       />
+    )
+
+    if (!label) return input
+
+    return (
+      <div className="flex flex-col gap-[var(--spacing-xs)]">
+        <label
+          htmlFor={resolvedId}
+          className="text-sm font-medium text-[var(--foreground)]"
+        >
+          {label}
+        </label>
+        {input}
+      </div>
     )
   }
 )

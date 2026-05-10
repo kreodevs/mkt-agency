@@ -1,89 +1,185 @@
-// REGISTRY: CurrencyInput
-
-import { forwardRef } from 'react'
-import { InputNumber, type InputNumberProps } from 'primereact/inputnumber'
+import { forwardRef, useState, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface CurrencyInputProps extends Omit<InputNumberProps, 'mode' | 'currency' | 'locale'> {
+export interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'> {
     label?: string;
     error?: string;
+    value?: number | null;
+    onChange?: (value: number | null) => void;
     currency?: string; // e.g. 'USD', 'MXN', 'EUR'
     locale?: string; // e.g. 'en-US', 'es-MX'
     decimals?: number; // Cuántos decimales permites (si se pasa, no rellena con ceros innecesarios)
 }
 
-export const CurrencyInput = forwardRef<InputNumber, CurrencyInputProps>(
-    ({ className, label, error, currency = 'USD', locale = 'en-US', decimals, ...props }, ref) => {
-        // Fallback robusto para evitar colapsos al teclear props en Storybook
-        // currency requiere 3 letras ('USD', 'MXN').
-        const safeCurrency = currency.length === 3 ? currency : 'USD';
+/**
+ * Formatea un número como string de moneda usando Intl.NumberFormat.
+ */
+function formatCurrency(
+    value: number | null | undefined,
+    locale: string,
+    currency: string,
+    decimals?: number,
+): string {
+    if (value == null) return ''
+    try {
+        const minDec = decimals ?? 2
+        const maxDec = decimals ?? 2
+        return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency,
+            minimumFractionDigits: minDec,
+            maximumFractionDigits: maxDec,
+        }).format(value)
+    } catch {
+        return String(value)
+    }
+}
 
-        // locale requiere un formato BCP 47 válido, una manera simple de verificar
-        // es que tenga al menos 4 caracteres si trae guion o no estar vacío.
-        // Un chequeo de validez real usando Intl:
-        let safeLocale = 'en-US';
-        try {
-            // Evaluamos si el navegador nativamente soporta el string en crudo
-            Intl.NumberFormat(locale);
-            safeLocale = locale;
-        } catch (e) {
-            safeLocale = 'en-US';
+/**
+ * Parsea un string ingresado por el usuario de vuelta a número,
+ * respetando los separadores decimales/de grupo del locale.
+ */
+function parseNumberInput(input: string, locale: string): number | null {
+    if (!input.trim()) return null
+
+    try {
+        // Obtener separadores del locale
+        const sample = new Intl.NumberFormat(locale).formatToParts(1234.56)
+        const decimalSep = sample.find(p => p.type === 'decimal')?.value ?? '.'
+        const groupSep = sample.find(p => p.type === 'group')?.value ?? ','
+
+        // Limpiar: quitar todo excepto dígitos, separador decimal, signo menos, E(e)
+        const cleaned = input.replace(
+            new RegExp(`[^0-9\\${decimalSep}eE\\-]`, 'g'), '',
+        )
+
+        // Normalizar separador decimal a '.' y eliminar separadores de grupo
+        let normalized
+        if (decimalSep !== '.') {
+            // Reemplazar separador decimal local por punto, y eliminar grupos
+            normalized = cleaned
+                .replace(new RegExp(`\\${groupSep}`, 'g'), '')
+                .replace(new RegExp(`\\${decimalSep}`), '.')
+        } else {
+            normalized = cleaned.replace(new RegExp(`\\${groupSep}`, 'g'), '')
         }
 
-        // Intercepta símbolos apretados como "MX$" y separa el texto del símbolo
-        let resolvedMode: "currency" | "decimal" = "currency";
-        let customPrefix: string | undefined = undefined;
-        let defaultCurrencyDecimals = 2; // Por defecto
+        // Asegurar un solo punto decimal
+        const parts = normalized.split('.')
+        const final = parts.length > 1
+            ? parts[0] + '.' + parts.slice(1).join('')
+            : normalized
 
+        const num = parseFloat(final)
+        return isNaN(num) ? null : num
+    } catch {
+        const num = parseFloat(input.replace(/[^0-9.\-]/g, ''))
+        return isNaN(num) ? null : num
+    }
+}
+
+export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
+    (
+        {
+            className,
+            label,
+            error,
+            placeholder,
+            value,
+            onChange,
+            disabled,
+            currency = 'USD',
+            locale = 'en-US',
+            decimals,
+            ...inputProps
+        },
+        ref,
+    ) => {
+        // Validar locale
+        let safeLocale = 'en-US'
         try {
-            const parts = new Intl.NumberFormat(safeLocale, { style: 'currency', currency: safeCurrency }).formatToParts(1.1);
-            const currencyPart = parts.find(p => p.type === 'currency');
+            Intl.NumberFormat(locale)
+            safeLocale = locale
+        } catch {
+            safeLocale = 'en-US'
+        }
 
-            // Si el motor empuja un string tipo "MX$" o "CA$" sin espacio
-            if (currencyPart && currencyPart.value.length > 1 && currencyPart.value.endsWith('$')) {
-                resolvedMode = 'decimal';
-                customPrefix = currencyPart.value.replace('$', ' $ ');
+        const safeCurrency = currency.length === 3 ? currency : 'USD'
 
-                // Mantenemos los decimales originales de la moneda
-                const fractionPart = parts.find(p => p.type === 'fraction');
-                defaultCurrencyDecimals = fractionPart ? fractionPart.value.length : 0;
+        // displayText: lo que se ve en el <input>
+        const [displayText, setDisplayText] = useState(() =>
+            formatCurrency(value, safeLocale, safeCurrency, decimals),
+        )
+        const [focused, setFocused] = useState(false)
+
+        // Sincronizar value externo → display cuando no estamos en edición
+        useEffect(() => {
+            if (!focused) {
+                setDisplayText(formatCurrency(value, safeLocale, safeCurrency, decimals))
             }
-        } catch (e) {
-            // Ignorar errores en parseo nativo.
-        }
+        }, [value, focused, safeLocale, safeCurrency, decimals])
 
-        // Determinar límites de decimales finales a inyectar al InputNumber
-        const finalMaxDecimals = decimals !== undefined ? decimals : (resolvedMode === 'decimal' ? defaultCurrencyDecimals : undefined);
-        const finalMinDecimals = decimals !== undefined ? 0 : (resolvedMode === 'decimal' ? defaultCurrencyDecimals : undefined);
+        const handleFocus = useCallback(() => {
+            if (disabled) return
+            setFocused(true)
+            // Al enfocar, mostrar el valor númerico puro para edición
+            setDisplayText(value != null ? String(value) : '')
+        }, [disabled, value])
+
+        const handleBlur = useCallback(() => {
+            setFocused(false)
+            const parsed = parseNumberInput(displayText, safeLocale)
+            // Llamar onChange con el valor numérico crudo
+            if (parsed !== value) {
+                onChange?.(parsed)
+            }
+            // Reformatear para display
+            setDisplayText(formatCurrency(parsed, safeLocale, safeCurrency, decimals))
+        }, [displayText, onChange, safeLocale, safeCurrency, decimals, value])
+
+        const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+            setDisplayText(e.target.value)
+        }, [])
+
+        const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') {
+                ;(e.target as HTMLInputElement).blur()
+            }
+        }, [])
 
         return (
             <div className="flex flex-col gap-1.5 w-full">
-                {label && <label className="text-sm font-medium leading-none text-[var(--foreground)]">{label}</label>}
-                <InputNumber
+                {label && (
+                    <label className="text-sm font-medium leading-none text-[var(--foreground)]">
+                        {label}
+                    </label>
+                )}
+
+                <input
                     ref={ref}
-                    mode={resolvedMode}
-                    currency={resolvedMode === 'currency' ? safeCurrency : undefined}
-                    prefix={customPrefix}
-                    minFractionDigits={props.minFractionDigits !== undefined ? props.minFractionDigits : finalMinDecimals}
-                    maxFractionDigits={props.maxFractionDigits !== undefined ? props.maxFractionDigits : finalMaxDecimals}
-                    locale={safeLocale}
-                    className={cn("w-full", className)}
-                    pt={{
-                        root: { className: "w-full" },
-                        input: {
-                            root: {
-                                className: cn(
-                                    "flex h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm ring-offset-[var(--background)] file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[var(--foreground-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
-                                    error && "border-[var(--destructive)] focus-visible:ring-[var(--destructive)]"
-                                )
-                            }
-                        }
-                    }}
-                    {...props}
+                    type="text"
+                    inputMode="decimal"
+                    value={displayText}
+                    onChange={handleChange}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    placeholder={placeholder ?? '0.00'}
+                    disabled={disabled}
+                    className={cn(
+                        'flex h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm ring-offset-[var(--background)] file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[var(--foreground-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
+                        error &&
+                            'border-[var(--destructive)] focus-visible:ring-[var(--destructive)]',
+                        className,
+                    )}
+                    {...inputProps}
                 />
-                {error && <span className="text-[14px] text-[var(--destructive)]">{error}</span>}
+
+                {error && (
+                    <span className="text-[14px] text-[var(--destructive)]">{error}</span>
+                )}
             </div>
         )
-    }
+    },
 )
 CurrencyInput.displayName = 'CurrencyInput'

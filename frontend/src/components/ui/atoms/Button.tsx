@@ -1,6 +1,5 @@
-import { Button as PrimeButton, type ButtonProps as PrimeButtonProps } from 'primereact/button'
 import { Loader2 } from 'lucide-react'
-import { forwardRef } from 'react'
+import { forwardRef, type ComponentPropsWithoutRef } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
@@ -32,36 +31,23 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends Omit<PrimeButtonProps, 'pt' | 'size'>,
-  VariantProps<typeof buttonVariants> {
+  extends ComponentPropsWithoutRef<'button'>,
+    VariantProps<typeof buttonVariants> {
   loading?: boolean
 }
 
-export const Button = forwardRef<PrimeButton, ButtonProps>(
-  ({ variant, size, loading, disabled, children, className, icon, ...props }, ref) => {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant, size, loading, disabled, children, className, ...props }, ref) => {
     return (
-      <PrimeButton
+      <button
         ref={ref}
         disabled={disabled || loading}
+        className={cn(buttonVariants({ variant, size, className }))}
         {...props}
-        pt={{
-          root: {
-            className: cn(buttonVariants({ variant, size, className })),
-          },
-          label: {
-            className: 'font-medium',
-          },
-          icon: {
-            className: 'w-4 h-4',
-          },
-          loadingIcon: {
-            className: 'w-4 h-4 animate-spin',
-          },
-        }}
-        icon={loading ? <Loader2 className="w-4 h-4 animate-spin" /> : icon}
       >
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         {children}
-      </PrimeButton>
+      </button>
     )
   }
 )
