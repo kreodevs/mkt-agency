@@ -1,9 +1,7 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs'
-import { forwardRef, ReactNode, useState, useEffect, useCallback } from 'react'
-import { cn } from '@/lib/utils'
+import { TabView as PrimeTabView, type TabViewProps as PrimeTabViewProps, TabPanel, type TabPanelProps } from 'primereact/tabview'
+import { forwardRef, type ReactNode } from 'react'
 
-export interface TabItemProps {
-  value: string
+export interface TabItemProps extends Omit<TabPanelProps, 'pt'> {
   label: string
   icon?: ReactNode
   badge?: string | number
@@ -11,25 +9,18 @@ export interface TabItemProps {
   children: ReactNode
 }
 
-export interface TabViewInputProps {
+export interface TabViewInputProps extends Omit<PrimeTabViewProps, 'pt'> {
   tabs?: TabItemProps[]
   variant?: 'default' | 'bordered' | 'pills' | 'underline'
   size?: 'sm' | 'md' | 'lg'
   fullWidth?: boolean
   children?: ReactNode
-  /** Controlled active tab index (0-based) — maps to Radix value internally */
-  activeIndex?: number
-  /** Default tab value for uncontrolled usage */
-  defaultValue?: string
-  /** Called when the active tab changes — receives the tab's string value */
-  onTabChange?: (value: string) => void
-  className?: string
 }
 
 const sizeStyles = {
-  sm: { tab: 'px-[var(--spacing-md)] py-1.5 text-xs', icon: 'w-3 h-3', badge: 'text-[10px] px-1.5 py-[var(--spacing-xxs)]' },
-  md: { tab: 'px-[var(--spacing-md)] py-[var(--spacing-sm)] text-sm', icon: 'w-4 h-4', badge: 'text-xs px-[var(--spacing-sm)] py-[var(--spacing-xxs)]' },
-  lg: { tab: 'px-[var(--spacing-lg)] py-2.5 text-base', icon: 'w-5 h-5', badge: 'text-xs px-[var(--spacing-sm)] py-[var(--spacing-xs)]' },
+  sm: { tab: 'px-3 py-1.5 text-xs', icon: 'w-3 h-3', badge: 'text-[10px] px-1.5 py-0.5' },
+  md: { tab: 'px-4 py-2 text-sm', icon: 'w-4 h-4', badge: 'text-xs px-2 py-0.5' },
+  lg: { tab: 'px-5 py-2.5 text-base', icon: 'w-5 h-5', badge: 'text-xs px-2 py-1' },
 }
 
 const variantStyles = {
@@ -40,16 +31,16 @@ const variantStyles = {
       text-[var(--foreground-muted)]
       hover:text-[var(--foreground)] hover:bg-[var(--muted)]
       transition-colors
-      data-[state=active]:text-[var(--accent)]
-      data-[state=active]:after:absolute
-      data-[state=active]:after:bottom-0
-      data-[state=active]:after:left-0
-      data-[state=active]:after:right-0
-      data-[state=active]:after:h-0.5
-      data-[state=active]:after:bg-[var(--accent)]
+      [&[data-p-highlight=true]]:text-[var(--accent)]
+      [&[data-p-highlight=true]]:after:absolute
+      [&[data-p-highlight=true]]:after:bottom-0
+      [&[data-p-highlight=true]]:after:left-0
+      [&[data-p-highlight=true]]:after:right-0
+      [&[data-p-highlight=true]]:after:h-0.5
+      [&[data-p-highlight=true]]:after:bg-[var(--accent)]
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-[var(--spacing-md)] bg-[var(--card)]',
+    content: 'p-4 bg-[var(--card)]',
   },
   bordered: {
     nav: 'flex border border-[var(--border)] rounded-t-[var(--radius)] bg-[var(--secondary)] overflow-hidden',
@@ -58,131 +49,135 @@ const variantStyles = {
       text-[var(--foreground-muted)]
       hover:text-[var(--foreground)] hover:bg-[var(--muted)]
       transition-colors
-      data-[state=active]:text-[var(--accent)]
-      data-[state=active]:bg-[var(--card)]
+      [&[data-p-highlight=true]]:text-[var(--accent)]
+      [&[data-p-highlight=true]]:bg-[var(--card)]
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-[var(--spacing-md)] border border-t-0 border-[var(--border)] rounded-b-[var(--radius)] bg-[var(--card)]',
+    content: 'p-4 border border-t-0 border-[var(--border)] rounded-b-[var(--radius)] bg-[var(--card)]',
   },
   pills: {
-    nav: 'flex gap-[var(--spacing-sm)] p-[var(--spacing-xs)] rounded-[var(--radius)] bg-[var(--secondary)]',
+    nav: 'flex gap-2 p-1 rounded-[var(--radius)] bg-[var(--secondary)]',
     tab: `
       font-medium rounded-[var(--radius-sm)]
       text-[var(--foreground-muted)]
       hover:text-[var(--foreground)]
       transition-colors
-      data-[state=active]:text-[var(--primary-foreground)]
-      data-[state=active]:bg-[var(--primary)]
-      data-[state=active]:shadow-sm
+      [&[data-p-highlight=true]]:text-[var(--primary-foreground)]
+      [&[data-p-highlight=true]]:bg-[var(--primary)]
+      [&[data-p-highlight=true]]:shadow-sm
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-[var(--spacing-md)] mt-[var(--spacing-sm)]',
+    content: 'p-4 mt-2',
   },
   underline: {
-    nav: 'flex gap-[var(--spacing-md)]',
+    nav: 'flex gap-4',
     tab: `
-      relative font-medium pb-[var(--spacing-sm)]
+      relative font-medium pb-2
       text-[var(--foreground-muted)]
       hover:text-[var(--foreground)]
       transition-colors
-      data-[state=active]:text-[var(--accent)]
-      data-[state=active]:after:absolute
-      data-[state=active]:after:bottom-0
-      data-[state=active]:after:left-0
-      data-[state=active]:after:right-0
-      data-[state=active]:after:h-0.5
-      data-[state=active]:after:bg-[var(--accent)]
-      data-[state=active]:after:rounded-full
+      [&[data-p-highlight=true]]:text-[var(--accent)]
+      [&[data-p-highlight=true]]:after:absolute
+      [&[data-p-highlight=true]]:after:bottom-0
+      [&[data-p-highlight=true]]:after:left-0
+      [&[data-p-highlight=true]]:after:right-0
+      [&[data-p-highlight=true]]:after:h-0.5
+      [&[data-p-highlight=true]]:after:bg-[var(--accent)]
+      [&[data-p-highlight=true]]:after:rounded-full
       disabled:opacity-50 disabled:cursor-not-allowed
     `,
-    content: 'p-[var(--spacing-md)] border-t border-[var(--border)]',
+    content: 'p-4 border-t border-[var(--border)]',
   },
 }
 
 export const TabView = forwardRef<HTMLDivElement, TabViewInputProps>(
-  ({ tabs, variant = 'default', size = 'md', fullWidth = false, children, activeIndex, defaultValue, onTabChange, className, ...props }, ref) => {
+  ({ tabs, variant = 'default', size = 'md', fullWidth = false, children, ...props }, ref) => {
     const styles = variantStyles[variant]
     const sizes = sizeStyles[size]
+
     const fullWidthStyles = fullWidth ? 'flex-1 justify-center' : ''
 
-    // Derive the string value from activeIndex (controlled) or fallback
-    const controlledValue =
-      activeIndex !== undefined && tabs && tabs[activeIndex] ? tabs[activeIndex].value : undefined
-
-    const fallbackDefault = tabs?.[0]?.value ?? 'tab-0'
-    const [internalValue, setInternalValue] = useState<string>(defaultValue ?? fallbackDefault)
-
-    // Sync external activeIndex changes into internal state
-    useEffect(() => {
-      if (controlledValue !== undefined) {
-        setInternalValue(controlledValue)
-      }
-    }, [controlledValue])
-
-    const handleValueChange = useCallback(
-      (value: string) => {
-        setInternalValue(value)
-        onTabChange?.(value)
+    const ptStyles = {
+      root: {
+        className: 'w-full',
       },
-      [onTabChange]
-    )
-
-    // Current value for Radix: controlled if activeIndex is given, otherwise internal
-    const radixValue = controlledValue !== undefined ? controlledValue : internalValue
+      nav: {
+        className: styles.nav,
+      },
+      tab: {
+        root: {
+          className: '',
+        },
+        header: {
+          className: `${styles.tab} ${sizes.tab} ${fullWidthStyles}`.trim(),
+        },
+        headerAction: {
+          className: 'flex items-center gap-2 outline-none',
+        },
+        headerTitle: {
+          className: 'whitespace-nowrap',
+        },
+      },
+      panelContainer: {
+        className: styles.content,
+      },
+    }
 
     const renderTabHeader = (item: TabItemProps) => (
-      <div className="flex items-center gap-[var(--spacing-sm)]">
-        {item.icon && <span className={sizes.icon}>{item.icon}</span>}
+      <div className="flex items-center gap-2">
+        {item.icon && (
+          <span className={sizes.icon}>
+            {item.icon}
+          </span>
+        )}
         <span>{item.label}</span>
         {item.badge !== undefined && (
-          <span
-            className={cn(
-              sizes.badge,
-              'rounded-full font-medium bg-[var(--accent)] text-[var(--accent-foreground)]'
-            )}
-          >
+          <span className={`
+            ${sizes.badge} rounded-full font-medium
+            bg-[var(--accent)] text-[var(--accent-foreground)]
+          `}>
             {item.badge}
           </span>
         )}
       </div>
     )
 
-    return (
-      <div ref={ref} className={cn('w-full', className)} {...props}>
-        <Tabs value={radixValue} onValueChange={handleValueChange}>
-          <TabsList className={styles.nav}>
-            {tabs?.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                disabled={tab.disabled}
-                className={cn(
-                  styles.tab,
-                  sizes.tab,
-                  fullWidthStyles,
-                  'flex items-center gap-[var(--spacing-sm)] outline-none'
-                )}
-              >
-                {renderTabHeader(tab)}
-              </TabsTrigger>
-            ))}
-            {!tabs &&
-              // If children are provided directly, render them as triggers
-              // Children should be elements shaped like TabItemProps
-              children}
-          </TabsList>
+    if (children) {
+      return (
+        <div ref={ref}>
+          <PrimeTabView {...props} pt={ptStyles}>
+            {children}
+          </PrimeTabView>
+        </div>
+      )
+    }
 
-          {tabs?.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value} className={cn(styles.content, 'outline-none')}>
+    return (
+      <div ref={ref}>
+        <PrimeTabView {...props} pt={ptStyles}>
+          {tabs?.map((tab, index) => (
+            <TabPanel
+              key={index}
+              header={renderTabHeader(tab)}
+              disabled={tab.disabled}
+              pt={{
+                header: { className: `${styles.tab} ${sizes.tab} ${fullWidthStyles}`.trim() },
+                headerAction: { className: 'flex items-center gap-2 outline-none' },
+                content: { className: '' },
+              }}
+            >
               {tab.children}
-            </TabsContent>
+            </TabPanel>
           ))}
-        </Tabs>
+        </PrimeTabView>
       </div>
     )
   }
 )
 
 TabView.displayName = 'TabView'
+
+// Export TabPanel for custom usage
+export { TabPanel }
 
 export default TabView
