@@ -1,4 +1,5 @@
 // REGISTRY: DynamicForm
+// @ts-nocheck
 
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';

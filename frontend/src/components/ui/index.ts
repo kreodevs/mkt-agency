@@ -23,13 +23,13 @@ export { Progress } from './atoms/Progress';
 
 // === Molecules ===
 export { Accordion } from './molecules/Accordion';
-export type { AccordionInputProps, AccordionItemProps } from './molecules/Accordion';
+export type { AccordionProps, AccordionItemProps } from './molecules/Accordion';
 export { AlertDialog } from './molecules/AlertDialog';
 export { Alert } from './molecules/Alert';
 export { Calendar } from './molecules/Calendar';
 export type { CalendarInputProps, DateRangePickerProps } from './molecules/Calendar';
 export { Card } from './molecules/Card';
-export type { CardInputProps } from './molecules/Card';
+export type { CardProps } from './molecules/Card';
 export { CurrencyInput } from './molecules/CurrencyInput';
 export type { CurrencyInputProps } from './molecules/CurrencyInput';
 export { Dialog } from './molecules/Dialog';

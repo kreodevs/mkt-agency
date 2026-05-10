@@ -113,12 +113,7 @@ export default function OnboardingPage() {
               Completa el onboarding para configurar tu cuenta y empezar a
               gestionar campañas.
             </p>
-            <Button
-              label="🚀 Iniciar Onboarding"
-              icon="pi pi-play"
-              onClick={handleStart}
-              size="lg"
-            />
+            <Button onClick={handleStart} size="lg">🚀 Iniciar Onboarding</Button>
           </div>
         </Card>
       </div>
@@ -146,11 +141,7 @@ export default function OnboardingPage() {
               Has completado el onboarding. Ya puedes empezar a usar MarketingOS
               al máximo.
             </p>
-            <Button
-              label="Ir a CRM"
-              icon="pi pi-arrow-right"
-              onClick={() => navigate('/crm')}
-            />
+            <Button onClick={() => navigate('/crm')}>Ir a CRM</Button>
           </div>
         </Card>
       </div>
@@ -162,13 +153,11 @@ export default function OnboardingPage() {
     if (row.status !== 'pending' && row.status !== 'in_progress') return null;
     return (
       <Button
-        label="✓ Completar"
-        icon="pi pi-check"
         size="sm"
-        severity="success"
+        className="bg-emerald-600 text-white hover:bg-emerald-700"
         loading={completingKey === row.key}
         onClick={() => handleComplete(row.key)}
-      />
+      >✓ Completar</Button>
     );
   };
 

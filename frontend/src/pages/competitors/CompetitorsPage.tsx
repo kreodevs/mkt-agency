@@ -76,7 +76,7 @@ export default function CompetitorsPage() {
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">Competidores</h2>
-        <Button label="+ Agregar Competidor" icon="pi pi-plus" onClick={() => setShowNew(true)} />
+        <Button onClick={() => setShowNew(true)}>+ Agregar Competidor</Button>
       </div>
 
       <Card>
@@ -102,7 +102,7 @@ export default function CompetitorsPage() {
           <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)} />
           <InputText placeholder="Website" value={newWebsite} onChange={e => setNewWebsite(e.target.value)} />
           <InputText placeholder="Descripción" value={newDescription} onChange={e => setNewDescription(e.target.value)} />
-          <Button label="Crear" onClick={handleCreate} disabled={!newName} />
+          <Button onClick={handleCreate} disabled={!newName}>Crear</Button>
         </div>
       </Dialog>
     </div>

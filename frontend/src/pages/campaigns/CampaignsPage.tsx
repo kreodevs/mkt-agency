@@ -60,7 +60,7 @@ export default function CampaignsPage() {
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">Google Ads</h2>
-        <Button label="Nueva Campaña" icon="pi pi-plus" onClick={() => setShowNew(true)}  />
+        <Button onClick={() => setShowNew(true)}>Nueva Campaña</Button>
       </div>
 
       <Card>
@@ -85,7 +85,7 @@ export default function CampaignsPage() {
         <div className="flex flex-column gap-2">
           <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)}  />
           <InputText type="number" placeholder="Presupuesto mensual" value={newBudget} onChange={e => setNewBudget(Number(e.target.value))}  />
-          <Button label="Crear" onClick={handleCreate} disabled={!newName}  />
+          <Button onClick={handleCreate} disabled={!newName}>Crear</Button>
         </div>
       </Dialog>
     </div>

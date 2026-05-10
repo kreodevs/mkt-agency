@@ -48,7 +48,7 @@ export default function CrmPage() {
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">CRM</h2>
-        <Button label="Nuevo Lead" icon="pi pi-plus" onClick={() => setShowNew(true)} />
+        <Button onClick={() => setShowNew(true)}>Nuevo Lead</Button>
       </div>
 
       <div className="grid">
@@ -88,7 +88,7 @@ export default function CrmPage() {
           <InputText placeholder="Clínica" value={newClinic} onChange={e => setNewClinic(e.target.value)} />
           <InputText placeholder="Teléfono" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
           <InputText placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
-          <Button label="Crear" onClick={handleCreate} disabled={!newName} />
+          <Button onClick={handleCreate} disabled={!newName}>Crear</Button>
         </div>
       </Dialog>
     </div>

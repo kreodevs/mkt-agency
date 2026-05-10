@@ -39,7 +39,7 @@ export default function LeadDetailPage() {
 
   return (
     <div className="p-3" style={{ maxWidth: '800px' }}>
-      <Button label="← Volver" text onClick={() => navigate('/crm')} className="mb-2" />
+      <Button variant="ghost" onClick={() => navigate('/crm')} className="mb-2">← Volver</Button>
 
       <Card title={lead.name}>
         <div className="grid">

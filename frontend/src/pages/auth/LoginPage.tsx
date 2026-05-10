@@ -41,7 +41,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex align-items-center justify-content-center min-h-screen" style={{ background: '#f0f2f5' }}>
-      <Card title="MktAgencyOS" subTitle="Iniciar sesión" className="w-full max-w-sm mx-4">
+      <Card title="MktAgencyOS" subtitle="Iniciar sesión" className="w-full max-w-sm mx-4">
         {error && <div className="text-sm text-[var(--destructive)] bg-red-50 border border-red-200 rounded-[var(--radius-sm)] px-3 py-2 mb-3 w-full">{error}</div>}
         <form onSubmit={handleSubmit} className="flex flex-column gap-3">
           <div>
@@ -50,9 +50,9 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="block mb-1 text-sm">Contraseña</label>
-            <Password value={password} onChange={(e) => setPassword(e.target.value)} className="w-full" feedback={false} toggleMask required />
+            <Password value={password} onChange={(e) => setPassword(e.target.value)} className="w-full" required />
           </div>
-          <Button type="submit" label="Entrar" loading={loading} className="w-full" />
+          <Button type="submit" loading={loading} className="w-full">Entrar</Button>
         </form>
         <div className="mt-3 text-center text-sm">
           ¿No tienes cuenta? <Link to="/register">Regístrate</Link>

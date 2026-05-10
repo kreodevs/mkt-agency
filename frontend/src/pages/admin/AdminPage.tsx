@@ -145,7 +145,7 @@ export default function AdminPage() {
         <h2 className="text-xl font-bold text-[var(--foreground)] mt-0">Administración</h2>
       </div>
 
-      <Card variant="bordered">
+      <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Store size={18} className="text-[var(--primary)]" />

@@ -99,13 +99,13 @@ export default function SetupPage() {
           </div>
 
           <Button
-            label="Crear Administrador"
-            icon="pi pi-check"
             onClick={handleSubmit}
             loading={loading}
             disabled={!name || !email || !password || !tenantName}
             className="w-full"
-          />
+          >
+            Crear Administrador
+          </Button>
         </div>
       </Card>
     </div>

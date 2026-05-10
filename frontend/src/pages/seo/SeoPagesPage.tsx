@@ -57,7 +57,7 @@ export default function SeoPagesPage() {
     <div>
       <div className="flex justify-content-between align-items-center mb-3">
         <h2 className="mt-0">Páginas SEO Local</h2>
-        <Button label="+ Nueva Página" icon="pi pi-plus" onClick={() => setShowNew(true)} />
+        <Button onClick={() => setShowNew(true)}>+ Nueva Página</Button>
       </div>
 
       <Card>
@@ -81,7 +81,7 @@ export default function SeoPagesPage() {
             onChange={e => setNewStatus(e.value)}
             placeholder="Estado"
           />
-          <Button label="Crear" onClick={handleCreate} disabled={!newCity || !newSlug || !newTitle} />
+          <Button onClick={handleCreate} disabled={!newCity || !newSlug || !newTitle}>Crear</Button>
         </div>
       </Dialog>
     </div>
