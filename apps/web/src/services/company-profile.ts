@@ -3,6 +3,8 @@ import type {
   CompanyProfile,
   CompanyProfileSection,
   SectionKey,
+  SuggestSectionResponse,
+  SuggestionAssignmentResponse,
   UpdateSectionResponse,
 } from '@/types/company-profile';
 
@@ -22,4 +24,20 @@ export async function updateCompanyProfileSection(
     method: 'PATCH',
     body: JSON.stringify({ data }),
   });
+}
+
+export async function requestSectionSuggestion(
+  sectionKey: SectionKey,
+): Promise<SuggestSectionResponse> {
+  return apiFetch<SuggestSectionResponse>(`/company-profile/sections/${sectionKey}/suggest`, {
+    method: 'POST',
+  });
+}
+
+export async function getSuggestionAssignment(
+  assignmentId: string,
+): Promise<SuggestionAssignmentResponse> {
+  return apiFetch<SuggestionAssignmentResponse>(
+    `/company-profile/suggestions/${assignmentId}`,
+  );
 }

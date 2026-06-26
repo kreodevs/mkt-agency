@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { listTenants } from '@/services/tenants';
 import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
+import { CreateTenantModal } from './CreateTenantModal';
 
 const STATUS_OPTIONS: Array<{ label: string; value: '' | TenantStatus }> = [
   { label: 'Todos los estados', value: '' },
@@ -47,8 +48,10 @@ const filterSelectClass =
   'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function TenantListPage() {
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'' | TenantStatus>('');
   const [planFilter, setPlanFilter] = useState<'' | TenantPlan>('');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const tenantsQuery = useQuery({
     queryKey: ['tenants', { status: statusFilter, plan: planFilter }],
@@ -124,11 +127,17 @@ export default function TenantListPage() {
         title="Tenants"
         description="Gestión de organizaciones registradas en la plataforma"
         actions={
-          <Button disabled title="Creación de tenant en siguiente iteración">
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nuevo tenant
           </Button>
         }
+      />
+
+      <CreateTenantModal
+        visible={createOpen}
+        onHide={() => setCreateOpen(false)}
+        onCreated={() => void queryClient.invalidateQueries({ queryKey: ['tenants'] })}
       />
 
       <Card>

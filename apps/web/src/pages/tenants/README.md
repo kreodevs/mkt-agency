@@ -14,5 +14,8 @@ Query params: `status`, `plan` (máx. 100 registros por petición según API).
 
 ## Próximo
 
-- Modal/formulario creación tenant (`POST /tenants`)
 - Detalle y edición por fila
+
+## Crear tenant
+
+Modal `CreateTenantModal` (Kreo `Dialog`) — `POST /api/v1/tenants` con owner.

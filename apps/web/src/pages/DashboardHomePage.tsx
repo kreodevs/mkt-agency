@@ -57,13 +57,18 @@ export default function DashboardHomePage() {
                   : 'Completa las secciones obligatorias para activar tu perfil (80%).'}
               </p>
 
-              <Link to="/onboarding">
-                <Button>
-                  {profileQuery.data.status === 'completed'
-                    ? 'Ver cuestionario'
-                    : 'Continuar onboarding'}
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link to="/onboarding">
+                  <Button variant="outline">
+                    {profileQuery.data.status === 'completed'
+                      ? 'Ver cuestionario'
+                      : 'Continuar onboarding'}
+                  </Button>
+                </Link>
+                <Link to="/campaigns">
+                  <Button>Ver campañas</Button>
+                </Link>
+              </div>
             </div>
           )}
 

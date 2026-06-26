@@ -6,16 +6,22 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  ALL_SECTION_KEYS,
-  MANDATORY_SECTION_KEYS,
-  SectionKey,
-} from './domain/section-keys';
 import { CompanyProfileCompletedEvent } from './events/company-profile-completed.event';
 import { CompanyProfileSectionEntity } from './infrastructure/typeorm/company-profile-section.entity';
 import { CompanyProfileEntity } from './infrastructure/typeorm/company-profile.entity';
 import { OutboxEntity } from './infrastructure/typeorm/outbox.entity';
 import { CompletionCalculatorService } from './services/completion-calculator.service';
+import {
+  ALL_SECTION_KEYS,
+  MANDATORY_SECTION_KEYS,
+  SectionKey,
+} from './domain/section-keys';
+import {
+  SuggestSectionAcceptedDto,
+  SuggestionAssignmentResponseDto,
+} from './dto/suggest-section.response.dto';
+import { SectionSuggestionAssignmentEntity } from './infrastructure/typeorm/section-suggestion-assignment.entity';
+import { SuggestionWorkerService } from './workers/suggestion.worker';
 import { UpdateCompanyProfileDto } from './dto/update-company-profile.dto';
 import { UpdateSectionDto } from './dto/update-section.dto';
 
@@ -26,7 +32,10 @@ export class CompanyProfileService {
     private readonly profiles: Repository<CompanyProfileEntity>,
     @InjectRepository(CompanyProfileSectionEntity)
     private readonly sections: Repository<CompanyProfileSectionEntity>,
+    @InjectRepository(SectionSuggestionAssignmentEntity)
+    private readonly suggestionAssignments: Repository<SectionSuggestionAssignmentEntity>,
     private readonly completionCalculator: CompletionCalculatorService,
+    private readonly suggestionWorker: SuggestionWorkerService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -182,6 +191,92 @@ export class CompanyProfileService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async requestSectionSuggestion(
+    tenantId: string,
+    sectionKey: string,
+  ): Promise<SuggestSectionAcceptedDto> {
+    if (!ALL_SECTION_KEYS.includes(sectionKey as SectionKey)) {
+      throw new BadRequestException({
+        error: 'Invalid section key',
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const profile = await this.ensureProfile(tenantId);
+    if (profile.status === 'completed') {
+      throw new ConflictException({
+        error: 'Company profile is already completed',
+        code: 'CONFLICT',
+      });
+    }
+
+    const inProgress = await this.suggestionAssignments.findOne({
+      where: [
+        { tenantId, sectionKey, status: 'pending' },
+        { tenantId, sectionKey, status: 'processing' },
+      ],
+    });
+    if (inProgress) {
+      return {
+        assignmentId: inProgress.id,
+        status: inProgress.status === 'pending' ? 'pending' : 'processing',
+        message: 'Suggestion generation already in progress.',
+      };
+    }
+
+    const assignment = await this.suggestionAssignments.save(
+      this.suggestionAssignments.create({
+        tenantId,
+        profileId: profile.id,
+        sectionKey,
+        status: 'pending',
+        result: null,
+        errorMessage: null,
+      }),
+    );
+
+    this.suggestionWorker.enqueue(assignment.id);
+
+    return {
+      assignmentId: assignment.id,
+      status: 'pending',
+      message: 'Suggestion generation in progress.',
+    };
+  }
+
+  async getSuggestionAssignment(
+    tenantId: string,
+    assignmentId: string,
+  ): Promise<SuggestionAssignmentResponseDto> {
+    const assignment = await this.suggestionAssignments.findOne({
+      where: { id: assignmentId, tenantId },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException({
+        error: 'Suggestion assignment not found',
+        code: 'NOT_FOUND',
+      });
+    }
+
+    const response: SuggestionAssignmentResponseDto = {
+      assignmentId: assignment.id,
+      sectionKey: assignment.sectionKey,
+      status: assignment.status,
+    };
+
+    if (assignment.status === 'completed' && assignment.result) {
+      response.suggestion = assignment.result;
+      response.message = 'Suggestion ready.';
+    } else if (assignment.status === 'failed') {
+      response.error = assignment.errorMessage ?? 'Suggestion generation failed';
+    } else {
+      response.message = 'Suggestion generation in progress.';
+    }
+
+    return response;
   }
 
   async createEmptyProfileForTenant(

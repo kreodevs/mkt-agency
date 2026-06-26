@@ -23,6 +23,7 @@ import {
 } from '@/services/company-profile';
 import type { SectionKey } from '@/types/company-profile';
 import { SectionStepForm } from './SectionStepForm';
+import { AISuggestion } from '@/components/onboarding/AISuggestion';
 
 export default function OnboardingWizardPage() {
   const navigate = useNavigate();
@@ -223,6 +224,20 @@ export default function OnboardingWizardPage() {
                   : 'Sección opcional — enriquece el contexto de la IA'}
               </p>
             </div>
+
+            <AISuggestion
+              sectionKey={currentSection.key}
+              disabled={saveMutation.isPending}
+              onAccept={(suggestion) => {
+                setFormValues((prev) => ({
+                  ...prev,
+                  [currentSection.key]: {
+                    ...prev[currentSection.key],
+                    ...suggestion,
+                  },
+                }));
+              }}
+            />
 
             <SectionStepForm
               fields={currentSection.fields}

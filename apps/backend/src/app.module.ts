@@ -14,6 +14,33 @@ import { CompanyProfileModule } from './modules/company-profile/company-profile.
 import { CompanyProfileEntity } from './modules/company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from './modules/company-profile/infrastructure/typeorm/company-profile-section.entity';
 import { OutboxEntity } from './modules/company-profile/infrastructure/typeorm/outbox.entity';
+import { SectionSuggestionAssignmentEntity } from './modules/company-profile/infrastructure/typeorm/section-suggestion-assignment.entity';
+import { CampaignModule } from './modules/campaign/campaign.module';
+import { AudienceEntity } from './modules/campaign/infrastructure/typeorm/audience.entity';
+import { BudgetEntity } from './modules/campaign/infrastructure/typeorm/budget.entity';
+import { CampaignStrategyAssignmentEntity } from './modules/campaign/infrastructure/typeorm/campaign-strategy-assignment.entity';
+import { CampaignTemplateEntity } from './modules/campaign/infrastructure/typeorm/campaign-template.entity';
+import { CampaignEntity } from './modules/campaign/infrastructure/typeorm/campaign.entity';
+import { ContentModule } from './modules/content/content.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { AssetsModule } from './modules/assets/assets.module';
+import { AssetEntity } from './modules/assets/infrastructure/typeorm/asset.entity';
+import { AssetFolderEntity } from './modules/assets/infrastructure/typeorm/asset-folder.entity';
+import { AssetTagEntity } from './modules/assets/infrastructure/typeorm/asset-tag.entity';
+import { AssetTagAssignmentEntity } from './modules/assets/infrastructure/typeorm/asset-tag-assignment.entity';
+import { DomainsModule } from './modules/domains/domains.module';
+import { CustomDomainEntity } from './modules/domains/infrastructure/typeorm/custom-domain.entity';
+import { DnsVerificationEntity } from './modules/domains/infrastructure/typeorm/dns-verification.entity';
+import { CrmModule } from './modules/crm/crm.module';
+import { FormsModule } from './modules/forms/form.module';
+import { FormEntity } from './modules/forms/infrastructure/typeorm/form.entity';
+import { FormSubmissionEntity } from './modules/forms/infrastructure/typeorm/form-submission.entity';
+import { LeadEntity } from './modules/crm/infrastructure/typeorm/lead.entity';
+import { LeadInteractionEntity } from './modules/crm/infrastructure/typeorm/lead-interaction.entity';
+import { ContentApprovalEntity } from './modules/content/infrastructure/typeorm/content-approval.entity';
+import { ContentVersionEntity } from './modules/content/infrastructure/typeorm/content-version.entity';
+import { ContentEntity } from './modules/content/infrastructure/typeorm/content.entity';
+import { EventEntity } from './modules/content/infrastructure/typeorm/event.entity';
 import { UsersModule } from './modules/users/users.module';
 import { AuditLogEntity } from './modules/users/infrastructure/typeorm/audit-log.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
@@ -47,6 +74,26 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
           CompanyProfileEntity,
           CompanyProfileSectionEntity,
           OutboxEntity,
+          SectionSuggestionAssignmentEntity,
+          CampaignTemplateEntity,
+          CampaignEntity,
+          BudgetEntity,
+          AudienceEntity,
+          CampaignStrategyAssignmentEntity,
+          ContentEntity,
+          ContentVersionEntity,
+          ContentApprovalEntity,
+          EventEntity,
+          FormEntity,
+          FormSubmissionEntity,
+          LeadEntity,
+          LeadInteractionEntity,
+          AssetEntity,
+          AssetFolderEntity,
+          AssetTagEntity,
+          AssetTagAssignmentEntity,
+          CustomDomainEntity,
+          DnsVerificationEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -56,6 +103,13 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
     SetupModule,
     TenantModule,
     CompanyProfileModule,
+    CampaignModule,
+    ContentModule,
+    CalendarModule,
+    CrmModule,
+    FormsModule,
+    AssetsModule,
+    DomainsModule,
     SuperadminModule,
     UsersModule,
     SecurityModule,

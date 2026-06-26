@@ -42,3 +42,24 @@ export interface UpdateSectionResponse {
   completionPercentage: number;
   status: CompanyProfileStatus;
 }
+
+export type SuggestionAssignmentStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed';
+
+export interface SuggestSectionResponse {
+  assignmentId: string;
+  status: 'pending' | 'processing';
+  message: string;
+}
+
+export interface SuggestionAssignmentResponse {
+  assignmentId: string;
+  sectionKey: SectionKey;
+  status: SuggestionAssignmentStatus;
+  suggestion?: Record<string, unknown>;
+  error?: string;
+  message?: string;
+}

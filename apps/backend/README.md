@@ -12,8 +12,16 @@ API NestJS (monolito modular) bajo `apps/backend`.
 | `superadmin` | `/api/v1/superadmin` | Impersonación auditada |
 | `users` | `/api/v1/users` | Perfil autenticado |
 | `security` | `/api/v1/security-events` | Eventos de seguridad (SA) |
+| `company-profile` | `/api/v1/company-profile` | Onboarding tenant + sugerencias IA |
+| `campaign` | `/api/v1/campaigns`, `/campaign-templates`, `/audiences` | Campañas US-009 |
+| `content` | `/api/v1/contents` | Contenido versionado US-010/011 |
+| `calendar` | `/api/v1/calendar` | Calendario editorial US-012 |
 
 Ver README por módulo en `src/modules/*/README.md`.
+
+## Infra async (BullMQ)
+
+Workers requieren Redis (`REDIS_URL` en `.env.example`). Colas: `section-suggestion`, `campaign-strategy`.
 
 ## Endpoints implementados
 
@@ -76,7 +84,7 @@ yarn install
 yarn workspace @mkt-agency/backend start:dev
 ```
 
-Variables de entorno: ver `.env.example` en la raíz (`DB_*`).
+Variables de entorno: ver `.env.example` en la raíz (`DB_*`, `REDIS_URL`, `AI_*`).
 
 ## Build
 

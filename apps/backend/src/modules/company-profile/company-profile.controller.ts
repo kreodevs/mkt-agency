@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Patch, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
@@ -36,5 +46,25 @@ export class CompanyProfileController {
     @Body() body: UpdateSectionDto,
   ) {
     return this.companyProfileService.updateSection(user.tenantId!, key, body);
+  }
+
+  @Post('sections/:key/suggest')
+  @HttpCode(HttpStatus.ACCEPTED)
+  suggestSection(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('key') key: string,
+  ) {
+    return this.companyProfileService.requestSectionSuggestion(user.tenantId!, key);
+  }
+
+  @Get('suggestions/:assignmentId')
+  getSuggestionAssignment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('assignmentId') assignmentId: string,
+  ) {
+    return this.companyProfileService.getSuggestionAssignment(
+      user.tenantId!,
+      assignmentId,
+    );
   }
 }

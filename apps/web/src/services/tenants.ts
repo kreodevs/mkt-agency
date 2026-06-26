@@ -3,7 +3,29 @@ import type {
   ListTenantsParams,
   PaginatedTenantsResponse,
   Tenant,
+  TenantPlan,
 } from '@/types/tenant';
+
+export interface CreateTenantPayload {
+  name: string;
+  slug: string;
+  plan: TenantPlan;
+  owner: {
+    email: string;
+    password: string;
+    name: string;
+  };
+}
+
+export interface CreateTenantResponse extends Tenant {
+  owner?: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId: string;
+  };
+}
 
 function buildQuery(params: ListTenantsParams): string {
   const search = new URLSearchParams();
@@ -23,4 +45,11 @@ export async function listTenants(
 
 export async function getTenant(id: string): Promise<Tenant> {
   return apiFetch<Tenant>(`/tenants/${id}`);
+}
+
+export async function createTenant(payload: CreateTenantPayload): Promise<CreateTenantResponse> {
+  return apiFetch<CreateTenantResponse>('/tenants', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

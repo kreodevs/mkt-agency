@@ -235,334 +235,303 @@
 
 ### US-008: Solicitar sugerencia IA para una sección del perfil
 
-- [ ] [P] Implementar endpoint `POST /api/v1/company-profile/sections/:key/suggest` que encola sugerencia IA
-  **MDD:** §4 POST /api/v1/company-profile/sections/:key/suggest
-  **Story:** US-008
-  **Archivo:** `apps/backend/src/modules/company-profile/company-profile.controller.ts`
+- [x] [P] Implementar endpoint `POST /api/v1/company-profile/sections/:key/suggest` que encola sugerencia IA
+  **Nota:** BullMQ `section-suggestion`; polling `GET /suggestions/:assignmentId`.
 
-- [ ] [P] Implementar worker BullMQ para procesar sugerencia IA y guardar resultado
-  **MDD:** §4, §5.4 (estrategia de reintentos)
-  **Story:** US-008
-  **Archivo:** `apps/backend/src/modules/company-profile/workers/suggestion.worker.ts`
+- [x] [P] Implementar worker para procesar sugerencia IA y guardar resultado
+  **Archivo:** `apps/backend/src/modules/company-profile/workers/suggestion.worker.ts`, `suggestion.processor.ts`
 
-- [ ] [P] Implementar adaptador de IA para generar sugerencia (Strategy pattern)
-  **MDD:** §5.6, §3 tabla company_profile_sections
-  **Story:** US-008
-  **Archivo:** `apps/backend/src/modules/ai-agents/adapters/suggestion.adapter.ts`
+- [x] [P] Implementar adaptador de IA para generar sugerencia (Strategy pattern)
+  **Archivo:** `stub-suggestion.adapter.ts`, `openrouter-suggestion.adapter.ts`
 
 **Checkpoint:** Endpoint responde 202; worker procesa y guarda sugerencia; usuario puede aceptar/rechazar.
 
 ### US-009: Crear y gestionar campañas multicanal
 
-- [ ] [P] Implementar CRUD de plantillas de campaña (GET/POST/GET/:id/PATCH/:id/DELETE/:id)
+- [x] [P] Implementar CRUD de plantillas de campaña (GET/POST/GET/:id/PATCH/:id/DELETE/:id)
   **MDD:** §4 campaign-templates endpoints
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/campaign-template.controller.ts`
 
-- [ ] [P] Implementar CRUD de campañas (POST, GET, GET/:id, PATCH/:id, DELETE/:id solo draft)
+- [x] [P] Implementar CRUD de campañas (POST, GET, GET/:id, PATCH/:id, DELETE/:id solo draft)
   **MDD:** §4 campaigns endpoints
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/campaign.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/campaigns/:id/generate-strategy` que encola generación IA
+- [x] [P] Implementar endpoint `POST /api/v1/campaigns/:id/generate-strategy` que encola generación IA
   **MDD:** §4 POST /api/v1/campaigns/:id/generate-strategy
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/campaign.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/campaigns/:id/budgets` para listar presupuestos
+- [x] [P] Implementar endpoint `GET /api/v1/campaigns/:id/budgets` para listar presupuestos
   **MDD:** §4 GET /api/v1/campaigns/:id/budgets
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/campaign.controller.ts`
 
-- [ ] [P] Implementar endpoint `PATCH /api/v1/campaigns/:id/budgets/:budgetId` para aprobar/rechazar presupuesto
+- [x] [P] Implementar endpoint `PATCH /api/v1/campaigns/:id/budgets/:budgetId` para aprobar/rechazar presupuesto
   **MDD:** §4 PATCH /api/v1/campaigns/:id/budgets/:budgetId
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/campaign.controller.ts`
 
-- [ ] [P] Implementar CRUD de audiencias (GET, POST, PATCH/:id, DELETE/:id)
+- [x] [P] Implementar CRUD de audiencias (GET, POST, PATCH/:id, DELETE/:id)
   **MDD:** §4 audiences endpoints
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/audience.controller.ts`
 
-- [ ] [P] Implementar worker BullMQ para generar estrategia y presupuestos por IA
+- [x] [P] Implementar worker BullMQ para generar estrategia y presupuestos por IA
   **MDD:** §5.2, §4
   **Story:** US-009
   **Archivo:** `apps/backend/src/modules/campaign/workers/strategy-generator.worker.ts`
 
-- [ ] [P] Crear migraciones para tablas `campaign_templates`, `campaigns`, `budgets`, `audiences`
-  **MDD:** §3.1 SQL
+- [x] [P] Crear migraciones para tablas `campaign_templates`, `campaigns`, `budgets`, `audiences`
+  **Nota:** TypeORM entities + `synchronize` dev; `campaign_strategy_assignments`.
   **Archivo:** `apps/backend/src/modules/campaign/infrastructure/typeorm/`
 
 **Checkpoint:** Creación de campaña desde plantilla; IA genera estrategia en <30s; presupuestos aprobables individualmente.
 
 ### US-010: Gestionar contenido con versionado inmutable
 
-- [ ] [P] Implementar CRUD de contenidos (POST, GET, GET/:id, PATCH/:id, DELETE/:id)
-  **MDD:** §4 contents endpoints
-  **Story:** US-010
+- [x] [P] Implementar CRUD de contenidos (POST, GET, GET/:id, PATCH/:id, DELETE/:id)
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/contents/:id/versions` para listar historial
-  **MDD:** §4 GET /api/v1/contents/:id/versions
-  **Story:** US-010
+- [x] [P] Implementar endpoint `GET /api/v1/contents/:id/versions` para listar historial
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/contents/:id/versions/:vid` para obtener versión específica
-  **MDD:** §4 GET /api/v1/contents/:id/versions/:vid
-  **Story:** US-010
+- [x] [P] Implementar endpoint `GET /api/v1/contents/:id/versions/:vid` para obtener versión específica
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/contents/:id/revert/:vid` para revertir
-  **MDD:** §4 POST /api/v1/contents/:id/revert/:vid
-  **Story:** US-010
+- [x] [P] Implementar endpoint `POST /api/v1/contents/:id/revert/:vid` para revertir
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar lógica de versionado: al PATCH sobre contenido aprobado, crear nueva versión automática
-  **MDD:** §5.5 (caso borde modificación de contenido aprobado)
-  **Story:** US-010
-  **Archivo:** `apps/backend/src/modules/content/commands/update-content.command.ts`
+- [x] [P] Implementar lógica de versionado: al PATCH sobre contenido aprobado, crear nueva versión automática
+  **Archivo:** `apps/backend/src/modules/content/content.service.ts`
 
-- [ ] [P] Implementar lógica de reversión que crea nueva versión con contenido restaurado
-  **MDD:** §5.5, §4
-  **Story:** US-010
-  **Archivo:** `apps/backend/src/modules/content/commands/revert-content.command.ts`
+- [x] [P] Implementar lógica de reversión que crea nueva versión con contenido restaurado
+  **Archivo:** `apps/backend/src/modules/content/content.service.ts`
 
-- [ ] [P] Implementar repositorio de versiones con contenido inmutable (append-only)
-  **MDD:** §3, §5.5
-  **Archivo:** `apps/backend/src/modules/content/domain/content-version.repository.ts`
+- [x] [P] Implementar repositorio de versiones con contenido inmutable (append-only)
+  **Nota:** TypeORM `ContentVersionEntity`; sin updates in-place.
+  **Archivo:** `apps/backend/src/modules/content/infrastructure/typeorm/content-version.entity.ts`
 
-- [ ] [P] Crear migraciones para tablas `contents`, `content_versions`, `content_approvals`
-  **MDD:** §3.1 SQL
+- [x] [P] Crear migraciones para tablas `contents`, `content_versions`, `content_approvals`
+  **Nota:** TypeORM + `events`; `synchronize` dev.
   **Archivo:** `apps/backend/src/modules/content/infrastructure/typeorm/`
 
-- [ ] [P] Implementar event sourcing: al crear, modificar, aprobar o revertir contenido, insertar evento en `events`
-  **MDD:** §2.3 Event Sourcing
-  **Archivo:** `apps/backend/src/modules/content/events/content-event-sourcing.service.ts`
+- [x] [P] Implementar event sourcing: al crear, modificar, aprobar o revertir contenido, insertar evento en `events`
+  **Archivo:** `apps/backend/src/modules/content/services/content-event-sourcing.service.ts`
 
 **Checkpoint:** Cada modificación crea nueva versión; historial completo; reversión exitosa.
 
 ### US-011: Aprobar o rechazar contenido con firma digital (Kill Switch)
 
-- [ ] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/approve` con cálculo SHA-256
-  **MDD:** §4 POST /api/v1/contents/:id/versions/:vid/approve, §5.1 regla 1, §5.2 flujo
-  **Story:** US-011
+- [x] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/approve` con cálculo SHA-256
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/reject` con feedback
-  **MDD:** §4 POST /api/v1/contents/:id/versions/:vid/reject
-  **Story:** US-011
+- [x] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/reject` con feedback
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/request-changes`
-  **MDD:** §4 POST /api/v1/contents/:id/versions/:vid/request-changes
-  **Story:** US-011
+- [x] [P] Implementar endpoint `POST /api/v1/contents/:id/versions/:vid/request-changes`
   **Archivo:** `apps/backend/src/modules/content/content.controller.ts`
 
-- [ ] [P] Implementar servicio de firma digital SHA-256 sobre body + version_id + asset_ids
-  **MDD:** §5.1 regla 1, §6
-  **Story:** US-011
+- [x] [P] Implementar servicio de firma digital SHA-256 sobre body + version_id + asset_ids
   **Archivo:** `apps/backend/src/modules/content/services/digital-signature.service.ts`
 
-- [ ] [P] Implementar outbox pattern para evento `ContentApproved` (persistir en outbox dentro de la misma transacción)
-  **MDD:** §2.3 Outbox Pattern
-  **Story:** US-011, T-003
-  **Archivo:** `apps/backend/src/modules/content/events/content-approved.event.ts`
+- [x] [P] Implementar outbox pattern para evento `ContentApproved` (persistir en outbox dentro de la misma transacción)
+  **Archivo:** `apps/backend/src/modules/content/content.service.ts`
 
-- [ ] [P] Implementar validación de que la versión no esté ya aprobada (409)
-  **MDD:** §5.5 validaciones previas
-  **Story:** US-011
-  **Archivo:** `apps/backend/src/modules/content/commands/approve-content.command.ts`
+- [x] [P] Implementar validación de que la versión no esté ya aprobada (409)
+  **Archivo:** `apps/backend/src/modules/content/content.service.ts`
 
 **Checkpoint:** Aprobación genera hash SHA-256; contenido congelado; rechazo guarda feedback; modificación post-aprobación crea nueva versión.
 
 ### US-012: Visualizar y gestionar el Calendario Editorial
 
-- [ ] [P] Implementar endpoint `GET /api/v1/calendar?month=&year=` que devuelva contenido agrupado por día
+- [x] [P] Implementar endpoint `GET /api/v1/calendar?month=&year=` que devuelva contenido agrupado por día
   **MDD:** §4 GET /api/v1/calendar
   **Story:** US-012
   **Archivo:** `apps/backend/src/modules/calendar/calendar.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/calendar/:date` que devuelva Detalle del Día
+- [x] [P] Implementar endpoint `GET /api/v1/calendar/:date` que devuelva Detalle del Día
   **MDD:** §4 GET /api/v1/calendar/:date
   **Story:** US-012
   **Archivo:** `apps/backend/src/modules/calendar/calendar.controller.ts`
 
-- [ ] [P] Implementar query de calendario que cruce `campaigns`, `contents`, `content_versions`
+- [x] [P] Implementar query de calendario que cruce `campaigns`, `contents`, `content_versions`
   **MDD:** §3
   **Story:** US-012
-  **Archivo:** `apps/backend/src/modules/calendar/queries/get-calendar.query.ts`
+  **Archivo:** `apps/backend/src/modules/calendar/calendar.service.ts`
 
-- [ ] [P] Frontend: Configurar @fullcalendar/react con eventos coloreados por estado
+- [x] [P] Frontend: Configurar @fullcalendar/react con eventos coloreados por estado
   **MDD:** §2.4
   **Story:** US-012
-  **Archivo:** `frontend/src/components/calendar/CalendarView.tsx`
+  **Archivo:** `apps/web/src/components/calendar/CalendarView.tsx`
 
-- [ ] [P] Frontend: Crear componente Detalle del Día con lista de contenidos y acciones de aprobación/rechazo
+- [x] [P] Frontend: Crear componente Detalle del Día con lista de contenidos y acciones de aprobación/rechazo
   **MDD:** §2.4
   **Story:** US-012
-  **Archivo:** `frontend/src/components/calendar/DayDetail.tsx`
+  **Archivo:** `apps/web/src/components/calendar/DayDetail.tsx`
 
-- [ ] [P] Frontend: Integrar fetch al calendario con TanStack Query y estados de color
+- [x] [P] Frontend: Integrar fetch al calendario con TanStack Query y estados de color
   **MDD:** §2.4
   **Story:** US-012
-  **Archivo:** `frontend/src/hooks/useCalendar.ts`
+  **Archivo:** `apps/web/src/hooks/useCalendar.ts`
 
 **Checkpoint:** Calendario muestra contenido coloreado por estado; Detalle del Día permite aprobar/rechazar.
 
 ### US-013: Crear y gestionar formularios embebidos
 
-- [ ] [P] Implementar CRUD de formularios (POST, GET, GET/:id, PATCH/:id, DELETE/:id)
+- [x] [P] Implementar CRUD de formularios (POST, GET, GET/:id, PATCH/:id, DELETE/:id)
   **MDD:** §4 forms endpoints
   **Story:** US-013
   **Archivo:** `apps/backend/src/modules/forms/form.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/forms/:id/snippet` para generar snippet JS embebible
+- [x] [P] Implementar endpoint `GET /api/v1/forms/:id/snippet` para generar snippet JS embebible
   **MDD:** §4 GET /api/v1/forms/:id/snippet
   **Story:** US-013
   **Archivo:** `apps/backend/src/modules/forms/form.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/forms/:id/submit` público que cree lead
+- [x] [P] Implementar endpoint `POST /api/v1/forms/:id/submit` público que cree lead
   **MDD:** §4 POST /api/v1/forms/:id/submit
   **Story:** US-013
   **Archivo:** `apps/backend/src/modules/forms/form.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/forms/:id/submissions` para listar envíos
+- [x] [P] Implementar endpoint `GET /api/v1/forms/:id/submissions` para listar envíos
   **MDD:** §4 GET /api/v1/forms/:id/submissions
   **Story:** US-013
   **Archivo:** `apps/backend/src/modules/forms/form.controller.ts`
 
-- [ ] [P] Implementar lógica de duplicación de leads por email (evitar duplicados)
+- [x] [P] Implementar lógica de duplicación de leads por email (evitar duplicados)
   **MDD:** §5.5 (caso borde)
   **Story:** US-013
-  **Archivo:** `apps/backend/src/modules/crm/commands/submit-form.command.ts`
+  **Archivo:** `apps/backend/src/modules/crm/commands/submit-form.handler.ts`
 
-- [ ] [P] Crear migraciones para tablas `forms`, `form_submissions`
+- [x] [P] Crear migraciones para tablas `forms`, `form_submissions`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/forms/infrastructure/typeorm/`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000001-CreateFormsAndCrm.ts`
 
-- [ ] [P] Frontend: Crear componente snippet JS para embeber (generación condicional)
+- [x] [P] Frontend: Crear componente snippet JS para embeber (generación condicional)
   **MDD:** §2.4
   **Story:** US-013
-  **Archivo:** `frontend/src/components/forms/FormSnippet.tsx`
+  **Archivo:** `apps/web/src/components/forms/FormSnippet.tsx`
 
 **Checkpoint:** Creación de formulario; snippet JS funcional; envío público crea lead; evita duplicados.
 
 ### US-014: Gestionar pipeline de leads con scoring IA
 
-- [ ] [P] Implementar CRUD de leads (GET, GET/:id, PATCH/:id/stage, PATCH/:id, DELETE/:id)
+- [x] [P] Implementar CRUD de leads (GET, GET/:id, PATCH/:id/stage, PATCH/:id, DELETE/:id)
   **MDD:** §4 leads endpoints
   **Story:** US-014
   **Archivo:** `apps/backend/src/modules/crm/lead.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/leads/:id/interactions` para historial
+- [x] [P] Implementar endpoint `GET /api/v1/leads/:id/interactions` para historial
   **MDD:** §4 GET /api/v1/leads/:id/interactions
   **Story:** US-014
   **Archivo:** `apps/backend/src/modules/crm/lead.controller.ts`
 
-- [ ] [P] Implementar servicio de scoring IA de leads (Strategy pattern)
+- [x] [P] Implementar servicio de scoring IA de leads (Strategy pattern)
   **MDD:** §5.1 regla 7
   **Story:** US-014, T-005
   **Archivo:** `apps/backend/src/modules/crm/services/lead-scoring.service.ts`
 
-- [ ] [P] Implementar recalculo de score tras nueva interacción
+- [x] [P] Implementar recalculo de score tras nueva interacción
   **MDD:** §5.1 regla 7
   **Story:** US-014
-  **Archivo:** `apps/backend/src/modules/crm/commands/add-interaction.command.ts`
+  **Archivo:** `apps/backend/src/modules/crm/commands/add-interaction.handler.ts`
 
-- [ ] [P] Implementar validación de eliminación de lead con propuestas firmadas (409)
+- [x] [P] Implementar validación de eliminación de lead con propuestas firmadas (409)
   **MDD:** §5.5 (caso borde)
   **Story:** US-014
-  **Archivo:** `apps/backend/src/modules/crm/commands/delete-lead.command.ts`
+  **Archivo:** `apps/backend/src/modules/crm/commands/delete-lead.handler.ts`
 
-- [ ] [P] Crear migraciones para tablas `leads`, `lead_interactions`
+- [x] [P] Crear migraciones para tablas `leads`, `lead_interactions`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/crm/infrastructure/typeorm/`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000001-CreateFormsAndCrm.ts`
 
-- [ ] [P] Frontend: Crear pipeline Kanban de leads con etapas y score
+- [x] [P] Frontend: Crear pipeline Kanban de leads con etapas y score
   **MDD:** §2.4
   **Story:** US-014
-  **Archivo:** `frontend/src/components/crm/LeadPipeline.tsx`
+  **Archivo:** `apps/web/src/components/crm/LeadPipeline.tsx`
 
 **Checkpoint:** Pipeline con leads; score IA calculado; eliminación bloqueada si tiene propuestas firmadas.
 
 ### US-015: Subir y gestionar activos multimedia
 
-- [ ] [P] Implementar endpoint `POST /api/v1/assets/upload` (multipart) con subida a S3
+- [x] [P] Implementar endpoint `POST /api/v1/assets/upload` (multipart) con subida a S3
   **MDD:** §4 POST /api/v1/assets/upload
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar CRUD de assets (GET, GET/:id, PATCH/:id, DELETE/:id con verificación reference_count)
+- [x] [P] Implementar CRUD de assets (GET, GET/:id, PATCH/:id, DELETE/:id con verificación reference_count)
   **MDD:** §4 assets endpoints
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/assets/:id/download-url` para URL firmada
+- [x] [P] Implementar endpoint `GET /api/v1/assets/:id/download-url` para URL firmada
   **MDD:** §4 GET /api/v1/assets/:id/download-url
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/assets/:id/duplicate`
+- [x] [P] Implementar endpoint `POST /api/v1/assets/:id/duplicate`
   **MDD:** §4 POST /api/v1/assets/:id/duplicate
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar CRUD de carpetas (asset-folders)
+- [x] [P] Implementar CRUD de carpetas (asset-folders)
   **MDD:** §4 asset-folders endpoints
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset-folder.controller.ts`
 
-- [ ] [P] Implementar gestión de etiquetas (asset-tags)
+- [x] [P] Implementar gestión de etiquetas (asset-tags)
   **MDD:** §4 (implícito en assets)
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset-tag.controller.ts`
 
-- [ ] [P] Implementar lógica de eliminación protegida: verificar `is_in_use` y `reference_count`
+- [x] [P] Implementar lógica de eliminación protegida: verificar `is_in_use` y `reference_count`
   **MDD:** §5.1 regla 9
   **Story:** US-015
-  **Archivo:** `apps/backend/src/modules/assets/commands/delete-asset.command.ts`
+  **Archivo:** `apps/backend/src/modules/assets/commands/delete-asset.handler.ts`
 
-- [ ] [P] Implementar adaptador S3 para subida, descarga y eliminación de archivos
+- [x] [P] Implementar adaptador S3 para subida, descarga y eliminación de archivos
   **MDD:** §7.4
   **Story:** US-015
-  **Archivo:** `apps/backend/src/modules/assets/infrastructure/adapters/s3.adapter.ts`
+  **Archivo:** `apps/backend/src/modules/assets/infrastructure/adapters/s3-storage.adapter.ts`
 
-- [ ] [P] Crear migraciones para tablas `assets`, `asset_folders`, `asset_tags`, `asset_tag_assignments`
+- [x] [P] Crear migraciones para tablas `assets`, `asset_folders`, `asset_tags`, `asset_tag_assignments`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/assets/infrastructure/typeorm/`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000002-CreateAssets.ts`
 
-- [ ] [P] Frontend: Crear componente de librería multimedia (lista, subida, carpetas, etiquetas)
+- [x] [P] Frontend: Crear componente de librería multimedia (lista, subida, carpetas, etiquetas)
   **MDD:** §2.4
   **Story:** US-015
-  **Archivo:** `frontend/src/components/assets/AssetLibrary.tsx`
+  **Archivo:** `apps/web/src/pages/assets/AssetLibraryPage.tsx`
 
 **Checkpoint:** Subida de activos; organización en carpetas/etiquetas; eliminación bloqueada si está en uso; URL firmada expira en 1h.
 
 ### US-016: Configurar dominio personalizado para dashboard whitelabel
 
-- [ ] [P] Implementar CRUD de dominios personalizados (POST, GET, GET/:id, DELETE/:id)
+- [x] [P] Implementar CRUD de dominios personalizados (POST, GET, GET/:id, DELETE/:id)
   **MDD:** §4 domains endpoints
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/domain.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/domains/:id/verify-dns` para verificar registro CNAME
+- [x] [P] Implementar endpoint `POST /api/v1/domains/:id/verify-dns` para verificar registro CNAME
   **MDD:** §4 POST /api/v1/domains/:id/verify-dns
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/domain.controller.ts`
 
-- [ ] [P] Implementar servicio de verificación DNS (consulta de registro CNAME)
+- [x] [P] Implementar servicio de verificación DNS (consulta de registro CNAME)
   **MDD:** §7.4
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/services/dns-verification.service.ts`
 
-- [ ] [P] Implementar worker para emisión de SSL vía Let's Encrypt tras verificación exitosa
+- [x] [P] Implementar worker para emisión de SSL vía Let's Encrypt tras verificación exitosa
   **MDD:** §7.2
   **Story:** US-016
-  **Archivo:** `apps/backend/src/modules/domains/workers/ssl-worker.ts`
+  **Archivo:** `apps/backend/src/modules/domains/workers/ssl-provision.worker.ts`
 
-- [ ] [P] Crear migraciones para tablas `custom_domains`, `dns_verifications`
+- [x] [P] Crear migraciones para tablas `custom_domains`, `dns_verifications`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/domains/infrastructure/typeorm/`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000003-CreateDomains.ts`
 
 **Checkpoint:** Dominio registrado; verificación DNS; SSL automático; dashboard sirviendo bajo dominio personalizado.
 
@@ -696,92 +665,72 @@
 
 ### US-009: Campañas (frontend)
 
-- [ ] [P] Crear página de listado de campañas con filtros y búsqueda
-  **MDD:** §2.4
-  **Story:** US-009
-  **Archivo:** `frontend/src/pages/campaigns/CampaignList.tsx`
+- [x] [P] Crear página de listado de campañas con filtros y búsqueda
+  **Archivo:** `apps/web/src/pages/campaigns/CampaignListPage.tsx`
 
-- [ ] [P] Crear página de detalle de campaña con presupuestos y estrategia
-  **MDD:** §2.4
-  **Story:** US-009
-  **Archivo:** `frontend/src/pages/campaigns/CampaignDetail.tsx`
+- [x] [P] Crear página de detalle de campaña con presupuestos y estrategia
+  **Archivo:** `apps/web/src/pages/campaigns/CampaignDetailPage.tsx`
 
-- [ ] [P] Crear página de creación de campaña desde plantilla o desde cero
-  **MDD:** §2.4
-  **Story:** US-009
-  **Archivo:** `frontend/src/pages/campaigns/CampaignCreate.tsx`
+- [x] [P] Crear página de creación de campaña desde plantilla o desde cero
+  **Archivo:** `apps/web/src/pages/campaigns/CampaignCreatePage.tsx`
 
-- [ ] [P] Crear componente KanbanBoard para visualizar campañas como tablero de estados
-  **MDD:** §2.4
-  **Story:** US-009
-  **Archivo:** `frontend/src/components/campaigns/CampaignKanban.tsx`
+- [x] [P] Crear componente KanbanBoard para visualizar campañas como tablero de estados
+  **Archivo:** `apps/web/src/components/campaigns/CampaignKanban.tsx`
 
-- [ ] [P] Crear componente de aprobación de presupuesto individual
-  **MDD:** §4 PATCH budgets
-  **Story:** US-009
-  **Archivo:** `frontend/src/components/campaigns/BudgetApproval.tsx`
+- [x] [P] Crear componente de aprobación de presupuesto individual
+  **Archivo:** `apps/web/src/components/campaigns/BudgetApproval.tsx`
 
 ### US-010: Contenido (frontend)
 
-- [ ] [P] Crear página de listado de contenidos por campaña
-  **MDD:** §2.4
-  **Story:** US-010
-  **Archivo:** `frontend/src/pages/content/ContentList.tsx`
+- [x] [P] Crear página de listado de contenidos por campaña
+  **Archivo:** `apps/web/src/pages/content/ContentListPage.tsx`
 
-- [ ] [P] Crear página de edición de contenido con versionado
-  **MDD:** §2.4
-  **Story:** US-010
-  **Archivo:** `frontend/src/pages/content/ContentEdit.tsx`
+- [x] [P] Crear página de edición de contenido con versionado
+  **Archivo:** `apps/web/src/pages/content/ContentEditPage.tsx`
 
-- [ ] [P] Crear componente de historial de versiones con opción de revertir
-  **MDD:** §2.4
-  **Story:** US-010
-  **Archivo:** `frontend/src/components/content/VersionHistory.tsx`
+- [x] [P] Crear componente de historial de versiones con opción de revertir
+  **Archivo:** `apps/web/src/components/content/VersionHistory.tsx`
 
-- [ ] [P] Crear componente de firma digital visible (hash SHA-256)
-  **MDD:** §5.2
-  **Story:** US-010
-  **Archivo:** `frontend/src/components/content/SignatureBadge.tsx`
+- [x] [P] Crear componente de firma digital visible (hash SHA-256)
+  **Archivo:** `apps/web/src/components/content/SignatureBadge.tsx`
 
 ### US-011: Aprobación (frontend)
 
-- [ ] [P] Crear componente de aprobación/rechazo con feedback
-  **MDD:** §2.4
-  **Story:** US-011
-  **Archivo:** `frontend/src/components/content/ApprovalActions.tsx`
+- [x] [P] Crear componente de aprobación/rechazo con feedback
+  **Archivo:** `apps/web/src/components/content/ApprovalActions.tsx`
 
-- [ ] [P] Crear componente de kit de descarga "Copiar y Llevar" con contenido congelado
+- [x] [P] Crear componente de kit de descarga "Copiar y Llevar" con contenido congelado
   **MDD:** §5.2, §2.4
   **Story:** US-011
-  **Archivo:** `frontend/src/components/content/DownloadKit.tsx`
+  **Archivo:** `apps/web/src/components/content/DownloadKit.tsx`
 
-- [ ] [P] Mostrar estado de aprobación con colores (verde/amarillo/rojo)
+- [x] [P] Mostrar estado de aprobación con colores (verde/amarillo/rojo)
   **MDD:** §2.4
   **Story:** US-011
-  **Archivo:** `frontend/src/components/content/StatusBadge.tsx`
+  **Archivo:** `apps/web/src/components/content/StatusBadge.tsx`
 
 ### US-014: CRM (frontend)
 
-- [ ] [P] Crear página de pipeline de leads con KanbanBoard
+- [x] [P] Crear página de pipeline de leads con KanbanBoard
   **MDD:** §2.4
   **Story:** US-014
-  **Archivo:** `frontend/src/pages/crm/LeadPipeline.tsx`
+  **Archivo:** `apps/web/src/pages/crm/LeadPipelinePage.tsx`
 
-- [ ] [P] Crear componente de detalle de lead con historial de interacciones
+- [x] [P] Crear componente de detalle de lead con historial de interacciones
   **MDD:** §2.4
   **Story:** US-014
-  **Archivo:** `frontend/src/components/crm/LeadDetail.tsx`
+  **Archivo:** `apps/web/src/components/crm/LeadDetail.tsx`
 
 ### US-015: Activos (frontend)
 
-- [ ] [P] Crear página de librería multimedia con DataTable, filtros y subida
+- [x] [P] Crear página de librería multimedia con DataTable, filtros y subida
   **MDD:** §2.4
   **Story:** US-015
-  **Archivo:** `frontend/src/pages/assets/AssetLibrary.tsx`
+  **Archivo:** `apps/web/src/pages/assets/AssetLibraryPage.tsx`
 
-- [ ] [P] Crear componente de subida con barra de progreso
+- [x] [P] Crear componente de subida con barra de progreso
   **MDD:** §2.4
-  **Archivo:** `frontend/src/components/assets/AssetUploader.tsx`
+  **Archivo:** `apps/web/src/components/assets/AssetUploader.tsx`
 
 ### US-007: Onboarding (frontend)
 
@@ -790,22 +739,20 @@
   **Story:** US-007
   **Archivo:** `frontend/src/pages/onboarding/OnboardingWizard.tsx`
 
-- [ ] [P] Crear componente de sugerencia IA con opciones aceptar/rechazar
-  **MDD:** §2.4
-  **Story:** US-008
-  **Archivo:** `frontend/src/components/onboarding/AISuggestion.tsx`
+- [x] [P] Crear componente de sugerencia IA con opciones aceptar/rechazar
+  **Archivo:** `apps/web/src/components/onboarding/AISuggestion.tsx`
 
 ### US-016: Dominios (frontend)
 
-- [ ] [P] Crear página de configuración de dominio personalizado
+- [x] [P] Crear página de configuración de dominio personalizado
   **MDD:** §2.4
   **Story:** US-016
-  **Archivo:** `frontend/src/pages/settings/DomainSettings.tsx`
+  **Archivo:** `apps/web/src/pages/settings/DomainSettingsPage.tsx`
 
-- [ ] [P] Crear componente de verificación DNS con progreso
+- [x] [P] Crear componente de verificación DNS con progreso
   **MDD:** §2.4
   **Story:** US-016
-  **Archivo:** `frontend/src/components/domains/DNSVerification.tsx`
+  **Archivo:** `apps/web/src/components/domains/DNSVerification.tsx`
 
 ### US-004: Login (frontend)
 
@@ -821,10 +768,10 @@
 
 ### Otros (frontend)
 
-- [ ] [P] Crear página de listado de formularios y generación de snippet
+- [x] [P] Crear página de listado de formularios y generación de snippet
   **MDD:** §2.4
   **Story:** US-013
-  **Archivo:** `frontend/src/pages/forms/FormList.tsx`
+  **Archivo:** `apps/web/src/pages/forms/FormListPage.tsx`
 
 - [ ] [P] Crear página de propuestas comerciales
   **MDD:** §2.4

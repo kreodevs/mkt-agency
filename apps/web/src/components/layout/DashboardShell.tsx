@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, Shield } from 'lucide-react';
+import { Building2, CalendarDays, ClipboardList, FileInput, FileText, FolderOpen, Globe, Megaphone, Shield, Users } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
@@ -21,6 +21,13 @@ export const tenantNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
       { label: 'Onboarding', href: '/onboarding', icon: ClipboardList },
+      { label: 'Campañas', href: '/campaigns', icon: Megaphone },
+      { label: 'Contenidos', href: '/contents', icon: FileText },
+      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
+      { label: 'Formularios', href: '/forms', icon: FileInput },
+      { label: 'Leads', href: '/leads', icon: Users },
+      { label: 'Activos', href: '/assets', icon: FolderOpen },
+      { label: 'Dominio', href: '/settings/domain', icon: Globe },
     ],
   },
 ];
