@@ -9,7 +9,9 @@ Desarrollo local: **`docker-compose.yml`**.
 1. **Projects** → nuevo proyecto → entorno (ej. `production`).
 2. **Create Service** → **Compose**.
 3. Conectar repositorio Git (`kreodevs/mkt-agency`).
-4. **Compose file path:** `docker-compose.dokploy.yml`
+4. **Compose file path:** `docker-compose.dokploy.yml`  
+   ⚠️ **No uses** `docker-compose.yml` en Dokploy: ese archivo publica `3000:3000` y usa `container_name`, lo que provoca conflictos de puerto y rompe métricas/logs en Dokploy.
+
 5. **Build context:** raíz del repo (`.`).
 
 ## 2. Variables de entorno
@@ -78,3 +80,18 @@ Programar backups de `pgdata` desde Dokploy → Volume Backups.
 ## 9. CI → Dokploy
 
 GitHub Actions (`.github/workflows/ci.yml`) valida `yarn build`. Configura webhook de deploy en Dokploy al push en `main`.
+
+## 10. Troubleshooting
+
+### `Bind for 0.0.0.0:3000 failed: port is already allocated`
+
+Causa habitual: el servicio Compose en Dokploy apunta a **`docker-compose.yml`** en lugar de **`docker-compose.dokploy.yml`**.
+
+| Archivo | API en host |
+|---------|-------------|
+| `docker-compose.dokploy.yml` | No expone puertos (correcto en prod) |
+| `docker-compose.yml` | Publica `${API_PUBLISH_PORT:-3001}:3000` (solo local) |
+
+**Solución:** en Dokploy → Compose → **Compose Path** → `docker-compose.dokploy.yml` → redeploy.
+
+Si otro stack del mismo servidor ya usa el 3000, no afecta a `docker-compose.dokploy.yml` siempre que no publiques el puerto en el servicio `api`.

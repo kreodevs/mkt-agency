@@ -60,6 +60,9 @@ services:
       context: .
       dockerfile: Dockerfile.api
     restart: unless-stopped
+    # Sin ports: — la API solo es accesible en la red internal (nginx → api:3000)
+    expose:
+      - "3000"
     environment:
       NODE_ENV: production
       PORT: 3000
