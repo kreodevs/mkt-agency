@@ -1,0 +1,114 @@
+import { Inject } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { DataSource } from 'typeorm';
+import { Password } from '../../../shared/domain/password.value-object';
+import { UserEntity } from '../../../shared/infrastructure/typeorm/user.entity';
+import { ALL_SECTION_KEYS } from '../../company-profile/domain/section-keys';
+import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../../company-profile/infrastructure/typeorm/company-profile-section.entity';
+import {
+  TENANT_REPOSITORY,
+  TenantRepositoryPort,
+} from '../domain/tenant.repository.port';
+import { TenantEntity } from '../infrastructure/typeorm/tenant.entity';
+import {
+  CreateTenantCommand,
+  CreateTenantResult,
+} from './create-tenant.command';
+import { SlugAlreadyExistsException } from '../exceptions/slug-already-exists.exception';
+
+@CommandHandler(CreateTenantCommand)
+export class CreateTenantHandler
+  implements ICommandHandler<CreateTenantCommand, CreateTenantResult>
+{
+  constructor(
+    @Inject(TENANT_REPOSITORY)
+    private readonly tenantRepository: TenantRepositoryPort,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  async execute(command: CreateTenantCommand): Promise<CreateTenantResult> {
+    const existing = await this.tenantRepository.findBySlug(command.slug);
+    if (existing) {
+      throw new SlugAlreadyExistsException();
+    }
+
+    const password = await Password.createFromPlaintext(command.ownerPassword);
+    const ownerEmail = command.ownerEmail.trim().toLowerCase();
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const tenantRepo = queryRunner.manager.getRepository(TenantEntity);
+      const userRepo = queryRunner.manager.getRepository(UserEntity);
+
+      const tenantEntity = tenantRepo.create({
+        name: command.name.trim(),
+        slug: command.slug.trim().toLowerCase(),
+        plan: command.plan,
+        status: 'active',
+        settings: {},
+      });
+      const savedTenant = await tenantRepo.save(tenantEntity);
+
+      const ownerEntity = userRepo.create({
+        email: ownerEmail,
+        name: command.ownerName.trim(),
+        passwordHash: password.toHash(),
+        isSuperadmin: false,
+        tenantId: savedTenant.id,
+        role: 'owner',
+        status: 'active',
+      });
+      const savedOwner = await userRepo.save(ownerEntity);
+
+      const profileRepo = queryRunner.manager.getRepository(CompanyProfileEntity);
+      const sectionRepo = queryRunner.manager.getRepository(
+        CompanyProfileSectionEntity,
+      );
+      const profile = await profileRepo.save(
+        profileRepo.create({ tenantId: savedTenant.id, status: 'pending' }),
+      );
+
+      for (const sectionKey of ALL_SECTION_KEYS) {
+        await sectionRepo.save(
+          sectionRepo.create({
+            profileId: profile.id,
+            sectionKey,
+            data: {},
+            isCompleted: false,
+          }),
+        );
+      }
+
+      await queryRunner.commitTransaction();
+
+      return {
+        id: savedTenant.id,
+        name: savedTenant.name,
+        slug: savedTenant.slug,
+        plan: savedTenant.plan,
+        status: savedTenant.status,
+        settings: savedTenant.settings,
+        maxUsers: savedTenant.maxUsers,
+        maxAssetsSize: Number(savedTenant.maxAssetsSize),
+        createdAt: savedTenant.createdAt,
+        updatedAt: savedTenant.updatedAt,
+        owner: {
+          id: savedOwner.id,
+          email: savedOwner.email,
+          name: savedOwner.name,
+          role: savedOwner.role,
+          tenantId: savedOwner.tenantId!,
+        },
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+}

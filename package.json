@@ -1,9 +1,10 @@
 {
-  "name": "mktagencyos",
-  "version": "1.0.0",
+  "name": "mkt-agency-os",
   "private": true,
   "workspaces": [
-    "backend",
-    "frontend"
-  ]
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "yarn workspace @mkt-agency/backend build && yarn workspace @mkt-agency/web build"
+  }
 }

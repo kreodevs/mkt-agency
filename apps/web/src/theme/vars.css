@@ -1,0 +1,60 @@
+:root {
+  --primary: #c9a227;
+  --primary-foreground: #0a0a0a;
+  --primary-hover: #b8922a;
+  --background: #0a0a0a;
+  --background-secondary: #111111;
+  --foreground: #f5f5f5;
+  --foreground-muted: #a3a3a3;
+  --foreground-subtle: #6b6b6b;
+  --accent: #c9a227;
+  --accent-foreground: #0a0a0a;
+  --card: #141414;
+  --card-foreground: #f5f5f5;
+  --card-border: #2a2a2a;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #f5f5f5;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --input: #1c1c1c;
+  --input-border: #2a2a2a;
+  --input-focus: #c9a227;
+  --ring: #c9a227;
+  --ring-offset: #0a0a0a;
+  --radius: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --transition-base: 200ms ease;
+  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+  --z-fixed: 1030;
+  --z-modal: 1050;
+  --z-tooltip: 1070;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

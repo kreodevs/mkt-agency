@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "theforge": {
+      "url": "{{API_URL}}/mcp",
+      "headers": {
+        "Authorization": "Bearer {{MCP_M2M_SECRET}}"
+      }
+    }
+  }
+}

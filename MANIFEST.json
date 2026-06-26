@@ -1,0 +1,279 @@
+{
+  "templateVersion": "2.0.0",
+  "files": [
+    ".specify/memory/constitution.md",
+    ".theforge-project.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/agent-governance/agent-onboarding.md",
+    "docs/agent-governance/agents/backend-implementer.md",
+    "docs/agent-governance/agents/frontend-implementer.md",
+    "docs/agent-governance/commands/implementar-tarea.md",
+    "docs/agent-governance/commands/revisar-api.md",
+    "docs/agent-governance/COMO-USAR-GOBERNANZA-IA.md",
+    "docs/agent-governance/INSTALACION.md",
+    "docs/agent-governance/mcp.json.example",
+    "docs/agent-governance/references/AGENT-PROMPT.md",
+    "docs/agent-governance/references/CURSOR_SKILLS_Y_RULES.md",
+    "docs/agent-governance/references/PROMPT_HANDOFF_AGENTE.md",
+    "docs/agent-governance/references/THEFORGE-DOC-CONSUMPTION-GUIDE.md",
+    "docs/agent-governance/references/THEFORGE-LINK.md",
+    "docs/agent-governance/references/workflows.md",
+    "docs/agent-governance/rules/api-contracts.mdc",
+    "docs/agent-governance/rules/architecture-patterns.mdc",
+    "docs/agent-governance/rules/git-commits.mdc",
+    "docs/agent-governance/rules/mcp-governance.mdc",
+    "docs/agent-governance/rules/orchestrator.mdc",
+    "docs/agent-governance/rules/security-auth.mdc",
+    "docs/agent-governance/rules/stack-backend.mdc",
+    "docs/agent-governance/rules/stack-frontend.mdc",
+    "docs/agent-governance/rules/theforge-doc-sync.mdc",
+    "docs/agent-governance/skills/deploy-kubernetes/SKILL.md",
+    "docs/agent-governance/skills/design-system-ui/SKILL.md",
+    "docs/agent-governance/skills/frontend/SKILL.md",
+    "docs/agent-governance/skills/monorepo-packages/SKILL.md",
+    "docs/agent-governance/skills/theforge-doc-sync/SKILL.md",
+    "docs/sdd/api-contracts.md",
+    "docs/sdd/architecture.md",
+    "docs/sdd/blueprint.md",
+    "docs/sdd/infra.md",
+    "docs/sdd/logic-flows.md",
+    "docs/sdd/mdd.md",
+    "docs/sdd/PROGRESO.md",
+    "docs/sdd/spec.md",
+    "docs/sdd/tasks.md",
+    "docs/sdd/use-cases.md",
+    "docs/sdd/user-stories.md",
+    "docs/sdd/ux-ui-guide.md",
+    "IMPLEMENT.md",
+    "PROMPT-INICIAL.md",
+    "scripts/install-agent-governance.sh",
+    "specs/001-mkt-agency-os/contracts/api-contracts.md",
+    "specs/001-mkt-agency-os/data-model.md",
+    "specs/001-mkt-agency-os/design-system.md",
+    "specs/001-mkt-agency-os/infra.md",
+    "specs/001-mkt-agency-os/logic-flows.md",
+    "specs/001-mkt-agency-os/plan.md",
+    "specs/001-mkt-agency-os/quickstart.md",
+    "specs/001-mkt-agency-os/research.md",
+    "specs/001-mkt-agency-os/spec.md",
+    "specs/001-mkt-agency-os/tasks.md"
+  ],
+  "generatedAt": "2026-06-26T22:22:38.845Z",
+  "suggestions": {
+    "archetypes": [
+      "nestjs-react-monorepo",
+      "design-system-ui",
+      "auth-jwt",
+      "kubernetes",
+      "mcp-enabled"
+    ],
+    "rationale": [
+      "Arquetipos detectados: nestjs-react-monorepo, design-system-ui, auth-jwt, kubernetes, mcp-enabled.",
+      "Stack inferido: NestJS, React, Dokploy.",
+      "Rule `git-commits`: Convenciones de commits y git safety (señal fuerte, min LOW).",
+      "Rule `stack-backend`: Stack backend: lint, typecheck, tests y convenciones (señal fuerte, min LOW).",
+      "Rule `stack-frontend`: Stack frontend: componentes, tokens y gates (señal fuerte, min LOW).",
+      "Rule `api-contracts`: Contratos API, validación y OpenAPI (señal fuerte, min MEDIUM).",
+      "Rule `orchestrator`: Roles PM → Dev → QA → Reviewer y subflujos (señal moderada, min MEDIUM).",
+      "Rule `security-auth`: Autenticación, autorización y secretos (señal fuerte, min MEDIUM).",
+      "Rule `architecture-patterns`: Patrones wizard: Hexagonal, CQRS, DDD, etc. (señal moderada, min MEDIUM).",
+      "Rule `mcp-governance`: Uso de servidores MCP declarados en §1 (señal fuerte, min MEDIUM).",
+      "Skill `domain-package`: Skill de dominio del paquete o módulo principal (señal fuerte).",
+      "Skill `design-system-ui`: Design system / paquete UI compartido (señal fuerte).",
+      "Skill `deploy-kubernetes`: Despliegue Kubernetes / Helm según MDD §7 (señal fuerte).",
+      "Skill `monorepo-packages`: Trabajo en monorepo multi-paquete (señal fuerte).",
+      "Complejidad HIGH + monorepo: considerar AGENTS.md anidados bajo packages/.",
+      "Tasks disponibles: PROMPT-INICIAL, AGENT-PROMPT y PROGRESO derivados del checklist.",
+      "Conflictos SDD detectados: 1 (ver AGENTS.md / AGENT-PROMPT)."
+    ],
+    "entries": [
+      {
+        "id": "git-commits",
+        "path": "docs/agent-governance/rules/git-commits.mdc",
+        "kind": "rule",
+        "purpose": "Convenciones de commits y git safety",
+        "strength": "strong"
+      },
+      {
+        "id": "stack-backend",
+        "path": "docs/agent-governance/rules/stack-backend.mdc",
+        "kind": "rule",
+        "purpose": "Stack backend: lint, typecheck, tests y convenciones",
+        "strength": "strong"
+      },
+      {
+        "id": "stack-frontend",
+        "path": "docs/agent-governance/rules/stack-frontend.mdc",
+        "kind": "rule",
+        "purpose": "Stack frontend: componentes, tokens y gates",
+        "strength": "strong"
+      },
+      {
+        "id": "api-contracts",
+        "path": "docs/agent-governance/rules/api-contracts.mdc",
+        "kind": "rule",
+        "purpose": "Contratos API, validación y OpenAPI",
+        "strength": "strong"
+      },
+      {
+        "id": "orchestrator",
+        "path": "docs/agent-governance/rules/orchestrator.mdc",
+        "kind": "rule",
+        "purpose": "Roles PM → Dev → QA → Reviewer y subflujos",
+        "strength": "weak"
+      },
+      {
+        "id": "security-auth",
+        "path": "docs/agent-governance/rules/security-auth.mdc",
+        "kind": "rule",
+        "purpose": "Autenticación, autorización y secretos",
+        "strength": "strong"
+      },
+      {
+        "id": "architecture-patterns",
+        "path": "docs/agent-governance/rules/architecture-patterns.mdc",
+        "kind": "rule",
+        "purpose": "Patrones wizard: Hexagonal, CQRS, DDD, etc.",
+        "strength": "weak"
+      },
+      {
+        "id": "mcp-governance",
+        "path": "docs/agent-governance/rules/mcp-governance.mdc",
+        "kind": "rule",
+        "purpose": "Uso de servidores MCP declarados en §1",
+        "strength": "strong"
+      },
+      {
+        "id": "domain-package",
+        "path": "docs/agent-governance/skills/frontend/SKILL.md",
+        "kind": "skill",
+        "purpose": "Skill de dominio del paquete o módulo principal",
+        "strength": "strong"
+      },
+      {
+        "id": "design-system-ui",
+        "path": "docs/agent-governance/skills/design-system-ui/SKILL.md",
+        "kind": "skill",
+        "purpose": "Design system / paquete UI compartido",
+        "strength": "strong"
+      },
+      {
+        "id": "deploy-kubernetes",
+        "path": "docs/agent-governance/skills/deploy-kubernetes/SKILL.md",
+        "kind": "skill",
+        "purpose": "Despliegue Kubernetes / Helm según MDD §7",
+        "strength": "strong"
+      },
+      {
+        "id": "monorepo-packages",
+        "path": "docs/agent-governance/skills/monorepo-packages/SKILL.md",
+        "kind": "skill",
+        "purpose": "Trabajo en monorepo multi-paquete",
+        "strength": "strong"
+      }
+    ]
+  },
+  "installMap": [
+    {
+      "source": "docs/agent-governance/agents/backend-implementer.md",
+      "target": ".cursor/agents/backend-implementer.md"
+    },
+    {
+      "source": "docs/agent-governance/agents/frontend-implementer.md",
+      "target": ".cursor/agents/frontend-implementer.md"
+    },
+    {
+      "source": "docs/agent-governance/commands/implementar-tarea.md",
+      "target": ".cursor/commands/implementar-tarea.md"
+    },
+    {
+      "source": "docs/agent-governance/commands/revisar-api.md",
+      "target": ".cursor/commands/revisar-api.md"
+    },
+    {
+      "source": "docs/agent-governance/mcp.json.example",
+      "target": ".cursor/mcp.json"
+    },
+    {
+      "source": "docs/agent-governance/references/AGENT-PROMPT.md",
+      "target": ".cursor/references/AGENT-PROMPT.md"
+    },
+    {
+      "source": "docs/agent-governance/references/CURSOR_SKILLS_Y_RULES.md",
+      "target": ".cursor/references/CURSOR_SKILLS_Y_RULES.md"
+    },
+    {
+      "source": "docs/agent-governance/references/PROMPT_HANDOFF_AGENTE.md",
+      "target": ".cursor/references/PROMPT_HANDOFF_AGENTE.md"
+    },
+    {
+      "source": "docs/agent-governance/references/THEFORGE-DOC-CONSUMPTION-GUIDE.md",
+      "target": ".cursor/references/THEFORGE-DOC-CONSUMPTION-GUIDE.md"
+    },
+    {
+      "source": "docs/agent-governance/references/THEFORGE-LINK.md",
+      "target": ".cursor/references/THEFORGE-LINK.md"
+    },
+    {
+      "source": "docs/agent-governance/references/workflows.md",
+      "target": ".cursor/references/workflows.md"
+    },
+    {
+      "source": "docs/agent-governance/rules/api-contracts.mdc",
+      "target": ".cursor/rules/api-contracts.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/architecture-patterns.mdc",
+      "target": ".cursor/rules/architecture-patterns.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/git-commits.mdc",
+      "target": ".cursor/rules/git-commits.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/mcp-governance.mdc",
+      "target": ".cursor/rules/mcp-governance.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/orchestrator.mdc",
+      "target": ".cursor/rules/orchestrator.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/security-auth.mdc",
+      "target": ".cursor/rules/security-auth.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/stack-backend.mdc",
+      "target": ".cursor/rules/stack-backend.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/stack-frontend.mdc",
+      "target": ".cursor/rules/stack-frontend.mdc"
+    },
+    {
+      "source": "docs/agent-governance/rules/theforge-doc-sync.mdc",
+      "target": ".cursor/rules/theforge-doc-sync.mdc"
+    },
+    {
+      "source": "docs/agent-governance/skills/deploy-kubernetes/SKILL.md",
+      "target": ".cursor/skills/deploy-kubernetes/SKILL.md"
+    },
+    {
+      "source": "docs/agent-governance/skills/design-system-ui/SKILL.md",
+      "target": ".cursor/skills/design-system-ui/SKILL.md"
+    },
+    {
+      "source": "docs/agent-governance/skills/frontend/SKILL.md",
+      "target": ".cursor/skills/frontend/SKILL.md"
+    },
+    {
+      "source": "docs/agent-governance/skills/monorepo-packages/SKILL.md",
+      "target": ".cursor/skills/monorepo-packages/SKILL.md"
+    },
+    {
+      "source": "docs/agent-governance/skills/theforge-doc-sync/SKILL.md",
+      "target": ".cursor/skills/theforge-doc-sync/SKILL.md"
+    }
+  ]
+}
