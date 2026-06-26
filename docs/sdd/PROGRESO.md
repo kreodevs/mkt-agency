@@ -1033,3 +1033,54 @@ _Actualiza este archivo al cerrar tareas o hitos._
 - `yarn build` OK.
 
 **Próximo bloque sugerido:** US-017 propuestas comerciales IA; migración baseline tablas core.
+
+### Sesión 2026-06-26 — US-017 propuestas comerciales
+
+- Backend: `ProposalsModule` (CRUD async, sign SHA-256, reject, outbox `ProposalSigned`).
+- Worker cola `proposal-generation` con stub/OpenRouter.
+- Migración `1730000000004-CreateProposals.ts`.
+- Frontend: `/proposals`, `ProposalListPage`, `ProposalDetailPage`, `ProposalContentView`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** US-018 reportes IA; migración baseline tablas core.
+
+### Sesión 2026-06-26 — US-018 reportes de rendimiento
+
+- Backend: `ReportsModule` (POST/GET async, métricas agregadas, worker `report-generation`).
+- Tipos: `campaign_performance`, `lead_analytics`; estados `generating` → `completed`/`failed`.
+- Migración `1730000000005-CreateReports.ts`.
+- Frontend: `/reports`, `ReportListPage`, `ReportDetailPage`, `ReportDataView`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** US-019 monitoreo de competidores; migración baseline tablas core.
+
+### Sesión 2026-06-26 — US-019 monitoreo de competidores
+
+- Backend: `CompetitorsModule` (POST/GET/DELETE, GET mentions con filtro sentiment).
+- Menciones demo al registrar (MVP); worker externo en prod.
+- Migración `1730000000006-CreateCompetitors.ts`.
+- Frontend: `/settings/competitors`, `CompetitorsPage`, `MentionList`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** US-020 audit logs superadmin; migración baseline tablas core.
+
+### Sesión 2026-06-26 — US-020 logs de auditoría (superadmin)
+
+- Backend: `AuditModule` con `GET /api/v1/audit-logs` (filtros tenant/action/from/to, paginación).
+- Decorador `@AuditLog` + `AuditLogInterceptor` (tenant.created, superadmin.impersonate_started, profile updates).
+- Worker `audit-retention` elimina registros >90 días (cola BullMQ).
+- Migración `1730000000007-CreateAuditLogs.ts`.
+- Frontend: `/admin/audit-logs`, `AuditLogsPage`, nav superadmin en `DashboardShell`.
+- Fix import paths en `audit.service.ts`; lazy import en router.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** US-006 eventos de seguridad (frontend); migración baseline tablas core; infra Docker/CI.
+
+### Sesión 2026-06-26 — US-006 frontend eventos de seguridad
+
+- Frontend: `/admin/security-events`, `SecurityEventsPage` (filtros severity/eventType, tabla paginada).
+- Servicio `listSecurityEvents` → `GET /api/v1/security-events`.
+- Nav superadmin «Seguridad» en `DashboardShell`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** banner impersonación; migración baseline tablas core; infra Docker/CI.

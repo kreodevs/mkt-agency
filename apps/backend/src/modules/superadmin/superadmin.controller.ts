@@ -3,6 +3,7 @@ import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { SuperadminGuard } from '../../shared/guards/superadmin.guard';
+import { AuditLog } from '../audit/decorators/audit-log.decorator';
 import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
 import { SuperadminService } from './superadmin.service';
 
@@ -13,6 +14,7 @@ export class SuperadminController {
 
   @Post('impersonate')
   @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.impersonate_started', resourceType: 'user' })
   impersonate(
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: ImpersonateRequestDto,

@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SuperadminGuard } from '../../shared/guards/superadmin.guard';
+import { AuditLog } from '../audit/decorators/audit-log.decorator';
 import { CreateTenantRequestDto } from './dto/create-tenant.request.dto';
 import {
   ListTenantsQueryDto,
@@ -31,6 +32,7 @@ export class TenantController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @AuditLog({ action: 'tenant.created', resourceType: 'tenant' })
   create(@Body() body: CreateTenantRequestDto): Promise<TenantResponseDto> {
     return this.tenantService.create(body);
   }

@@ -480,90 +480,90 @@
 
 ### US-017: Solicitar, firmar y gestionar propuestas comerciales
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals` para solicitar propuesta IA
+- [x] [P] Implementar endpoint `POST /api/v1/proposals` para solicitar propuesta IA
   **MDD:** §4 POST /api/v1/proposals
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar endpoints GET listar y GET/:id para propuestas
+- [x] [P] Implementar endpoints GET listar y GET/:id para propuestas
   **MDD:** §4 GET /api/v1/proposals, GET /api/v1/proposals/:id
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals/:id/sign` con firma digital
+- [x] [P] Implementar endpoint `POST /api/v1/proposals/:id/sign` con firma digital
   **MDD:** §4 POST /api/v1/proposals/:id/sign
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals/:id/reject`
+- [x] [P] Implementar endpoint `POST /api/v1/proposals/:id/reject`
   **MDD:** §4 POST /api/v1/proposals/:id/reject
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar worker BullMQ para generación de propuesta por IA
+- [x] [P] Implementar worker BullMQ para generación de propuesta por IA
   **MDD:** §5.4
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/workers/proposal-generator.worker.ts`
 
-- [ ] [P] Crear migración para tabla `proposals`
+- [x] [P] Crear migración para tabla `proposals`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/proposals/infrastructure/typeorm/proposal.entity.ts`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000004-CreateProposals.ts`
 
 **Checkpoint:** Propuesta generada por IA; firma digital; rechazo con feedback; propuesta firmada queda congelada.
 
 ### US-018: Generar y visualizar reportes de rendimiento
 
-- [ ] [P] Implementar endpoints CRUD de reportes (POST, GET, GET/:id)
+- [x] [P] Implementar endpoints CRUD de reportes (POST, GET, GET/:id)
   **MDD:** §4 reports endpoints
   **Story:** US-018
   **Archivo:** `apps/backend/src/modules/reports/report.controller.ts`
 
-- [ ] [P] Implementar worker BullMQ para generación de reporte por IA
+- [x] [P] Implementar worker BullMQ para generación de reporte por IA
   **MDD:** §5.4
   **Story:** US-018
   **Archivo:** `apps/backend/src/modules/reports/workers/report-generator.worker.ts`
 
-- [ ] [P] Crear migración para tabla `reports`
+- [x] [P] Crear migración para tabla `reports`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/reports/infrastructure/typeorm/report.entity.ts`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000005-CreateReports.ts`
 
 **Checkpoint:** Reporte generado por IA; listado y detalle disponibles.
 
 ### US-019: Registrar y monitorear competidores
 
-- [ ] [P] Implementar CRUD de competidores (POST, GET, DELETE/:id)
+- [x] [P] Implementar CRUD de competidores (POST, GET, DELETE/:id)
   **MDD:** §4 competitors endpoints
   **Story:** US-019
   **Archivo:** `apps/backend/src/modules/competitors/competitor.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/competitors/:id/mentions`
+- [x] [P] Implementar endpoint `GET /api/v1/competitors/:id/mentions`
   **MDD:** §4 GET /api/v1/competitors/:id/mentions
   **Story:** US-019
   **Archivo:** `apps/backend/src/modules/competitors/competitor.controller.ts`
 
-- [ ] [P] Crear migraciones para tablas `competitors`, `competitor_mentions`
+- [x] [P] Crear migraciones para tablas `competitors`, `competitor_mentions`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/competitors/infrastructure/typeorm/`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000006-CreateCompetitors.ts`
 
 **Checkpoint:** Competidores registrados; menciones visibles.
 
 ### US-020: Consultar logs de auditoría como superadmin
 
-- [ ] [P] Implementar endpoint `GET /api/v1/audit-logs` con filtros y paginación
+- [x] [P] Implementar endpoint `GET /api/v1/audit-logs` con filtros y paginación
   **MDD:** §4 GET /api/v1/audit-logs
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/audit.controller.ts`
 
-- [ ] [P] Implementar registro automático en `audit_logs` mediante decorador @AuditLog
+- [x] [P] Implementar registro automático en `audit_logs` mediante decorador @AuditLog
   **MDD:** §6, T-006
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/decorators/audit-log.decorator.ts`
 
-- [ ] [P] Crear migración para tabla `audit_logs`
+- [x] [P] Crear migración para tabla `audit_logs`
   **MDD:** §3.1 SQL
-  **Archivo:** `apps/backend/src/modules/audit/infrastructure/typeorm/audit-log.entity.ts`
+  **Archivo:** `apps/backend/src/database/migrations/1730000000007-CreateAuditLogs.ts`
 
-- [ ] [P] Implementar política de retención de logs (90 días) con worker de limpieza
+- [x] [P] Implementar política de retención de logs (90 días) con worker de limpieza
   **MDD:** §6
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/workers/log-retention.worker.ts`
@@ -707,30 +707,30 @@
   **Story:** US-013
   **Archivo:** `apps/web/src/pages/forms/FormListPage.tsx`
 
-- [ ] [P] Crear página de propuestas comerciales
+- [x] [P] Crear página de propuestas comerciales
   **MDD:** §2.4
   **Story:** US-017
-  **Archivo:** `frontend/src/pages/proposals/ProposalList.tsx`
+  **Archivo:** `apps/web/src/pages/proposals/ProposalListPage.tsx`
 
-- [ ] [P] Crear página de reportes
+- [x] [P] Crear página de reportes
   **MDD:** §2.4
   **Story:** US-018
-  **Archivo:** `frontend/src/pages/reports/ReportList.tsx`
+  **Archivo:** `apps/web/src/pages/reports/ReportListPage.tsx`
 
-- [ ] [P] Crear página de configuración de competidores
+- [x] [P] Crear página de configuración de competidores
   **MDD:** §2.4
   **Story:** US-019
-  **Archivo:** `frontend/src/pages/settings/Competitors.tsx`
+  **Archivo:** `apps/web/src/pages/settings/CompetitorsPage.tsx`
 
-- [ ] [P] Crear página de logs de auditoría (superadmin)
+- [x] [P] Crear página de logs de auditoría (superadmin)
   **MDD:** §2.4
   **Story:** US-020
-  **Archivo:** `frontend/src/pages/admin/AuditLogs.tsx`
+  **Archivo:** `apps/web/src/pages/admin/AuditLogsPage.tsx`
 
-- [ ] [P] Crear página de eventos de seguridad (superadmin)
+- [x] [P] Crear página de eventos de seguridad (superadmin)
   **MDD:** §2.4
   **Story:** US-006
-  **Archivo:** `frontend/src/pages/admin/SecurityEvents.tsx`
+  **Archivo:** `apps/web/src/pages/admin/SecurityEventsPage.tsx`
 
 - [ ] [P] Crear componente de banner de impersonación visible
   **MDD:** §6 (impersonación)
@@ -857,12 +857,12 @@
 
 ### T-006: Implementar registro automático en audit_logs (middleware)
 
-- [ ] [P] Crear decorador @AuditLog(action, resourceType) para handlers de comandos
+- [x] [P] Crear decorador @AuditLog(action, resourceType) para handlers de comandos
   **MDD:** §6
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/decorators/audit-log.decorator.ts`
 
-- [ ] [P] Implementar interceptor para registrar automáticamente mutaciones
+- [x] [P] Implementar interceptor para registrar automáticamente mutaciones
   **MDD:** §6
   **Archivo:** `apps/backend/src/modules/audit/interceptors/audit-log.interceptor.ts`
 

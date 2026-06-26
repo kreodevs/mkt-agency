@@ -31,6 +31,14 @@ import { AssetTagAssignmentEntity } from './modules/assets/infrastructure/typeor
 import { DomainsModule } from './modules/domains/domains.module';
 import { CustomDomainEntity } from './modules/domains/infrastructure/typeorm/custom-domain.entity';
 import { DnsVerificationEntity } from './modules/domains/infrastructure/typeorm/dns-verification.entity';
+import { ProposalsModule } from './modules/proposals/proposals.module';
+import { ProposalEntity } from './modules/proposals/infrastructure/typeorm/proposal.entity';
+import { ReportsModule } from './modules/reports/reports.module';
+import { ReportEntity } from './modules/reports/infrastructure/typeorm/report.entity';
+import { CompetitorsModule } from './modules/competitors/competitors.module';
+import { CompetitorEntity } from './modules/competitors/infrastructure/typeorm/competitor.entity';
+import { CompetitorMentionEntity } from './modules/competitors/infrastructure/typeorm/competitor-mention.entity';
+import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
 import { FormEntity } from './modules/forms/infrastructure/typeorm/form.entity';
@@ -94,6 +102,10 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
           AssetTagAssignmentEntity,
           CustomDomainEntity,
           DnsVerificationEntity,
+          ProposalEntity,
+          ReportEntity,
+          CompetitorEntity,
+          CompetitorMentionEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -110,6 +122,10 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
     FormsModule,
     AssetsModule,
     DomainsModule,
+    ProposalsModule,
+    ReportsModule,
+    CompetitorsModule,
+    AuditModule,
     SuperadminModule,
     UsersModule,
     SecurityModule,

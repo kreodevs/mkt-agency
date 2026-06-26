@@ -2,7 +2,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
+  QUEUE_AUDIT_RETENTION,
   QUEUE_CAMPAIGN_STRATEGY,
+  QUEUE_PROPOSAL_GENERATION,
+  QUEUE_REPORT_GENERATION,
   QUEUE_SECTION_SUGGESTION,
   QUEUE_SSL_PROVISION,
 } from './queue.constants';
@@ -22,6 +25,9 @@ import {
       { name: QUEUE_SECTION_SUGGESTION },
       { name: QUEUE_CAMPAIGN_STRATEGY },
       { name: QUEUE_SSL_PROVISION },
+      { name: QUEUE_PROPOSAL_GENERATION },
+      { name: QUEUE_REPORT_GENERATION },
+      { name: QUEUE_AUDIT_RETENTION },
     ),
   ],
   exports: [BullModule],

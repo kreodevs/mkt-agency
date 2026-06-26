@@ -6,6 +6,8 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const SetupPage = lazy(() => import('@/pages/setup/SetupPage'));
 const DashboardHomePage = lazy(() => import('@/pages/DashboardHomePage'));
 const TenantListPage = lazy(() => import('@/pages/tenants/TenantListPage'));
+const AuditLogsPage = lazy(() => import('@/pages/admin/AuditLogsPage'));
+const SecurityEventsPage = lazy(() => import('@/pages/admin/SecurityEventsPage'));
 const CampaignListPage = lazy(() => import('@/pages/campaigns/CampaignListPage'));
 const CampaignCreatePage = lazy(() => import('@/pages/campaigns/CampaignCreatePage'));
 const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetailPage'));
@@ -16,7 +18,12 @@ const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
 const AssetLibraryPage = lazy(() => import('@/pages/assets/AssetLibraryPage'));
 const LeadPipelinePage = lazy(() => import('@/pages/crm/LeadPipelinePage'));
 const FormListPage = lazy(() => import('@/pages/forms/FormListPage'));
+const ProposalListPage = lazy(() => import('@/pages/proposals/ProposalListPage'));
+const ProposalDetailPage = lazy(() => import('@/pages/proposals/ProposalDetailPage'));
 const DomainSettingsPage = lazy(() => import('@/pages/settings/DomainSettingsPage'));
+const CompetitorsPage = lazy(() => import('@/pages/settings/CompetitorsPage'));
+const ReportListPage = lazy(() => import('@/pages/reports/ReportListPage'));
+const ReportDetailPage = lazy(() => import('@/pages/reports/ReportDetailPage'));
 const OnboardingWizardPage = lazy(() => import('@/pages/onboarding/OnboardingWizardPage'));
 
 function Loading() {
@@ -40,6 +47,8 @@ export function AppRouter() {
           <Route path="/" element={<DashboardHomePage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
+            <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
+            <Route path="/admin/security-events" element={<SecurityEventsPage />} />
           </Route>
           <Route element={<TenantGuard />}>
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
@@ -53,7 +62,12 @@ export function AppRouter() {
             <Route path="/forms" element={<FormListPage />} />
             <Route path="/leads" element={<LeadPipelinePage />} />
             <Route path="/assets" element={<AssetLibraryPage />} />
+            <Route path="/proposals" element={<ProposalListPage />} />
+            <Route path="/proposals/:id" element={<ProposalDetailPage />} />
+            <Route path="/reports" element={<ReportListPage />} />
+            <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/settings/domain" element={<DomainSettingsPage />} />
+            <Route path="/settings/competitors" element={<CompetitorsPage />} />
           </Route>
         </Route>
 
