@@ -24,7 +24,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: '#f0f2f5' }}>
+    <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--background)' }}>
       <Card title="MktAgencyOS" subtitle="Crear cuenta" className="w-full max-w-sm mx-4">
         {error && <div className="text-sm text-[var(--destructive)] bg-red-50 border border-red-200 rounded-[var(--radius-sm)] px-3 py-2 mb-3 w-full">{error}</div>}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">

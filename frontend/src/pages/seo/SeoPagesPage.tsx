@@ -11,7 +11,7 @@ const statusOptions = [
 const statusTag = (status: string) => {
   const isPublished = status === 'published';
   return (
-    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isPublished ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
       {status}
     </span>
   );

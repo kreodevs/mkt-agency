@@ -6,7 +6,7 @@ import { competitors } from '../../services/api';
 const statusTag = (status: string) => {
   const isActive = status === 'active';
   return (
-    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isActive ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
       {status}
     </span>
   );

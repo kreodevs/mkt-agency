@@ -6,7 +6,7 @@ import { leads } from '../../services/api';
 
 const STAGES = ['prospecto', 'contactado', 'interesado', 'trial', 'cliente'];
 const STAGE_LABELS: any = { prospecto: 'Prospecto', contactado: 'Contactado', interesado: 'Interesado', trial: 'Trial', cliente: 'Cliente' };
-const STAGE_COLORS: any = { prospecto: '#e3f2fd', contactado: '#fff3e0', interesado: '#e8f5e9', trial: '#f3e5f5', cliente: '#c8e6c9' };
+const STAGE_COLORS: any = { prospecto: 'var(--accent-muted)', contactado: 'var(--warning)', interesado: 'var(--success)', trial: 'var(--accent-muted)', cliente: 'var(--success)' };
 
 export default function CrmPage() {
   const navigate = useNavigate();

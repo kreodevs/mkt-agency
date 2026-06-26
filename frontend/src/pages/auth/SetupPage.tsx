@@ -46,7 +46,7 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="flex items-center justify-center" style={{ minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="flex items-center justify-center" style={{ minHeight: '100vh', background: 'var(--background)' }}>
       <Card style={{ width: 420 }}>
         <div className="flex flex-col gap-1.5 mb-4 items-center">
           <i className="pi pi-shield text-primary" style={{ fontSize: '3rem' }} />

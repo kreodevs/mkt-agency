@@ -21,12 +21,12 @@ export default function DashboardPage() {
 
   const hotLeads = leadList.filter((l: any) => l.score >= 80);
   const scoreBody = (row: any) => {
-    const clr = row.score >= 80 ? 'bg-red-100 text-red-800' : row.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800';
+    const clr = row.score >= 80 ? 'bg-destructive/10 text-destructive' : row.score >= 60 ? 'bg-warning/10 text-warning' : 'bg-accent/10 text-accent';
     return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${clr}`}>{row.score || '-'}</span>;
   };
   const stageBody = (row: any) => {
-    const colors: Record<string, string> = { prospecto: 'bg-purple-100 text-purple-800', contactado: 'bg-amber-100 text-amber-800', interesado: 'bg-emerald-100 text-emerald-800', trial: 'bg-indigo-100 text-indigo-800', cliente: 'bg-emerald-100 text-emerald-800' };
-    return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors[row.stage] || 'bg-purple-100 text-purple-800'}`}>{row.stage}</span>;
+    const colors: Record<string, string> = { prospecto: 'bg-accent/10 text-accent', contactado: 'bg-warning/10 text-warning', interesado: 'bg-success/10 text-success', trial: 'bg-info/10 text-info', cliente: 'bg-success/10 text-success' };
+    return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors[row.stage] || 'bg-accent/10 text-accent'}`}>{row.stage}</span>;
   };
 
   return (

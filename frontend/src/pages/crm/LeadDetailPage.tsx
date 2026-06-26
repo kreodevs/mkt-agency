@@ -53,7 +53,7 @@ export default function LeadDetailPage() {
             <div className="mb-2">
               <strong>Score:</strong>{' '}
               <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
-                lead.score >= 80 ? 'bg-red-100 text-red-800' : lead.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+                lead.score >= 80 ? 'bg-destructive/10 text-destructive' : lead.score >= 60 ? 'bg-warning/10 text-warning' : 'bg-accent/10 text-accent'
               }`}>
                 {lead.score || '-'}
               </span>
