@@ -1,10 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Card } from 'primereact/card';
-import { TabView, TabPanel } from 'primereact/tabview';
-import { Toast } from 'primereact/toast';
+import { InputText, Card, TabView, Textarea } from '@/components/ui';
 import { getCurrentTenant, getCurrentProduct } from '../../stores/authStore';
 import { settings } from '../../services/api';
 import {
@@ -16,11 +12,12 @@ export default function SettingsPage() {
   const tenant = getCurrentTenant();
   const product = getCurrentProduct();
   const productId = sessionStorage.getItem('currentProductId');
-  const toast = useRef<Toast>(null);
   const navigate = useNavigate();
 
   const [currentSettings, setCurrentSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
+  const [toast, setToast] = useState<{severity: string; summary: string; detail: string} | null>(null);
 
   // X/Twitter
   const [xApiKey, setXApiKey] = useState('');
@@ -55,6 +52,13 @@ export default function SettingsPage() {
 
   const productName = product?.name || 'MarketingOS';
 
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const fetchSettings = () => {
     if (!tenant || !productId) return;
     setLoading(true);
@@ -75,7 +79,7 @@ export default function SettingsPage() {
         setLogoUrl(data.logoUrl || '');
       })
       .catch(() => {
-        toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las configuraciones', life: 3000 });
+        setToast({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las configuraciones' });
       })
       .finally(() => setLoading(false));
   };
@@ -115,12 +119,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (data.updated) {
-        toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Contexto del producto actualizado', life: 2000 });
+        setToast({ severity: 'success', summary: 'Guardado', detail: 'Contexto del producto actualizado' });
       } else {
-        toast.current?.show({ severity: 'error', summary: 'Error', detail: data.error || 'No se pudo guardar', life: 3000 });
+        setToast({ severity: 'error', summary: 'Error', detail: data.error || 'No se pudo guardar' });
       }
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error de conexión', life: 3000 });
+      setToast({ severity: 'error', summary: 'Error', detail: 'Error de conexión' });
     } finally {
       setSavingProductContext(false);
     }
@@ -144,10 +148,10 @@ export default function SettingsPage() {
     setSavingSocial(true);
     try {
       await settings.update(tenant.id, productId, { xApiKey, xApiSecret, xAccessToken, xAccessSecret });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Redes sociales guardadas', life: 2000 });
+      setToast({ severity: 'success', summary: 'Guardado', detail: 'Redes sociales guardadas' });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
+      setToast({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });
     } finally {
       setSavingSocial(false);
     }
@@ -158,10 +162,10 @@ export default function SettingsPage() {
     setSavingGoogleAds(true);
     try {
       await settings.update(tenant.id, productId, { googleAdsDeveloperToken, googleAdsClientId, googleAdsClientSecret });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Google Ads guardado', life: 2000 });
+      setToast({ severity: 'success', summary: 'Guardado', detail: 'Google Ads guardado' });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
+      setToast({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });
     } finally {
       setSavingGoogleAds(false);
     }
@@ -172,10 +176,10 @@ export default function SettingsPage() {
     setSavingWhatsapp(true);
     try {
       await settings.update(tenant.id, productId, { whatsappPhoneNumberId, whatsappToken });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'WhatsApp guardado', life: 2000 });
+      setToast({ severity: 'success', summary: 'Guardado', detail: 'WhatsApp guardado' });
       fetchSettings();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
+      setToast({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });
     } finally {
       setSavingWhatsapp(false);
     }
@@ -186,11 +190,11 @@ export default function SettingsPage() {
     setSavingBrand(true);
     try {
       await settings.update(tenant.id, productId, { logoUrl });
-      toast.current?.show({ severity: 'success', summary: 'Guardado', detail: 'Marca guardada', life: 2000 });
+      setToast({ severity: 'success', summary: 'Guardado', detail: 'Marca guardada' });
       fetchSettings();
       fetchAssets();
     } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar', life: 3000 });
+      setToast({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });
     } finally {
       setSavingBrand(false);
     }
@@ -201,7 +205,6 @@ export default function SettingsPage() {
   if (!productId) {
     return (
       <div>
-        <Toast ref={toast} />
         <h2 className="text-xl font-bold text-[var(--foreground)] mt-0 mb-4">Configuración</h2>
         <Card className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]">
           <div className="flex flex-col items-center justify-center py-10 gap-3">
@@ -219,6 +222,12 @@ export default function SettingsPage() {
             </button>
           </div>
         </Card>
+        {toast && (
+          <div className="fixed bottom-4 right-4 z-50 px-4 py-3 rounded-[var(--radius-md)] shadow-lg text-sm font-medium text-white"
+            style={{ backgroundColor: toast.severity === 'success' ? 'var(--success)' : 'var(--danger)' }}>
+            {toast.detail}
+          </div>
+        )}
       </div>
     );
   }
@@ -238,239 +247,241 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <Toast ref={toast} />
-
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-[var(--foreground)] mt-0">Configuración de {productName}</h2>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+          <span className="text-[var(--foreground-muted)] text-sm">Cargando...</span>
         </div>
       ) : (
         <Card className="!bg-[var(--card)] !text-[var(--card-foreground)] !border !border-[var(--card-border)] !rounded-[var(--radius-lg)]">
           <TabView
-            pt={{
-              nav: { className: 'bg-transparent border-b border-[var(--border)]' },
-              tab: {
-                className: ({ context }: any) => cn(
-                  'bg-transparent border-none px-4 py-3 text-sm font-medium transition-colors cursor-pointer',
-                  context.active
-                    ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
-                    : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]',
+            activeIndex={activeTab}
+            onTabChange={(value) => setActiveTab(value)}
+            tabs={[
+              {
+                value: 'social',
+                header: (
+                  <div className="flex items-center gap-2">
+                    <Twitter size={16} />
+                    <span>Redes Sociales</span>
+                  </div>
+                ),
+                children: (
+                  <div className="flex flex-col gap-4 pt-4">
+                    {hasSocialConfig && (
+                      <div className="flex items-center gap-1.5 text-sm text-[var(--success)] font-medium">
+                        <Check size={16} />
+                        <span>Conectado</span>
+                      </div>
+                    )}
+                    {renderField('API Key', xApiKey, setXApiKey)}
+                    {renderField('API Secret', xApiSecret, setXApiSecret)}
+                    {renderField('Access Token', xAccessToken, setXAccessToken)}
+                    {renderField('Access Secret', xAccessSecret, setXAccessSecret)}
+                    <button
+                      onClick={handleSaveSocial}
+                      disabled={savingSocial}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                    >
+                      <Save size={16} />
+                      {savingSocial ? 'Guardando...' : 'Guardar'}
+                    </button>
+                  </div>
                 ),
               },
-              inkbar: { className: 'hidden' },
-            }}
-          >
-            <TabPanel
-              header={
-                <div className="flex items-center gap-2">
-                  <Twitter size={16} />
-                  <span>Redes Sociales</span>
-                </div>
-              }
-            >
-              <div className="flex flex-col gap-4 pt-4">
-                {hasSocialConfig && (
-                  <div className="flex items-center gap-1.5 text-sm text-[var(--success)] font-medium">
-                    <Check size={16} />
-                    <span>Conectado</span>
+              {
+                value: 'google-ads',
+                header: (
+                  <div className="flex items-center gap-2">
+                    <Globe size={16} />
+                    <span>Google Ads</span>
                   </div>
-                )}
-                {renderField('API Key', xApiKey, setXApiKey)}
-                {renderField('API Secret', xApiSecret, setXApiSecret)}
-                {renderField('Access Token', xAccessToken, setXAccessToken)}
-                {renderField('Access Secret', xAccessSecret, setXAccessSecret)}
-                <button
-                  onClick={handleSaveSocial}
-                  disabled={savingSocial}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
-                >
-                  <Save size={16} />
-                  {savingSocial ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
-            </TabPanel>
-
-            <TabPanel
-              header={
-                <div className="flex items-center gap-2">
-                  <Globe size={16} />
-                  <span>Google Ads</span>
-                </div>
-              }
-            >
-              <div className="flex flex-col gap-4 pt-4">
-                {renderField('Developer Token', googleAdsDeveloperToken, setGoogleAdsDeveloperToken)}
-                {renderField('Client ID', googleAdsClientId, setGoogleAdsClientId, 'client-id.apps.googleusercontent.com')}
-                {renderField('Client Secret', googleAdsClientSecret, setGoogleAdsClientSecret)}
-                <button
-                  onClick={handleSaveGoogleAds}
-                  disabled={savingGoogleAds}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
-                >
-                  <Save size={16} />
-                  {savingGoogleAds ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
-            </TabPanel>
-
-            <TabPanel
-              header={
-                <div className="flex items-center gap-2">
-                  <MessageCircle size={16} />
-                  <span>WhatsApp</span>
-                </div>
-              }
-            >
-              <div className="flex flex-col gap-4 pt-4">
-                {renderField('Phone Number ID', whatsappPhoneNumberId, setWhatsappPhoneNumberId)}
-                {renderField('Token', whatsappToken, setWhatsappToken)}
-                <button
-                  onClick={handleSaveWhatsapp}
-                  disabled={savingWhatsapp}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
-                >
-                  <Save size={16} />
-                  {savingWhatsapp ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
-            </TabPanel>
-
-            <TabPanel
-              header={
-                <div className="flex items-center gap-2">
-                  <Image size={16} />
-                  <span>Marca</span>
-                </div>
-              }
-            >
-              <div className="flex flex-col gap-4 pt-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">URL del Logo</label>
-                  <InputText
-                    value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    placeholder="https://ejemplo.com/logo.png"
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
-                  />
-                </div>
-                {logoUrl && (
-                  <div className="flex items-center justify-center border border-[var(--border)] rounded-[var(--radius-md)] p-4 bg-[var(--background-tertiary)]" style={{ minHeight: '120px' }}>
-                    <img src={logoUrl} alt="Logo preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none'; }} />
+                ),
+                children: (
+                  <div className="flex flex-col gap-4 pt-4">
+                    {renderField('Developer Token', googleAdsDeveloperToken, setGoogleAdsDeveloperToken)}
+                    {renderField('Client ID', googleAdsClientId, setGoogleAdsClientId, 'client-id.apps.googleusercontent.com')}
+                    {renderField('Client Secret', googleAdsClientSecret, setGoogleAdsClientSecret)}
+                    <button
+                      onClick={handleSaveGoogleAds}
+                      disabled={savingGoogleAds}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                    >
+                      <Save size={16} />
+                      {savingGoogleAds ? 'Guardando...' : 'Guardar'}
+                    </button>
                   </div>
-                )}
-                <button
-                  onClick={handleSaveBrand}
-                  disabled={savingBrand}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
-                >
-                  <Save size={16} />
-                  {savingBrand ? 'Guardando...' : 'Guardar'}
-                </button>
-
-                <div className="mt-3">
-                  <h4 className="text-sm font-semibold text-[var(--foreground)] mb-2">Assets subidos</h4>
-                  {assets.length === 0 ? (
-                    <p className="text-xs text-[var(--foreground-subtle)]">No hay archivos subidos aún.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {assets.map((asset: any, i: number) => (
-                        <a
-                          key={i}
-                          href={asset.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-[var(--radius-sm)] border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors no-underline"
-                        >
-                          <Image size={14} />
-                          {asset.name || `Archivo ${i + 1}`}
-                        </a>
-                      ))}
+                ),
+              },
+              {
+                value: 'whatsapp',
+                header: (
+                  <div className="flex items-center gap-2">
+                    <MessageCircle size={16} />
+                    <span>WhatsApp</span>
+                  </div>
+                ),
+                children: (
+                  <div className="flex flex-col gap-4 pt-4">
+                    {renderField('Phone Number ID', whatsappPhoneNumberId, setWhatsappPhoneNumberId)}
+                    {renderField('Token', whatsappToken, setWhatsappToken)}
+                    <button
+                      onClick={handleSaveWhatsapp}
+                      disabled={savingWhatsapp}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                    >
+                      <Save size={16} />
+                      {savingWhatsapp ? 'Guardando...' : 'Guardar'}
+                    </button>
+                  </div>
+                ),
+              },
+              {
+                value: 'brand',
+                header: (
+                  <div className="flex items-center gap-2">
+                    <Image size={16} />
+                    <span>Marca</span>
+                  </div>
+                ),
+                children: (
+                  <div className="flex flex-col gap-4 pt-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">URL del Logo</label>
+                      <InputText
+                        value={logoUrl}
+                        onChange={(e) => setLogoUrl(e.target.value)}
+                        placeholder="https://ejemplo.com/logo.png"
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
+                      />
                     </div>
-                  )}
-                </div>
-              </div>
-            </TabPanel>
+                    {logoUrl && (
+                      <div className="flex items-center justify-center border border-[var(--border)] rounded-[var(--radius-md)] p-4 bg-[var(--background-tertiary)]" style={{ minHeight: '120px' }}>
+                        <img src={logoUrl} alt="Logo preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none'; }} />
+                      </div>
+                    )}
+                    <button
+                      onClick={handleSaveBrand}
+                      disabled={savingBrand}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                    >
+                      <Save size={16} />
+                      {savingBrand ? 'Guardando...' : 'Guardar'}
+                    </button>
 
-            <TabPanel
-              header={
-                <div className="flex items-center gap-2">
-                  <Package size={16} />
-                  <span>Contexto del Producto</span>
-                </div>
-              }
-            >
-              <div className="flex flex-col gap-4 pt-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Descripción del producto</label>
-                  <InputTextarea
-                    value={productDescription}
-                    onChange={(e) => setProductDescription(e.target.value)}
-                    placeholder="Ej: OralTrack es un SaaS de gestión de pacientes para clínicas dentales con recordatorios automáticos, historial clínico digital y facturación integrada."
-                    rows={4}
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
-                  />
-                  <p className="text-xs text-[var(--foreground-subtle)]">Esta descripción la usará Hermes para entender tu producto</p>
-                </div>
+                    <div className="mt-3">
+                      <h4 className="text-sm font-semibold text-[var(--foreground)] mb-2">Assets subidos</h4>
+                      {assets.length === 0 ? (
+                        <p className="text-xs text-[var(--foreground-subtle)]">No hay archivos subidos aún.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {assets.map((asset: any, i: number) => (
+                            <a
+                              key={i}
+                              href={asset.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-[var(--radius-sm)] border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors no-underline"
+                            >
+                              <Image size={14} />
+                              {asset.name || `Archivo ${i + 1}`}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                value: 'product-context',
+                header: (
+                  <div className="flex items-center gap-2">
+                    <Package size={16} />
+                    <span>Contexto del Producto</span>
+                  </div>
+                ),
+                children: (
+                  <div className="flex flex-col gap-4 pt-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Descripción del producto</label>
+                      <Textarea
+                        value={productDescription}
+                        onChange={(e) => setProductDescription(e.target.value)}
+                        placeholder="Ej: OralTrack es un SaaS de gestión de pacientes para clínicas dentales con recordatorios automáticos, historial clínico digital y facturación integrada."
+                        rows={4}
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                      />
+                      <p className="text-xs text-[var(--foreground-subtle)]">Esta descripción la usará Hermes para entender tu producto</p>
+                    </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Mercado objetivo</label>
-                  <InputTextarea
-                    value={productTarget}
-                    onChange={(e) => setProductTarget(e.target.value)}
-                    placeholder="Ej: Clínicas dentales pequeñas y medianas en México y Latinoamérica, dueños de clínicas de 1-5 consultorios."
-                    rows={2}
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
-                  />
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Mercado objetivo</label>
+                      <Textarea
+                        value={productTarget}
+                        onChange={(e) => setProductTarget(e.target.value)}
+                        placeholder="Ej: Clínicas dentales pequeñas y medianas en México y Latinoamérica, dueños de clínicas de 1-5 consultorios."
+                        rows={2}
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                      />
+                    </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Características clave (una por línea)</label>
-                  <InputTextarea
-                    value={productFeatures}
-                    onChange={(e) => setProductFeatures(e.target.value)}
-                    placeholder="Recordatorios automáticos vía WhatsApp&#10;Historial clínico digital&#10;Facturación electrónica integrada&#10;Dashboard de indicadores"
-                    rows={4}
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
-                  />
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Características clave (una por línea)</label>
+                      <Textarea
+                        value={productFeatures}
+                        onChange={(e) => setProductFeatures(e.target.value)}
+                        placeholder="Recordatorios automáticos vía WhatsApp&#10;Historial clínico digital&#10;Facturación electrónica integrada&#10;Dashboard de indicadores"
+                        rows={4}
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                      />
+                    </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Competidores (uno por línea)</label>
-                  <InputTextarea
-                    value={productCompetitors}
-                    onChange={(e) => setProductCompetitors(e.target.value)}
-                    placeholder="Dentalink&#10;ClinicCloud&#10;DentiMax"
-                    rows={3}
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
-                  />
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Competidores (uno por línea)</label>
+                      <Textarea
+                        value={productCompetitors}
+                        onChange={(e) => setProductCompetitors(e.target.value)}
+                        placeholder="Dentalink&#10;ClinicCloud&#10;DentiMax"
+                        rows={3}
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)] resize-none"
+                      />
+                    </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Sitio web</label>
-                  <InputText
-                    value={productWebsite}
-                    onChange={(e) => setProductWebsite(e.target.value)}
-                    placeholder="https://oraltrack.com"
-                    className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
-                  />
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-[var(--foreground-muted)] uppercase tracking-[0.05em]">Sitio web</label>
+                      <InputText
+                        value={productWebsite}
+                        onChange={(e) => setProductWebsite(e.target.value)}
+                        placeholder="https://oraltrack.com"
+                        className="!w-full !bg-[var(--input)] !text-[var(--foreground)] !border !border-[var(--input-border)] !rounded-[var(--radius-md)] !px-3 !py-2 !text-sm !placeholder:text-[var(--foreground-subtle)] focus:!border-[var(--input-focus)] focus:!ring-1 focus:!ring-[var(--ring)]"
+                      />
+                    </div>
 
-                <button
-                  onClick={handleSaveProductContext}
-                  disabled={savingProductContext}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
-                >
-                  <Save size={16} />
-                  {savingProductContext ? 'Guardando...' : 'Guardar Contexto'}
-                </button>
-              </div>
-            </TabPanel>
-          </TabView>
+                    <button
+                      onClick={handleSaveProductContext}
+                      disabled={savingProductContext}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[var(--radius-md)] text-sm font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-colors cursor-pointer border-none mt-1"
+                    >
+                      <Save size={16} />
+                      {savingProductContext ? 'Guardando...' : 'Guardar Contexto'}
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </Card>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 px-4 py-3 rounded-[var(--radius-md)] shadow-lg text-sm font-medium text-white"
+          style={{ backgroundColor: toast.severity === 'success' ? 'var(--success)' : 'var(--danger)' }}>
+          {toast.detail}
+        </div>
       )}
     </div>
   );

@@ -74,7 +74,7 @@ export default function CompetitorsPage() {
 
   return (
     <div>
-      <div className="flex justify-content-between align-items-center mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="mt-0">Competidores</h2>
         <Button onClick={() => setShowNew(true)}>+ Agregar Competidor</Button>
       </div>
@@ -98,7 +98,7 @@ export default function CompetitorsPage() {
       </Card>
 
       <Dialog header="Nuevo Competidor" visible={showNew} onHide={() => setShowNew(false)} size="sm">
-        <div className="flex flex-column gap-2">
+        <div className="flex flex-col gap-2">
           <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)} />
           <InputText placeholder="Website" value={newWebsite} onChange={e => setNewWebsite(e.target.value)} />
           <InputText placeholder="Descripción" value={newDescription} onChange={e => setNewDescription(e.target.value)} />

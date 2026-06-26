@@ -58,7 +58,7 @@ export default function CampaignsPage() {
 
   return (
     <div>
-      <div className="flex justify-content-between align-items-center mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="mt-0">Google Ads</h2>
         <Button onClick={() => setShowNew(true)}>Nueva Campaña</Button>
       </div>
@@ -82,7 +82,7 @@ export default function CampaignsPage() {
       </Card>
 
       <Dialog header="Nueva Campaña" visible={showNew} onHide={() => setShowNew(false)} size="sm">
-        <div className="flex flex-column gap-2">
+        <div className="flex flex-col gap-2">
           <InputText placeholder="Nombre" value={newName} onChange={e => setNewName(e.target.value)}  />
           <InputText type="number" placeholder="Presupuesto mensual" value={newBudget} onChange={e => setNewBudget(Number(e.target.value))}  />
           <Button onClick={handleCreate} disabled={!newName}>Crear</Button>

@@ -55,7 +55,7 @@ export default function SeoPagesPage() {
 
   return (
     <div>
-      <div className="flex justify-content-between align-items-center mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="mt-0">Páginas SEO Local</h2>
         <Button onClick={() => setShowNew(true)}>+ Nueva Página</Button>
       </div>
@@ -71,7 +71,7 @@ export default function SeoPagesPage() {
       </Card>
 
       <Dialog header="Nueva Página SEO" visible={showNew} onHide={() => setShowNew(false)} size="sm">
-        <div className="flex flex-column gap-2">
+        <div className="flex flex-col gap-2">
           <InputText placeholder="Ciudad" value={newCity} onChange={e => setNewCity(e.target.value)} />
           <InputText placeholder="Slug" value={newSlug} onChange={e => setNewSlug(e.target.value)} />
           <InputText placeholder="Título" value={newTitle} onChange={e => setNewTitle(e.target.value)} />

@@ -46,14 +46,14 @@ export default function CrmPage() {
 
   return (
     <div>
-      <div className="flex justify-content-between align-items-center mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="mt-0">CRM</h2>
         <Button onClick={() => setShowNew(true)}>Nuevo Lead</Button>
       </div>
 
-      <div className="grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {grouped.map(g => (
-          <div key={g.stage} className="col" style={{ minWidth: '250px' }}>
+          <div key={g.stage}>
             <Card title={`${g.label} (${g.items.length})`} style={{ background: STAGE_COLORS[g.stage] }}>
               {g.items.map((lead: any) => (
                 <div
@@ -83,7 +83,7 @@ export default function CrmPage() {
       </div>
 
       <Dialog header="Nuevo Lead" visible={showNew} onHide={() => setShowNew(false)} style={{ width: '400px' }}>
-        <div className="flex flex-column gap-2">
+        <div className="flex flex-col gap-2">
           <InputText placeholder="Nombre *" value={newName} onChange={e => setNewName(e.target.value)} />
           <InputText placeholder="Clínica" value={newClinic} onChange={e => setNewClinic(e.target.value)} />
           <InputText placeholder="Teléfono" value={newPhone} onChange={e => setNewPhone(e.target.value)} />

@@ -99,7 +99,7 @@ export default function OnboardingPage() {
   if (!data && !loading) {
     return (
       <div>
-        <div className="flex justify-content-between align-items-center mb-3">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="mt-0">Onboarding</h2>
         </div>
         <Card>
@@ -124,7 +124,7 @@ export default function OnboardingPage() {
   if (isCompleted) {
     return (
       <div>
-        <div className="flex justify-content-between align-items-center mb-3">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="mt-0">Onboarding</h2>
           <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
             completado
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
       </div>
 
       <Card className="mb-3">
-        <div className="flex align-items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="font-medium">Progreso:</span>
           <Progress value={progress} className="flex-1" />
           <span className="font-bold">

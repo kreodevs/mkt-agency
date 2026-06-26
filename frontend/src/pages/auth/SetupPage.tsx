@@ -46,19 +46,19 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="flex justify-content-center align-items-center" style={{ minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="flex items-center justify-center" style={{ minHeight: '100vh', background: '#f8f9fa' }}>
       <Card style={{ width: 420 }}>
-        <div className="flex flex-column align-items-center mb-4">
+        <div className="flex flex-col gap-1.5 mb-4 items-center">
           <i className="pi pi-shield text-primary" style={{ fontSize: '3rem' }} />
           <h2 className="mt-2 mb-1">Configurar Administrador</h2>
-          <p className="text-500 mt-0" style={{ fontSize: '0.9rem' }}>
+          <p className="text-muted mt-0" style={{ fontSize: '0.9rem' }}>
             Primera vez en MarketingOS. Crea tu cuenta de administrador.
           </p>
         </div>
 
         {error && <Alert variant="destructive" className="mb-3"><span>{error}</span></Alert>}
 
-        <div className="flex flex-column gap-3">
+        <div className="flex flex-col gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">Tu nombre</label>
             <InputText

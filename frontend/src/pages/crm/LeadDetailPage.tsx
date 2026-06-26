@@ -38,18 +38,18 @@ export default function LeadDetailPage() {
   if (!lead) return <div className="p-3">Cargando...</div>;
 
   return (
-    <div className="p-3" style={{ maxWidth: '800px' }}>
+    <div style={{ maxWidth: '800px' }} className="px-0 sm:px-3">
       <Button variant="ghost" onClick={() => navigate('/crm')} className="mb-2">← Volver</Button>
 
       <Card title={lead.name}>
-        <div className="grid">
-          <div className="col-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
             <div className="mb-2"><strong>Clínica:</strong> {lead.clinic || '-'}</div>
             <div className="mb-2"><strong>Teléfono:</strong> {lead.phone || '-'}</div>
             <div className="mb-2"><strong>Email:</strong> {lead.email || '-'}</div>
             <div className="mb-2"><strong>Fuente:</strong> {lead.source}</div>
           </div>
-          <div className="col-6">
+          <div>
             <div className="mb-2">
               <strong>Score:</strong>{' '}
               <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
