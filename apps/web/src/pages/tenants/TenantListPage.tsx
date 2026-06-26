@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, UserRoundSearch } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -10,6 +11,7 @@ import { Card } from '@/components/molecules/Card';
 import { listTenants } from '@/services/tenants';
 import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
 import { CreateTenantModal } from './CreateTenantModal';
+import { ImpersonateTenantModal } from './ImpersonateTenantModal';
 
 const STATUS_OPTIONS: Array<{ label: string; value: '' | TenantStatus }> = [
   { label: 'Todos los estados', value: '' },
@@ -48,10 +50,12 @@ const filterSelectClass =
   'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function TenantListPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'' | TenantStatus>('');
   const [planFilter, setPlanFilter] = useState<'' | TenantPlan>('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [impersonateTenant, setImpersonateTenant] = useState<Tenant | null>(null);
 
   const tenantsQuery = useQuery({
     queryKey: ['tenants', { status: statusFilter, plan: planFilter }],
@@ -117,6 +121,22 @@ export default function TenantListPage() {
         width: '180px',
         body: (row: Tenant) => formatDate(row.createdAt),
       },
+      {
+        field: 'actions',
+        header: 'Acciones',
+        width: '140px',
+        body: (row: Tenant) => (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setImpersonateTenant(row)}
+            disabled={row.status !== 'active'}
+          >
+            <UserRoundSearch className="mr-1 h-4 w-4" />
+            Impersonar
+          </Button>
+        ),
+      },
     ],
     [],
   );
@@ -138,6 +158,13 @@ export default function TenantListPage() {
         visible={createOpen}
         onHide={() => setCreateOpen(false)}
         onCreated={() => void queryClient.invalidateQueries({ queryKey: ['tenants'] })}
+      />
+
+      <ImpersonateTenantModal
+        tenant={impersonateTenant}
+        visible={!!impersonateTenant}
+        onHide={() => setImpersonateTenant(null)}
+        onStarted={() => navigate('/')}
       />
 
       <Card>

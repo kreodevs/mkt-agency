@@ -54,6 +54,9 @@ import { AuditLogEntity } from './modules/users/infrastructure/typeorm/audit-log
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
+import { LoggerModule } from './shared/logger/logger.module';
+import { RedisModule } from './shared/redis/redis.module';
+import { RateLimitGuard } from './modules/auth/guards/rate-limit.guard';
 import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
 
 @Module({
@@ -62,6 +65,8 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
       isGlobal: true,
       envFilePath: ['.env', '../../.env'],
     }),
+    LoggerModule,
+    RedisModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -134,6 +139,10 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
     },
   ],
 })

@@ -1,5 +1,7 @@
 # Tenants (superadmin)
 
+Listado y alta de tenants. Acción «Impersonar» abre modal con UUID de usuario del tenant (US-003).
+
 Página `/tenants` con listado paginado vía `GET /api/v1/tenants`.
 
 ## Componentes Kreo

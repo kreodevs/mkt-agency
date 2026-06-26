@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { SessionEntity } from '../modules/auth/infrastructure/typeorm/session.entity';
+import { AuditLogEntity } from '../modules/users/infrastructure/typeorm/audit-log.entity';
 import { AudienceEntity } from '../modules/campaign/infrastructure/typeorm/audience.entity';
 import { BudgetEntity } from '../modules/campaign/infrastructure/typeorm/budget.entity';
 import { CampaignStrategyAssignmentEntity } from '../modules/campaign/infrastructure/typeorm/campaign-strategy-assignment.entity';
@@ -14,18 +15,23 @@ import { AssetEntity } from '../modules/assets/infrastructure/typeorm/asset.enti
 import { AssetFolderEntity } from '../modules/assets/infrastructure/typeorm/asset-folder.entity';
 import { AssetTagAssignmentEntity } from '../modules/assets/infrastructure/typeorm/asset-tag-assignment.entity';
 import { AssetTagEntity } from '../modules/assets/infrastructure/typeorm/asset-tag.entity';
+import { CompetitorMentionEntity } from '../modules/competitors/infrastructure/typeorm/competitor-mention.entity';
+import { CompetitorEntity } from '../modules/competitors/infrastructure/typeorm/competitor.entity';
 import { LeadInteractionEntity } from '../modules/crm/infrastructure/typeorm/lead-interaction.entity';
 import { LeadEntity } from '../modules/crm/infrastructure/typeorm/lead.entity';
 import { ContentApprovalEntity } from '../modules/content/infrastructure/typeorm/content-approval.entity';
 import { ContentVersionEntity } from '../modules/content/infrastructure/typeorm/content-version.entity';
 import { ContentEntity } from '../modules/content/infrastructure/typeorm/content.entity';
 import { EventEntity } from '../modules/content/infrastructure/typeorm/event.entity';
+import { CustomDomainEntity } from '../modules/domains/infrastructure/typeorm/custom-domain.entity';
+import { DnsVerificationEntity } from '../modules/domains/infrastructure/typeorm/dns-verification.entity';
 import { FormSubmissionEntity } from '../modules/forms/infrastructure/typeorm/form-submission.entity';
 import { FormEntity } from '../modules/forms/infrastructure/typeorm/form.entity';
+import { ProposalEntity } from '../modules/proposals/infrastructure/typeorm/proposal.entity';
+import { ReportEntity } from '../modules/reports/infrastructure/typeorm/report.entity';
 import { SecurityEventEntity } from '../modules/security/infrastructure/typeorm/security-event.entity';
 import { ImpersonationLogEntity } from '../modules/superadmin/infrastructure/typeorm/impersonation-log.entity';
 import { TenantEntity } from '../modules/tenant/infrastructure/typeorm/tenant.entity';
-import { AuditLogEntity } from '../modules/users/infrastructure/typeorm/audit-log.entity';
 import { UserEntity } from '../shared/infrastructure/typeorm/user.entity';
 
 export default new DataSource({
@@ -63,6 +69,12 @@ export default new DataSource({
     AssetFolderEntity,
     AssetTagEntity,
     AssetTagAssignmentEntity,
+    CustomDomainEntity,
+    DnsVerificationEntity,
+    ProposalEntity,
+    ReportEntity,
+    CompetitorEntity,
+    CompetitorMentionEntity,
   ],
   migrations: ['src/database/migrations/*.ts'],
   migrationsTableName: 'typeorm_migrations',

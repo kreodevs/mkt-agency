@@ -13,6 +13,8 @@ import { RefreshTokenHandler } from './commands/refresh-token.handler';
 import { SESSION_REPOSITORY } from './domain/session.repository.port';
 import { SessionEntity } from './infrastructure/typeorm/session.entity';
 import { TypeOrmSessionRepository } from './infrastructure/typeorm/typeorm-session.repository';
+import { RateLimitGuard } from './guards/rate-limit.guard';
+import { RateLimitService } from './services/rate-limit.service';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { TypeOrmSessionRepository } from './infrastructure/typeorm/typeorm-sessi
     AuthService,
     LoginHandler,
     RefreshTokenHandler,
+    RateLimitService,
+    RateLimitGuard,
     {
       provide: SESSION_REPOSITORY,
       useClass: TypeOrmSessionRepository,
@@ -35,6 +39,6 @@ import { TypeOrmSessionRepository } from './infrastructure/typeorm/typeorm-sessi
       useClass: TypeOrmUserRepository,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, RateLimitGuard, RateLimitService],
 })
 export class AuthModule {}

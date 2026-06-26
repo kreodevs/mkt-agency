@@ -13,6 +13,7 @@ yarn migration:run
 
 | Migración | Tablas |
 |-----------|--------|
+| `1730000000000-CreateCoreTables.ts` | `tenants`, `users`, `sessions`, `security_events`, `impersonation_logs`, perfiles, campañas, contenidos, `events` |
 | `1730000000001-CreateFormsAndCrm.ts` | `forms`, `form_submissions`, `leads`, `lead_interactions` |
 | `1730000000002-CreateAssets.ts` | `assets`, `asset_folders`, `asset_tags`, `asset_tag_assignments` |
 | `1730000000003-CreateDomains.ts` | `custom_domains`, `dns_verifications` |
@@ -23,4 +24,4 @@ yarn migration:run
 
 DataSource: `src/database/data-source.ts`.
 
-Las tablas core (users, tenants, campaigns, contents, …) se gestionan con `synchronize` en dev hasta una migración baseline dedicada.
+La migración `1730000000000` es la **baseline** para despliegues sin `synchronize`.

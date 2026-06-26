@@ -732,42 +732,42 @@
   **Story:** US-006
   **Archivo:** `apps/web/src/pages/admin/SecurityEventsPage.tsx`
 
-- [ ] [P] Crear componente de banner de impersonación visible
+- [x] [P] Crear componente de banner de impersonación visible
   **MDD:** §6 (impersonación)
   **Story:** US-003
-  **Archivo:** `frontend/src/components/admin/ImpersonationBanner.tsx`
+  **Archivo:** `apps/web/src/components/admin/ImpersonationBanner.tsx`
 
 ## Infraestructura tasks
 
-- [ ] [P] Crear `Dockerfile.api` (multietapa) para backend NestJS
+- [x] [P] Crear `Dockerfile.api` (multietapa) para backend NestJS
   **MDD:** §7.4, Infra sección 1
   **Archivo:** `Dockerfile.api`
 
-- [ ] [P] Crear `Dockerfile.frontend` (multietapa) para frontend React/Vite
+- [x] [P] Crear `Dockerfile.frontend` (multietapa) para frontend React/Vite
   **MDD:** §7.4, Infra sección 1
-  **Archivo:** `frontend/Dockerfile.frontend`
+  **Archivo:** `Dockerfile.frontend`
 
-- [ ] [P] Crear `docker-compose.yml` con servicios: postgres, redis, minio, api, worker, frontend
+- [x] [P] Crear `docker-compose.yml` con servicios: postgres, redis, minio, api, worker, frontend
   **MDD:** §7.4, Infra sección 2
   **Archivo:** `docker-compose.yml`
 
-- [ ] [P] Configurar health checks para todos los servicios
+- [x] [P] Configurar health checks para todos los servicios
   **MDD:** §7.3, Infra sección 1
   **Archivo:** `docker-compose.yml`
 
-- [ ] [P] Crear archivo `.env.example` con todas las variables de entorno
+- [x] [P] Crear archivo `.env.example` con todas las variables de entorno
   **MDD:** §7.5, Infra sección 3
   **Archivo:** `.env.example`
 
-- [ ] [P] Configurar volúmenes persistentes para postgres, redis, minio
+- [x] [P] Configurar volúmenes persistentes para postgres, redis, minio
   **MDD:** §7.4, Infra sección 4
   **Archivo:** `docker-compose.yml`
 
-- [ ] [P] Configurar CI/CD en GitHub Actions con lint, test, build, deploy
+- [x] [P] Configurar CI/CD en GitHub Actions con lint, test, build, deploy
   **MDD:** §7.6
-  **Archivo:** `.github/workflows/deploy.yml`
+  **Archivo:** `.github/workflows/ci.yml`
 
-- [ ] [P] Configurar rate limiting con Redis (100 req/min público, 1000 auth, 20 IA)
+- [x] [P] Configurar rate limiting con Redis (100 req/min público, 1000 auth, 20 IA)
   **MDD:** §5.4
   **Archivo:** `apps/backend/src/modules/auth/guards/rate-limit.guard.ts`
 
@@ -775,7 +775,7 @@
   **MDD:** §6
   **Archivo:** `apps/backend/src/shared/middleware/tenant.middleware.ts`
 
-- [ ] [P] Configurar logging estructurado (pino/winston) con niveles configurables
+- [x] [P] Configurar logging estructurado (pino/winston) con niveles configurables
   **MDD:** §7.5
   **Archivo:** `apps/backend/src/shared/logger/logger.module.ts`
 

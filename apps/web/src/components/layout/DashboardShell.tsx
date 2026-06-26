@@ -2,6 +2,7 @@ import { AlertTriangle, Building2, BarChart3, CalendarDays, ClipboardList, FileI
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
+import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { logout } from '@/services/auth';
 import { useAuthStore } from '@/store/auth';
 
@@ -49,11 +50,13 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
 
   const navigationGroups =
     navigationOverride ??
-    (user?.isSuperadmin
-      ? superadminNavigation
-      : user?.tenantId
-        ? tenantNavigation
-        : []);
+    (user?.impersonating && user.tenantId
+      ? tenantNavigation
+      : user?.isSuperadmin
+        ? superadminNavigation
+        : user?.tenantId
+          ? tenantNavigation
+          : []);
 
   const handleLogout = async () => {
     await logout();
@@ -61,14 +64,17 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   };
 
   return (
-    <AppLayout
-      navigationGroups={navigationGroups}
-      activeHref={location.pathname}
-      linkComponent={Link}
-      user={user ? { name: user.name, email: user.email } : undefined}
-      onLogout={handleLogout}
-    >
-      {children}
-    </AppLayout>
+    <>
+      <ImpersonationBanner />
+      <AppLayout
+        navigationGroups={navigationGroups}
+        activeHref={location.pathname}
+        linkComponent={Link}
+        user={user ? { name: user.name, email: user.email } : undefined}
+        onLogout={handleLogout}
+      >
+        {children}
+      </AppLayout>
+    </>
   );
 }

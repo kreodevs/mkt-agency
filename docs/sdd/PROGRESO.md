@@ -1084,3 +1084,24 @@ _Actualiza este archivo al cerrar tareas o hitos._
 - `yarn build` OK.
 
 **Próximo bloque sugerido:** banner impersonación; migración baseline tablas core; infra Docker/CI.
+
+### Sesión 2026-06-26 — Banner impersonación, baseline DB e infra Docker/CI
+
+- Frontend: `ImpersonationBanner`, store con sesión superadmin guardada, `startImpersonation`/`endImpersonation`.
+- Modal impersonar en listado tenants; nav tenant durante impersonación.
+- Migración baseline `1730000000000-CreateCoreTables.ts` (tenants, users, sessions, security, campañas, contenidos…).
+- `Dockerfile.api`, `Dockerfile.frontend`, `docker-compose.yml`, `infra/nginx/frontend.conf`.
+- CI GitHub Actions: `.github/workflows/ci.yml` (`yarn build`).
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** rate limiting Redis; logging estructurado; páginas frontend pendientes (login/setup/onboarding).
+
+### Sesión 2026-06-26 — Dokploy compose, rate limit y logging
+
+- `docker-compose.dokploy.yml` — red `dokploy-network`, sin `container_name`, Traefik labels en frontend.
+- Guía `infra/dokploy/README.md` (Domains UI, env, migraciones, volúmenes).
+- Rate limiting Redis: guard global (100/1000/20 req/min por tier).
+- `StructuredLogger` JSON con `LOG_LEVEL`; CORS desde `CORS_ORIGIN`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** middleware tenant_id; páginas frontend pendientes; entrypoint migraciones en deploy.
