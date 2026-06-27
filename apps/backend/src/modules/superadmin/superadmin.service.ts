@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { JwtTokenService } from '../../shared/auth/jwt-token.service';
@@ -11,6 +11,8 @@ import {
   ImpersonateResult,
 } from './commands/impersonate.command';
 import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
+import { ListUsersResponseDto } from './dto/list-users.response.dto';
+import { UpdateUserBySuperadminDto } from './dto/update-user.request.dto';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 
 @Injectable()
@@ -69,6 +71,53 @@ export class SuperadminService {
     return {
       message: 'Impersonation ended. Audit log recorded.',
       sessionToken: accessToken,
+    };
+  }
+
+  async listUsers(params: {
+    page: number;
+    limit: number;
+    search?: string;
+  }): Promise<ListUsersResponseDto> {
+    const result = await this.users.findAll(params);
+    return result;
+  }
+
+  async updateUser(
+    userId: string,
+    body: UpdateUserBySuperadminDto,
+  ): Promise<{ id: string; email: string; name: string; role: string; status: string; isSuperadmin: boolean; tenantId: string | null }> {
+    const user = await this.users.findPublicById(userId);
+    if (!user) {
+      throw new NotFoundException({
+        error: 'User not found',
+        code: 'NOT_FOUND',
+      });
+    }
+
+    const updated = await this.users.updateById(userId, body);
+    if (!updated) {
+      throw new NotFoundException({
+        error: 'User not found after update',
+        code: 'NOT_FOUND',
+      });
+    }
+
+    // Get full record with status from DB
+    const result = await this.users.findAll({
+      page: 1,
+      limit: 1,
+    });
+    const fullUser = result.items.find((u) => u.id === userId);
+
+    return {
+      id: updated.id,
+      email: updated.email,
+      name: updated.name,
+      role: updated.role,
+      status: fullUser?.status ?? 'active',
+      isSuperadmin: updated.isSuperadmin,
+      tenantId: updated.tenantId,
     };
   }
 }

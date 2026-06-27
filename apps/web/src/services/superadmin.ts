@@ -18,6 +18,45 @@ export interface EndImpersonationResponse {
   sessionToken: string;
 }
 
+export interface SuperadminUser {
+  id: string;
+  email: string;
+  name: string;
+  isSuperadmin: boolean;
+  role: string;
+  status: string;
+  tenantId: string | null;
+  tenant?: { id: string; name: string; slug: string; plan: string; status: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListUsersResponse {
+  items: SuperadminUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function listSuperadminUsers(params?: { page?: number; limit?: number; search?: string }): Promise<ListUsersResponse> {
+  const search = new URLSearchParams();
+  if (params?.page) search.set('page', String(params.page));
+  if (params?.limit) search.set('limit', String(params.limit));
+  if (params?.search) search.set('search', params.search);
+  const qs = search.toString();
+  return apiFetch<ListUsersResponse>(`/superadmin/users${qs ? `?${qs}` : ''}`);
+}
+
+export async function updateSuperadminUser(
+  userId: string,
+  payload: { name?: string; role?: string; status?: string },
+): Promise<SuperadminUser> {
+  return apiFetch<SuperadminUser>(`/superadmin/users/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function startImpersonation(payload: {
   tenantId: string;
   userId: string;

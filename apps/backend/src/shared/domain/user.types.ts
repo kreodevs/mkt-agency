@@ -48,3 +48,29 @@ export interface PublicUserRecord {
   role: string;
   tenantId: string | null;
 }
+
+export interface ListUsersParams {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+export interface UserWithTenant extends PublicUserRecord {
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tenant?: { id: string; name: string; slug: string; plan: string; status: string } | null;
+}
+
+export interface ListUsersResult {
+  items: UserWithTenant[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export type UpdateUserByRepo = {
+  name?: string;
+  role?: string;
+  status?: string;
+};
