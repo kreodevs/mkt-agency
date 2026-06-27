@@ -28,6 +28,17 @@ export const tenantNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
       { label: 'Onboarding', href: '/onboarding', icon: ClipboardList },
+    ],
+  },
+  {
+    title: 'Agentes',
+    items: [
+      { label: 'Brand Analyst', href: '/agents', icon: Bot },
+    ],
+  },
+  {
+    title: 'Marketing',
+    items: [
       { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Contenidos', href: '/contents', icon: FileText },
       { label: 'Calendario', href: '/calendar', icon: CalendarDays },

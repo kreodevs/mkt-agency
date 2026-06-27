@@ -5,3 +5,4 @@ export const QUEUE_PROPOSAL_GENERATION = 'proposal-generation';
 export const QUEUE_REPORT_GENERATION = 'report-generation';
 export const QUEUE_AUDIT_RETENTION = 'audit-retention';
 export const QUEUE_SECURITY_ALERT = 'security-alert';
+export const QUEUE_BRAND_INTERVIEW = 'brand-interview';
