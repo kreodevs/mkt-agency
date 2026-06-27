@@ -7,7 +7,10 @@ import { Toaster } from '@/components/molecules/Sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AppRouter } from '@/router';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { initPwaUpdates } from '@/pwa/registerPwa';
 import './index.css';
+
+initPwaUpdates();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

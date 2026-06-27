@@ -7,11 +7,15 @@ COPY package.json yarn.lock ./
 COPY apps/backend/package.json apps/backend/
 COPY apps/web/package.json apps/web/
 
+RUN apk add --no-cache git
+
 RUN yarn install --frozen-lockfile
 
+COPY .git .git
 COPY apps/web apps/web
 
-RUN yarn workspace @mkt-agency/web build
+RUN VITE_APP_VERSION="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
+  yarn workspace @mkt-agency/web build
 
 # ---- Runtime Stage ----
 FROM nginx:1.27-alpine AS runtime

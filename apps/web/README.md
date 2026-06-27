@@ -16,6 +16,13 @@ yarn dev      # http://localhost:5173 (proxy /api → backend :3000)
 yarn build
 ```
 
+## PWA y actualizaciones
+
+- Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`).
+- Cada build genera `version.json` con el **commit git** (`VITE_APP_VERSION`).
+- Tras un deploy nuevo, la app **se recarga sola** (service worker `autoUpdate` + polling de `version.json` cada 60s).
+- Detalle: `src/pwa/README.md`
+
 ## Componentes Kreo instalados
 
 | Componente | Ruta |

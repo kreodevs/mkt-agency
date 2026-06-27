@@ -1,9 +1,49 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import { appVersionPlugin, resolveAppVersion } from './vite-app-version.plugin';
+
+const appVersion = resolveAppVersion();
 
 export default defineConfig({
-  plugins: [react()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+  },
+  plugins: [
+    react(),
+    appVersionPlugin(appVersion),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: false,
+      includeAssets: ['favicon.svg'],
+      manifest: {
+        name: 'Mkt Agency OS',
+        short_name: 'Mkt Agency',
+        description: 'Plataforma de marketing para agencias',
+        theme_color: '#6366f1',
+        background_color: '#0f172a',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/favicon.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff2,webmanifest}'],
+        globIgnores: ['**/version.json'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
