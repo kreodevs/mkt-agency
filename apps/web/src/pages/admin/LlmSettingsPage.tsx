@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { LlmModelSelect } from '@/components/admin/LlmModelSelect';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -9,7 +10,6 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
-import { formatModelOptionLabel } from '@/lib/llm-models';
 import {
   listLlmProviderModels,
   listLlmProviders,
@@ -45,36 +45,53 @@ export default function LlmSettingsPage() {
   );
 
   useEffect(() => {
-    if (editing) {
-      setProviderId(editing.providerId ?? configuredProviders[0]?.id ?? '');
-      setModel(editing.model);
-      setTemperature(String(editing.temperature));
-      setEnabled(editing.enabled);
+    if (!editing) {
+      return;
     }
+
+    setProviderId(editing.providerId ?? configuredProviders[0]?.id ?? '');
+    setModel(editing.model);
+    setTemperature(String(editing.temperature));
+    setEnabled(editing.enabled);
   }, [editing, configuredProviders]);
 
-  const modelsQuery = useQuery({
-    queryKey: ['llm-provider-models', providerId],
-    queryFn: () => listLlmProviderModels(providerId),
-    enabled: !!editing && !!providerId,
-    staleTime: 5 * 60 * 1000,
-  });
-
   useEffect(() => {
-    const models = modelsQuery.data?.models ?? [];
-    if (!models.length) {
+    if (!editing || !providerId) {
       return;
     }
 
-    if (model && models.some((item) => item.id === model)) {
-      return;
-    }
+    let cancelled = false;
 
-    const preferred =
-      editing?.model && editing.providerId === providerId ? editing.model : null;
-    const match = preferred ? models.find((item) => item.id === preferred) : null;
-    setModel(match?.id ?? models[0].id);
-  }, [modelsQuery.data, providerId, model, editing]);
+    void listLlmProviderModels(providerId)
+      .then((response) => {
+        if (cancelled) {
+          return;
+        }
+
+        const models = response.models;
+        if (!models.length) {
+          return;
+        }
+
+        setModel((current) => {
+          if (current && models.some((item) => item.id === current)) {
+            return current;
+          }
+
+          const preferred =
+            editing.model && editing.providerId === providerId ? editing.model : null;
+          const match = preferred ? models.find((item) => item.id === preferred) : null;
+          return match?.id ?? models[0].id;
+        });
+      })
+      .catch(() => {
+        /* LlmModelSelect muestra error y reintento */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editing, providerId]);
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -129,7 +146,6 @@ export default function LlmSettingsPage() {
     },
   ];
 
-  const models = modelsQuery.data?.models ?? [];
   const canSave = Boolean(providerId && model.trim());
 
   return (
@@ -174,46 +190,32 @@ export default function LlmSettingsPage() {
           ) : (
             <>
               <div className="flex flex-col gap-[var(--spacing-xs)]">
-                <label className="text-sm font-medium">Proveedor</label>
+                <label htmlFor="llm-task-provider" className="text-sm font-medium">
+                  Proveedor
+                </label>
                 <select
+                  id="llm-task-provider"
                   className={selectClass}
                   value={providerId}
-                  onChange={(e) => {
-                    setProviderId(e.target.value);
+                  onChange={(event) => {
+                    setProviderId(event.target.value);
                     setModel('');
                   }}
                 >
-                  {configuredProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                  {configuredProviders.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex flex-col gap-[var(--spacing-xs)]">
-                <label className="text-sm font-medium">Modelo</label>
-                {modelsQuery.isLoading ? (
-                  <p className="text-sm text-[var(--foreground-muted)]">Cargando modelos…</p>
-                ) : modelsQuery.isError ? (
-                  <p className="text-sm text-[var(--destructive)]">
-                    No se pudieron cargar modelos del proveedor. Verifica URL y API key.
-                  </p>
-                ) : (
-                  <select
-                    className={selectClass}
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    disabled={!models.length}
-                  >
-                    {models.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {formatModelOptionLabel(item)}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+              <LlmModelSelect
+                providerId={providerId}
+                value={model}
+                onChange={setModel}
+                enabled={Boolean(editing && providerId)}
+              />
             </>
           )}
 
@@ -234,8 +236,8 @@ export default function LlmSettingsPage() {
             Tarea habilitada
           </label>
           <p className="text-xs text-[var(--foreground-muted)]">
-            Los precios mostrados son USD por millón de tokens (entrada / salida) según el catálogo
-            del proveedor. Configura proveedores en{' '}
+            El desplegable de modelo muestra el costo USD por millón de tokens (entrada / salida).
+            Configura proveedores en{' '}
             <a href="/admin/llm-providers" className="text-[var(--primary)] underline">
               Proveedores LLM
             </a>

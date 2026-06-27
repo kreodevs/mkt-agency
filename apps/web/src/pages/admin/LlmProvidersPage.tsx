@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -10,20 +10,16 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { LlmModelSelect } from '@/components/admin/LlmModelSelect';
 import { toast } from '@/components/molecules/Sonner';
-import { formatModelOptionLabel } from '@/lib/llm-models';
 import {
   createLlmProvider,
   deleteLlmProvider,
-  listLlmProviderModels,
   listLlmProviders,
   updateLlmProvider,
   type LlmProvider,
 } from '@/services/superadmin';
 import { ApiError } from '@/services/api';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function LlmProvidersPage() {
   const queryClient = useQueryClient();
@@ -43,34 +39,8 @@ export default function LlmProvidersPage() {
     queryFn: () => listLlmProviders(true),
   });
 
-  const canFetchModels =
-    dialogOpen &&
-    Boolean(
-      editing?.apiKeyConfigured ||
-        form.apiKey.trim() ||
-        (editing && form.apiKey.trim()),
-    );
-
-  const modelsQuery = useQuery({
-    queryKey: ['llm-provider-models', editing?.id ?? 'new', form.apiUrl],
-    queryFn: () => listLlmProviderModels(editing!.id),
-    enabled: dialogOpen && !!editing?.apiKeyConfigured && !form.apiKey.trim(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  useEffect(() => {
-    const models = modelsQuery.data?.models ?? [];
-    if (!dialogOpen || !models.length || form.defaultModel) {
-      return;
-    }
-
-    const preferred = editing?.defaultModel;
-    const match = preferred ? models.find((item) => item.id === preferred) : null;
-    setForm((current) => ({
-      ...current,
-      defaultModel: match?.id ?? models[0].id,
-    }));
-  }, [modelsQuery.data, dialogOpen, editing, form.defaultModel]);
+  const showModelSelect =
+    dialogOpen && !!editing?.apiKeyConfigured && !form.apiKey.trim();
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -195,9 +165,6 @@ export default function LlmProvidersPage() {
     },
   ];
 
-  const models = modelsQuery.data?.models ?? [];
-  const showModelSelect = canFetchModels && editing?.apiKeyConfigured && !form.apiKey.trim();
-
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
@@ -268,37 +235,23 @@ export default function LlmProvidersPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="mb-1 block text-sm font-medium">Modelo por defecto</label>
             {showModelSelect ? (
-              modelsQuery.isLoading ? (
-                <p className="text-sm text-[var(--foreground-muted)]">Cargando modelos…</p>
-              ) : modelsQuery.isError ? (
+              <LlmModelSelect
+                providerId={editing!.id}
+                value={form.defaultModel}
+                onChange={(modelId) => setForm((f) => ({ ...f, defaultModel: modelId }))}
+                enabled={dialogOpen && !!editing?.apiKeyConfigured}
+              />
+            ) : (
+              <>
+                <label className="mb-1 block text-sm font-medium">Modelo por defecto</label>
                 <InputText
                   value={form.defaultModel}
                   onChange={(e) => setForm((f) => ({ ...f, defaultModel: e.target.value }))}
-                  placeholder="deepseek/deepseek-v4-flash"
+                  placeholder="Guarda el proveedor con API key para ver catálogo"
                   fullWidth
                 />
-              ) : (
-                <select
-                  className={selectClass}
-                  value={form.defaultModel}
-                  onChange={(e) => setForm((f) => ({ ...f, defaultModel: e.target.value }))}
-                >
-                  {models.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {formatModelOptionLabel(item)}
-                    </option>
-                  ))}
-                </select>
-              )
-            ) : (
-              <InputText
-                value={form.defaultModel}
-                onChange={(e) => setForm((f) => ({ ...f, defaultModel: e.target.value }))}
-                placeholder="Guarda el proveedor con API key para ver catálogo"
-                fullWidth
-              />
+              </>
             )}
           </div>
 
