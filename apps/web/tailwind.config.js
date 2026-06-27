@@ -53,6 +53,11 @@ export default {
         '2xl': '2px',
         '3xl': '2px',
       },
+      /* Layout widths — evita colisión con spacing numérico Letter (p. ej. w-72 ≠ 72px) */
+      width: {
+        sidebar: '18rem',
+        'sidebar-collapsed': '5rem',
+      },
     },
   },
   plugins: [],
