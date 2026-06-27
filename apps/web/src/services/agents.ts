@@ -1,5 +1,5 @@
 import { apiFetch } from '@/services/api';
-import type { AgentInterview } from '@/types/agents';
+import type { AgentInterview, CompetitorAnalysis } from '@/types/agents';
 
 export async function listInterviews(): Promise<AgentInterview[]> {
   return apiFetch<AgentInterview[]>('/agents/interviews');
@@ -24,4 +24,20 @@ export async function submitAnswer(
     method: 'POST',
     body: JSON.stringify({ answer }),
   });
+}
+
+// Competitor Intel
+export async function listCompetitorAnalyses(): Promise<CompetitorAnalysis[]> {
+  return apiFetch<CompetitorAnalysis[]>('/agents/competitor-intel');
+}
+
+export async function triggerCompetitorAnalysis(competitors?: string): Promise<CompetitorAnalysis> {
+  return apiFetch<CompetitorAnalysis>('/agents/competitor-intel', {
+    method: 'POST',
+    body: JSON.stringify({ competitors }),
+  });
+}
+
+export async function getCompetitorAnalysis(id: string): Promise<CompetitorAnalysis> {
+  return apiFetch<CompetitorAnalysis>(`/agents/competitor-intel/${id}`);
 }

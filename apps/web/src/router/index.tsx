@@ -31,6 +31,7 @@ const ReportDetailPage = lazy(() => import('@/pages/reports/ReportDetailPage'));
 const OnboardingWizardPage = lazy(() => import('@/pages/onboarding/OnboardingWizardPage'));
 const AgentListPage = lazy(() => import('@/pages/agents/AgentListPage'));
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
+const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
 
 function Loading() {
   return (
@@ -64,6 +65,7 @@ export function AppRouter() {
             <Route path="/agents" element={<AgentListPage />} />
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
+            <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />
