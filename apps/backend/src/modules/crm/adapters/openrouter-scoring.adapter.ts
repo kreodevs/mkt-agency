@@ -23,7 +23,11 @@ export class OpenRouterScoringAdapter implements ScoringAdapterPort {
       recentInteractionTypes: context.interactions.slice(0, 5).map((i) => i.type),
     });
 
-    const result = await this.llm.chatJson<{ score?: number }>(systemPrompt, userPrompt);
+    const result = await this.llm.chatJson<{ score?: number }>(
+      systemPrompt,
+      userPrompt,
+      { taskType: 'lead_scoring' },
+    );
     const raw = result?.score ?? 0;
     return Math.min(100, Math.max(0, Math.round(raw)));
   }

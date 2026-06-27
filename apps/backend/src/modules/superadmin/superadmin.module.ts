@@ -11,6 +11,7 @@ import { TypeOrmTenantRepository } from '../tenant/infrastructure/typeorm/typeor
 import { ImpersonateHandler } from './commands/impersonate.handler';
 import { ImpersonationLogEntity } from './infrastructure/typeorm/impersonation-log.entity';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
+import { LlmModule } from '../../shared/ai/llm.module';
 import { SuperadminController } from './superadmin.controller';
 import { SuperadminService } from './superadmin.service';
 
@@ -18,6 +19,7 @@ import { SuperadminService } from './superadmin.service';
   imports: [
     CqrsModule,
     AuthSharedModule,
+    LlmModule,
     TypeOrmModule.forFeature([
       ImpersonationLogEntity,
       TenantEntity,

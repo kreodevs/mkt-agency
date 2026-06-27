@@ -39,6 +39,7 @@ export class OpenRouterSuggestionAdapter implements SuggestionAdapterPort {
     const result = await this.llm.chatJson<Record<string, unknown>>(
       systemPrompt,
       userPrompt,
+      { taskType: 'section_suggestion' },
     );
 
     return result ?? {};

@@ -51,6 +51,9 @@ import { ContentEntity } from './modules/content/infrastructure/typeorm/content.
 import { EventEntity } from './modules/content/infrastructure/typeorm/event.entity';
 import { UsersModule } from './modules/users/users.module';
 import { AuditLogEntity } from './modules/users/infrastructure/typeorm/audit-log.entity';
+import { PackageModule } from './modules/packages/package.module';
+import { PackageEntity } from './modules/packages/infrastructure/typeorm/package.entity';
+import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -88,6 +91,8 @@ import {
         entities: [
           UserEntity,
           TenantEntity,
+          PackageEntity,
+          LlmTaskConfigEntity,
           SessionEntity,
           SecurityEventEntity,
           ImpersonationLogEntity,
@@ -126,6 +131,7 @@ import {
     AuthSharedModule,
     AuthModule,
     SetupModule,
+    PackageModule,
     TenantModule,
     CompanyProfileModule,
     CampaignModule,

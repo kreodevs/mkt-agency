@@ -13,6 +13,9 @@ import {
 import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
 import { ListUsersResponseDto } from './dto/list-users.response.dto';
 import { UpdateUserBySuperadminDto } from './dto/update-user.request.dto';
+import { UpdateLlmTaskConfigDto } from './dto/llm-task-config.dto';
+import { LlmConfigService } from '../../shared/ai/llm-config.service';
+import { LlmTaskType } from '../../shared/ai/llm-task-types';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 
 @Injectable()
@@ -23,6 +26,7 @@ export class SuperadminService {
     @Inject(USER_REPOSITORY)
     private readonly users: UserRepositoryPort,
     private readonly impersonationLogger: ImpersonationLoggerService,
+    private readonly llmConfigService: LlmConfigService,
   ) {}
 
   impersonate(
@@ -119,5 +123,13 @@ export class SuperadminService {
       isSuperadmin: updated.isSuperadmin,
       tenantId: updated.tenantId,
     };
+  }
+
+  listLlmTasks() {
+    return this.llmConfigService.listAll();
+  }
+
+  updateLlmTask(taskType: LlmTaskType, body: UpdateLlmTaskConfigDto) {
+    return this.llmConfigService.update(taskType, body);
   }
 }

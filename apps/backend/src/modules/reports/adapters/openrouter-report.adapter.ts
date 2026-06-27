@@ -25,7 +25,11 @@ export class OpenRouterReportAdapter implements ReportAdapterPort {
       campaign: context.campaign,
     });
 
-    const result = await this.llm.chatJson<GeneratedReportData>(systemPrompt, userPrompt);
+    const result = await this.llm.chatJson<GeneratedReportData>(
+      systemPrompt,
+      userPrompt,
+      { taskType: 'report_generation' },
+    );
 
     if (!result?.summary || !Array.isArray(result.recommendations)) {
       throw new Error('Invalid report response from LLM');

@@ -14,10 +14,12 @@ export class TenantResponseDto {
   name!: string;
   slug!: string;
   plan!: string;
+  packageId!: string | null;
   status!: string;
   settings!: Record<string, unknown>;
   maxUsers!: number;
   maxAssetsSize!: number;
+  maxFileSize!: number;
   createdAt!: Date;
   updatedAt!: Date;
   owner?: TenantOwnerResponseDto;
@@ -36,10 +38,12 @@ export function toTenantResponse(tenant: Tenant): TenantResponseDto {
     name: tenant.name,
     slug: tenant.slug,
     plan: tenant.plan,
+    packageId: tenant.packageId,
     status: tenant.status,
     settings: tenant.settings,
     maxUsers: tenant.maxUsers,
     maxAssetsSize: tenant.maxAssetsSize,
+    maxFileSize: tenant.maxFileSize,
     createdAt: tenant.createdAt,
     updatedAt: tenant.updatedAt,
   };

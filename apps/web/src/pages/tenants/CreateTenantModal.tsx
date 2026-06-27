@@ -1,13 +1,13 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/molecules/Dialog';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
+import { listPackages } from '@/services/packages';
 import { createTenant, type CreateTenantPayload } from '@/services/tenants';
-import type { TenantPlan } from '@/types/tenant';
 
 interface CreateTenantModalProps {
   visible: boolean;
@@ -28,21 +28,36 @@ function slugify(name: string): string {
     .slice(0, 100);
 }
 
+function formatBytes(bytes: number) {
+  if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} GB`;
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
+  return `${Math.round(bytes / 1024)} KB`;
+}
+
 export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantModalProps) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
-  const [plan, setPlan] = useState<TenantPlan>('starter');
+  const [packageId, setPackageId] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
+
+  const packagesQuery = useQuery({
+    queryKey: ['packages', { activeOnly: true }],
+    queryFn: () => listPackages(false),
+    enabled: visible,
+  });
+
+  const activePackages = packagesQuery.data?.items ?? [];
+  const selectedPackage = activePackages.find((pkg) => pkg.id === packageId);
 
   useEffect(() => {
     if (!visible) return;
     setName('');
     setSlug('');
     setSlugTouched(false);
-    setPlan('starter');
+    setPackageId('');
     setOwnerName('');
     setOwnerEmail('');
     setOwnerPassword('');
@@ -53,6 +68,12 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
       setSlug(slugify(name));
     }
   }, [name, slugTouched]);
+
+  useEffect(() => {
+    if (activePackages.length && !packageId) {
+      setPackageId(activePackages[0].id);
+    }
+  }, [activePackages, packageId]);
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateTenantPayload) => createTenant(payload),
@@ -69,10 +90,14 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!packageId) {
+      toast.error('Selecciona un paquete');
+      return;
+    }
     createMutation.mutate({
       name: name.trim(),
       slug: slug.trim(),
-      plan,
+      packageId,
       owner: {
         name: ownerName.trim(),
         email: ownerEmail.trim(),
@@ -119,16 +144,26 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
           placeholder="mi-agencia"
         />
         <div className="flex flex-col gap-[var(--spacing-xs)]">
-          <label className="text-sm font-medium text-[var(--foreground)]">Plan</label>
+          <label className="text-sm font-medium text-[var(--foreground)]">Paquete</label>
           <select
             className={selectClass}
-            value={plan}
-            onChange={(e) => setPlan(e.target.value as TenantPlan)}
+            value={packageId}
+            onChange={(e) => setPackageId(e.target.value)}
+            required
+            disabled={packagesQuery.isLoading || activePackages.length === 0}
           >
-            <option value="starter">Starter</option>
-            <option value="professional">Professional</option>
-            <option value="enterprise">Enterprise</option>
+            {activePackages.map((pkg) => (
+              <option key={pkg.id} value={pkg.id}>
+                {pkg.name}
+              </option>
+            ))}
           </select>
+          {selectedPackage && (
+            <p className="text-xs text-[var(--foreground-muted)]">
+              {selectedPackage.maxUsers} usuarios · {formatBytes(selectedPackage.maxAssetsSize)}{' '}
+              storage · {formatBytes(selectedPackage.maxFileSize)}/archivo
+            </p>
+          )}
         </div>
 
         <div className="border-t border-[var(--border)] pt-4">

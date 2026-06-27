@@ -3,13 +3,12 @@ import type {
   ListTenantsParams,
   PaginatedTenantsResponse,
   Tenant,
-  TenantPlan,
 } from '@/types/tenant';
 
 export interface CreateTenantPayload {
   name: string;
   slug: string;
-  plan: TenantPlan;
+  packageId: string;
   owner: {
     email: string;
     password: string;

@@ -57,6 +57,31 @@ export async function updateSuperadminUser(
   });
 }
 
+export interface LlmTaskConfig {
+  taskType: string;
+  label: string;
+  provider: string;
+  model: string;
+  temperature: number;
+  maxTokens?: number;
+  systemPromptTemplate?: string | null;
+  enabled: boolean;
+}
+
+export async function listLlmTasks(): Promise<LlmTaskConfig[]> {
+  return apiFetch<LlmTaskConfig[]>('/superadmin/llm-tasks');
+}
+
+export async function updateLlmTask(
+  taskType: string,
+  payload: Partial<Omit<LlmTaskConfig, 'taskType'>>,
+): Promise<LlmTaskConfig> {
+  return apiFetch<LlmTaskConfig>(`/superadmin/llm-tasks/${taskType}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function startImpersonation(payload: {
   tenantId: string;
   userId: string;

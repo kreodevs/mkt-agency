@@ -14,6 +14,7 @@ import {
   inferAssetType,
   MAX_ASSET_FILE_SIZE,
 } from './domain/asset.constants';
+import { TenantLimitsService } from '../packages/services/tenant-limits.service';
 import { ListAssetsQueryDto, UpdateAssetDto } from './dto/asset.request.dto';
 import {
   AssetDownloadUrlResponseDto,
@@ -42,6 +43,7 @@ export class AssetService {
     @Inject(STORAGE_ADAPTER)
     private readonly storage: StorageAdapterPort,
     private readonly deleteAssetHandler: DeleteAssetHandler,
+    private readonly tenantLimitsService: TenantLimitsService,
   ) {}
 
   async list(tenantId: string, query: ListAssetsQueryDto): Promise<PaginatedAssetsResponseDto> {
@@ -102,11 +104,13 @@ export class AssetService {
 
     if (file.size > MAX_ASSET_FILE_SIZE) {
       throw new PayloadTooLargeException({
-        error: 'File size exceeds limit',
+        error: 'File size exceeds platform maximum',
         code: 'PAYLOAD_TOO_LARGE',
         maxSize: MAX_ASSET_FILE_SIZE,
       });
     }
+
+    await this.tenantLimitsService.assertCanUpload(tenantId, file.size);
 
     const mimeType = file.mimetype || 'application/octet-stream';
     const fileKey = `tenants/${tenantId}/${randomUUID()}/${file.originalname}`;

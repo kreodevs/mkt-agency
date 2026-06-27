@@ -1,20 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
-import { ALLOWED_TENANT_PLANS } from '../domain/tenant.constants';
 
 export class CreateTenantCommand {
   constructor(
     public readonly name: string,
     public readonly slug: string,
-    public readonly plan: string,
+    public readonly packageId: string,
     public readonly ownerEmail: string,
     public readonly ownerPassword: string,
     public readonly ownerName: string,
   ) {
-    if (!ALLOWED_TENANT_PLANS.includes(plan as (typeof ALLOWED_TENANT_PLANS)[number])) {
+    if (!packageId?.trim()) {
       throw new BadRequestException({
-        error: 'Invalid tenant plan',
+        error: 'packageId is required',
         code: 'VALIDATION_ERROR',
-        details: `Allowed plans: ${ALLOWED_TENANT_PLANS.join(', ')}`,
       });
     }
   }
@@ -25,10 +23,12 @@ export interface CreateTenantResult {
   name: string;
   slug: string;
   plan: string;
+  packageId: string | null;
   status: string;
   settings: Record<string, unknown>;
   maxUsers: number;
   maxAssetsSize: number;
+  maxFileSize: number;
   createdAt: Date;
   updatedAt: Date;
   owner: {

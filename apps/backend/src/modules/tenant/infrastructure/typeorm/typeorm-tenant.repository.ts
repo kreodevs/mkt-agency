@@ -76,6 +76,9 @@ export class TypeOrmTenantRepository implements TenantRepositoryPort {
     if (data.plan !== undefined) {
       entity.plan = data.plan;
     }
+    if (data.packageId !== undefined) {
+      entity.packageId = data.packageId;
+    }
     if (data.status !== undefined) {
       entity.status = data.status;
     }
@@ -87,6 +90,9 @@ export class TypeOrmTenantRepository implements TenantRepositoryPort {
     }
     if (data.maxAssetsSize !== undefined) {
       entity.maxAssetsSize = String(data.maxAssetsSize);
+    }
+    if (data.maxFileSize !== undefined) {
+      entity.maxFileSize = String(data.maxFileSize);
     }
 
     const saved = await this.tenants.save(entity);
@@ -104,10 +110,12 @@ export class TypeOrmTenantRepository implements TenantRepositoryPort {
       name: entity.name,
       slug: entity.slug,
       plan: entity.plan,
+      packageId: entity.packageId,
       status: entity.status,
       settings: entity.settings,
       maxUsers: entity.maxUsers,
       maxAssetsSize: Number(entity.maxAssetsSize),
+      maxFileSize: Number(entity.maxFileSize),
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

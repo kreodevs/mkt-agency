@@ -3,10 +3,12 @@ export interface Tenant {
   name: string;
   slug: string;
   plan: string;
+  packageId: string | null;
   status: string;
   settings: Record<string, unknown>;
   maxUsers: number;
   maxAssetsSize: number;
+  maxFileSize: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,14 +17,20 @@ export interface CreateTenantData {
   name: string;
   slug: string;
   plan: string;
+  packageId?: string | null;
+  maxUsers?: number;
+  maxAssetsSize?: number;
+  maxFileSize?: number;
 }
 
 export interface UpdateTenantData {
   plan?: string;
+  packageId?: string | null;
   status?: string;
   settings?: Record<string, unknown>;
   maxUsers?: number;
   maxAssetsSize?: number;
+  maxFileSize?: number;
 }
 
 export interface ListTenantsParams {

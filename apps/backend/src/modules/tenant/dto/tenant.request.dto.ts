@@ -5,6 +5,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   Min,
 } from 'class-validator';
@@ -17,6 +18,10 @@ export class UpdateTenantRequestDto {
   @IsOptional()
   @IsIn([...ALLOWED_TENANT_PLANS])
   plan?: string;
+
+  @IsOptional()
+  @IsUUID()
+  packageId?: string;
 
   @IsOptional()
   @IsIn([...ALLOWED_TENANT_STATUSES])
@@ -37,6 +42,12 @@ export class UpdateTenantRequestDto {
   @IsInt()
   @Min(1)
   maxAssetsSize?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  maxFileSize?: number;
 }
 
 export class ListTenantsQueryDto {

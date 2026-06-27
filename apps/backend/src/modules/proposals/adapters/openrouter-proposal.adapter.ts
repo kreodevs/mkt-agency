@@ -26,6 +26,7 @@ export class OpenRouterProposalAdapter implements ProposalAdapterPort {
     const result = await this.llm.chatJson<GeneratedProposalContent>(
       systemPrompt,
       userPrompt,
+      { taskType: 'proposal_generation' },
     );
 
     if (

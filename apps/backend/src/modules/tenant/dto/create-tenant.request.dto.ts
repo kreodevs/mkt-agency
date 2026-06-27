@@ -1,18 +1,16 @@
 import { Type } from 'class-transformer';
 import {
   IsEmail,
-  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
-  Max,
   MaxLength,
   Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { ALLOWED_TENANT_PLANS } from '../domain/tenant.constants';
 
 export class CreateTenantOwnerDto {
   @IsEmail()
@@ -48,8 +46,8 @@ export class CreateTenantRequestDto {
   })
   slug!: string;
 
-  @IsIn([...ALLOWED_TENANT_PLANS])
-  plan!: string;
+  @IsUUID()
+  packageId!: string;
 
   @ValidateNested()
   @Type(() => CreateTenantOwnerDto)

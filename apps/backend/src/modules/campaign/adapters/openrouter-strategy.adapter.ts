@@ -26,6 +26,7 @@ export class OpenRouterStrategyAdapter implements StrategyAdapterPort {
     const result = await this.llm.chatJson<GeneratedStrategyResult>(
       systemPrompt,
       userPrompt,
+      { taskType: 'campaign_strategy' },
     );
 
     if (!result?.strategy || !Array.isArray(result.budgets)) {

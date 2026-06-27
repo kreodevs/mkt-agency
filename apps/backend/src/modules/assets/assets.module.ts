@@ -4,6 +4,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { memoryStorage } from 'multer';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
+import { PackageModule } from '../packages/package.module';
 import { MAX_ASSET_FILE_SIZE } from './domain/asset.constants';
 import { DeleteAssetHandler } from './commands/delete-asset.handler';
 import { AssetFolderController } from './asset-folder.controller';
@@ -26,6 +27,7 @@ import { AssetEntity } from './infrastructure/typeorm/asset.entity';
 @Module({
   imports: [
     AuthSharedModule,
+    PackageModule,
     ConfigModule,
     MulterModule.register({
       storage: memoryStorage(),

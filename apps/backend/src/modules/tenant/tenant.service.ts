@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import { TenantLimitsService } from '../packages/services/tenant-limits.service';
 import {
   CreateTenantCommand,
   CreateTenantResult,
@@ -28,6 +29,7 @@ export class TenantService {
     @Inject(TENANT_REPOSITORY)
     private readonly tenantRepository: TenantRepositoryPort,
     private readonly commandBus: CommandBus,
+    private readonly tenantLimitsService: TenantLimitsService,
   ) {}
 
   async create(body: CreateTenantRequestDto): Promise<TenantResponseDto> {
@@ -38,7 +40,7 @@ export class TenantService {
       new CreateTenantCommand(
         body.name,
         body.slug,
-        body.plan,
+        body.packageId,
         body.owner.email,
         body.owner.password,
         body.owner.name,
@@ -79,6 +81,19 @@ export class TenantService {
     id: string,
     body: UpdateTenantRequestDto,
   ): Promise<TenantResponseDto> {
+    if (body.packageId) {
+      await this.tenantLimitsService.applyPackageLimits(id, body.packageId);
+      const { packageId: _packageId, plan: _plan, ...rest } = body;
+      if (Object.keys(rest).length === 0) {
+        const tenant = await this.tenantRepository.findById(id);
+        if (!tenant) {
+          throw new TenantNotFoundException();
+        }
+        return toTenantResponse(tenant);
+      }
+      body = rest;
+    }
+
     const tenant = await this.tenantRepository.update(id, body);
     if (!tenant) {
       throw new TenantNotFoundException();

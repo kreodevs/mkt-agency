@@ -1,8 +1,9 @@
-import { Inject } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DataSource } from 'typeorm';
 import { Password } from '../../../shared/domain/password.value-object';
 import { UserEntity } from '../../../shared/infrastructure/typeorm/user.entity';
+import { PackageService } from '../../packages/package.service';
 import { ALL_SECTION_KEYS } from '../../company-profile/domain/section-keys';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from '../../company-profile/infrastructure/typeorm/company-profile-section.entity';
@@ -25,12 +26,21 @@ export class CreateTenantHandler
     @Inject(TENANT_REPOSITORY)
     private readonly tenantRepository: TenantRepositoryPort,
     private readonly dataSource: DataSource,
+    private readonly packageService: PackageService,
   ) {}
 
   async execute(command: CreateTenantCommand): Promise<CreateTenantResult> {
     const existing = await this.tenantRepository.findBySlug(command.slug);
     if (existing) {
       throw new SlugAlreadyExistsException();
+    }
+
+    const pkg = await this.packageService.findEntityById(command.packageId);
+    if (!pkg || !pkg.isActive) {
+      throw new BadRequestException({
+        error: 'Invalid or inactive package',
+        code: 'VALIDATION_ERROR',
+      });
     }
 
     const password = await Password.createFromPlaintext(command.ownerPassword);
@@ -47,9 +57,13 @@ export class CreateTenantHandler
       const tenantEntity = tenantRepo.create({
         name: command.name.trim(),
         slug: command.slug.trim().toLowerCase(),
-        plan: command.plan,
+        plan: pkg.slug,
+        packageId: pkg.id,
         status: 'active',
         settings: {},
+        maxUsers: pkg.maxUsers,
+        maxAssetsSize: pkg.maxAssetsSize,
+        maxFileSize: pkg.maxFileSize,
       });
       const savedTenant = await tenantRepo.save(tenantEntity);
 
@@ -90,10 +104,12 @@ export class CreateTenantHandler
         name: savedTenant.name,
         slug: savedTenant.slug,
         plan: savedTenant.plan,
+        packageId: savedTenant.packageId,
         status: savedTenant.status,
         settings: savedTenant.settings,
         maxUsers: savedTenant.maxUsers,
         maxAssetsSize: Number(savedTenant.maxAssetsSize),
+        maxFileSize: Number(savedTenant.maxFileSize),
         createdAt: savedTenant.createdAt,
         updatedAt: savedTenant.updatedAt,
         owner: {

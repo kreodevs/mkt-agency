@@ -6,10 +6,12 @@ export interface Tenant {
   name: string;
   slug: string;
   plan: TenantPlan;
+  packageId: string | null;
   status: TenantStatus;
   settings: Record<string, unknown>;
   maxUsers: number;
   maxAssetsSize: number;
+  maxFileSize: number;
   createdAt: string;
   updatedAt: string;
 }
