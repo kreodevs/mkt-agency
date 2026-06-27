@@ -28,6 +28,9 @@ RUN yarn install --frozen-lockfile --production=true \
   && yarn cache clean
 
 COPY --from=build /app/apps/backend/dist apps/backend/dist
+COPY scripts/docker-api-entrypoint.sh /app/docker-api-entrypoint.sh
+
+RUN chmod +x /app/docker-api-entrypoint.sh
 
 USER appuser
 
@@ -35,4 +38,5 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
+ENTRYPOINT ["/app/docker-api-entrypoint.sh"]
 CMD ["node", "apps/backend/dist/main.js"]

@@ -1105,3 +1105,12 @@ _Actualiza este archivo al cerrar tareas o hitos._
 - `yarn build` OK.
 
 **Próximo bloque sugerido:** middleware tenant_id; páginas frontend pendientes; entrypoint migraciones en deploy.
+
+### Sesión 2026-06-26 — T-007 alertas de seguridad
+
+- `SecurityAlertObserver` → outbox `SecurityAlert` para severidad `high`/`critical`.
+- Worker cola `security-alert` (cada 30s) + `SlackSecurityAlertAdapter` (`SLACK_SECURITY_WEBHOOK_URL`).
+- `account_locked` pasa a severidad `high`; `refresh_token_reuse` sigue `critical`.
+- `yarn build` OK.
+
+**Próximo bloque sugerido:** middleware tenant_id; entrypoint migraciones deploy; reconciliar tasks frontend infra.

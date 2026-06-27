@@ -868,11 +868,11 @@
 
 ### T-007: Implementar sistema de alertas para eventos de seguridad high/critical
 
-- [ ] [P] Detectar eventos de seguridad con severidad high/critical y emitir a outbox
+- [x] [P] Detectar eventos de seguridad con severidad high/critical y emitir a outbox
   **MDD:** §6
   **Archivo:** `apps/backend/src/modules/security/observers/security-alert.observer.ts`
 
-- [ ] [P] Worker de notificaciones que consuma eventos de outbox y envíe alerta (Slack/email)
+- [x] [P] Worker de notificaciones que consuma eventos de outbox y envíe alerta (Slack/email)
   **MDD:** §6
   **Archivo:** `apps/backend/src/modules/security/workers/alert.worker.ts`
 

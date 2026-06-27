@@ -11,13 +11,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-mktos}
+      POSTGRES_USER: ${DB_USER:-mktos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mktos} -d ${DB_NAME:-mktos}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,9 +69,9 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-mktos}
+      DB_USER: ${DB_USER:-mktos}
+      DB_PASSWORD: ${DB_PASSWORD:-change_me}
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
@@ -113,12 +113,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      RUN_MIGRATIONS: "false"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-mktos}
+      DB_USER: ${DB_USER:-mktos}
+      DB_PASSWORD: ${DB_PASSWORD:-change_me}
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
@@ -130,11 +131,12 @@ services:
       AI_API_URL: ${AI_API_URL}
       AI_API_KEY: ${AI_API_KEY}
       AI_MODEL: ${AI_MODEL}
-    command: ["node", "apps/backend/dist/main.js"]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      api:
         condition: service_healthy
     networks:
       - internal

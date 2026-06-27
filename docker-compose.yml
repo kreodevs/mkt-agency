@@ -5,9 +5,9 @@ services:
     container_name: mkt-agency-postgres
     env_file: .env
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-mktos}
+      POSTGRES_USER: ${DB_USER:-mktos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -92,6 +92,7 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+      RUN_MIGRATIONS: "false"
       DB_HOST: postgres
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379
@@ -101,7 +102,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["node", "apps/backend/dist/main.js"]
+      api:
+        condition: service_healthy
 
   frontend:
     build:

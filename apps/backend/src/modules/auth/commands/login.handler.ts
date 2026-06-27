@@ -88,7 +88,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
         await this.users.lockUntil(user.id, lockedUntil);
         await this.securityEvents.record({
           eventType: 'account_locked',
-          severity: 'medium',
+          severity: 'high',
           userId: user.id,
           tenantId: user.tenantId,
           metadata: { attempts },

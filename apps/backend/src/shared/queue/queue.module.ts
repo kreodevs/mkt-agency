@@ -7,6 +7,7 @@ import {
   QUEUE_PROPOSAL_GENERATION,
   QUEUE_REPORT_GENERATION,
   QUEUE_SECTION_SUGGESTION,
+  QUEUE_SECURITY_ALERT,
   QUEUE_SSL_PROVISION,
 } from './queue.constants';
 
@@ -28,6 +29,7 @@ import {
       { name: QUEUE_PROPOSAL_GENERATION },
       { name: QUEUE_REPORT_GENERATION },
       { name: QUEUE_AUDIT_RETENTION },
+      { name: QUEUE_SECURITY_ALERT },
     ),
   ],
   exports: [BullModule],

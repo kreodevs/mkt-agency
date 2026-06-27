@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import path from 'path';
 import { DataSource } from 'typeorm';
 import { SessionEntity } from '../modules/auth/infrastructure/typeorm/session.entity';
 import { AuditLogEntity } from '../modules/users/infrastructure/typeorm/audit-log.entity';
@@ -33,14 +34,19 @@ import { SecurityEventEntity } from '../modules/security/infrastructure/typeorm/
 import { ImpersonationLogEntity } from '../modules/superadmin/infrastructure/typeorm/impersonation-log.entity';
 import { TenantEntity } from '../modules/tenant/infrastructure/typeorm/tenant.entity';
 import { UserEntity } from '../shared/infrastructure/typeorm/user.entity';
+import {
+  resolveDatabaseName,
+  resolveDatabasePassword,
+  resolveDatabaseUser,
+} from '../shared/config/database.config';
 
 export default new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST ?? 'localhost',
   port: parseInt(process.env.DB_PORT ?? '5432', 10),
-  username: process.env.DB_USER ?? 'mktos',
-  password: process.env.DB_PASSWORD ?? 'change_me',
-  database: process.env.DB_NAME ?? 'mktos',
+  username: resolveDatabaseUser(),
+  password: resolveDatabasePassword(),
+  database: resolveDatabaseName(),
   entities: [
     UserEntity,
     TenantEntity,
@@ -76,6 +82,12 @@ export default new DataSource({
     CompetitorEntity,
     CompetitorMentionEntity,
   ],
-  migrations: ['src/database/migrations/*.ts'],
+  migrations: [
+    path.join(
+      __dirname,
+      'migrations',
+      __filename.endsWith('.js') ? '*.js' : '*.ts',
+    ),
+  ],
   migrationsTableName: 'typeorm_migrations',
 });

@@ -58,6 +58,11 @@ import { LoggerModule } from './shared/logger/logger.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { RateLimitGuard } from './modules/auth/guards/rate-limit.guard';
 import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
+import {
+  resolveDatabaseName,
+  resolveDatabasePassword,
+  resolveDatabaseUser,
+} from './shared/config/database.config';
 
 @Module({
   imports: [
@@ -74,9 +79,12 @@ import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
         type: 'postgres' as const,
         host: config.get<string>('DB_HOST', 'localhost'),
         port: parseInt(config.get<string>('DB_PORT', '5432'), 10),
-        username: config.get<string>('DB_USER', 'mktos'),
-        password: config.get<string>('DB_PASSWORD', 'change_me'),
-        database: config.get<string>('DB_NAME', 'mktos'),
+        username: config.get<string>('DB_USER')?.trim() || resolveDatabaseUser(),
+        password:
+          config.get<string>('DB_PASSWORD')?.trim() ||
+          config.get<string>('DB_PASS')?.trim() ||
+          resolveDatabasePassword(),
+        database: config.get<string>('DB_NAME')?.trim() || resolveDatabaseName(),
         entities: [
           UserEntity,
           TenantEntity,

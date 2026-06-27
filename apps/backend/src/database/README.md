@@ -2,11 +2,14 @@
 
 En **desarrollo**, `synchronize: true` crea/actualiza el esquema automáticamente.
 
-En **producción**, ejecutar migraciones antes del deploy:
+En **producción (Docker/Dokploy)**, el contenedor `api` ejecuta migraciones al arrancar vía `scripts/docker-api-entrypoint.sh` (`migration:run:prod`). El worker usa `RUN_MIGRATIONS=false`.
+
+Manual (local o contenedor):
 
 ```bash
 cd apps/backend
-yarn migration:run
+yarn migration:run          # desarrollo (TS + ts-node)
+yarn migration:run:prod     # compilado (dist/*.js)
 ```
 
 ## Archivos
@@ -21,6 +24,7 @@ yarn migration:run
 | `1730000000005-CreateReports.ts` | `reports` |
 | `1730000000006-CreateCompetitors.ts` | `competitors`, `competitor_mentions` |
 | `1730000000007-CreateAuditLogs.ts` | `audit_logs` |
+| `1730000000008-UpgradeLegacyUsersSchema.ts` | Añade columnas monorepo en `users` legacy (camelCase → snake_case) |
 
 DataSource: `src/database/data-source.ts`.
 

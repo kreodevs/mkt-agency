@@ -26,4 +26,4 @@ Si ves `Bind for 0.0.0.0:3000 failed: port is already allocated`:
 1. **En Dokploy:** cambia el compose path a `docker-compose.dokploy.yml` (no `docker-compose.yml`).
 2. **En local:** para el proceso en 3000 (`yarn start:dev`, otro contenedor) o define `API_PUBLISH_PORT=3002` en `.env`.
 
-En producción ejecutar migraciones antes del deploy (`yarn workspace @mkt-agency/backend migration:run`).
+En producción las migraciones se aplican al arrancar el contenedor `api` (entrypoint en `Dockerfile.api`). El worker no las ejecuta (`RUN_MIGRATIONS=false`).
