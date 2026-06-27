@@ -38,6 +38,9 @@ import { ReportEntity } from './modules/reports/infrastructure/typeorm/report.en
 import { CompetitorsModule } from './modules/competitors/competitors.module';
 import { CompetitorEntity } from './modules/competitors/infrastructure/typeorm/competitor.entity';
 import { CompetitorMentionEntity } from './modules/competitors/infrastructure/typeorm/competitor-mention.entity';
+import { AgentsModule } from './modules/agents/agents.module';
+import { AgentInterviewEntity } from './modules/agents/domain/agent-interview.entity';
+import { AgentInterviewMessageEntity } from './modules/agents/domain/agent-interview-message.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
@@ -126,6 +129,8 @@ import {
           ReportEntity,
           CompetitorEntity,
           CompetitorMentionEntity,
+          AgentInterviewEntity,
+          AgentInterviewMessageEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -146,6 +151,7 @@ import {
     ProposalsModule,
     ReportsModule,
     CompetitorsModule,
+    AgentsModule,
     AuditModule,
     SuperadminModule,
     UsersModule,

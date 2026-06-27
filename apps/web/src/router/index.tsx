@@ -29,6 +29,8 @@ const CompetitorsPage = lazy(() => import('@/pages/settings/CompetitorsPage'));
 const ReportListPage = lazy(() => import('@/pages/reports/ReportListPage'));
 const ReportDetailPage = lazy(() => import('@/pages/reports/ReportDetailPage'));
 const OnboardingWizardPage = lazy(() => import('@/pages/onboarding/OnboardingWizardPage'));
+const AgentListPage = lazy(() => import('@/pages/agents/AgentListPage'));
+const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 
 function Loading() {
   return (
@@ -59,6 +61,9 @@ export function AppRouter() {
             <Route path="/admin/security-events" element={<SecurityEventsPage />} />
           </Route>
           <Route element={<TenantGuard />}>
+            <Route path="/agents" element={<AgentListPage />} />
+            <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
+            <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />
