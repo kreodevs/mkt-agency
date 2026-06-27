@@ -19,6 +19,7 @@ import {
   UpdateLlmTaskConfigDto,
 } from './dto/llm-task-config.dto';
 import { LlmConfigService } from '../../shared/ai/llm-config.service';
+import { LlmModelsCatalogService } from '../../shared/ai/llm-models-catalog.service';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { LlmTaskType } from '../../shared/ai/llm-task-types';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
@@ -33,6 +34,7 @@ export class SuperadminService {
     private readonly impersonationLogger: ImpersonationLoggerService,
     private readonly llmConfigService: LlmConfigService,
     private readonly llmProviderService: LlmProviderService,
+    private readonly llmModelsCatalogService: LlmModelsCatalogService,
   ) {}
 
   impersonate(
@@ -148,10 +150,18 @@ export class SuperadminService {
   }
 
   updateLlmProvider(id: string, body: UpdateLlmProviderDto) {
-    return this.llmProviderService.update(id, body);
+    return this.llmProviderService.update(id, body).then((result) => {
+      this.llmModelsCatalogService.invalidateProvider(id);
+      return result;
+    });
   }
 
   deleteLlmProvider(id: string) {
+    this.llmModelsCatalogService.invalidateProvider(id);
     return this.llmProviderService.remove(id);
+  }
+
+  listLlmProviderModels(providerId: string) {
+    return this.llmModelsCatalogService.listForProvider(providerId);
   }
 }

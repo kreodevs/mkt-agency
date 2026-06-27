@@ -1,4 +1,5 @@
 import { apiFetch } from '@/services/api';
+import type { LlmModelsListResponse } from '@/lib/llm-models';
 import {
   useAuthStore,
   type AuthTokens,
@@ -120,6 +121,10 @@ export async function updateLlmProvider(
 
 export async function deleteLlmProvider(id: string): Promise<void> {
   await apiFetch<void>(`/superadmin/llm-providers/${id}`, { method: 'DELETE' });
+}
+
+export async function listLlmProviderModels(providerId: string): Promise<LlmModelsListResponse> {
+  return apiFetch<LlmModelsListResponse>(`/superadmin/llm-providers/${providerId}/models`);
 }
 
 export async function listLlmTasks(): Promise<LlmTaskConfig[]> {

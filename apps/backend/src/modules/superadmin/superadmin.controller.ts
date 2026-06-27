@@ -100,6 +100,12 @@ export class SuperadminController {
     return this.superadminService.updateLlmProvider(id, body);
   }
 
+  @Get('llm-providers/:id/models')
+  @UseGuards(SuperadminGuard)
+  listLlmProviderModels(@Param('id') id: string) {
+    return this.superadminService.listLlmProviderModels(id);
+  }
+
   @Delete('llm-providers/:id')
   @UseGuards(SuperadminGuard)
   @AuditLog({ action: 'superadmin.delete_llm_provider', resourceType: 'llm_provider' })

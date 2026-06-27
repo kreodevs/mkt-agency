@@ -131,6 +131,17 @@ export class LlmProviderService {
     return this.toResponse(saved);
   }
 
+  async findEntityByIdOrFail(id: string): Promise<LlmProviderEntity> {
+    const row = await this.findEntityById(id);
+    if (!row) {
+      throw new NotFoundException({
+        error: 'LLM provider not found',
+        code: 'NOT_FOUND',
+      });
+    }
+    return row;
+  }
+
   async remove(id: string): Promise<void> {
     const row = await this.providers.findOne({ where: { id } });
     if (!row) {

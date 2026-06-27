@@ -27,7 +27,7 @@ Copiar desde `.env.example` y definir en Dokploy → **Environment**:
 | `CORS_ORIGIN` | Origen del frontend (dominio público) |
 | `API_PUBLIC_URL` | URL pública API, ej. `https://app.example.com/api/v1` |
 | `LOG_LEVEL` | `info` en prod |
-| `APP_VERSION` | (opcional) commit SHA para `version.json` / PWA; si vacío, timestamp de deploy |
+| `APP_VERSION` | (opcional) override manual del hash en `version.json` / PWA |
 
 > PostgreSQL fija la contraseña solo al crear el volumen `pgdata`. Si cambias `DB_PASSWORD` después, resetea el volumen (§10).
 
@@ -172,6 +172,6 @@ printenv DB_USER DB_PASSWORD DB_HOST
 
 Dokploy clona el repo **sin** carpeta `.git` (shallow export). El Dockerfile ya no depende de git.
 
-**Versión PWA (`version.json`):** cada build usa `deploy-YYYYMMDDHHMMSS` (UTC) si no defines `APP_VERSION` en Environment de Dokploy. Opcional: `APP_VERSION=<commit-sha>` para trazabilidad.
+**Versión PWA (`version.json`):** el build del frontend usa el **commit hash** que Dokploy inyecta (`DOKPLOY_COMMIT_HASH`, `SOURCE_COMMIT`, etc.), igual que otras apps del mismo servidor. No hace falta definir `APP_VERSION` salvo override manual. Si no hay hash, usa `deploy-YYYYMMDDHHMMSS` (UTC).
 
 **Solución:** redeploy con código actual (`Dockerfile.frontend` sin `COPY .git`).

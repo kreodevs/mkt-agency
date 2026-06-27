@@ -19,7 +19,7 @@ yarn build
 ## PWA y actualizaciones
 
 - Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`).
-- Cada build genera `version.json` con el **commit git** (`VITE_APP_VERSION`).
+- Cada build genera `version.json` con el **commit del deploy** (hash inyectado por Dokploy en el build del frontend).
 - Tras un deploy nuevo, la app **se recarga sola** (service worker `autoUpdate` + polling de `version.json` cada 60s).
 - Detalle: `src/pwa/README.md`
 
