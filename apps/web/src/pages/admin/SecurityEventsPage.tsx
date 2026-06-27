@@ -108,7 +108,7 @@ export default function SecurityEventsPage() {
           description="Intentos de acceso, bloqueos y alertas de seguridad del sistema."
         />
 
-        <Card className="grid gap-3 sm:grid-cols-2">
+        <Card className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               Severidad
@@ -135,12 +135,14 @@ export default function SecurityEventsPage() {
           />
         </Card>
 
-        <DataTable
-          columns={columns}
-          data={items}
-          loading={eventsQuery.isLoading}
-          emptyMessage="No hay eventos con estos filtros"
-        />
+        <div className="overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={items}
+            loading={eventsQuery.isLoading}
+            emptyMessage="No hay eventos con estos filtros"
+          />
+        </div>
       </div>
     </DashboardShell>
   );

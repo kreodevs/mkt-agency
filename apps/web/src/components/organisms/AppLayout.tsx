@@ -67,7 +67,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         )}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <header className="z-20 flex h-20 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-[var(--spacing-lg)]">
+          <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 md:h-20 md:px-6 lg:px-8">
             <div className="flex items-center gap-[var(--spacing-md)]">
               {hasSidebar && (
                 <button
@@ -90,7 +90,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
               </Button>
             </div>
           </header>
-          <main className="custom-scrollbar flex-1 overflow-y-auto p-[var(--spacing-lg)] lg:p-10">
+          <main className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
             <div className="mx-auto max-w-[1600px] animate-fade-in">{children}</div>
           </main>
         </div>
