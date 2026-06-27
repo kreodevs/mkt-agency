@@ -26,7 +26,10 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000007-CreateAuditLogs.ts` | `audit_logs` |
 | `1730000000008-ClearSuperadminTenantId.ts` | Limpia `tenant_id` en filas `is_superadmin` (legacy) |
 | `1730000000009-ResetSuperadminLoginLockouts.ts` | Resetea lockout de superadmins tras migración de hash |
-| `1729999999999-UpgradeLegacyUsersSchema.ts` | Añade columnas monorepo en `users` legacy (camelCase → snake_case); corre **antes** del baseline |
+| `1730000000010-CreatePackagesAndLlmConfigs.ts` | `packages`, `llm_task_configs`, límites en `tenants` |
+| `1730000000011-CreateLlmProviders.ts` | `llm_providers`, FK en `llm_task_configs` |
+| `1730000000012-EnsureTenantLimitColumns.ts` | Columnas de límites/paquete en `tenants` legacy + perfiles |
+| `1729999999999-UpgradeLegacyUsersSchema.ts` | Añade columnas monorepo en `users` legacy; corre **antes** del baseline |
 
 DataSource: `src/database/data-source.ts`.
 

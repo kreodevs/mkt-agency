@@ -1,11 +1,10 @@
 import {
   BadRequestException,
-  ConflictException,
   Inject,
 } from '@nestjs/common';
-import { QueryFailedError } from 'typeorm';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DataSource } from 'typeorm';
+import { rethrowKnownDatabaseError } from '../../../shared/database/postgres-errors';
 import { Password } from '../../../shared/domain/password.value-object';
 import { UserEntity } from '../../../shared/infrastructure/typeorm/user.entity';
 import { PackageService } from '../../packages/package.service';
@@ -127,21 +126,7 @@ export class CreateTenantHandler
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-
-      if (error instanceof QueryFailedError) {
-        const driverCode = (
-          error as QueryFailedError & { driverError?: { code?: string; constraint?: string } }
-        ).driverError?.code;
-
-        if (driverCode === '23505') {
-          throw new ConflictException({
-            error: 'Owner email or tenant slug already exists',
-            code: 'CONFLICT',
-          });
-        }
-      }
-
-      throw error;
+      rethrowKnownDatabaseError(error);
     } finally {
       await queryRunner.release();
     }

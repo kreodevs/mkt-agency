@@ -14,7 +14,9 @@ Guards: `JwtAuthGuard` + `SuperadminGuard` (`apps/backend/src/shared/guards/`).
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/tenants` | Crea tenant + owner (transacción) |
+| POST | `/tenants` | Crea tenant + owner (transacción) + perfil onboarding |
+
+Errores frecuentes en prod legacy: migración `1730000000012` añade `max_users`, `max_assets_size`, `package_id` en `tenants` si faltaban (antes → 500 opaco).
 | GET | `/tenants` | Lista paginada (`page`, `limit`, `status`, `plan`) |
 | GET | `/tenants/:id` | Detalle |
 | PATCH | `/tenants/:id` | Actualiza plan, status, settings, límites |
