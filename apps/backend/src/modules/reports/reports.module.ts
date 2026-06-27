@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
@@ -22,7 +22,6 @@ import { ReportGeneratorWorkerService } from './workers/report-generator.worker'
     AuthSharedModule,
     QueueModule,
     LlmModule,
-    ConfigModule,
     TypeOrmModule.forFeature([
       ReportEntity,
       CampaignEntity,
@@ -41,13 +40,18 @@ import { ReportGeneratorWorkerService } from './workers/report-generator.worker'
     {
       provide: REPORT_ADAPTER,
       useFactory: (
-        config: ConfigService,
         stub: StubReportAdapter,
         llm: OpenRouterReportAdapter,
-      ): ReportAdapterPort => {
-        return config.get<string>('AI_API_KEY') ? llm : stub;
-      },
-      inject: [ConfigService, StubReportAdapter, OpenRouterReportAdapter],
+        providers: LlmProviderService,
+      ): ReportAdapterPort => ({
+        generate: async (context) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.generate(context);
+          }
+          return stub.generate(context);
+        },
+      }),
+      inject: [StubReportAdapter, OpenRouterReportAdapter, LlmProviderService],
     },
   ],
   exports: [ReportService],

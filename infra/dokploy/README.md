@@ -23,7 +23,7 @@ Copiar desde `.env.example` y definir en Dokploy → **Environment**:
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Misma contraseña en postgres + api/worker; obligatoria antes del 1er deploy |
 | `JWT_PRIVATE_KEY_PEM`, `JWT_PUBLIC_KEY_PEM` | RSA PEM (una línea con `\n`) |
 | `S3_*` | MinIO interno o DO Spaces en prod |
-| `AI_API_KEY`, `AI_API_URL`, `AI_MODEL` | OpenRouter / proveedor IA |
+| `AI_*` | Obsoleto — configurar en superadmin → Proveedores LLM |
 | `CORS_ORIGIN` | Origen del frontend (dominio público) |
 | `API_PUBLIC_URL` | URL pública API, ej. `https://app.example.com/api/v1` |
 | `LOG_LEVEL` | `info` en prod |

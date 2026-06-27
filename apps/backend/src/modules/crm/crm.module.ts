@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { FormEntity } from '../forms/infrastructure/typeorm/form.entity';
 import { OpenRouterScoringAdapter } from './adapters/openrouter-scoring.adapter';
@@ -23,7 +23,6 @@ import { LeadScoringService } from './services/lead-scoring.service';
   imports: [
     AuthSharedModule,
     LlmModule,
-    ConfigModule,
     TypeOrmModule.forFeature([LeadEntity, LeadInteractionEntity, FormEntity]),
   ],
   controllers: [LeadController],
@@ -38,11 +37,18 @@ import { LeadScoringService } from './services/lead-scoring.service';
     {
       provide: SCORING_ADAPTER,
       useFactory: (
-        config: ConfigService,
         stub: StubScoringAdapter,
         llm: OpenRouterScoringAdapter,
-      ): ScoringAdapterPort => (config.get<string>('AI_API_KEY') ? llm : stub),
-      inject: [ConfigService, StubScoringAdapter, OpenRouterScoringAdapter],
+        providers: LlmProviderService,
+      ): ScoringAdapterPort => ({
+        score: async (context) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.score(context);
+          }
+          return stub.score(context);
+        },
+      }),
+      inject: [StubScoringAdapter, OpenRouterScoringAdapter, LlmProviderService],
     },
   ],
   exports: [SubmitFormHandler, LeadScoringService, AddInteractionHandler],

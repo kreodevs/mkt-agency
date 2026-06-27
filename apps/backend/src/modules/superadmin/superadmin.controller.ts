@@ -7,7 +7,7 @@ import { AuditLog } from '../audit/decorators/audit-log.decorator';
 import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
 import { ListUsersResponseDto } from './dto/list-users.response.dto';
 import { UpdateUserBySuperadminDto } from './dto/update-user.request.dto';
-import { UpdateLlmTaskConfigDto } from './dto/llm-task-config.dto';
+import { UpdateLlmTaskConfigDto, CreateLlmProviderDto, UpdateLlmProviderDto } from './dto/llm-task-config.dto';
 import { SuperadminService } from './superadmin.service';
 import { LLM_TASK_TYPES, type LlmTaskType } from '../../shared/ai/llm-task-types';
 
@@ -77,5 +77,33 @@ export class SuperadminController {
       });
     }
     return this.superadminService.updateLlmTask(taskType as LlmTaskType, body);
+  }
+
+  @Get('llm-providers')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.list_llm_providers', resourceType: 'llm_provider' })
+  listLlmProviders(@Query('includeInactive') includeInactive?: string) {
+    return this.superadminService.listLlmProviders(includeInactive === 'true');
+  }
+
+  @Post('llm-providers')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.create_llm_provider', resourceType: 'llm_provider' })
+  createLlmProvider(@Body() body: CreateLlmProviderDto) {
+    return this.superadminService.createLlmProvider(body);
+  }
+
+  @Patch('llm-providers/:id')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.update_llm_provider', resourceType: 'llm_provider' })
+  updateLlmProvider(@Param('id') id: string, @Body() body: UpdateLlmProviderDto) {
+    return this.superadminService.updateLlmProvider(id, body);
+  }
+
+  @Delete('llm-providers/:id')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.delete_llm_provider', resourceType: 'llm_provider' })
+  async deleteLlmProvider(@Param('id') id: string) {
+    await this.superadminService.deleteLlmProvider(id);
   }
 }

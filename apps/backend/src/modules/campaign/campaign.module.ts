@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
@@ -30,7 +30,6 @@ import { StrategyGeneratorWorkerService } from './workers/strategy-generator.wor
     AuthSharedModule,
     QueueModule,
     LlmModule,
-    ConfigModule,
     TypeOrmModule.forFeature([
       CampaignTemplateEntity,
       CampaignEntity,
@@ -52,13 +51,18 @@ import { StrategyGeneratorWorkerService } from './workers/strategy-generator.wor
     {
       provide: STRATEGY_ADAPTER,
       useFactory: (
-        config: ConfigService,
         stub: StubStrategyAdapter,
         llm: OpenRouterStrategyAdapter,
-      ): StrategyAdapterPort => {
-        return config.get<string>('AI_API_KEY') ? llm : stub;
-      },
-      inject: [ConfigService, StubStrategyAdapter, OpenRouterStrategyAdapter],
+        providers: LlmProviderService,
+      ): StrategyAdapterPort => ({
+        generate: async (context) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.generate(context);
+          }
+          return stub.generate(context);
+        },
+      }),
+      inject: [StubStrategyAdapter, OpenRouterStrategyAdapter, LlmProviderService],
     },
   ],
 })

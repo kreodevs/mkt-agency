@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmTaskConfigEntity } from '../../modules/platform/infrastructure/typeorm/llm-task-config.entity';
+import { LlmProviderService } from './llm-provider.service';
 import {
   LLM_TASK_TYPES,
+  type LlmTaskConfigResponse,
   type LlmTaskType,
-  type ResolvedLlmConfig,
+  type ResolvedLlmExecutionConfig,
 } from './llm-task-types';
 
 @Injectable()
@@ -14,30 +19,31 @@ export class LlmConfigService {
   constructor(
     @InjectRepository(LlmTaskConfigEntity)
     private readonly configs: Repository<LlmTaskConfigEntity>,
-    private readonly configService: ConfigService,
+    private readonly providerService: LlmProviderService,
   ) {}
 
-  async listAll(): Promise<ResolvedLlmConfig[]> {
-    const rows = await this.configs.find({ order: { taskType: 'ASC' } });
-    return rows.map((row) => this.toResolved(row));
+  async listAll(): Promise<LlmTaskConfigResponse[]> {
+    const rows = await this.configs.find({
+      relations: { providerEntity: true },
+      order: { taskType: 'ASC' },
+    });
+    return rows.map((row) => this.toResponse(row));
   }
 
-  async resolve(taskType: LlmTaskType): Promise<ResolvedLlmConfig> {
-    const row = await this.configs.findOne({ where: { taskType } });
-    if (row) {
-      return this.toResolved(row);
+  async resolve(taskType: LlmTaskType): Promise<ResolvedLlmExecutionConfig> {
+    const row = await this.configs.findOne({
+      where: { taskType },
+      relations: { providerEntity: true },
+    });
+
+    if (!row) {
+      throw new NotFoundException({
+        error: `LLM task config not found: ${taskType}`,
+        code: 'NOT_FOUND',
+      });
     }
 
-    return {
-      taskType,
-      provider: 'openrouter',
-      model: this.configService.get<string>(
-        'AI_MODEL',
-        'deepseek/deepseek-v4-flash',
-      ),
-      temperature: 0.7,
-      enabled: true,
-    };
+    return this.toExecutionConfig(row);
   }
 
   async update(
@@ -45,34 +51,68 @@ export class LlmConfigService {
     data: Partial<{
       label: string;
       description: string | null;
-      provider: string;
+      providerId: string;
       model: string;
       temperature: number;
       maxTokens: number | null;
       systemPromptTemplate: string | null;
       enabled: boolean;
     }>,
-  ): Promise<ResolvedLlmConfig> {
+  ): Promise<LlmTaskConfigResponse> {
     if (!LLM_TASK_TYPES.includes(taskType)) {
-      throw new Error(`Unknown task type: ${taskType}`);
+      throw new BadRequestException({
+        error: 'Invalid LLM task type',
+        code: 'VALIDATION_ERROR',
+      });
     }
 
-    let row = await this.configs.findOne({ where: { taskType } });
+    let row = await this.configs.findOne({
+      where: { taskType },
+      relations: { providerEntity: true },
+    });
+
     if (!row) {
+      let providerId = data.providerId ?? null;
+      if (providerId) {
+        const provider = await this.providerService.findEntityById(providerId);
+        if (!provider) {
+          throw new BadRequestException({
+            error: 'Invalid providerId',
+            code: 'VALIDATION_ERROR',
+          });
+        }
+      } else {
+        const providers = await this.providerService.list(true);
+        providerId = providers[0]?.id ?? null;
+        if (!providerId) {
+          throw new BadRequestException({
+            error: 'Create an LLM provider before configuring tasks',
+            code: 'VALIDATION_ERROR',
+          });
+        }
+      }
+
       row = this.configs.create({
         taskType,
         label: taskType,
-        provider: 'openrouter',
-        model: this.configService.get<string>(
-          'AI_MODEL',
-          'deepseek/deepseek-v4-flash',
-        ),
+        providerId,
+        model: data.model ?? 'deepseek/deepseek-v4-flash',
       });
+    }
+
+    if (data.providerId !== undefined) {
+      const provider = await this.providerService.findEntityById(data.providerId);
+      if (!provider) {
+        throw new BadRequestException({
+          error: 'Invalid providerId',
+          code: 'VALIDATION_ERROR',
+        });
+      }
+      row.providerId = data.providerId;
     }
 
     if (data.label !== undefined) row.label = data.label;
     if (data.description !== undefined) row.description = data.description;
-    if (data.provider !== undefined) row.provider = data.provider;
     if (data.model !== undefined) row.model = data.model;
     if (data.temperature !== undefined) {
       row.temperature = String(data.temperature);
@@ -84,18 +124,64 @@ export class LlmConfigService {
     if (data.enabled !== undefined) row.enabled = data.enabled;
 
     const saved = await this.configs.save(row);
-    return this.toResolved(saved);
+    const reloaded = await this.configs.findOne({
+      where: { taskType: saved.taskType },
+      relations: { providerEntity: true },
+    });
+
+    return this.toResponse(reloaded!);
   }
 
-  private toResolved(row: LlmTaskConfigEntity): ResolvedLlmConfig {
+  private toResponse(row: LlmTaskConfigEntity): LlmTaskConfigResponse {
     return {
       taskType: row.taskType as LlmTaskType,
-      provider: row.provider,
+      label: row.label,
+      description: row.description,
+      providerId: row.providerId,
+      providerName: row.providerEntity?.name ?? null,
+      providerSlug: row.providerEntity?.slug ?? null,
       model: row.model,
       temperature: Number(row.temperature),
       maxTokens: row.maxTokens ?? undefined,
       systemPromptTemplate: row.systemPromptTemplate,
       enabled: row.enabled,
+    };
+  }
+
+  private toExecutionConfig(row: LlmTaskConfigEntity): ResolvedLlmExecutionConfig {
+    const provider = row.providerEntity;
+    if (!provider) {
+      throw new BadRequestException({
+        error: `LLM task ${row.taskType} has no provider assigned`,
+        code: 'LLM_PROVIDER_MISSING',
+      });
+    }
+    if (!provider.isActive) {
+      throw new BadRequestException({
+        error: `LLM provider ${provider.slug} is inactive`,
+        code: 'LLM_PROVIDER_INACTIVE',
+      });
+    }
+    if (!provider.apiKey?.trim()) {
+      throw new BadRequestException({
+        error: `LLM provider ${provider.slug} has no API key configured`,
+        code: 'LLM_API_KEY_MISSING',
+      });
+    }
+
+    const model = row.model?.trim() || provider.defaultModel?.trim();
+    if (!model) {
+      throw new BadRequestException({
+        error: `LLM task ${row.taskType} has no model configured`,
+        code: 'LLM_MODEL_MISSING',
+      });
+    }
+
+    return {
+      ...this.toResponse(row),
+      apiUrl: provider.apiUrl.replace(/\/$/, ''),
+      apiKey: provider.apiKey.trim(),
+      model,
     };
   }
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -10,14 +10,19 @@ import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
 import {
+  listLlmProviders,
   listLlmTasks,
   updateLlmTask,
   type LlmTaskConfig,
 } from '@/services/superadmin';
 
+const selectClass =
+  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
 export default function LlmSettingsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<LlmTaskConfig | null>(null);
+  const [providerId, setProviderId] = useState('');
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState('0.7');
   const [enabled, setEnabled] = useState(true);
@@ -27,9 +32,26 @@ export default function LlmSettingsPage() {
     queryFn: listLlmTasks,
   });
 
+  const providersQuery = useQuery({
+    queryKey: ['llm-providers', { activeOnly: true }],
+    queryFn: () => listLlmProviders(false),
+  });
+
+  const activeProviders = providersQuery.data ?? [];
+
+  useEffect(() => {
+    if (editing) {
+      setProviderId(editing.providerId ?? activeProviders[0]?.id ?? '');
+      setModel(editing.model);
+      setTemperature(String(editing.temperature));
+      setEnabled(editing.enabled);
+    }
+  }, [editing, activeProviders]);
+
   const saveMutation = useMutation({
     mutationFn: () =>
       updateLlmTask(editing!.taskType, {
+        providerId,
         model: model.trim(),
         temperature: Number(temperature),
         enabled,
@@ -45,6 +67,11 @@ export default function LlmSettingsPage() {
   const columns: DataTableColumn[] = [
     { field: 'label', header: 'Tarea' },
     { field: 'taskType', header: 'Tipo' },
+    {
+      field: 'providerName',
+      header: 'Proveedor',
+      body: (row) => (row as LlmTaskConfig).providerName ?? '—',
+    },
     { field: 'model', header: 'Modelo' },
     {
       field: 'temperature',
@@ -69,12 +96,7 @@ export default function LlmSettingsPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => {
-              setEditing(task);
-              setModel(task.model);
-              setTemperature(String(task.temperature));
-              setEnabled(task.enabled);
-            }}
+            onClick={() => setEditing(task)}
           >
             Configurar
           </Button>
@@ -86,8 +108,8 @@ export default function LlmSettingsPage() {
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
-        title="Modelos LLM"
-        description="Asigna el modelo OpenRouter (u otro proveedor) por tipo de tarea de IA."
+        title="Tareas LLM"
+        description="Asigna proveedor y modelo por tipo de tarea de IA."
       />
 
       <Card className="mt-6">
@@ -101,7 +123,7 @@ export default function LlmSettingsPage() {
       <Dialog
         visible={!!editing}
         onHide={() => setEditing(null)}
-        title={editing ? `Modelo: ${editing.label}` : 'Modelo LLM'}
+        title={editing ? `Tarea: ${editing.label}` : 'Tarea LLM'}
         footer={
           <>
             <Button variant="ghost" onClick={() => setEditing(null)}>
@@ -114,8 +136,22 @@ export default function LlmSettingsPage() {
         }
       >
         <div className="space-y-4">
+          <div className="flex flex-col gap-[var(--spacing-xs)]">
+            <label className="text-sm font-medium">Proveedor</label>
+            <select
+              className={selectClass}
+              value={providerId}
+              onChange={(e) => setProviderId(e.target.value)}
+            >
+              {activeProviders.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} {p.apiKeyConfigured ? '' : '(sin API key)'}
+                </option>
+              ))}
+            </select>
+          </div>
           <InputText
-            label="Modelo (OpenRouter ID)"
+            label="Modelo"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="deepseek/deepseek-v4-flash"
@@ -138,8 +174,11 @@ export default function LlmSettingsPage() {
             Tarea habilitada
           </label>
           <p className="text-xs text-[var(--foreground-muted)]">
-            La API key sigue en variables de entorno (`AI_API_KEY`). Aquí solo configuras qué
-            modelo usa cada tarea.
+            Configura proveedores y API keys en{' '}
+            <a href="/admin/llm-providers" className="text-[var(--primary)] underline">
+              Proveedores LLM
+            </a>
+            .
           </p>
         </div>
       </Dialog>

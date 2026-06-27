@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { OpenRouterSuggestionAdapter } from './adapters/openrouter-suggestion.adapter';
 import {
   SUGGESTION_ADAPTER,
@@ -9,20 +9,25 @@ import {
 import { StubSuggestionAdapter } from './adapters/stub-suggestion.adapter';
 
 @Module({
-  imports: [ConfigModule, LlmModule],
+  imports: [LlmModule],
   providers: [
     StubSuggestionAdapter,
     OpenRouterSuggestionAdapter,
     {
       provide: SUGGESTION_ADAPTER,
       useFactory: (
-        config: ConfigService,
         stub: StubSuggestionAdapter,
         llm: OpenRouterSuggestionAdapter,
-      ): SuggestionAdapterPort => {
-        return config.get<string>('AI_API_KEY') ? llm : stub;
-      },
-      inject: [ConfigService, StubSuggestionAdapter, OpenRouterSuggestionAdapter],
+        providers: LlmProviderService,
+      ): SuggestionAdapterPort => ({
+        generate: async (context) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.generate(context);
+          }
+          return stub.generate(context);
+        },
+      }),
+      inject: [StubSuggestionAdapter, OpenRouterSuggestionAdapter, LlmProviderService],
     },
   ],
   exports: [SUGGESTION_ADAPTER],

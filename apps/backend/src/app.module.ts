@@ -54,6 +54,7 @@ import { AuditLogEntity } from './modules/users/infrastructure/typeorm/audit-log
 import { PackageModule } from './modules/packages/package.module';
 import { PackageEntity } from './modules/packages/infrastructure/typeorm/package.entity';
 import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
+import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -93,6 +94,7 @@ import {
           TenantEntity,
           PackageEntity,
           LlmTaskConfigEntity,
+          LlmProviderEntity,
           SessionEntity,
           SecurityEventEntity,
           ImpersonationLogEntity,

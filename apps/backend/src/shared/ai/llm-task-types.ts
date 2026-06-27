@@ -8,12 +8,35 @@ export const LLM_TASK_TYPES = [
 
 export type LlmTaskType = (typeof LLM_TASK_TYPES)[number];
 
-export interface ResolvedLlmConfig {
+export interface LlmTaskConfigResponse {
   taskType: LlmTaskType;
-  provider: string;
+  label: string;
+  description?: string | null;
+  providerId: string | null;
+  providerName: string | null;
+  providerSlug: string | null;
   model: string;
   temperature: number;
   maxTokens?: number;
   systemPromptTemplate?: string | null;
   enabled: boolean;
+}
+
+export interface ResolvedLlmExecutionConfig extends LlmTaskConfigResponse {
+  apiUrl: string;
+  apiKey: string;
+}
+
+export interface LlmProviderResponse {
+  id: string;
+  slug: string;
+  name: string;
+  apiUrl: string;
+  defaultModel: string | null;
+  apiKeyConfigured: boolean;
+  apiKeyHint: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { LlmProviderEntity } from './llm-provider.entity';
 
 @Entity({ name: 'llm_task_configs' })
 export class LlmTaskConfigEntity {
@@ -11,8 +19,12 @@ export class LlmTaskConfigEntity {
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
-  @Column({ type: 'varchar', length: 50, default: 'openrouter' })
-  provider!: string;
+  @Column({ name: 'provider_id', type: 'uuid', nullable: true })
+  providerId!: string | null;
+
+  @ManyToOne(() => LlmProviderEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'provider_id' })
+  providerEntity?: LlmProviderEntity | null;
 
   @Column({ type: 'varchar', length: 255 })
   model!: string;

@@ -60,12 +60,66 @@ export async function updateSuperadminUser(
 export interface LlmTaskConfig {
   taskType: string;
   label: string;
-  provider: string;
+  providerId: string | null;
+  providerName: string | null;
+  providerSlug: string | null;
   model: string;
   temperature: number;
   maxTokens?: number;
   systemPromptTemplate?: string | null;
   enabled: boolean;
+}
+
+export interface LlmProvider {
+  id: string;
+  slug: string;
+  name: string;
+  apiUrl: string;
+  defaultModel: string | null;
+  apiKeyConfigured: boolean;
+  apiKeyHint: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listLlmProviders(includeInactive = false): Promise<LlmProvider[]> {
+  const query = includeInactive ? '?includeInactive=true' : '';
+  return apiFetch<LlmProvider[]>(`/superadmin/llm-providers${query}`);
+}
+
+export async function createLlmProvider(payload: {
+  slug: string;
+  name: string;
+  apiUrl: string;
+  apiKey?: string;
+  defaultModel?: string;
+}): Promise<LlmProvider> {
+  return apiFetch<LlmProvider>('/superadmin/llm-providers', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateLlmProvider(
+  id: string,
+  payload: Partial<{
+    name: string;
+    apiUrl: string;
+    apiKey: string | null;
+    defaultModel: string | null;
+    isActive: boolean;
+  }>,
+): Promise<LlmProvider> {
+  return apiFetch<LlmProvider>(`/superadmin/llm-providers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteLlmProvider(id: string): Promise<void> {
+  await apiFetch<void>(`/superadmin/llm-providers/${id}`, { method: 'DELETE' });
 }
 
 export async function listLlmTasks(): Promise<LlmTaskConfig[]> {

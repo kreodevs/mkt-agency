@@ -80,9 +80,6 @@ services:
       S3_REGION: ${S3_REGION:-us-east-1}
       JWT_PRIVATE_KEY_PEM: ${JWT_PRIVATE_KEY_PEM}
       JWT_PUBLIC_KEY_PEM: ${JWT_PUBLIC_KEY_PEM}
-      AI_API_URL: ${AI_API_URL}
-      AI_API_KEY: ${AI_API_KEY}
-      AI_MODEL: ${AI_MODEL}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       API_PUBLIC_URL: ${API_PUBLIC_URL}
       DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-dashboard.mktagency.app}
@@ -130,9 +127,6 @@ services:
       S3_REGION: ${S3_REGION:-us-east-1}
       JWT_PRIVATE_KEY_PEM: ${JWT_PRIVATE_KEY_PEM}
       JWT_PUBLIC_KEY_PEM: ${JWT_PUBLIC_KEY_PEM}
-      AI_API_URL: ${AI_API_URL}
-      AI_API_KEY: ${AI_API_KEY}
-      AI_MODEL: ${AI_MODEL}
     depends_on:
       postgres:
         condition: service_healthy

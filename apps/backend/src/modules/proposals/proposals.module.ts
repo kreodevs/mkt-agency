@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
@@ -25,7 +25,6 @@ import { ProposalGeneratorWorkerService } from './workers/proposal-generator.wor
     AuthSharedModule,
     QueueModule,
     LlmModule,
-    ConfigModule,
     TypeOrmModule.forFeature([
       ProposalEntity,
       CampaignEntity,
@@ -44,13 +43,18 @@ import { ProposalGeneratorWorkerService } from './workers/proposal-generator.wor
     {
       provide: PROPOSAL_ADAPTER,
       useFactory: (
-        config: ConfigService,
         stub: StubProposalAdapter,
         llm: OpenRouterProposalAdapter,
-      ): ProposalAdapterPort => {
-        return config.get<string>('AI_API_KEY') ? llm : stub;
-      },
-      inject: [ConfigService, StubProposalAdapter, OpenRouterProposalAdapter],
+        providers: LlmProviderService,
+      ): ProposalAdapterPort => ({
+        generate: async (context) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.generate(context);
+          }
+          return stub.generate(context);
+        },
+      }),
+      inject: [StubProposalAdapter, OpenRouterProposalAdapter, LlmProviderService],
     },
   ],
   exports: [ProposalService],

@@ -9,6 +9,7 @@ const TenantListPage = lazy(() => import('@/pages/tenants/TenantListPage'));
 const AuditLogsPage = lazy(() => import('@/pages/admin/AuditLogsPage'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
 const PackageListPage = lazy(() => import('@/pages/admin/PackageListPage'));
+const LlmProvidersPage = lazy(() => import('@/pages/admin/LlmProvidersPage'));
 const LlmSettingsPage = lazy(() => import('@/pages/admin/LlmSettingsPage'));
 const SecurityEventsPage = lazy(() => import('@/pages/admin/SecurityEventsPage'));
 const CampaignListPage = lazy(() => import('@/pages/campaigns/CampaignListPage'));
@@ -51,6 +52,7 @@ export function AppRouter() {
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
             <Route path="/admin/packages" element={<PackageListPage />} />
+            <Route path="/admin/llm-providers" element={<LlmProvidersPage />} />
             <Route path="/admin/llm-settings" element={<LlmSettingsPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogsPage />} />

@@ -13,8 +13,13 @@ import {
 import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
 import { ListUsersResponseDto } from './dto/list-users.response.dto';
 import { UpdateUserBySuperadminDto } from './dto/update-user.request.dto';
-import { UpdateLlmTaskConfigDto } from './dto/llm-task-config.dto';
+import {
+  CreateLlmProviderDto,
+  UpdateLlmProviderDto,
+  UpdateLlmTaskConfigDto,
+} from './dto/llm-task-config.dto';
 import { LlmConfigService } from '../../shared/ai/llm-config.service';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { LlmTaskType } from '../../shared/ai/llm-task-types';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 
@@ -27,6 +32,7 @@ export class SuperadminService {
     private readonly users: UserRepositoryPort,
     private readonly impersonationLogger: ImpersonationLoggerService,
     private readonly llmConfigService: LlmConfigService,
+    private readonly llmProviderService: LlmProviderService,
   ) {}
 
   impersonate(
@@ -131,5 +137,21 @@ export class SuperadminService {
 
   updateLlmTask(taskType: LlmTaskType, body: UpdateLlmTaskConfigDto) {
     return this.llmConfigService.update(taskType, body);
+  }
+
+  listLlmProviders(includeInactive = false) {
+    return this.llmProviderService.list(includeInactive);
+  }
+
+  createLlmProvider(body: CreateLlmProviderDto) {
+    return this.llmProviderService.create(body);
+  }
+
+  updateLlmProvider(id: string, body: UpdateLlmProviderDto) {
+    return this.llmProviderService.update(id, body);
+  }
+
+  deleteLlmProvider(id: string) {
+    return this.llmProviderService.remove(id);
   }
 }
