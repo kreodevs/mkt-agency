@@ -7,14 +7,13 @@ COPY package.json yarn.lock ./
 COPY apps/backend/package.json apps/backend/
 COPY apps/web/package.json apps/web/
 
-RUN apk add --no-cache git
-
 RUN yarn install --frozen-lockfile
 
-COPY .git .git
 COPY apps/web apps/web
 
-RUN VITE_APP_VERSION="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
+# Dokploy clones without .git — pass APP_VERSION in compose env/build-arg (commit sha) or use deploy timestamp.
+ARG APP_VERSION=
+RUN VITE_APP_VERSION="${APP_VERSION:-deploy-$(date -u +%Y%m%d%H%M%S)}" \
   yarn workspace @mkt-agency/web build
 
 # ---- Runtime Stage ----

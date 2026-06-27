@@ -147,6 +147,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        APP_VERSION: ${APP_VERSION:-}
     restart: unless-stopped
     expose:
       - "80"

@@ -27,6 +27,7 @@ Copiar desde `.env.example` y definir en Dokploy → **Environment**:
 | `CORS_ORIGIN` | Origen del frontend (dominio público) |
 | `API_PUBLIC_URL` | URL pública API, ej. `https://app.example.com/api/v1` |
 | `LOG_LEVEL` | `info` en prod |
+| `APP_VERSION` | (opcional) commit SHA para `version.json` / PWA; si vacío, timestamp de deploy |
 
 > PostgreSQL fija la contraseña solo al crear el volumen `pgdata`. Si cambias `DB_PASSWORD` después, resetea el volumen (§10).
 
@@ -166,3 +167,11 @@ En Dokploy Environment, define exactamente la misma contraseña con la que se cr
 printenv DB_USER DB_PASSWORD DB_HOST
 # Debe coincidir con POSTGRES_* del servicio postgres en el mismo deploy
 ```
+
+### Build frontend: `COPY .git .git` → `"/.git": not found`
+
+Dokploy clona el repo **sin** carpeta `.git` (shallow export). El Dockerfile ya no depende de git.
+
+**Versión PWA (`version.json`):** cada build usa `deploy-YYYYMMDDHHMMSS` (UTC) si no defines `APP_VERSION` en Environment de Dokploy. Opcional: `APP_VERSION=<commit-sha>` para trazabilidad.
+
+**Solución:** redeploy con código actual (`Dockerfile.frontend` sin `COPY .git`).
