@@ -2,7 +2,7 @@
 
 | Script | Uso |
 |--------|-----|
-| `docker-api-entrypoint.sh` | Entrypoint de `Dockerfile.api`: ejecuta `migration:run:prod` si `RUN_MIGRATIONS=true` (default), luego `exec` del CMD (`node apps/backend/dist/main.js`). |
+| `docker-api-entrypoint.sh` | Entrypoint de `Dockerfile.api`: ejecuta `typeorm migration:run` contra `apps/backend/dist/database/data-source.js` si `RUN_MIGRATIONS=true` (default), luego `exec` del CMD. |
 
 Variables:
 

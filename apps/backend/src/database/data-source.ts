@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import path from 'path';
+import { join } from 'path';
 import { DataSource } from 'typeorm';
 import { SessionEntity } from '../modules/auth/infrastructure/typeorm/session.entity';
 import { AuditLogEntity } from '../modules/users/infrastructure/typeorm/audit-log.entity';
@@ -83,7 +83,7 @@ export default new DataSource({
     CompetitorMentionEntity,
   ],
   migrations: [
-    path.join(
+    join(
       __dirname,
       'migrations',
       __filename.endsWith('.js') ? '*.js' : '*.ts',
