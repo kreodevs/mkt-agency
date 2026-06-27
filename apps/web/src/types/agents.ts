@@ -19,7 +19,28 @@ export interface AgentInterview {
   updatedAt: string;
 }
 
-export const AGENTS_CATALOG = [
+export interface CompetitorAnalysis {
+  id: string;
+  tenantId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  competitorsInput: string | null;
+  analysis: Record<string, unknown> | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentCatalogItem {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  href: string;
+  status: 'ready' | 'coming_soon';
+  color: string;
+}
+
+export const AGENTS_CATALOG: AgentCatalogItem[] = [
   {
     id: 'brand_interview',
     name: 'Brand Analyst',
@@ -27,7 +48,17 @@ export const AGENTS_CATALOG = [
       'Entrevista guiada que analiza tu marca, audiencia, competencia y objetivos de marketing para generar un Brand Brief profesional.',
     icon: 'Bot',
     href: '/agents/brand-interview',
-    status: 'ready' as const,
+    status: 'ready',
     color: 'from-violet-500 to-purple-600',
+  },
+  {
+    id: 'competitor_intel',
+    name: 'Competitor Intel',
+    description:
+      'Analiza en profundidad a tus competidores: fortalezas, debilidades, posicionamiento y oportunidades de mercado. Genera un reporte estratégico.',
+    icon: 'Target',
+    href: '/agents/competitor-intel',
+    status: 'ready',
+    color: 'from-amber-500 to-orange-600',
   },
 ];

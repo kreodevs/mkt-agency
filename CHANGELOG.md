@@ -1,6 +1,30 @@
 # Changelog
 
-## [0.1.0] — 2026-06-28
+## [0.2.0] — 2026-06-28
+
+### Added
+
+- **Competitor Intel agent**: New deep-competitor-analysis agent with async processing
+  - `AgentCompetitorAnalysisEntity` (tenant-scoped, JSONB analysis result)
+  - `POST /agents/competitor-intel` + `GET /agents/competitor-intel` + `GET /agents/competitor-intel/:id`
+  - OpenRouter + Stub adapters for competitive landscape generation
+  - New LLM task type `competitor_intel` (configurable via superadmin)
+  - Frontend: `/agents/competitor-intel` page with trigger, polling spinner, and report viewer
+
+- **Agent orchestration hub**: `/agents` page now shows multiple agent cards
+  - Brand Analyst + Competitor Intel as launchable agents
+  - Cards with gradient headers, descriptions, and status badges
+  - Ready for future agents (Content Strategist, Market Research)
+
+### Fixed
+
+- **DI error**: `CompanyProfileEntityRepository` not available in `AgentsModule` context — added `TypeOrmModule.forFeature([CompanyProfileEntity])` to resolve NestJS dependency injection for `BrandInterviewWorkerService`
+
+### Changed
+
+- `AGENTS_CATALOG` now supports `AgentCatalogItem[]` with `status` field
+- Hub page renders dynamically from catalog entries
+- Sidebar "Agentes" → "Brand Analyst" links to hub `/agents`
 
 ### Added
 

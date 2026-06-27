@@ -1,4 +1,4 @@
-import { AlertTriangle, Bot, Building2, BarChart3, CalendarDays, ClipboardList, FileInput, FileSignature, FileText, FolderOpen, Globe, Megaphone, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, FileInput, FileSignature, FileText, FolderOpen, Globe, Megaphone, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';

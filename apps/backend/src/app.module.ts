@@ -41,6 +41,7 @@ import { CompetitorMentionEntity } from './modules/competitors/infrastructure/ty
 import { AgentsModule } from './modules/agents/agents.module';
 import { AgentInterviewEntity } from './modules/agents/domain/agent-interview.entity';
 import { AgentInterviewMessageEntity } from './modules/agents/domain/agent-interview-message.entity';
+import { AgentCompetitorAnalysisEntity } from './modules/agents/domain/agent-competitor-analysis.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
@@ -131,6 +132,7 @@ import {
           CompetitorMentionEntity,
           AgentInterviewEntity,
           AgentInterviewMessageEntity,
+          AgentCompetitorAnalysisEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
