@@ -138,6 +138,10 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     return this.toPublicUser(saved);
   }
 
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.users.update(userId, { passwordHash });
+  }
+
   private toAuthUser(
     user: UserEntity,
     tenantStatus: string | null,

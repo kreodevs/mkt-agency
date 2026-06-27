@@ -37,7 +37,9 @@ Copiar desde `.env.example` y definir en Dokploy → **Environment**:
 3. Puerto interno: **80**.
 4. HTTPS: Let's Encrypt (Dokploy inyecta labels Traefik).
 
-El nginx del frontend hace proxy de `/api/` al servicio `api:3000` en la red `internal`.
+El nginx del frontend hace proxy de `/api/` al servicio `mkt-agency-api:3000` en la red `internal`.
+
+> **Importante:** no uses el hostname genérico `api` en nginx. Otros stacks en el mismo servidor (p. ej. Kreo Eventos) registran el alias `api` en `dokploy-network` y el frontend resolvería el backend equivocado. El compose define el alias `mkt-agency-api` solo en la red interna del stack.
 
 > Si configuras dominio manual con labels, mantén `traefik.docker.network=dokploy-network`.
 
@@ -74,8 +76,8 @@ Programar backups de `pgdata` desde Dokploy → Volume Backups.
 
 | Servicio | Red pública | Acceso |
 |----------|-------------|--------|
-| frontend | `dokploy-network` | Dominio Traefik |
-| api | solo `internal` | vía nginx `/api` |
+| frontend | `dokploy-network` | Dominio Traefik (solo UI; `/api` va por nginx interno) |
+| api | solo `internal` | vía nginx → `mkt-agency-api:3000` (no añadir dominio Traefik) |
 | postgres, redis, minio, worker | solo `internal` | no exponer |
 
 ## 7. Worker
@@ -113,6 +115,14 @@ El volumen `pgdata` conserva el esquema **legacy** (`users.password`, `isSuperAd
 **Solución A — conservar datos:** despliega código con migración `1729999999999-UpgradeLegacyUsersSchema` (entrypoint `api` la ejecuta al arrancar, antes del baseline).
 
 **Solución B — reset:** eliminar volumen `pgdata` y redeploy (esquema limpio monorepo).
+
+### `pchstr must contain a $ as first char` en login
+
+Usuarios del esquema **legacy** tienen `password_hash` en **bcrypt** (`$2a$…`); el monorepo usa **Argon2id**. Sin compatibilidad, `argon2.verify` lanza 500.
+
+**Solución (código ≥ fix bcrypt):** el login acepta bcrypt legacy y rehashea a Argon2id tras autenticación exitosa. Redeploy del servicio `api`.
+
+Si el hash no es bcrypt ni argon2 (dato corrupto), usa `POST /api/v1/setup/init` solo si no hay superadmin, o resetea la fila en `users`.
 
 ### `password authentication failed for user "mktos"`
 

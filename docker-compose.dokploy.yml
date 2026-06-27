@@ -60,7 +60,7 @@ services:
       context: .
       dockerfile: Dockerfile.api
     restart: unless-stopped
-    # Sin ports: — la API solo es accesible en la red internal (nginx → api:3000)
+    # Sin ports: — la API solo es accesible en la red internal (nginx → mkt-agency-api:3000)
     expose:
       - "3000"
     environment:
@@ -104,7 +104,9 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - internal
+      internal:
+        aliases:
+          - mkt-agency-api
 
   worker:
     build:

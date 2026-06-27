@@ -111,6 +111,11 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       });
     }
 
+    if (Password.isLegacyBcryptHash(user.passwordHash)) {
+      const upgraded = await Password.upgradeFromPlaintext(command.password);
+      await this.users.updatePasswordHash(user.id, upgraded.toHash());
+    }
+
     await this.users.resetLoginAttempts(user.id);
 
     const refreshToken = generateRefreshToken();
