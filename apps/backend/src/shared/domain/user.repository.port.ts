@@ -41,6 +41,7 @@ export interface UserRepositoryPort {
   updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
   clearTenantId(userId: string): Promise<void>;
   findAll(params: ListUsersParams): Promise<ListUsersResult>;
+  findByTenantId(tenantId: string): Promise<PublicUserRecord[]>;
   updateById(userId: string, data: UpdateUserByRepo): Promise<UserWithTenant | null>;
 }
 

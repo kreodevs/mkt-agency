@@ -150,6 +150,14 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     await this.users.update(userId, { tenantId: null });
   }
 
+  async findByTenantId(tenantId: string): Promise<PublicUserRecord[]> {
+    const users = await this.users.find({
+      where: { tenantId, isSuperadmin: false },
+      order: { name: 'ASC' },
+    });
+    return users.map((u) => this.toPublicUser(u));
+  }
+
   async findAll(params: ListUsersParams): Promise<ListUsersResult> {
     const { page, limit, search } = params;
     const query = this.users.createQueryBuilder('user');

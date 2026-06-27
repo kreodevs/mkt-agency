@@ -5,6 +5,7 @@ import { JwtTokenService } from '../../shared/auth/jwt-token.service';
 import {
   USER_REPOSITORY,
   UserRepositoryPort,
+  PublicUserRecord,
 } from '../../shared/domain/user.repository.port';
 import {
   ImpersonateCommand,
@@ -163,5 +164,9 @@ export class SuperadminService {
 
   listLlmProviderModels(providerId: string) {
     return this.llmModelsCatalogService.listForProvider(providerId);
+  }
+
+  listTenantUsers(tenantId: string): Promise<PublicUserRecord[]> {
+    return this.users.findByTenantId(tenantId);
   }
 }

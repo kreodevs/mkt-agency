@@ -20,7 +20,7 @@ export function initPwaUpdates(): void {
 
   const updateServiceWorker = registerSW({
     immediate: true,
-    onRegisteredSW(_swUrl, registration) {
+    onRegisteredSW(_swUrl: string | undefined, registration: ServiceWorkerRegistration | undefined) {
       if (!registration) {
         return;
       }
@@ -32,7 +32,7 @@ export function initPwaUpdates(): void {
       checkServiceWorker();
       window.setInterval(checkServiceWorker, UPDATE_CHECK_MS);
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.warn('[PWA] No se pudo registrar el service worker', error);
     },
   });
