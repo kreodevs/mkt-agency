@@ -5,7 +5,7 @@ import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { toast } from '@/components/molecules/Sonner';
-import { ApiError } from '@/services/api';
+import { getApiErrorMessage } from '@/services/api';
 import { listPackages } from '@/services/packages';
 import { createTenant, type CreateTenantPayload } from '@/services/tenants';
 
@@ -17,6 +17,8 @@ interface CreateTenantModalProps {
 
 const selectClass =
   'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
+const PASSWORD_POLICY = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 function slugify(name: string): string {
   return name
@@ -42,6 +44,7 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
   const [ownerName, setOwnerName] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   const packagesQuery = useQuery({
     queryKey: ['packages', { activeOnly: true }],
@@ -61,6 +64,7 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
     setOwnerName('');
     setOwnerEmail('');
     setOwnerPassword('');
+    setSubmitError('');
   }, [visible]);
 
   useEffect(() => {
@@ -78,25 +82,57 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
   const createMutation = useMutation({
     mutationFn: (payload: CreateTenantPayload) => createTenant(payload),
     onSuccess: () => {
+      setSubmitError('');
       toast.success('Tenant creado correctamente');
       onCreated();
       onHide();
     },
     onError: (error) => {
-      const message = error instanceof ApiError ? error.message : 'No se pudo crear el tenant';
+      const message = getApiErrorMessage(error, 'No se pudo crear el tenant');
+      setSubmitError(message);
       toast.error(message);
     },
   });
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!packageId) {
-      toast.error('Selecciona un paquete');
+    setSubmitError('');
+
+    const trimmedSlug = slug.trim();
+    if (trimmedSlug.length < 2) {
+      const message = 'El slug debe tener al menos 2 caracteres (solo minúsculas, números y guiones)';
+      setSubmitError(message);
+      toast.error(message);
       return;
     }
+
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedSlug)) {
+      const message = 'El slug solo puede usar minúsculas, números y guiones';
+      setSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!packageId) {
+      const message = packagesQuery.isError
+        ? 'No se pudieron cargar los paquetes. Recarga la página o crea un paquete en superadmin.'
+        : 'Selecciona un paquete';
+      setSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!PASSWORD_POLICY.test(ownerPassword)) {
+      const message =
+        'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo';
+      setSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
     createMutation.mutate({
       name: name.trim(),
-      slug: slug.trim(),
+      slug: trimmedSlug,
       packageId,
       owner: {
         name: ownerName.trim(),
@@ -125,6 +161,12 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
       }
     >
       <form id="create-tenant-form" className="space-y-4" onSubmit={onSubmit}>
+        {submitError ? (
+          <p className="rounded-[var(--radius)] border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-2 text-sm text-[var(--destructive)]">
+            {submitError}
+          </p>
+        ) : null}
+
         <InputText
           label="Nombre"
           value={name}
@@ -145,24 +187,38 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
         />
         <div className="flex flex-col gap-[var(--spacing-xs)]">
           <label className="text-sm font-medium text-[var(--foreground)]">Paquete</label>
-          <select
-            className={selectClass}
-            value={packageId}
-            onChange={(e) => setPackageId(e.target.value)}
-            required
-            disabled={packagesQuery.isLoading || activePackages.length === 0}
-          >
-            {activePackages.map((pkg) => (
-              <option key={pkg.id} value={pkg.id}>
-                {pkg.name}
-              </option>
-            ))}
-          </select>
-          {selectedPackage && (
-            <p className="text-xs text-[var(--foreground-muted)]">
-              {selectedPackage.maxUsers} usuarios · {formatBytes(selectedPackage.maxAssetsSize)}{' '}
-              storage · {formatBytes(selectedPackage.maxFileSize)}/archivo
+          {packagesQuery.isLoading ? (
+            <p className="text-sm text-[var(--foreground-muted)]">Cargando paquetes…</p>
+          ) : packagesQuery.isError ? (
+            <p className="text-sm text-[var(--destructive)]">
+              No se pudieron cargar los paquetes. Verifica que exista al menos uno activo en
+              Paquetes.
             </p>
+          ) : activePackages.length === 0 ? (
+            <p className="text-sm text-[var(--destructive)]">
+              No hay paquetes activos. Crea uno en superadmin → Paquetes.
+            </p>
+          ) : (
+            <>
+              <select
+                className={selectClass}
+                value={packageId}
+                onChange={(e) => setPackageId(e.target.value)}
+                required
+              >
+                {activePackages.map((pkg) => (
+                  <option key={pkg.id} value={pkg.id}>
+                    {pkg.name}
+                  </option>
+                ))}
+              </select>
+              {selectedPackage && (
+                <p className="text-xs text-[var(--foreground-muted)]">
+                  {selectedPackage.maxUsers} usuarios · {formatBytes(selectedPackage.maxAssetsSize)}{' '}
+                  storage · {formatBytes(selectedPackage.maxFileSize)}/archivo
+                </p>
+              )}
+            </>
           )}
         </div>
 

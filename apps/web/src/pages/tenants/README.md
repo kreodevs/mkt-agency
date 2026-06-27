@@ -20,4 +20,4 @@ Query params: `status`, `plan` (máx. 100 registros por petición según API).
 
 ## Crear tenant
 
-Modal `CreateTenantModal` (Kreo `Dialog`) — `POST /api/v1/tenants` con owner.
+Modal `CreateTenantModal` (Kreo `Dialog`) — `POST /api/v1/tenants` con owner, paquete (`packageId`) y validación de contraseña/slug en cliente. Los errores de API se muestran en toast y en un banner dentro del modal.

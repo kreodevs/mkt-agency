@@ -13,6 +13,47 @@ export class ApiError extends Error {
   }
 }
 
+function parseErrorBody(body: Record<string, unknown>, statusText: string): string {
+  if (typeof body.error === 'string' && body.error.trim()) {
+    return body.error.trim();
+  }
+  if (typeof body.details === 'string' && body.details.trim()) {
+    return body.details.trim();
+  }
+  if (typeof body.message === 'string' && body.message.trim()) {
+    return body.message.trim();
+  }
+  if (Array.isArray(body.message) && body.message.length > 0) {
+    return body.message.map((item) => String(item)).join('. ');
+  }
+  return statusText.trim() || 'Error desconocido';
+}
+
+export function getApiErrorMessage(
+  error: unknown,
+  fallback = 'Ocurrió un error inesperado',
+): string {
+  if (error instanceof ApiError) {
+    const message = error.message.trim();
+    if (message) {
+      return message;
+    }
+    if (error.code) {
+      return error.code;
+    }
+    return fallback;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
@@ -66,11 +107,14 @@ export async function apiFetch<T>(
   }
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as {
-      error?: string;
+    const body = (await response.json().catch(() => ({}))) as Record<string, unknown> & {
       code?: string;
     };
-    throw new ApiError(body.error ?? response.statusText, response.status, body.code);
+    throw new ApiError(
+      parseErrorBody(body, response.statusText),
+      response.status,
+      typeof body.code === 'string' ? body.code : undefined,
+    );
   }
 
   if (response.status === 204) {
