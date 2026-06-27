@@ -1,13 +1,74 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Upgrades users table from legacy Nest stack (synchronize + camelCase columns)
- * to monorepo schema (snake_case). Safe when table already matches target schema.
+ * Prepares legacy NestJS synchronize schema for monorepo migrations:
+ * renames incompatible tables to *_legacy, upgrades users columns.
  */
 export class UpgradeLegacyUsersSchema1729999999999 implements MigrationInterface {
   name = 'UpgradeLegacyUsersSchema1729999999999';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Legacy stack tables block baseline CREATE TABLE IF NOT EXISTS + indexes.
+    await queryRunner.query(`
+      DO $$
+      DECLARE
+        rec record;
+      BEGIN
+        FOR rec IN
+          SELECT * FROM (VALUES
+            ('tenants', 'slug'),
+            ('campaigns', 'tenant_id'),
+            ('sessions', 'refresh_token_hash'),
+            ('security_events', 'severity'),
+            ('impersonation_logs', 'superadmin_id'),
+            ('company_profiles', 'tenant_id'),
+            ('company_profile_sections', 'section_key'),
+            ('section_suggestion_assignments', 'section_key'),
+            ('outbox', 'event_type'),
+            ('campaign_templates', 'is_predefined'),
+            ('budgets', 'campaign_id'),
+            ('audiences', 'campaign_id'),
+            ('campaign_strategy_assignments', 'campaign_id'),
+            ('contents', 'tenant_id'),
+            ('content_versions', 'content_id'),
+            ('content_approvals', 'content_id'),
+            ('events', 'tenant_id'),
+            ('forms', 'tenant_id'),
+            ('leads', 'tenant_id'),
+            ('form_submissions', 'form_id'),
+            ('lead_interactions', 'lead_id'),
+            ('asset_folders', 'tenant_id'),
+            ('asset_tags', 'tenant_id'),
+            ('assets', 'tenant_id'),
+            ('asset_tag_assignments', 'asset_id'),
+            ('custom_domains', 'tenant_id'),
+            ('dns_verifications', 'domain_id'),
+            ('competitors', 'tenant_id'),
+            ('competitor_mentions', 'competitor_id'),
+            ('proposals', 'tenant_id'),
+            ('reports', 'tenant_id'),
+            ('audit_logs', 'tenant_id')
+          ) AS t(table_name, signature_column)
+        LOOP
+          IF EXISTS (
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = rec.table_name
+          ) AND NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = rec.table_name
+              AND column_name = rec.signature_column
+          ) THEN
+            EXECUTE format(
+              'ALTER TABLE %I RENAME TO %I',
+              rec.table_name,
+              rec.table_name || '_legacy'
+            );
+          END IF;
+        END LOOP;
+      END $$;
+    `);
+
     await queryRunner.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS tenant_id UUID;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);

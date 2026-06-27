@@ -61,7 +61,15 @@ export class CreateCoreTables1730000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'sessions' AND column_name = 'user_id'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
@@ -78,8 +86,16 @@ export class CreateCoreTables1730000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_security_events_severity
-      ON security_events(severity, created_at DESC)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'security_events' AND column_name = 'severity'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_security_events_severity
+          ON security_events(severity, created_at DESC);
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
@@ -184,7 +200,15 @@ export class CreateCoreTables1730000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_campaigns_tenant ON campaigns(tenant_id)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'campaigns' AND column_name = 'tenant_id'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_campaigns_tenant ON campaigns(tenant_id);
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
