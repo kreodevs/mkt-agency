@@ -10,6 +10,7 @@ import {
   SecurityAlertNotifierPort,
 } from './adapters/security-alert-notifier.port';
 import { SlackSecurityAlertAdapter } from './adapters/slack-security-alert.adapter';
+import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { SecurityEventEntity } from './infrastructure/typeorm/security-event.entity';
 import { SecurityAlertObserver } from './observers/security-alert.observer';
 import { SecurityController } from './security.controller';
@@ -23,7 +24,7 @@ import { AlertWorkerService } from './workers/alert.worker';
     ConfigModule,
     AuthSharedModule,
     QueueModule,
-    TypeOrmModule.forFeature([SecurityEventEntity, OutboxEntity]),
+    TypeOrmModule.forFeature([SecurityEventEntity, OutboxEntity, TenantEntity]),
   ],
   controllers: [SecurityController],
   providers: [

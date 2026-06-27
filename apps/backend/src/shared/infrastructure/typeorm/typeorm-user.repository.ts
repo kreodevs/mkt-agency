@@ -142,6 +142,10 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     await this.users.update(userId, { passwordHash });
   }
 
+  async clearTenantId(userId: string): Promise<void> {
+    await this.users.update(userId, { tenantId: null });
+  }
+
   private toAuthUser(
     user: UserEntity,
     tenantStatus: string | null,

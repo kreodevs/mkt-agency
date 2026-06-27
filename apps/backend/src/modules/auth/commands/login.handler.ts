@@ -90,7 +90,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
           eventType: 'account_locked',
           severity: 'high',
           userId: user.id,
-          tenantId: user.tenantId,
+          tenantId: this.securityTenantId(user),
           metadata: { attempts },
           ipAddress: command.ipAddress,
         });
@@ -99,7 +99,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
           eventType: 'login_failed',
           severity: 'medium',
           userId: user.id,
-          tenantId: user.tenantId,
+          tenantId: this.securityTenantId(user),
           metadata: { attempts },
           ipAddress: command.ipAddress,
         });
@@ -115,6 +115,8 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       const upgraded = await Password.upgradeFromPlaintext(command.password);
       await this.users.updatePasswordHash(user.id, upgraded.toHash());
     }
+
+    const tenantId = await this.resolveSessionTenantId(user);
 
     await this.users.resetLoginAttempts(user.id);
 
@@ -133,7 +135,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       email: user.email,
       isSuperadmin: user.isSuperadmin,
       role: user.role,
-      tenantId: user.tenantId,
+      tenantId,
     });
 
     return {
@@ -144,10 +146,33 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
         id: user.id,
         email: user.email,
         name: user.name,
-        tenantId: user.tenantId,
+        tenantId,
         isSuperadmin: user.isSuperadmin,
         role: user.role,
       },
     };
+  }
+
+  private securityTenantId(user: {
+    isSuperadmin: boolean;
+    tenantId: string | null;
+  }): string | null {
+    return user.isSuperadmin ? null : user.tenantId;
+  }
+
+  private async resolveSessionTenantId(user: {
+    id: string;
+    isSuperadmin: boolean;
+    tenantId: string | null;
+  }): Promise<string | null> {
+    if (!user.isSuperadmin) {
+      return user.tenantId;
+    }
+
+    if (user.tenantId) {
+      await this.users.clearTenantId(user.id);
+    }
+
+    return null;
   }
 }

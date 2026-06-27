@@ -124,6 +124,12 @@ Usuarios del esquema **legacy** tienen `password_hash` en **bcrypt** (`$2a$…`)
 
 Si el hash no es bcrypt ni argon2 (dato corrupto), usa `POST /api/v1/setup/init` solo si no hay superadmin, o resetea la fila en `users`.
 
+### `security_events_tenant_id_fkey` en login
+
+Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no existen (tablas `*_legacy`). Al registrar `login_failed`, la FK fallaba y el login devolvía 500.
+
+**Solución (código ≥ fix orphan tenant):** `SecurityEventRecorderService` omite `tenant_id` inválido y guarda el valor original en `metadata.orphanTenantId`. Redeploy `api`.
+
 ### `password authentication failed for user "mktos"`
 
 La API llega a Postgres pero la contraseña no coincide con la del volumen persistente.

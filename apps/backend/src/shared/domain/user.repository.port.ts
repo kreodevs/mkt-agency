@@ -31,6 +31,7 @@ export interface UserRepositoryPort {
   lockUntil(userId: string, until: Date): Promise<void>;
   updateName(userId: string, name: string): Promise<PublicUserRecord | null>;
   updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
+  clearTenantId(userId: string): Promise<void>;
 }
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
