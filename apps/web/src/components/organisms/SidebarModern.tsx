@@ -53,6 +53,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
     ref,
   ) => {
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
+    const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || 'dev';
 
     const toggleCollapse = () => {
       const next = !collapsed;
@@ -69,17 +70,34 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           className,
         )}
       >
-        <div className="mb-[var(--spacing-md)] flex h-20 shrink-0 items-center overflow-hidden px-[var(--spacing-lg)]">
-          <div className="flex items-center gap-[var(--spacing-md)]">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
-              M
-            </div>
-            {!collapsed &&
-              (brand ?? (
-                <span className="whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
-                  Mkt <span className="text-[var(--primary)]">Agency</span>
-                </span>
-              ))}
+        <div className="mb-[var(--spacing-md)] shrink-0 border-b border-[var(--border)] px-[var(--spacing-lg)] py-[var(--spacing-md)]">
+          <div className="flex items-start gap-[var(--spacing-md)]">
+            {collapsed ? (
+              <Tooltip content={`Mkt Agency · v${appVersion}`}>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                  M
+                </div>
+              </Tooltip>
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                M
+              </div>
+            )}
+            {!collapsed && (
+              <div className="min-w-0 pt-0.5">
+                {brand ?? (
+                  <span className="block whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
+                    Mkt <span className="text-[var(--primary)]">Agency</span>
+                  </span>
+                )}
+                <p
+                  className="mt-1 truncate font-mono text-[10px] text-[var(--foreground-subtle)]"
+                  title={`Versión en ejecución: ${appVersion}`}
+                >
+                  v{appVersion}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
