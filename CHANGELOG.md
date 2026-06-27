@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] — 2026-06-28
+
+### Changed
+
+- **Impersonación ahora con select de usuarios**: Reemplazado el input de UUID por un dropdown que lista los usuarios del tenant seleccionado. El superadmin elige visualmente a quién impersonar.
+  - Nuevo endpoint `GET /superadmin/tenants/:id/users` que retorna usuarios de un tenant
+  - Método `findByTenantId` en `UserRepositoryPort` + implementación TypeORM
+  - Frontend: `ImpersonateTenantModal` ahora usa `useQuery` para cargar usuarios y `<select>` para elegir
+
 ## [0.2.0] — 2026-06-28
 
 ### Added

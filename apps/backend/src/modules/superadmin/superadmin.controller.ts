@@ -106,6 +106,12 @@ export class SuperadminController {
     return this.superadminService.listLlmProviderModels(id);
   }
 
+  @Get('tenants/:id/users')
+  @UseGuards(SuperadminGuard)
+  listTenantUsers(@Param('id') tenantId: string) {
+    return this.superadminService.listTenantUsers(tenantId);
+  }
+
   @Delete('llm-providers/:id')
   @UseGuards(SuperadminGuard)
   @AuditLog({ action: 'superadmin.delete_llm_provider', resourceType: 'llm_provider' })
