@@ -4,8 +4,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Upgrades users table from legacy Nest stack (synchronize + camelCase columns)
  * to monorepo schema (snake_case). Safe when table already matches target schema.
  */
-export class UpgradeLegacyUsersSchema1730000000008 implements MigrationInterface {
-  name = 'UpgradeLegacyUsersSchema1730000000008';
+export class UpgradeLegacyUsersSchema1729999999999 implements MigrationInterface {
+  name = 'UpgradeLegacyUsersSchema1729999999999';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

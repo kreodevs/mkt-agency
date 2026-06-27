@@ -110,7 +110,7 @@ Si otro stack del mismo servidor ya usa el 3000, no afecta a `docker-compose.dok
 
 El volumen `pgdata` conserva el esquema **legacy** (`users.password`, `isSuperAdmin`, …). La migración baseline (`1730000000000`) usa `CREATE TABLE IF NOT EXISTS` y no altera tablas existentes.
 
-**Solución A — conservar datos:** despliega código con migración `1730000000008-UpgradeLegacyUsersSchema` (entrypoint `api` la ejecuta al arrancar).
+**Solución A — conservar datos:** despliega código con migración `1729999999999-UpgradeLegacyUsersSchema` (entrypoint `api` la ejecuta al arrancar, antes del baseline).
 
 **Solución B — reset:** eliminar volumen `pgdata` y redeploy (esquema limpio monorepo).
 

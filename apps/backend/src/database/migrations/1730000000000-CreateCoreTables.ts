@@ -38,7 +38,15 @@ export class CreateCoreTables1730000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'tenant_id'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
