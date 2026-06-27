@@ -6,17 +6,20 @@ import { TooltipProvider } from '@/components/molecules/Tooltip';
 import { Toaster } from '@/components/molecules/Sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AppRouter } from '@/router';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryProvider>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AppRouter />
-          <Toaster />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryProvider>
+    <AppErrorBoundary>
+      <QueryProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AppRouter />
+            <Toaster />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryProvider>
+    </AppErrorBoundary>
   </StrictMode>,
 );
