@@ -2,30 +2,66 @@ import { registerSW } from 'virtual:pwa-register';
 
 const VERSION_STORAGE_KEY = 'mkt-agency-app-version';
 const UPDATE_CHECK_MS = 60_000;
+const RELOAD_FALLBACK_MS = 4_000;
 
 export function initPwaUpdates(): void {
   if (!import.meta.env.PROD) {
     return;
   }
 
-  registerSW({
+  let reloading = false;
+  const reloadOnce = () => {
+    if (reloading) {
+      return;
+    }
+    reloading = true;
+    window.location.reload();
+  };
+
+  const updateServiceWorker = registerSW({
     immediate: true,
     onRegisteredSW(_swUrl, registration) {
       if (!registration) {
         return;
       }
 
-      registration.update().catch(() => undefined);
-      window.setInterval(() => {
-        registration.update().catch(() => undefined);
-      }, UPDATE_CHECK_MS);
+      const checkServiceWorker = () => {
+        void registration.update();
+      };
+
+      checkServiceWorker();
+      window.setInterval(checkServiceWorker, UPDATE_CHECK_MS);
+    },
+    onRegisterError(error) {
+      console.warn('[PWA] No se pudo registrar el service worker', error);
     },
   });
 
-  void startVersionPolling();
+  navigator.serviceWorker?.addEventListener('controllerchange', () => {
+    reloadOnce();
+  });
+
+  void startVersionPolling(async () => {
+    await activateWaitingServiceWorker();
+    void updateServiceWorker(true);
+    window.setTimeout(reloadOnce, RELOAD_FALLBACK_MS);
+  });
 }
 
-async function startVersionPolling(): Promise<void> {
+async function activateWaitingServiceWorker(): Promise<void> {
+  const registration = await navigator.serviceWorker?.getRegistration();
+  if (!registration) {
+    return;
+  }
+
+  await registration.update().catch(() => undefined);
+
+  if (registration.waiting) {
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
+
+async function startVersionPolling(onRemoteVersionChange: () => void | Promise<void>): Promise<void> {
   const checkVersion = async (): Promise<void> => {
     try {
       const response = await fetch(`/version.json?_=${Date.now()}`, {
@@ -44,7 +80,7 @@ async function startVersionPolling(): Promise<void> {
       const currentVersion = localStorage.getItem(VERSION_STORAGE_KEY);
       if (currentVersion && currentVersion !== nextVersion) {
         localStorage.setItem(VERSION_STORAGE_KEY, nextVersion);
-        window.location.reload();
+        await onRemoteVersionChange();
         return;
       }
 
