@@ -1,12 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import * as bcrypt from 'bcrypt';
+import { createHash, timingSafeEqual } from 'crypto';
 
 const PASSWORD_POLICY =
   /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 const ARGON2_HASH_PREFIX = /^\$argon2/i;
 const BCRYPT_HASH_PREFIX = /^\$2[aby]\$/;
+const LEGACY_SHA256_HEX = /^[a-f0-9]{64}$/i;
 
 export class Password {
   private constructor(private readonly hash: string) {}
@@ -24,13 +26,23 @@ export class Password {
     return Password.fromPlaintextWithoutPolicyCheck(plain);
   }
 
-  /** Rehash after legacy bcrypt verification (policy already satisfied historically). */
+  /** Rehash after legacy verification (policy already satisfied historically). */
   static async upgradeFromPlaintext(plain: string): Promise<Password> {
     return Password.fromPlaintextWithoutPolicyCheck(plain);
   }
 
   static isLegacyBcryptHash(hash: string): boolean {
     return BCRYPT_HASH_PREFIX.test(hash);
+  }
+
+  static isLegacySha256Hash(hash: string): boolean {
+    return LEGACY_SHA256_HEX.test(hash);
+  }
+
+  static isLegacyHash(hash: string): boolean {
+    return (
+      Password.isLegacyBcryptHash(hash) || Password.isLegacySha256Hash(hash)
+    );
   }
 
   static isArgon2Hash(hash: string): boolean {
@@ -48,6 +60,14 @@ export class Password {
 
     if (Password.isLegacyBcryptHash(hash)) {
       return bcrypt.compare(plain, hash);
+    }
+
+    if (Password.isLegacySha256Hash(hash)) {
+      const digest = createHash('sha256').update(plain).digest('hex');
+      return timingSafeEqual(
+        Buffer.from(digest, 'utf8'),
+        Buffer.from(hash, 'utf8'),
+      );
     }
 
     return false;

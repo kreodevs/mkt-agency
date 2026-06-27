@@ -111,7 +111,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       });
     }
 
-    if (Password.isLegacyBcryptHash(user.passwordHash)) {
+    if (Password.isLegacyHash(user.passwordHash)) {
       const upgraded = await Password.upgradeFromPlaintext(command.password);
       await this.users.updatePasswordHash(user.id, upgraded.toHash());
     }

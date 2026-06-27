@@ -116,13 +116,9 @@ El volumen `pgdata` conserva el esquema **legacy** (`users.password`, `isSuperAd
 
 **Solución B — reset:** eliminar volumen `pgdata` y redeploy (esquema limpio monorepo).
 
-### `pchstr must contain a $ as first char` en login
+El stack **legacy** (pre-monorepo) hasheaba con **SHA256 hex** (64 chars), no bcrypt ni Argon2. Tras migrar `password` → `password_hash`, el login fallaba con 401 aunque la contraseña fuera correcta.
 
-Usuarios del esquema **legacy** tienen `password_hash` en **bcrypt** (`$2a$…`); el monorepo usa **Argon2id**. Sin compatibilidad, `argon2.verify` lanza 500.
-
-**Solución (código ≥ fix bcrypt):** el login acepta bcrypt legacy y rehashea a Argon2id tras autenticación exitosa. Redeploy del servicio `api`.
-
-Si el hash no es bcrypt ni argon2 (dato corrupto), usa `POST /api/v1/setup/init` solo si no hay superadmin, o resetea la fila en `users`.
+**Solución (código ≥ fix sha256):** `Password.verify` acepta SHA256 legacy y rehashea a Argon2id al login exitoso. Si quedaste bloqueado por intentos fallidos, la migración `1730000000009` resetea lockout de superadmins.
 
 ### `security_events_tenant_id_fkey` en login
 
