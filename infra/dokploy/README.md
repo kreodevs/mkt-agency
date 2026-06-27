@@ -120,6 +120,14 @@ El stack **legacy** (pre-monorepo) hasheaba con **SHA256 hex** (64 chars), no bc
 
 **Solución (código ≥ fix sha256):** `Password.verify` acepta SHA256 legacy y rehashea a Argon2id al login exitoso. Si quedaste bloqueado por intentos fallidos, la migración `1730000000009` resetea lockout de superadmins.
 
+### Chunks JS devuelven `text/html` / MIME type error en el navegador
+
+Tras un redeploy, el navegador puede conservar un `index.html` antiguo que referencia hashes viejos (`index-*.js`, `DashboardHomePage-*.js`). Nginx respondía `index.html` para assets inexistentes → error de MIME.
+
+**Solución inmediata:** recarga forzada (`Ctrl+Shift+R` / `Cmd+Shift+R`) o ventana privada.
+
+**Solución en servidor (nginx):** `/assets/` usa `try_files $uri =404` (sin SPA fallback) e `index.html` lleva `Cache-Control: no-cache`. Redeploy del servicio `frontend`.
+
 ### `security_events_tenant_id_fkey` en login
 
 Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no existen (tablas `*_legacy`). Al registrar `login_failed`, la FK fallaba y el login devolvía 500.
