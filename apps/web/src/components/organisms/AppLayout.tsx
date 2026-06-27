@@ -62,7 +62,17 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="relative h-full w-72">{sidebarNode}</div>
+            <div className="relative h-full w-[85vw] max-w-sm overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
+                aria-label="Cerrar menú"
+              >
+                ✕
+              </button>
+              {sidebarNode}
+            </div>
           </div>
         )}
 
