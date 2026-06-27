@@ -173,32 +173,34 @@ export default function AdminUsersPage() {
             />
           </div>
 
+          <div className="overflow-x-auto">
           <DataTable
             columns={columns}
             data={items}
             loading={usersQuery.isLoading}
             emptyMessage="No se encontraron usuarios"
           />
+          </div>
 
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-4">
-              <span className="text-xs text-[var(--foreground-muted)]">
+            <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-center text-xs text-[var(--foreground-muted)] sm:text-left">
                 {total} usuario{total !== 1 ? 's' : ''} · Pág. {page} de {totalPages}
               </span>
-              <div className="flex gap-2">
+              <div className="flex justify-center gap-2">
                 <button
-                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+                  className="rounded-[var(--radius)] border border-[var(--border)] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--secondary)] disabled:opacity-40"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  Anterior
+                  ← Anterior
                 </button>
                 <button
-                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+                  className="rounded-[var(--radius)] border border-[var(--border)] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--secondary)] disabled:opacity-40"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Siguiente
+                  Siguiente →
                 </button>
               </div>
             </div>

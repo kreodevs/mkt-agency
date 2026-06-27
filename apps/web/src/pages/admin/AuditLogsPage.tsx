@@ -77,7 +77,7 @@ export default function AuditLogsPage() {
           description="Registro append-only de acciones sensibles (retención 90 días)."
         />
 
-        <Card className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
               Tenant ID
@@ -119,12 +119,14 @@ export default function AuditLogsPage() {
           </div>
         </Card>
 
-        <DataTable
-          columns={columns}
-          data={items}
-          loading={logsQuery.isLoading}
-          emptyMessage="No hay logs con estos filtros"
-        />
+        <div className="overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={items}
+            loading={logsQuery.isLoading}
+            emptyMessage="No hay logs con estos filtros"
+          />
+        </div>
       </div>
     </DashboardShell>
   );

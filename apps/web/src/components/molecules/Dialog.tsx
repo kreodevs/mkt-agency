@@ -16,10 +16,10 @@ export interface DialogInputProps
 }
 
 const sizeStyles: Record<string, string> = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
+  sm: 'w-[95vw] sm:max-w-sm',
+  md: 'w-[95vw] sm:max-w-md',
+  lg: 'w-[95vw] sm:max-w-lg',
+  xl: 'w-[95vw] sm:max-w-xl',
   full: 'max-w-[90vw] w-full',
 };
 

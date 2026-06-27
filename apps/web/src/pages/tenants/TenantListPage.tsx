@@ -46,9 +46,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
-
 export default function TenantListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -168,9 +165,9 @@ export default function TenantListPage() {
       />
 
       <Card>
-        <div className="mb-4 flex flex-wrap gap-3">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <select
-            className={filterSelectClass}
+            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] sm:w-auto"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | TenantStatus)}
             aria-label="Filtrar por estado"
@@ -182,7 +179,7 @@ export default function TenantListPage() {
             ))}
           </select>
           <select
-            className={filterSelectClass}
+            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] sm:w-auto"
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value as '' | TenantPlan)}
             aria-label="Filtrar por plan"
@@ -195,17 +192,19 @@ export default function TenantListPage() {
           </select>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={tableData}
-          loading={tenantsQuery.isLoading}
-          emptyMessage={
-            tenantsQuery.isError
-              ? 'No se pudo cargar el listado de tenants'
-              : 'No hay tenants que coincidan con los filtros'
-          }
-          rows={10}
-        />
+        <div className="overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={tableData}
+            loading={tenantsQuery.isLoading}
+            emptyMessage={
+              tenantsQuery.isError
+                ? 'No se pudo cargar el listado de tenants'
+                : 'No hay tenants que coincidan con los filtros'
+            }
+            rows={10}
+          />
+        </div>
 
         {tenantsQuery.data && (
           <p className="mt-3 text-xs text-[var(--foreground-muted)]">
