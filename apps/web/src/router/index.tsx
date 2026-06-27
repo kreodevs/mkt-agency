@@ -7,6 +7,7 @@ const SetupPage = lazy(() => import('@/pages/setup/SetupPage'));
 const DashboardHomePage = lazy(() => import('@/pages/DashboardHomePage'));
 const TenantListPage = lazy(() => import('@/pages/tenants/TenantListPage'));
 const AuditLogsPage = lazy(() => import('@/pages/admin/AuditLogsPage'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
 const SecurityEventsPage = lazy(() => import('@/pages/admin/SecurityEventsPage'));
 const CampaignListPage = lazy(() => import('@/pages/campaigns/CampaignListPage'));
 const CampaignCreatePage = lazy(() => import('@/pages/campaigns/CampaignCreatePage'));
@@ -47,6 +48,7 @@ export function AppRouter() {
           <Route path="/" element={<DashboardHomePage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
             <Route path="/admin/security-events" element={<SecurityEventsPage />} />
           </Route>

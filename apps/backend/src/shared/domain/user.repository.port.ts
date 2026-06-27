@@ -5,6 +5,10 @@ import {
   CreatedTenantOwner,
   CreateTenantOwnerParams,
   PublicUserRecord,
+  ListUsersParams,
+  ListUsersResult,
+  UserWithTenant,
+  UpdateUserByRepo,
 } from './user.types';
 
 export type {
@@ -14,6 +18,10 @@ export type {
   CreateSuperadminParams,
   CreatedTenantOwner,
   CreateTenantOwnerParams,
+  ListUsersParams,
+  ListUsersResult,
+  UserWithTenant,
+  UpdateUserByRepo,
 } from './user.types';
 
 export interface UserRepositoryPort {
@@ -32,6 +40,8 @@ export interface UserRepositoryPort {
   updateName(userId: string, name: string): Promise<PublicUserRecord | null>;
   updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
   clearTenantId(userId: string): Promise<void>;
+  findAll(params: ListUsersParams): Promise<ListUsersResult>;
+  updateById(userId: string, data: UpdateUserByRepo): Promise<UserWithTenant | null>;
 }
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');

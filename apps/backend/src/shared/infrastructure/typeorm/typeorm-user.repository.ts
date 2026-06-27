@@ -10,6 +10,10 @@ import {
   CreateTenantOwnerParams,
   CreatedTenantOwner,
   PublicUserRecord,
+  ListUsersParams,
+  ListUsersResult,
+  UserWithTenant,
+  UpdateUserByRepo,
 } from '../../domain/user.types';
 import { UserEntity } from '../typeorm/user.entity';
 
@@ -144,6 +148,99 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
 
   async clearTenantId(userId: string): Promise<void> {
     await this.users.update(userId, { tenantId: null });
+  }
+
+  async findAll(params: ListUsersParams): Promise<ListUsersResult> {
+    const { page, limit, search } = params;
+    const query = this.users.createQueryBuilder('user');
+
+    if (search) {
+      query.where(
+        '(LOWER(user.email) LIKE LOWER(:search) OR LOWER(user.name) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    const total = await query.getCount();
+    const items = await query
+      .orderBy('user.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const tenantsMap = new Map<string, { id: string; name: string; slug: string; plan: string; status: string }>();
+    const tenantIds = items.filter((u) => u.tenantId).map((u) => u.tenantId!);
+    if (tenantIds.length > 0) {
+      const tenants = await this.dataSource
+        .getRepository(TenantEntity)
+        .find({ where: tenantIds.map((id) => ({ id })) });
+      for (const t of tenants) {
+        tenantsMap.set(t.id, {
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          plan: t.plan,
+          status: t.status,
+        });
+      }
+    }
+
+    const mapped: UserWithTenant[] = items.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isSuperadmin: user.isSuperadmin,
+      role: user.role,
+      tenantId: user.tenantId,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      tenant: user.tenantId ? (tenantsMap.get(user.tenantId) ?? null) : null,
+    }));
+
+    return { items: mapped, total, page, limit };
+  }
+
+  async updateById(userId: string, data: UpdateUserByRepo): Promise<UserWithTenant | null> {
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name.trim();
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.status !== undefined) updateData.status = data.status;
+
+    if (Object.keys(updateData).length === 0) {
+      return this.findWithTenantById(userId);
+    }
+
+    await this.users.update(userId, updateData);
+    return this.findWithTenantById(userId);
+  }
+
+  private async findWithTenantById(userId: string): Promise<UserWithTenant | null> {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) return null;
+
+    let tenant: UserWithTenant['tenant'] = null;
+    if (user.tenantId) {
+      const t = await this.dataSource
+        .getRepository(TenantEntity)
+        .findOne({ where: { id: user.tenantId } });
+      if (t) {
+        tenant = { id: t.id, name: t.name, slug: t.slug, plan: t.plan, status: t.status };
+      }
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isSuperadmin: user.isSuperadmin,
+      role: user.role,
+      tenantId: user.tenantId,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      tenant,
+    };
   }
 
   private toAuthUser(

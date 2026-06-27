@@ -12,6 +12,7 @@ export const superadminNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
       { label: 'Tenants', href: '/tenants', icon: Building2 },
+      { label: 'Usuarios', href: '/admin/users', icon: Users },
       { label: 'Auditoría', href: '/admin/audit-logs', icon: ScrollText },
       { label: 'Seguridad', href: '/admin/security-events', icon: AlertTriangle },
     ],
