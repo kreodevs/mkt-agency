@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Trash2 } from 'lucide-react';
+import { Copy, Download, Grid3X3, ImageIcon, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetUploader } from '@/components/assets/AssetUploader';
 import { Button } from '@/components/atoms/Button';
@@ -19,6 +19,8 @@ import {
 } from '@/services/assets';
 import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
 
+type ViewMode = 'grid' | 'table';
+
 const filterSelectClass =
   'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
@@ -28,10 +30,35 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function AssetThumbnail({ asset }: { asset: Asset }) {
+  if (asset.type === 'image' && asset.url) {
+    return (
+      <div className="aspect-square overflow-hidden rounded-lg bg-[var(--background-secondary)]">
+        <img
+          src={asset.url}
+          alt={asset.name}
+          className="h-full w-full object-cover transition-transform hover:scale-105"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex aspect-square items-center justify-center rounded-lg bg-[var(--background-secondary)]">
+      <div className="flex flex-col items-center gap-1 text-[var(--foreground-muted)]">
+        <ImageIcon className="h-8 w-8" />
+        <span className="text-[10px] font-medium">{ASSET_TYPE_LABELS[asset.type]}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function AssetLibraryPage() {
   const queryClient = useQueryClient();
   const [folderFilter, setFolderFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const foldersQuery = useQuery({
     queryKey: ['asset-folders'],
@@ -72,6 +99,7 @@ export default function AssetLibraryPage() {
   });
 
   const items = assetsQuery.data?.items ?? [];
+  const imagesOnly = items.filter((a) => a.type === 'image');
 
   const columns: DataTableColumn[] = useMemo(
     () => [
@@ -165,7 +193,7 @@ export default function AssetLibraryPage() {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[var(--foreground-muted)]">Carpeta</label>
               <select
@@ -197,6 +225,36 @@ export default function AssetLibraryPage() {
                 ))}
               </select>
             </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>
+              <div className="flex">
+                <button
+                  type="button"
+                  className={`flex h-10 items-center gap-1 rounded-l-[var(--radius)] border px-3 text-sm transition-colors ${
+                    viewMode === 'grid'
+                      ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
+                      : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
+                  }`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                  Grid
+                </button>
+                <button
+                  type="button"
+                  className={`flex h-10 items-center gap-1 rounded-r-[var(--radius)] border px-3 text-sm transition-colors ${
+                    viewMode === 'table'
+                      ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
+                      : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
+                  }`}
+                  onClick={() => setViewMode('table')}
+                >
+                  <LayoutList className="h-4 w-4" />
+                  Tabla
+                </button>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -208,16 +266,132 @@ export default function AssetLibraryPage() {
         </Card>
       </div>
 
-      <Card>
-        <DataTable
-          data={items}
-          columns={columns}
-          loading={assetsQuery.isLoading}
-          emptyMessage="No hay activos en la librería"
-          paginator
-          rows={20}
-        />
-      </Card>
+      {/* Grid view */}
+      {viewMode === 'grid' ? (
+        assetsQuery.isLoading ? (
+          <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center text-[var(--foreground-muted)]">
+            No hay activos en la librería
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Images grid */}
+            {imagesOnly.length > 0 && (
+              <Card title="Imágenes" subtitle={`${imagesOnly.length} archivos`}>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {imagesOnly.map((asset) => (
+                    <AssetGridCard
+                      key={asset.id}
+                      asset={asset}
+                      onDownload={async () => {
+                        const { url } = await getAssetDownloadUrl(asset.id);
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      onDuplicate={() => duplicateMutation.mutate(asset.id)}
+                      onDelete={() => deleteMutation.mutate(asset.id)}
+                      locked={asset.isInUse || asset.referenceCount > 0}
+                    />
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Other assets */}
+            {items.filter((a) => a.type !== 'image').length > 0 && (
+              <Card title="Otros activos" subtitle="Documentos, videos, audio">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {items
+                    .filter((a) => a.type !== 'image')
+                    .map((asset) => (
+                      <AssetGridCard
+                        key={asset.id}
+                        asset={asset}
+                        onDownload={async () => {
+                          const { url } = await getAssetDownloadUrl(asset.id);
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                        }}
+                        onDuplicate={() => duplicateMutation.mutate(asset.id)}
+                        onDelete={() => deleteMutation.mutate(asset.id)}
+                        locked={asset.isInUse || asset.referenceCount > 0}
+                      />
+                    ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        )
+      ) : (
+        /* Table view */
+        <Card>
+          <DataTable
+            data={items}
+            columns={columns}
+            loading={assetsQuery.isLoading}
+            emptyMessage="No hay activos en la librería"
+            paginator
+            rows={20}
+          />
+        </Card>
+      )}
     </DashboardShell>
+  );
+}
+
+function AssetGridCard({
+  asset,
+  onDownload,
+  onDuplicate,
+  onDelete,
+  locked,
+}: {
+  asset: Asset;
+  onDownload: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  locked: boolean;
+}) {
+  return (
+    <div className="group relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition-all hover:shadow-md">
+      <AssetThumbnail asset={asset} />
+
+      {/* Actions overlay on hover */}
+      <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <Button type="button" size="sm" variant="ghost" onClick={onDownload}>
+          <Download className="h-3.5 w-3.5" />
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onDuplicate}>
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+        <Button type="button" size="sm" variant="ghost" disabled={locked} onClick={onDelete}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <div className="border-t border-[var(--border)] p-2.5">
+        <p className="truncate text-xs font-medium text-[var(--foreground)]">{asset.name}</p>
+        <p className="text-[10px] text-[var(--foreground-subtle)]">
+          {formatSize(asset.fileSize)}
+          {asset.referenceCount > 0 && ` · ${asset.referenceCount} refs`}
+        </p>
+        {asset.tags.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {asset.tags.slice(0, 2).map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full bg-[var(--secondary)] px-1.5 py-0.5 text-[9px] text-[var(--foreground-muted)]"
+              >
+                {tag.name}
+              </span>
+            ))}
+            {asset.tags.length > 2 && (
+              <span className="text-[9px] text-[var(--foreground-subtle)]">
+                +{asset.tags.length - 2}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
