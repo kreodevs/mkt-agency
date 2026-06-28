@@ -202,7 +202,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
             type="button"
             data-collapse-trigger
             onClick={toggleCollapse}
-            className="absolute -right-3 top-24 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)]"
+            className="absolute -right-3 top-24 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] lg:flex"
           >
             {collapsed ? (
               <ChevronRight className="h-3.5 w-3.5" />
