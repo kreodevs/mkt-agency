@@ -16,10 +16,7 @@ export async function login(email: string, password: string) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as Record<string, unknown>;
-    const message =
-      typeof (body as { error?: string })?.error === 'string'
-        ? (body as { error?: string }).error.trim()
-        : response.statusText || 'Error desconocido';
+    const message = (body as { error?: string }).error?.trim() || response.statusText || 'Error desconocido';
     throw new ApiError(message, response.status);
   }
 
