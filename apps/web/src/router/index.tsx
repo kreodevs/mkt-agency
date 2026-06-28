@@ -4,7 +4,6 @@ import { AuthGuard, GuestGuard, SuperadminGuard, TenantGuard } from '@/guards/Au
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const SetupPage = lazy(() => import('@/pages/setup/SetupPage'));
-const DashboardHomePage = lazy(() => import('@/pages/DashboardHomePage'));
 const TenantListPage = lazy(() => import('@/pages/tenants/TenantListPage'));
 const AuditLogsPage = lazy(() => import('@/pages/admin/AuditLogsPage'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
@@ -30,8 +29,10 @@ const ReportListPage = lazy(() => import('@/pages/reports/ReportListPage'));
 const ReportDetailPage = lazy(() => import('@/pages/reports/ReportDetailPage'));
 const OnboardingWizardPage = lazy(() => import('@/pages/onboarding/OnboardingWizardPage'));
 const AgentListPage = lazy(() => import('@/pages/agents/AgentListPage'));
+const MetricsDashboardPage = lazy(() => import('@/pages/dashboard/MetricsDashboardPage'));
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
+const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
 
 function Loading() {
   return (
@@ -51,7 +52,7 @@ export function AppRouter() {
         </Route>
 
         <Route element={<AuthGuard />}>
-          <Route path="/" element={<DashboardHomePage />} />
+          <Route path="/" element={<MetricsDashboardPage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
             <Route path="/admin/packages" element={<PackageListPage />} />
@@ -66,6 +67,7 @@ export function AppRouter() {
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
+            <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />
