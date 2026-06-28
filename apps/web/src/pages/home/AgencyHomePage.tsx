@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { useAuthStore } from '@/store/auth';
+import {
   AlertCircle,
   ArrowRight,
   BarChart3,
@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
+import { PageHeader } from '@/components/molecules/PageHeader';
 import { apiFetch } from '@/services/api';
 
 interface UpcomingPost {
@@ -83,10 +84,16 @@ export default function AgencyHomePage() {
   });
 
   const data = homeQuery.data;
+  const user = useAuthStore((s) => s.user);
 
   const hasOnboarded = useMemo(() => {
     return data && (data.upcoming.length > 0 || data.strategy || data.communityBatch || data.leads.total > 0);
   }, [data]);
+
+  // Superadmin with auto-created tenant — skip empty onboarding state
+  const isSuperadminWithTenant = useMemo(() => {
+    return user?.isSuperadmin && !user?.impersonating;
+  }, [user]);
 
   if (homeQuery.isLoading) {
     return (
@@ -95,6 +102,43 @@ export default function AgencyHomePage() {
           <div className="text-center">
             <div className="mb-4 text-4xl">🏢</div>
             <p className="text-[var(--foreground-muted)]">Cargando tu agencia...</p>
+          </div>
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  // Superadmin without a tenant — show admin dashboard
+  if (isSuperadminWithTenant && !hasOnboarded) {
+    return (
+      <DashboardShell>
+        <div className="space-y-6">
+          <PageHeader
+            title="Administración"
+            description="Panel de control de la plataforma"
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <QuickKpiCard
+              icon={Users}
+              label="Leads hoy"
+              value={data!.leads.today}
+              color="text-blue-600"
+              bg="bg-blue-500/10"
+            />
+            <QuickKpiCard
+              icon={Lightbulb}
+              label="Estrategia"
+              value="Pendiente"
+              color="text-amber-600"
+              bg="bg-amber-500/10"
+            />
+            <QuickKpiCard
+              icon={CalendarDays}
+              label="Próximas publicaciones"
+              value={data!.upcoming.length}
+              color="text-violet-600"
+              bg="bg-violet-500/10"
+            />
           </div>
         </div>
       </DashboardShell>
