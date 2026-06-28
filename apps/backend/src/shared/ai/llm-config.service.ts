@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +17,8 @@ import {
 
 @Injectable()
 export class LlmConfigService {
+  private readonly logger = new Logger(LlmConfigService.name);
+
   constructor(
     @InjectRepository(LlmTaskConfigEntity)
     private readonly configs: Repository<LlmTaskConfigEntity>,
@@ -27,6 +30,25 @@ export class LlmConfigService {
       relations: { providerEntity: true },
       order: { taskType: 'ASC' },
     });
+
+    // Auto-create missing task configs for any task type not yet in DB
+    const existingTypes = new Set(rows.map((r) => r.taskType));
+    const missing = LLM_TASK_TYPES.filter((t) => !existingTypes.has(t));
+    if (missing.length > 0) {
+      const newRows = this.configs.create(
+        missing.map((taskType) => ({
+          taskType,
+          label: taskType,
+          model: 'deepseek/deepseek-v4-flash',
+          temperature: '0.7',
+          enabled: true,
+        })),
+      );
+      await this.configs.save(newRows);
+      this.logger.log(`Auto-created LLM task configs: ${missing.join(', ')}`);
+      rows.push(...newRows.map((r) => ({ ...r, providerEntity: null })));
+    }
+
     return rows.map((row) => this.toResponse(row));
   }
 
