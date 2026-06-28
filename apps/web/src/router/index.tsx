@@ -32,6 +32,7 @@ const AgentListPage = lazy(() => import('@/pages/agents/AgentListPage'));
 const MetricsDashboardPage = lazy(() => import('@/pages/dashboard/MetricsDashboardPage'));
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
+const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
 
 function Loading() {
   return (
@@ -66,6 +67,7 @@ export function AppRouter() {
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
+            <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />

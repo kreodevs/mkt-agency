@@ -30,6 +30,18 @@ export interface CompetitorAnalysis {
   updatedAt: string;
 }
 
+export interface ImageGeneration {
+  id: string;
+  tenantId: string;
+  prompt: string;
+  status: string;
+  imageUrl: string | null;
+  assetId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AgentCatalogItem {
   id: string;
   name: string;
@@ -55,10 +67,20 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     id: 'competitor_intel',
     name: 'Competitor Intel',
     description:
-      'Analiza en profundidad a tus competidores: fortalezas, debilidades, posicionamiento y oportunidades de mercado. Genera un reporte estratégico.',
+      'Analiza en profundidad a tus competidores: fortalezas, debilidades, posicionamiento y oportunidades de mercado.',
     icon: 'Target',
     href: '/agents/competitor-intel',
     status: 'ready',
     color: 'from-amber-500 to-orange-600',
+  },
+  {
+    id: 'image_generation',
+    name: 'Image Generator',
+    description:
+      'Genera imágenes para tus campañas con IA. Describe lo que necesitas y elige estilo y tamaño.',
+    icon: 'Image',
+    href: '/agents/image-generator',
+    status: 'ready',
+    color: 'from-pink-500 to-rose-600',
   },
 ];

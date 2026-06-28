@@ -6,6 +6,7 @@ export const LLM_TASK_TYPES = [
   'report_generation',
   'brand_interview',
   'competitor_intel',
+  'image_generation',
 ] as const;
 
 export type LlmTaskType = (typeof LLM_TASK_TYPES)[number];

@@ -43,6 +43,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AgentInterviewEntity } from './modules/agents/domain/agent-interview.entity';
 import { AgentInterviewMessageEntity } from './modules/agents/domain/agent-interview-message.entity';
 import { AgentCompetitorAnalysisEntity } from './modules/agents/domain/agent-competitor-analysis.entity';
+import { AgentImageGenerationEntity } from './modules/agents/domain/agent-image-generation.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
@@ -134,6 +135,7 @@ import {
           AgentInterviewEntity,
           AgentInterviewMessageEntity,
           AgentCompetitorAnalysisEntity,
+          AgentImageGenerationEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
