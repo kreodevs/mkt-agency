@@ -181,6 +181,11 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
     // all features (CM, Strategy, Dashboard, etc.) without impersonating.
     if (!user.tenantId) {
       const slug = `admin-${user.id.slice(0, 8).toLowerCase()}`;
+      const existing = await this.tenants.findBySlug(slug);
+      if (existing) {
+        await this.users.updateById(user.id, { tenantId: existing.id });
+        return existing.id;
+      }
       const tenant = await this.tenants.create({
         name: `${user.name}'s Agency`,
         slug,

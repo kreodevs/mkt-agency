@@ -214,6 +214,7 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     if (data.name !== undefined) updateData.name = data.name.trim();
     if (data.role !== undefined) updateData.role = data.role;
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.tenantId !== undefined) updateData.tenantId = data.tenantId;
 
     if (Object.keys(updateData).length === 0) {
       return this.findWithTenantById(userId);
