@@ -11,6 +11,7 @@ export const superadminNavigation = [
     title: 'Administración',
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
+      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
       { label: 'Tenants', href: '/tenants', icon: Building2 },
       { label: 'Paquetes', href: '/admin/packages', icon: Package },
       { label: 'Proveedores LLM', href: '/admin/llm-providers', icon: Bot },
@@ -18,6 +19,29 @@ export const superadminNavigation = [
       { label: 'Usuarios', href: '/admin/users', icon: Users },
       { label: 'Auditoría', href: '/admin/audit-logs', icon: ScrollText },
       { label: 'Seguridad', href: '/admin/security-events', icon: AlertTriangle },
+    ],
+  },
+  {
+    title: 'Agentes',
+    items: [
+      { label: 'Brand Analyst', href: '/agents', icon: Bot },
+      { label: 'Community Manager', href: '/community', icon: MessageSquare },
+      { label: 'Estrategia', href: '/strategy', icon: Lightbulb },
+    ],
+  },
+  {
+    title: 'Marketing',
+    items: [
+      { label: 'Campañas', href: '/campaigns', icon: Megaphone },
+      { label: 'Contenidos', href: '/contents', icon: FileText },
+      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
+      { label: 'Formularios', href: '/forms', icon: FileInput },
+      { label: 'Leads', href: '/leads', icon: Users },
+      { label: 'Activos', href: '/assets', icon: FolderOpen },
+      { label: 'Propuestas', href: '/proposals', icon: FileSignature },
+      { label: 'Reportes', href: '/reports', icon: BarChart3 },
+      { label: 'Dominio', href: '/settings/domain', icon: Globe },
+      { label: 'Competidores', href: '/settings/competitors', icon: Target },
     ],
   },
 ];
