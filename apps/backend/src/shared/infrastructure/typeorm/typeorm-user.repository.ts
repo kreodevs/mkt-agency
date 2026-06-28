@@ -109,7 +109,7 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     tenantId: string,
   ): Promise<PublicUserRecord | null> {
     const user = await this.users.findOne({
-      where: { id, tenantId, isSuperadmin: false },
+      where: { id, tenantId },
     });
     return user ? this.toPublicUser(user) : null;
   }
@@ -152,7 +152,7 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
 
   async findByTenantId(tenantId: string): Promise<PublicUserRecord[]> {
     const users = await this.users.find({
-      where: { tenantId, isSuperadmin: false },
+      where: { tenantId },
       order: { name: 'ASC' },
     });
     return users.map((u) => this.toPublicUser(u));
