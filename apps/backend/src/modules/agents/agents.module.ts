@@ -29,6 +29,7 @@ import { CompetitorIntelProcessor } from './workers/competitor-intel.processor';
 import { CompetitorIntelService } from './competitor-intel.service';
 import { CompetitorIntelController } from './competitor-intel.controller';
 import { ImageGenerationController } from './image-generation.controller';
+import { WebsiteAnalyzerService } from './website-analyzer.service';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ImageGenerationController } from './image-generation.controller';
     CompetitorIntelProcessor,
     StubImageGenerationAdapter,
     OpenRouterImageGenerationAdapter,
+    WebsiteAnalyzerService,
     {
       provide: INTERVIEW_ADAPTER,
       useFactory: (

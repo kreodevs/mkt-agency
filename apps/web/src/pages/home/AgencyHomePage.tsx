@@ -9,14 +9,13 @@ import {
   Lightbulb,
   MessageSquare,
   Sparkles,
-  Target,
   TrendingUp,
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import WebsiteAnalyzerFlow from '@/components/onboarding/WebsiteAnalyzerFlow';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Card } from '@/components/molecules/Card';
-import { Button } from '@/components/atoms/Button';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { apiFetch } from '@/services/api';
 
@@ -150,42 +149,7 @@ export default function AgencyHomePage() {
     return (
       <DashboardShell>
         <div className="flex min-h-[70vh] items-center justify-center">
-          <div className="max-w-md text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-              <Sparkles className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="mb-2 text-2xl font-black text-[var(--foreground)]">
-              Tu agencia de marketing IA
-            </h1>
-            <p className="mb-8 text-sm text-[var(--foreground-muted)]">
-              SOHO, autoempleados, pequeños negocios — esto es tu agencia de marketing
-              con inteligencia artificial. Estrategia, contenido, imágenes y análisis
-              sin pagar una agencia tradicional.
-            </p>
-
-            <div className="mb-8 grid gap-3 text-left">
-              {[
-                { icon: MessageSquare, text: 'Genera copy para redes sociales con IA' },
-                { icon: Lightbulb, text: 'Estrategia automática que se ajusta sola' },
-                { icon: Target, text: 'Competitor intel para saber qué hacen otros' },
-                { icon: TrendingUp, text: 'Dashboard con métricas y diagnóstico' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--secondary)]">
-                    <item.icon className="h-4 w-4 text-[var(--primary)]" />
-                  </div>
-                  <span className="text-sm text-[var(--foreground)]">{item.text}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link to="/onboarding">
-              <Button className="w-full gap-2">
-                <Sparkles className="h-4 w-4" />
-                Configurar mi agencia
-              </Button>
-            </Link>
-          </div>
+          <WebsiteAnalyzerFlow />
         </div>
       </DashboardShell>
     );
