@@ -24,23 +24,40 @@ export class DashboardController {
   async getMetrics(@CurrentUser() user: AuthenticatedUser) {
     const tenantId = user.tenantId!;
 
-    const [leadCounts, contentCounts, campaignCounts] = await Promise.all([
-      this.leads
-        .createQueryBuilder('l')
-        .select('l.stage', 'stage')
-        .addSelect('COUNT(*)', 'count')
-        .where('l.tenant_id = :tenantId', { tenantId })
-        .groupBy('l.stage')
-        .getRawMany<{ stage: string; count: string }>(),
-      this.contents
-        .createQueryBuilder('c')
-        .select('c.status', 'status')
-        .addSelect('COUNT(*)', 'count')
-        .where('c.tenant_id = :tenantId', { tenantId })
-        .groupBy('c.status')
-        .getRawMany<{ status: string; count: string }>(),
-      this.campaigns.count({ where: { tenantId } }),
-    ]);
+    const [leadCounts, contentCounts, campaignCounts, contentTrend, campaignStatusCounts] =
+      await Promise.all([
+        this.leads
+          .createQueryBuilder('l')
+          .select('l.stage', 'stage')
+          .addSelect('COUNT(*)', 'count')
+          .where('l.tenant_id = :tenantId', { tenantId })
+          .groupBy('l.stage')
+          .getRawMany<{ stage: string; count: string }>(),
+        this.contents
+          .createQueryBuilder('c')
+          .select('c.status', 'status')
+          .addSelect('COUNT(*)', 'count')
+          .where('c.tenant_id = :tenantId', { tenantId })
+          .groupBy('c.status')
+          .getRawMany<{ status: string; count: string }>(),
+        this.campaigns.count({ where: { tenantId } }),
+        this.contents
+          .createQueryBuilder('c')
+          .select(`to_char(c.created_at, 'YYYY-MM')`, 'month')
+          .addSelect('COUNT(*)', 'count')
+          .where('c.tenant_id = :tenantId', { tenantId })
+          .andWhere("c.created_at >= NOW() - INTERVAL '12 months'")
+          .groupBy('month')
+          .orderBy('month', 'ASC')
+          .getRawMany<{ month: string; count: string }>(),
+        this.campaigns
+          .createQueryBuilder('c')
+          .select('c.status', 'status')
+          .addSelect('COUNT(*)', 'count')
+          .where('c.tenant_id = :tenantId', { tenantId })
+          .groupBy('c.status')
+          .getRawMany<{ status: string; count: string }>(),
+      ]);
 
     const leadsByStage: Record<string, number> = {};
     let totalLeads = 0;
@@ -56,6 +73,18 @@ export class DashboardController {
       totalContent += Number(row.count);
     }
 
+    const campaignsByStatus: Record<string, number> = {};
+    let totalCampaigns = 0;
+    for (const row of campaignStatusCounts) {
+      campaignsByStatus[row.status] = Number(row.count);
+      totalCampaigns += Number(row.count);
+    }
+
+    const trend = contentTrend.map((r) => ({
+      month: r.month,
+      count: Number(r.count),
+    }));
+
     return {
       leads: {
         total: totalLeads,
@@ -63,6 +92,13 @@ export class DashboardController {
         conversionRate: totalLeads > 0
           ? Math.round(((leadsByStage['client'] ?? 0) / totalLeads) * 100)
           : 0,
+        funnel: [
+          { stage: 'prospect', label: 'Prospectos', value: leadsByStage['prospect'] ?? 0 },
+          { stage: 'contacted', label: 'Contactados', value: leadsByStage['contacted'] ?? 0 },
+          { stage: 'interested', label: 'Interesados', value: leadsByStage['interested'] ?? 0 },
+          { stage: 'trial', label: 'En prueba', value: leadsByStage['trial'] ?? 0 },
+          { stage: 'client', label: 'Clientes', value: leadsByStage['client'] ?? 0 },
+        ],
       },
       content: {
         total: totalContent,
@@ -70,9 +106,12 @@ export class DashboardController {
         approvalRate: totalContent > 0
           ? Math.round(((contentByStatus['approved'] ?? 0) / totalContent) * 100)
           : 0,
+        trend,
       },
       campaigns: {
         total: campaignCounts,
+        byStatus: campaignsByStatus,
+        active: (campaignsByStatus['active'] ?? 0) + (campaignsByStatus['running'] ?? 0),
       },
     };
   }
