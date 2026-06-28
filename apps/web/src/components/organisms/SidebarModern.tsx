@@ -169,11 +169,22 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                   </p>
                 </div>
               )}
-              {onLogout && (
+              {onLogout && !collapsed && (
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="text-[var(--foreground-subtle)] transition-colors hover:text-[var(--destructive)]"
+                  className="flex items-center gap-1.5 rounded-[var(--radius)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+                  aria-label="Cerrar sesión"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Salir
+                </button>
+              )}
+              {onLogout && collapsed && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="rounded-[var(--radius)] p-2 text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
                   aria-label="Cerrar sesión"
                 >
                   <LogOut className="h-4 w-4" />
