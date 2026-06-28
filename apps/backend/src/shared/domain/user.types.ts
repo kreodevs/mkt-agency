@@ -73,4 +73,5 @@ export type UpdateUserByRepo = {
   name?: string;
   role?: string;
   status?: string;
+  tenantId?: string | null;
 };

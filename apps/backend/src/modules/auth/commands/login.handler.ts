@@ -10,6 +10,10 @@ import {
   USER_REPOSITORY,
   UserRepositoryPort,
 } from '../../../shared/domain/user.repository.port';
+import {
+  TENANT_REPOSITORY,
+  TenantRepositoryPort,
+} from '../../tenant/domain/tenant.repository.port';
 import { SecurityEventRecorderService } from '../../security/services/security-event-recorder.service';
 import {
   SESSION_REPOSITORY,
@@ -28,6 +32,8 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
     private readonly users: UserRepositoryPort,
     @Inject(SESSION_REPOSITORY)
     private readonly sessions: SessionRepositoryPort,
+    @Inject(TENANT_REPOSITORY)
+    private readonly tenants: TenantRepositoryPort,
     private readonly jwtTokenService: JwtTokenService,
     private readonly securityEvents: SecurityEventRecorderService,
   ) {}
@@ -162,6 +168,8 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
 
   private async resolveSessionTenantId(user: {
     id: string;
+    name: string;
+    email: string;
     isSuperadmin: boolean;
     tenantId: string | null;
   }): Promise<string | null> {
@@ -169,10 +177,22 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       return user.tenantId;
     }
 
-    if (user.tenantId) {
-      await this.users.clearTenantId(user.id);
+    // Superadmin without a tenant — auto-create one so they can use
+    // all features (CM, Strategy, Dashboard, etc.) without impersonating.
+    if (!user.tenantId) {
+      const slug = `admin-${user.id.slice(0, 8).toLowerCase()}`;
+      const tenant = await this.tenants.create({
+        name: `${user.name}'s Agency`,
+        slug,
+        plan: 'enterprise',
+        maxUsers: 10,
+        maxAssetsSize: 1_073_741_824, // 1 GB
+        maxFileSize: 52_428_800,       // 50 MB
+      });
+      await this.users.updateById(user.id, { tenantId: tenant.id });
+      return tenant.id;
     }
 
-    return null;
+    return user.tenantId;
   }
 }

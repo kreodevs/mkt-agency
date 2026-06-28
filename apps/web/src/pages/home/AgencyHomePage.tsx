@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
+import { useMemo } from 'react';
+import { useAuthStore } from '@/store/auth';
   AlertCircle,
   ArrowRight,
   BarChart3,

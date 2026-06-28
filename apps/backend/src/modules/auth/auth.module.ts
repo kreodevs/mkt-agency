@@ -15,13 +15,16 @@ import { SessionEntity } from './infrastructure/typeorm/session.entity';
 import { TypeOrmSessionRepository } from './infrastructure/typeorm/typeorm-session.repository';
 import { RateLimitGuard } from './guards/rate-limit.guard';
 import { RateLimitService } from './services/rate-limit.service';
+import { TENANT_REPOSITORY } from '../tenant/domain/tenant.repository.port';
+import { TypeOrmTenantRepository } from '../tenant/infrastructure/typeorm/typeorm-tenant.repository';
+import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 
 @Module({
   imports: [
     CqrsModule,
     AuthSharedModule,
     SecurityModule,
-    TypeOrmModule.forFeature([SessionEntity, UserEntity]),
+    TypeOrmModule.forFeature([SessionEntity, UserEntity, TenantEntity]),
   ],
   controllers: [AuthController],
   providers: [
@@ -37,6 +40,10 @@ import { RateLimitService } from './services/rate-limit.service';
     {
       provide: USER_REPOSITORY,
       useClass: TypeOrmUserRepository,
+    },
+    {
+      provide: TENANT_REPOSITORY,
+      useClass: TypeOrmTenantRepository,
     },
   ],
   exports: [AuthService, RateLimitGuard, RateLimitService],
