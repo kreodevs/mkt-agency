@@ -101,62 +101,63 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           </div>
         </div>
 
-        <div className="custom-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)]">
-          {groups.map((group, idx) => (
-            <div key={idx} className="mb-[var(--spacing-xl)]">
-              {!collapsed && group.title && (
-                <h3 className="mb-[var(--spacing-md)] px-[var(--spacing-md)] text-[10px] font-black uppercase tracking-[0.2em] text-[var(--foreground-subtle)]">
-                  {group.title}
-                </h3>
-              )}
-              <div className="space-y-[var(--spacing-xs)]">
-                {group.items.map((item, i) => {
-                  const isActive = activeHref === item.href;
-                  const Icon = item.icon;
-                  const content = (
-                    <div
-                      className={cn(
-                        'group relative flex cursor-pointer items-center gap-[var(--spacing-md)] rounded-[var(--radius)] px-[var(--spacing-md)] py-2.5 transition-all duration-200',
-                        isActive
-                          ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md'
-                          : 'text-[var(--foreground-muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]',
-                      )}
-                    >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && (
-                        <span className="flex-1 whitespace-nowrap text-sm font-semibold">
-                          {item.label}
-                        </span>
-                      )}
-                      {!collapsed && item.children?.length ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : null}
-                    </div>
-                  );
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="custom-scrollbar overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)]">
+            {groups.map((group, idx) => (
+              <div key={idx} className="mb-[var(--spacing-xl)]">
+                {!collapsed && group.title && (
+                  <h3 className="mb-[var(--spacing-md)] px-[var(--spacing-md)] text-[10px] font-black uppercase tracking-[0.2em] text-[var(--foreground-subtle)]">
+                    {group.title}
+                  </h3>
+                )}
+                <div className="space-y-[var(--spacing-xs)]">
+                  {group.items.map((item, i) => {
+                    const isActive = activeHref === item.href;
+                    const Icon = item.icon;
+                    const content = (
+                      <div
+                        className={cn(
+                          'group relative flex cursor-pointer items-center gap-[var(--spacing-md)] rounded-[var(--radius)] px-[var(--spacing-md)] py-2.5 transition-all duration-200',
+                          isActive
+                            ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md'
+                            : 'text-[var(--foreground-muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]',
+                        )}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && (
+                          <span className="flex-1 whitespace-nowrap text-sm font-semibold">
+                            {item.label}
+                          </span>
+                        )}
+                        {!collapsed && item.children?.length ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : null}
+                      </div>
+                    );
 
-                  const link = (
-                    <LinkComponent to={item.href} href={item.href}>
-                      {content}
-                    </LinkComponent>
-                  );
+                    const link = (
+                      <LinkComponent to={item.href} href={item.href}>
+                        {content}
+                      </LinkComponent>
+                    );
 
-                  return (
-                    <div key={i}>
-                      {collapsed ? (
-                        <Tooltip content={item.label}>{link}</Tooltip>
-                      ) : (
-                        link
-                      )}
-                    </div>
-                  );
-                })}
+                    return (
+                      <div key={i}>
+                        {collapsed ? (
+                          <Tooltip content={item.label}>{link}</Tooltip>
+                        ) : (
+                          link
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {user && (
-          <div className="mt-auto shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">
+          {user && (
+            <div className="shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">
             <div className="flex items-center gap-[var(--spacing-md)]">
               <Avatar src={user.avatar} name={user.name} size="sm" />
               {!collapsed && (
@@ -193,6 +194,8 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
             </div>
           </div>
         )}
+
+        </div>
 
         {collapsible && (
           <button
