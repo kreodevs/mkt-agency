@@ -1,5 +1,5 @@
-import { apiFetch } from '@/services/api';
 import { useAuthStore, type AuthTokens, type AuthUser } from '@/store/auth';
+import { API_BASE, ApiError, apiFetch } from '@/services/api';
 
 interface LoginResponse {
   accessToken: string;
@@ -8,10 +8,22 @@ interface LoginResponse {
 }
 
 export async function login(email: string, password: string) {
-  const data = await apiFetch<LoginResponse>('/auth/login', {
+  const response = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+    const message =
+      typeof (body as { error?: string })?.error === 'string'
+        ? (body as { error?: string }).error.trim()
+        : response.statusText || 'Error desconocido';
+    throw new ApiError(message, response.status);
+  }
+
+  const data = (await response.json()) as LoginResponse;
 
   useAuthStore.getState().setSession(
     { accessToken: data.accessToken, refreshToken: data.refreshToken },
