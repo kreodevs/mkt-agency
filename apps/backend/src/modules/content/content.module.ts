@@ -26,5 +26,6 @@ import { DigitalSignatureService } from './services/digital-signature.service';
   ],
   controllers: [ContentController],
   providers: [ContentService, DigitalSignatureService, ContentEventSourcingService],
+  exports: [ContentService],
 })
 export class ContentModule {}

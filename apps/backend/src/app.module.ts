@@ -46,6 +46,8 @@ import { AgentCompetitorAnalysisEntity } from './modules/agents/domain/agent-com
 import { AgentImageGenerationEntity } from './modules/agents/domain/agent-image-generation.entity';
 import { StrategyModule } from './modules/strategy/strategy.module';
 import { StrategyAdjustmentEntity } from './modules/strategy/infrastructure/typeorm/strategy-adjustment.entity';
+import { CommunityManagerModule } from './modules/community-manager/community-manager.module';
+import { CommunityManagerBatchEntity } from './modules/community-manager/infrastructure/typeorm/community-manager-batch.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
@@ -139,6 +141,7 @@ import {
           AgentCompetitorAnalysisEntity,
           AgentImageGenerationEntity,
           StrategyAdjustmentEntity,
+          CommunityManagerBatchEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -162,6 +165,7 @@ import {
     AgentsModule,
     DashboardModule,
     StrategyModule,
+    CommunityManagerModule,
     AuditModule,
     SuperadminModule,
     UsersModule,

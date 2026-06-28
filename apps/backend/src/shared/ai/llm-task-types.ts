@@ -8,6 +8,7 @@ export const LLM_TASK_TYPES = [
   'competitor_intel',
   'image_generation',
   'strategy_adjustment',
+  'social_copy',
 ] as const;
 
 export type LlmTaskType = (typeof LLM_TASK_TYPES)[number];
