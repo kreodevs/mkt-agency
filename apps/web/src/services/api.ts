@@ -55,8 +55,20 @@ export function getApiErrorMessage(
 }
 
 async function refreshAccessToken(): Promise<string | null> {
+  const store = useAuthStore.getState();
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
+
+  // If impersonating and we get a 401, the impersonation token expired.
+  // Restore the superadmin session instead of refreshing (refresh would give
+  // a non-impersonated token, causing data mismatch and flicker).
+  if (store.impersonation && store.savedSuperadminSession) {
+    const saved = store.savedSuperadminSession;
+    store.endImpersonation(saved.tokens.accessToken);
+    // The state is now restored to the superadmin. Return null so the caller
+    // gets a 401 and the UI re-renders as the superadmin.
+    return null;
+  }
 
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: 'POST',
@@ -65,7 +77,7 @@ async function refreshAccessToken(): Promise<string | null> {
   });
 
   if (!response.ok) {
-    useAuthStore.getState().clearSession();
+    store.clearSession();
     return null;
   }
 
@@ -74,7 +86,7 @@ async function refreshAccessToken(): Promise<string | null> {
     refreshToken: string;
   };
 
-  useAuthStore.getState().setTokens({
+  store.setTokens({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
   });
