@@ -39,6 +39,7 @@ import { CompetitorsModule } from './modules/competitors/competitors.module';
 import { CompetitorEntity } from './modules/competitors/infrastructure/typeorm/competitor.entity';
 import { CompetitorMentionEntity } from './modules/competitors/infrastructure/typeorm/competitor-mention.entity';
 import { AgentsModule } from './modules/agents/agents.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AgentInterviewEntity } from './modules/agents/domain/agent-interview.entity';
 import { AgentInterviewMessageEntity } from './modules/agents/domain/agent-interview-message.entity';
 import { AgentCompetitorAnalysisEntity } from './modules/agents/domain/agent-competitor-analysis.entity';
@@ -154,6 +155,7 @@ import {
     ReportsModule,
     CompetitorsModule,
     AgentsModule,
+    DashboardModule,
     AuditModule,
     SuperadminModule,
     UsersModule,
