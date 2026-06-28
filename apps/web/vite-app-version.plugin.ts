@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 
@@ -21,6 +21,9 @@ export function appVersionPlugin(version: string): Plugin {
 
   return {
     name: 'mkt-agency-app-version',
+    transformIndexHtml(html) {
+      return html.replace('%BUILD_ID%', version);
+    },
     configureServer(server) {
       server.middlewares.use('/version.json', (_req, res) => {
         res.setHeader('Content-Type', 'application/json');
