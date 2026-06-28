@@ -74,16 +74,21 @@ export class CommunityManagerService {
         topics: dto.topics,
       });
 
-      // Save each post as a Content item in the content module
+      // Save each post as a Content item, spread across next days
       const publishedPosts: string[] = [];
-      for (const post of result.posts) {
+      const today = new Date();
+      for (let i = 0; i < result.posts.length; i++) {
+        const post = result.posts[i];
         try {
           const contentDto = new CreateContentDto();
           contentDto.title = post.title;
           contentDto.type = 'social';
           contentDto.body = this.formatPostBody(post);
           contentDto.campaignId = dto.campaignId;
-          contentDto.scheduledDate = new Date().toISOString().split('T')[0];
+          // Spread posts across next days (starting tomorrow)
+          const scheduleDate = new Date(today);
+          scheduleDate.setDate(scheduleDate.getDate() + i + 1);
+          contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
 
           const content = await this.contentService.create(tenantId, userId, contentDto);
 

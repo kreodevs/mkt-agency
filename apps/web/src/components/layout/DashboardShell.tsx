@@ -27,6 +27,7 @@ export const tenantNavigation = [
     title: 'Mi empresa',
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
+      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
       { label: 'Onboarding', href: '/onboarding', icon: ClipboardList },
     ],
   },

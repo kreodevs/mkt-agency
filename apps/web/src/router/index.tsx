@@ -30,6 +30,7 @@ const ReportDetailPage = lazy(() => import('@/pages/reports/ReportDetailPage'));
 const OnboardingWizardPage = lazy(() => import('@/pages/onboarding/OnboardingWizardPage'));
 const AgentListPage = lazy(() => import('@/pages/agents/AgentListPage'));
 const MetricsDashboardPage = lazy(() => import('@/pages/dashboard/MetricsDashboardPage'));
+const AgencyHomePage = lazy(() => import('@/pages/home/AgencyHomePage'));
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
 const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
@@ -54,7 +55,8 @@ export function AppRouter() {
         </Route>
 
         <Route element={<AuthGuard />}>
-          <Route path="/" element={<MetricsDashboardPage />} />
+          <Route path="/" element={<AgencyHomePage />} />
+          <Route path="/dashboard" element={<MetricsDashboardPage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
             <Route path="/admin/packages" element={<PackageListPage />} />

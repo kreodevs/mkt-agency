@@ -7,6 +7,9 @@ import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { LeadEntity } from '../crm/infrastructure/typeorm/lead.entity';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
+import { StrategyAdjustmentEntity } from '../strategy/infrastructure/typeorm/strategy-adjustment.entity';
+import { CommunityManagerBatchEntity } from '../community-manager/infrastructure/typeorm/community-manager-batch.entity';
+import { ContentVersionEntity } from '../content/infrastructure/typeorm/content-version.entity';
 
 @Controller('dashboard')
 @UseGuards(TenantGuard)
@@ -18,6 +21,12 @@ export class DashboardController {
     private readonly contents: Repository<ContentEntity>,
     @InjectRepository(CampaignEntity)
     private readonly campaigns: Repository<CampaignEntity>,
+    @InjectRepository(StrategyAdjustmentEntity)
+    private readonly strategies: Repository<StrategyAdjustmentEntity>,
+    @InjectRepository(CommunityManagerBatchEntity)
+    private readonly cmBatches: Repository<CommunityManagerBatchEntity>,
+    @InjectRepository(ContentVersionEntity)
+    private readonly versions: Repository<ContentVersionEntity>,
   ) {}
 
   @Get('metrics')
@@ -112,6 +121,104 @@ export class DashboardController {
         total: campaignCounts,
         byStatus: campaignsByStatus,
         active: (campaignsByStatus['active'] ?? 0) + (campaignsByStatus['running'] ?? 0),
+      },
+    };
+  }
+
+  @Get('agency-home')
+  async getAgencyHome(@CurrentUser() user: AuthenticatedUser) {
+    const tenantId = user.tenantId!;
+    const today = new Date().toISOString().split('T')[0];
+
+    const [nextContent, latestStrategy, latestCmBatch, leadCount] = await Promise.all([
+      // Next upcoming content (scheduled for today or later, earliest first)
+      this.contents
+        .createQueryBuilder('c')
+        .leftJoinAndMapOne('c.version', ContentVersionEntity, 'v', 'v.id = c.current_version_id')
+        .where('c.tenant_id = :tenantId', { tenantId })
+        .andWhere('c.scheduled_date >= :today', { today })
+        .orderBy('c.scheduled_date', 'ASC')
+        .take(5)
+        .getMany(),
+
+      // Latest strategy analysis
+      this.strategies.findOne({
+        where: { tenantId },
+        order: { createdAt: 'DESC' },
+      }),
+
+      // Latest CM batch
+      this.cmBatches.findOne({
+        where: { tenantId },
+        order: { createdAt: 'DESC' },
+      }),
+
+      // Lead count today
+      this.leads.count({
+        where: {
+          tenantId,
+          createdAt: new Date(new Date().setHours(0, 0, 0, 0)),
+        } as unknown as Record<string, unknown>,
+      }),
+    ]);
+
+    // Get latest version bodies for next content items
+    const upcoming = await Promise.all(
+      nextContent.map(async (c) => {
+        const version = c.currentVersionId
+          ? await this.versions.findOne({ where: { id: c.currentVersionId } })
+          : null;
+        return {
+          id: c.id,
+          title: c.title,
+          type: c.type,
+          status: c.status,
+          scheduledDate: c.scheduledDate,
+          preview: version?.body ? (version.body.length > 150 ? `${version.body.slice(0, 150)}…` : version.body) : null,
+        };
+      }),
+    );
+
+    // Lead count (approximate — use today's creations)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const leadsToday = await this.leads.count({
+      where: { tenantId, createdAt: todayStart } as unknown as Record<string, unknown>,
+    });
+
+    // Count total leads
+    const totalLeads = await this.leads.count({ where: { tenantId } });
+    const clientLeads = await this.leads.count({ where: { tenantId, stage: 'client' } as unknown as Record<string, unknown> });
+
+    const strategyData = latestStrategy?.data as Record<string, unknown> | undefined;
+
+    return {
+      upcoming,
+      strategy: latestStrategy
+        ? {
+            id: latestStrategy.id,
+            status: latestStrategy.status,
+            summary: strategyData?.summary as string | undefined,
+            overallHealth: strategyData?.overallHealth as string | undefined,
+            suggestionsCount: (latestStrategy.suggestions as Array<Record<string, unknown>>)?.filter(
+              (s) => s.status === 'pending',
+            ).length ?? 0,
+            createdAt: latestStrategy.createdAt.toISOString(),
+          }
+        : null,
+      communityBatch: latestCmBatch
+        ? {
+            id: latestCmBatch.id,
+            postsCount: (latestCmBatch.posts as Array<Record<string, unknown>>)?.length ?? 0,
+            summary: ((latestCmBatch.data as Record<string, unknown>)?.summary as string) ?? '',
+            createdAt: latestCmBatch.createdAt.toISOString(),
+          }
+        : null,
+      leads: {
+        today: leadsToday,
+        total: totalLeads,
+        clients: clientLeads,
+        conversionRate: totalLeads > 0 ? Math.round((clientLeads / totalLeads) * 100) : 0,
       },
     };
   }
