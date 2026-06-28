@@ -10,16 +10,18 @@ import {
   SocialCopyAdapterPort,
 } from './adapters/social-copy.adapter.port';
 import { CommunityManagerBatchEntity } from './infrastructure/typeorm/community-manager-batch.entity';
+import { TonePresetEntity } from './infrastructure/typeorm/tone-preset.entity';
 import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
+import { TonePresetController } from './tone-preset.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CommunityManagerBatchEntity]),
+    TypeOrmModule.forFeature([CommunityManagerBatchEntity, TonePresetEntity]),
     LlmModule,
     ContentModule,
   ],
-  controllers: [CommunityManagerController],
+  controllers: [CommunityManagerController, TonePresetController],
   providers: [
     CommunityManagerService,
     StubSocialCopyAdapter,

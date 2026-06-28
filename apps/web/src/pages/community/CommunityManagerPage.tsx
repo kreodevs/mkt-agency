@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Bookmark,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -47,6 +48,14 @@ interface Batch {
   createdAt: string;
 }
 
+interface TonePreset {
+  id: string;
+  name: string;
+  toneText: string;
+  isDefault: boolean;
+  createdAt: string;
+}
+
 const PLATFORM_ICONS: Record<string, React.FC<{ className?: string }>> = {
   instagram: Instagram,
   linkedin: Linkedin,
@@ -78,6 +87,8 @@ export default function CommunityManagerPage() {
   const [tone, setTone] = useState('');
   const [topics, setTopics] = useState('');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+  const [savePresetName, setSavePresetName] = useState('');
+  const [showSavePreset, setShowSavePreset] = useState(false);
 
   const batchesQuery = useQuery({
     queryKey: ['cm-batches'],
@@ -114,6 +125,29 @@ export default function CommunityManagerPage() {
       prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
     );
   };
+
+  // Tone presets
+  const tonePresetsQuery = useQuery({
+    queryKey: ['tone-presets'],
+    queryFn: () => apiFetch<TonePreset[]>('/community-manager/tone-presets'),
+  });
+
+  const saveToneMutation = useMutation({
+    mutationFn: (name: string) =>
+      apiFetch<TonePreset>('/community-manager/tone-presets', {
+        method: 'POST',
+        body: JSON.stringify({ name, toneText: tone.trim() }),
+      }),
+    onSuccess: () => {
+      toast.success('Tono guardado como plantilla');
+      setShowSavePreset(false);
+      setSavePresetName('');
+      void queryClient.invalidateQueries({ queryKey: ['tone-presets'] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'Error al guardar');
+    },
+  });
 
   const latestBatch = batchesQuery.data?.[0];
 
@@ -179,13 +213,46 @@ export default function CommunityManagerPage() {
               <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
                 Tono (opcional)
               </label>
-              <input
-                type="text"
-                placeholder="Ej. Profesional, divertido, inspirador..."
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)]"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ej. Profesional, divertido, inspirador..."
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value)}
+                  className="h-10 flex-1 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)]"
+                />
+                {tone.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSavePresetName(tone.trim().slice(0, 40));
+                      setShowSavePreset(true);
+                    }}
+                    className="flex h-10 shrink-0 items-center gap-1 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-2.5 text-xs font-medium text-[var(--foreground-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              {/* Tone presets dropdown */}
+              {(tonePresetsQuery.data ?? []).length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {(tonePresetsQuery.data ?? []).slice(0, 5).map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setTone(preset.toneText)}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                        tone === preset.toneText
+                          ? 'bg-[var(--primary)]/10 text-[var(--primary)] ring-1 ring-[var(--primary)]'
+                          : 'bg-[var(--secondary)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)]/80'
+                      }`}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Topics */}
@@ -357,6 +424,52 @@ export default function CommunityManagerPage() {
               })}
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* Save tone preset dialog */}
+      {showSavePreset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">Guardar tono</h3>
+            <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+              Dale un nombre a esta plantilla de tono
+            </p>
+            <input
+              type="text"
+              value={savePresetName}
+              onChange={(e) => setSavePresetName(e.target.value)}
+              placeholder="Ej. Tono profesional, Divertido, Formal..."
+              className="mt-4 h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)]"
+              autoFocus
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setShowSavePreset(false);
+                  setSavePresetName('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (savePresetName.trim()) {
+                    saveToneMutation.mutate(savePresetName.trim());
+                  }
+                }}
+                loading={saveToneMutation.isPending}
+                disabled={!savePresetName.trim()}
+                className="gap-2"
+              >
+                <Bookmark className="h-4 w-4" />
+                Guardar
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </DashboardShell>

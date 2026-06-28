@@ -48,6 +48,7 @@ import { StrategyModule } from './modules/strategy/strategy.module';
 import { StrategyAdjustmentEntity } from './modules/strategy/infrastructure/typeorm/strategy-adjustment.entity';
 import { CommunityManagerModule } from './modules/community-manager/community-manager.module';
 import { CommunityManagerBatchEntity } from './modules/community-manager/infrastructure/typeorm/community-manager-batch.entity';
+import { TonePresetEntity } from './modules/community-manager/infrastructure/typeorm/tone-preset.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { FormsModule } from './modules/forms/form.module';
@@ -142,6 +143,7 @@ import {
           AgentImageGenerationEntity,
           StrategyAdjustmentEntity,
           CommunityManagerBatchEntity,
+          TonePresetEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
