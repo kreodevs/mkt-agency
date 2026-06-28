@@ -108,7 +108,7 @@ export default function AgencyHomePage() {
     );
   }
 
-  // Superadmin without a tenant — show admin dashboard
+  // Superadmin with auto-created tenant — show dashboard (data may be null on error)
   if (isSuperadminWithTenant && !hasOnboarded) {
     return (
       <DashboardShell>
@@ -121,7 +121,7 @@ export default function AgencyHomePage() {
             <QuickKpiCard
               icon={Users}
               label="Leads hoy"
-              value={data!.leads.today}
+              value={data?.leads?.today ?? 0}
               color="text-blue-600"
               bg="bg-blue-500/10"
             />
@@ -135,7 +135,7 @@ export default function AgencyHomePage() {
             <QuickKpiCard
               icon={CalendarDays}
               label="Próximas publicaciones"
-              value={data!.upcoming.length}
+              value={data?.upcoming?.length ?? 0}
               color="text-violet-600"
               bg="bg-violet-500/10"
             />
