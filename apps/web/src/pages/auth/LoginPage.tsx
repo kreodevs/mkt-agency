@@ -7,6 +7,7 @@ import { Password } from '@/components/atoms/Password';
 import { Card } from '@/components/molecules/Card';
 import { ApiError } from '@/services/api';
 import { login } from '@/services/auth';
+import { useAuthStore } from '@/store/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -20,7 +21,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success('Sesión iniciada');
-      navigate('/');
+      const user = useAuthStore.getState().user;
+      navigate(user?.isSuperadmin ? '/tenants' : '/');
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : 'No se pudo iniciar sesión';

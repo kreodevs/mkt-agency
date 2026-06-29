@@ -32,7 +32,7 @@ export function GuestGuard() {
   const user = useAuthStore((s) => s.user);
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={user.isSuperadmin ? '/tenants' : '/'} replace />;
   }
 
   return <Outlet />;

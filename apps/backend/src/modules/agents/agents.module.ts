@@ -10,6 +10,9 @@ import { AssetsModule } from '../assets/assets.module';
 import { OpenRouterInterviewAdapter } from './adapters/openrouter-interview.adapter';
 import { StubInterviewAdapter } from './adapters/stub-interview.adapter';
 import { INTERVIEW_ADAPTER, InterviewAdapterPort } from './adapters/interview.adapter.port';
+import { OpenRouterWebsiteAnalyzerAdapter } from './adapters/openrouter-website-analyzer.adapter';
+import { StubWebsiteAnalyzerAdapter } from './adapters/stub-website-analyzer.adapter';
+import { WEBSITE_ANALYZER_ADAPTER, WebsiteAnalyzerAdapterPort } from './adapters/website-analyzer.adapter.port';
 import { OpenRouterCompetitorIntelAdapter } from './adapters/openrouter-competitor-intel.adapter';
 import { StubCompetitorIntelAdapter } from './adapters/stub-competitor-intel.adapter';
 import { COMPETITOR_INTEL_ADAPTER, CompetitorIntelAdapterPort } from './adapters/competitor-intel.adapter.port';
@@ -63,7 +66,25 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     CompetitorIntelProcessor,
     StubImageGenerationAdapter,
     OpenRouterImageGenerationAdapter,
+    StubWebsiteAnalyzerAdapter,
+    OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
+    {
+      provide: WEBSITE_ANALYZER_ADAPTER,
+      useFactory: (
+        stub: StubWebsiteAnalyzerAdapter,
+        llm: OpenRouterWebsiteAnalyzerAdapter,
+        providers: LlmProviderService,
+      ): WebsiteAnalyzerAdapterPort => ({
+        analyze: async (url) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.analyze(url);
+          }
+          return stub.analyze(url);
+        },
+      }),
+      inject: [StubWebsiteAnalyzerAdapter, OpenRouterWebsiteAnalyzerAdapter, LlmProviderService],
+    },
     {
       provide: INTERVIEW_ADAPTER,
       useFactory: (
