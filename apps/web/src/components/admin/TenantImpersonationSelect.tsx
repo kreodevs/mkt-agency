@@ -5,11 +5,9 @@ import { listTenants } from '@/services/tenants';
 import { impersonateTenant } from '@/services/superadmin';
 import { getApiErrorMessage } from '@/services/api';
 import type { Tenant } from '@/types/tenant';
+import { IMPERSONATION_SELECT_CLASS } from './impersonation-select.constants';
 
 const CONSOLE_VALUE = '__console__';
-
-const SELECT_CLASS =
-  'h-9 min-w-0 max-w-[12rem] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:opacity-50 sm:max-w-[16rem]';
 
 export function TenantImpersonationSelect() {
   const navigate = useNavigate();
@@ -27,9 +25,9 @@ export function TenantImpersonationSelect() {
   );
 
   return (
-    <div className="flex min-w-0 flex-col items-end gap-1">
+    <div className="flex min-w-0 max-w-full flex-col items-end gap-1">
       <select
-        className={SELECT_CLASS}
+        className={IMPERSONATION_SELECT_CLASS}
         value={CONSOLE_VALUE}
         disabled={busy || tenantsQuery.isLoading || sorted.length === 0}
         title="Impersonar tenant"

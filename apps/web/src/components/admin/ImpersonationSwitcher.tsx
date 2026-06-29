@@ -5,11 +5,9 @@ import { exitImpersonation, impersonateTenant } from '@/services/superadmin';
 import { useAuthStore } from '@/store/auth';
 import { isImpersonating } from '@/lib/impersonation';
 import type { Tenant } from '@/types/tenant';
+import { IMPERSONATION_SELECT_CLASS } from './impersonation-select.constants';
 
 const CONSOLE_VALUE = '__console__';
-
-const SELECT_CLASS =
-  'h-9 min-w-0 w-full max-w-[9rem] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:opacity-50 sm:w-auto sm:min-w-[10rem] sm:max-w-[16rem]';
 
 export function ImpersonationSwitcher() {
   const tenantId = useAuthStore((s) => s.user?.tenantId);
@@ -32,7 +30,7 @@ export function ImpersonationSwitcher() {
 
   return (
     <select
-      className={SELECT_CLASS}
+      className={`${IMPERSONATION_SELECT_CLASS} w-auto sm:min-w-[10rem]`}
       value={current?.id ?? tenantId ?? CONSOLE_VALUE}
       disabled={busy}
       title="Impersonación superadmin"

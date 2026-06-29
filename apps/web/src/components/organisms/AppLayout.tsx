@@ -1,4 +1,5 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Bell, Menu as MenuIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/atoms/Button';
@@ -34,7 +35,12 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
     ref,
   ) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const location = useLocation();
     const hasSidebar = !!(sidebar || navigationGroups);
+
+    useEffect(() => {
+      setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const sidebarNode =
       sidebar ??
@@ -46,6 +52,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
           brand={brand}
           linkComponent={linkComponent}
           onLogout={onLogout}
+          onNavClick={() => setMobileMenuOpen(false)}
         />
       ) : null);
 
@@ -54,31 +61,25 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         ref={ref}
         className={cn('flex h-screen overflow-hidden bg-[var(--background)]', className)}
       >
-        {hasSidebar && <div className="hidden shrink-0 lg:flex">{sidebarNode}</div>}
+        {hasSidebar && <div className="hidden h-full shrink-0 lg:flex">{sidebarNode}</div>}
 
         {mobileMenuOpen && hasSidebar && (
-          <div className="fixed inset-0 z-[var(--z-modal)] lg:hidden">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <div className="relative h-full w-[85vw] max-w-sm overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
-                aria-label="Cerrar menú"
-              >
-                ✕
-              </button>
+          <div className="fixed inset-0 z-[var(--z-modal)] flex lg:hidden">
+            <div className="flex h-full w-[85vw] max-w-sm shrink-0 flex-col overflow-hidden bg-[var(--card)] shadow-xl">
               {sidebarNode}
             </div>
+            <button
+              type="button"
+              className="min-w-0 flex-1 cursor-default bg-black/60 backdrop-blur-sm"
+              aria-label="Cerrar menú"
+              onClick={() => setMobileMenuOpen(false)}
+            />
           </div>
         )}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 md:h-20 md:px-6 lg:px-8">
-            <div className="flex items-center gap-[var(--spacing-md)]">
+          <header className="z-20 flex min-h-16 shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--card)] px-4 py-2.5 md:min-h-20 md:px-6 md:py-3 lg:px-8">
+            <div className="flex shrink-0 items-center gap-[var(--spacing-md)]">
               {hasSidebar && (
                 <button
                   type="button"
@@ -93,9 +94,13 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
                 <span className="text-sm font-medium">Buscar...</span>
               </div>
             </div>
-            <div className="flex items-center gap-[var(--spacing-sm)]">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-[var(--spacing-sm)]">
               {headerActions}
-              <Button variant="ghost" size="icon" className="relative text-[var(--foreground-muted)]">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative shrink-0 text-[var(--foreground-muted)]"
+              >
                 <Bell className="h-5 w-5" />
               </Button>
             </div>

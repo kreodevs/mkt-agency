@@ -32,6 +32,7 @@ export interface SidebarModernProps {
   brand?: React.ReactNode;
   user?: { name: string; email: string; avatar?: string };
   onLogout?: () => void;
+  onNavClick?: () => void;
   linkComponent?: React.ElementType;
   className?: string;
 }
@@ -47,6 +48,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       brand,
       user,
       onLogout,
+      onNavClick,
       linkComponent: LinkComponent = 'a',
       className,
     },
@@ -65,7 +67,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       <aside
         ref={ref}
         className={cn(
-          'relative z-[var(--z-fixed)] flex h-screen shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
+          'relative z-[var(--z-fixed)] flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
           collapsed ? 'w-sidebar-collapsed' : 'w-sidebar',
           className,
         )}
@@ -102,7 +104,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="custom-scrollbar overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)]">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)]">
             {groups.map((group, idx) => (
               <div key={idx} className="mb-[var(--spacing-xl)]">
                 {!collapsed && group.title && (
@@ -136,7 +138,11 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                     );
 
                     const link = (
-                      <LinkComponent to={item.href} href={item.href}>
+                      <LinkComponent
+                        to={item.href}
+                        href={item.href}
+                        onClick={() => onNavClick?.()}
+                      >
                         {content}
                       </LinkComponent>
                     );
@@ -157,44 +163,43 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           </div>
 
           {user && (
-            <div className="shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">
-            <div className="flex items-center gap-[var(--spacing-md)]">
-              <Avatar src={user.avatar} name={user.name} size="sm" />
-              {!collapsed && (
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[var(--foreground)]">
-                    {user.name}
-                  </p>
-                  <p className="truncate text-[10px] text-[var(--foreground-muted)]">
-                    {user.email}
-                  </p>
-                </div>
-              )}
-              {onLogout && !collapsed && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="flex items-center gap-1.5 rounded-[var(--radius)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
-                  aria-label="Cerrar sesión"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  Salir
-                </button>
-              )}
-              {onLogout && collapsed && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="rounded-[var(--radius)] p-2 text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
-                  aria-label="Cerrar sesión"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              )}
+            <div className="mt-auto shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">
+              <div className="flex items-center gap-[var(--spacing-md)]">
+                <Avatar src={user.avatar} name={user.name} size="sm" />
+                {!collapsed && (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[var(--foreground)]">
+                      {user.name}
+                    </p>
+                    <p className="truncate text-[10px] text-[var(--foreground-muted)]">
+                      {user.email}
+                    </p>
+                  </div>
+                )}
+                {onLogout && !collapsed && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="flex items-center gap-1.5 rounded-[var(--radius)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+                    aria-label="Cerrar sesión"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Salir
+                  </button>
+                )}
+                {onLogout && collapsed && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="rounded-[var(--radius)] p-2 text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+                    aria-label="Cerrar sesión"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
+          )}
         </div>
 
         {collapsible && (
