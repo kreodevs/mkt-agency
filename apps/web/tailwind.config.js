@@ -82,6 +82,10 @@ export default {
         'control-lg': '3rem',
         header: '4rem',
       },
+      maxHeight: {
+        'panel-sm': '12rem',
+        'panel-md': '16rem',
+      },
     },
   },
   plugins: [],

@@ -95,7 +95,7 @@ export function LeadDetail({ lead, loading, onClose, onDelete, deleting }: LeadD
       {!interactionsQuery.isLoading && interactions.length === 0 && (
         <p className="text-sm text-[var(--foreground-muted)]">Sin interacciones registradas.</p>
       )}
-      <ul className="mb-4 max-h-64 space-y-3 overflow-auto">
+      <ul className="mb-4 max-h-panel-md space-y-3 overflow-auto">
         {interactions.map((item) => (
           <li key={item.id} className="rounded border border-[var(--border)] p-2 text-sm">
             <div className="flex items-center justify-between gap-2">

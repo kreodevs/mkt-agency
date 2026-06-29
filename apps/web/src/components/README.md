@@ -6,6 +6,6 @@ Import path oficial: `@/components/{layer}/{Name}`.
 - **molecules:** Card, PageHeader, Sonner, Tooltip, Stepper, Progress
 - **organisms:** AppLayout, SidebarModern (muestra `v{commit}` bajo el logo), DataTable, KanbanBoard
 
-**Alturas de controles:** la escala `spacing` Letter redefine valores numéricos (`h-8` → 8px). Usar tokens `h-control-sm|md|lg|icon` en botones e inputs, no `h-8`/`h-12`.
+**Alturas de controles:** la escala `spacing` Letter redefine valores numéricos (`h-8` → 8px, `max-h-64` → 64px). Usar tokens `h-control-*` y `max-h-panel-*`, no clases numéricas de altura.
 
 Fuente: MCP Kreo workflow DEV (`pull_source_code_from_registry`).

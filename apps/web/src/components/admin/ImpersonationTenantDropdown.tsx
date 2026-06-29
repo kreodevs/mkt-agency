@@ -103,7 +103,7 @@ export function ImpersonationTenantDropdown({
             id={menuId}
             role="listbox"
             style={menuStyle}
-            className="max-h-64 overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 shadow-lg"
+            className="max-h-panel-md overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 shadow-lg"
           >
             <button
               type="button"

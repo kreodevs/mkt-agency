@@ -222,7 +222,7 @@ export default function BrandInterviewPage() {
             <h3 className="mb-3 text-sm font-black uppercase tracking-wider text-[var(--primary)]">
               📄 Brand Brief generado
             </h3>
-            <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--card)] p-4 text-xs text-[var(--foreground-muted)]">
+            <pre className="max-h-panel-sm overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--card)] p-4 text-xs text-[var(--foreground-muted)]">
               {JSON.stringify(activeInterview.brandBrief, null, 2)}
             </pre>
             <p className="mt-3 text-xs text-[var(--foreground-subtle)]">

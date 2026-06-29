@@ -57,7 +57,7 @@ export function FormSnippet({ snippet, loading }: FormSnippetProps) {
         </Button>
       </div>
 
-      <pre className="max-h-64 overflow-auto rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs">
+      <pre className="max-h-panel-md overflow-auto rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs">
         {snippet.snippetJs}
       </pre>
     </Card>
