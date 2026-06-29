@@ -16,7 +16,7 @@ export default function LeadPipelinePage() {
 
   const leadsQuery = useQuery({
     queryKey: ['leads'],
-    queryFn: () => listLeads({ page: 1, limit: 200 }),
+    queryFn: () => listLeads({ page: 1, limit: 100 }),
   });
 
   const leadDetailQuery = useQuery({

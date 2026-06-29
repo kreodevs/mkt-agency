@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listTenants } from '@/services/tenants';
 import { exitImpersonation, impersonateTenant } from '@/services/superadmin';
+import { getApiErrorMessage } from '@/services/api';
 import { useAuthStore } from '@/store/auth';
 import { isImpersonating } from '@/lib/impersonation';
 import type { Tenant } from '@/types/tenant';
-import { IMPERSONATION_SELECT_CLASS } from './impersonation-select.constants';
-
-const CONSOLE_VALUE = '__console__';
+import {
+  IMPERSONATION_CONSOLE_VALUE,
+  ImpersonationTenantDropdown,
+} from './ImpersonationTenantDropdown';
 
 export function ImpersonationSwitcher() {
   const tenantId = useAuthStore((s) => s.user?.tenantId);
@@ -15,8 +17,9 @@ export function ImpersonationSwitcher() {
 
   const tenantsQuery = useQuery({
     queryKey: ['tenants-impersonation-switcher'],
-    queryFn: () => listTenants({ page: 1, limit: 200, status: 'active' }),
+    queryFn: () => listTenants({ page: 1, limit: 100, status: 'active' }),
     enabled: isImpersonating(),
+    retry: 2,
   });
 
   const sorted = useMemo(
@@ -26,17 +29,21 @@ export function ImpersonationSwitcher() {
 
   if (!isImpersonating()) return null;
 
-  const current = sorted.find((t: Tenant) => t.id === tenantId);
+  const current = sorted.find((tenant: Tenant) => tenant.id === tenantId);
+  const loadError = tenantsQuery.isError
+    ? getApiErrorMessage(tenantsQuery.error, 'No se pudieron cargar los tenants')
+    : null;
 
   return (
-    <select
-      className={`${IMPERSONATION_SELECT_CLASS} w-auto sm:min-w-[10rem]`}
-      value={current?.id ?? tenantId ?? CONSOLE_VALUE}
-      disabled={busy}
-      title="Impersonación superadmin"
-      onChange={(e) => {
-        const value = e.target.value;
-        if (value === CONSOLE_VALUE) {
+    <ImpersonationTenantDropdown
+      value={current?.id ?? tenantId ?? IMPERSONATION_CONSOLE_VALUE}
+      options={sorted.map((tenant: Tenant) => ({ id: tenant.id, name: tenant.name }))}
+      busy={busy}
+      loading={tenantsQuery.isLoading || tenantsQuery.isFetching}
+      error={loadError}
+      className="w-auto sm:min-w-[10rem]"
+      onSelect={(value) => {
+        if (value === IMPERSONATION_CONSOLE_VALUE) {
           exitImpersonation();
           return;
         }
@@ -44,19 +51,14 @@ export function ImpersonationSwitcher() {
         if (value === tenantId) return;
 
         setBusy(true);
-        void impersonateTenant(value).then(() => {
-          window.location.replace('/');
-        }).catch(() => {
-          setBusy(false);
-        });
+        void impersonateTenant(value)
+          .then(() => {
+            window.location.replace('/');
+          })
+          .catch(() => {
+            setBusy(false);
+          });
       }}
-    >
-      <option value={CONSOLE_VALUE}>Consola superadmin</option>
-      {sorted.map((t: Tenant) => (
-        <option key={t.id} value={t.id}>
-          {t.name}
-        </option>
-      ))}
-    </select>
+    />
   );
 }

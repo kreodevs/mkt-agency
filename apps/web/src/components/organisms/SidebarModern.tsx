@@ -67,8 +67,8 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       <aside
         ref={ref}
         className={cn(
-          'relative z-[var(--z-fixed)] flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
-          collapsed ? 'w-sidebar-collapsed' : 'w-sidebar',
+          'relative z-[var(--z-fixed)] flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
+          collapsed ? 'lg:w-sidebar-collapsed' : 'lg:w-sidebar',
           className,
         )}
       >

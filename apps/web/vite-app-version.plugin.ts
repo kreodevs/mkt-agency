@@ -1,6 +1,4 @@
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
 import type { Plugin } from 'vite';
 
 export function resolveAppVersion(): string {
@@ -16,9 +14,11 @@ export function resolveAppVersion(): string {
   }
 }
 
-export function appVersionPlugin(version: string): Plugin {
-  let outDir = 'dist';
+function versionPayload(version: string): string {
+  return `${JSON.stringify({ version, builtAt: new Date().toISOString() }, null, 2)}\n`;
+}
 
+export function appVersionPlugin(version: string): Plugin {
   return {
     name: 'mkt-agency-app-version',
     transformIndexHtml(html) {
@@ -28,19 +28,15 @@ export function appVersionPlugin(version: string): Plugin {
       server.middlewares.use('/version.json', (_req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
-        res.end(
-          JSON.stringify({ version: 'dev', builtAt: new Date().toISOString() }),
-        );
+        res.end(JSON.stringify({ version: 'dev', builtAt: new Date().toISOString() }));
       });
     },
-    configResolved(config) {
-      outDir = path.resolve(config.root, config.build.outDir);
-    },
-    closeBundle() {
-      writeFileSync(
-        path.join(outDir, 'version.json'),
-        `${JSON.stringify({ version, builtAt: new Date().toISOString() }, null, 2)}\n`,
-      );
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: versionPayload(version),
+      });
     },
   };
 }

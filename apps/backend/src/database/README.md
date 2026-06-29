@@ -29,6 +29,8 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000010-CreatePackagesAndLlmConfigs.ts` | `packages`, `llm_task_configs`, límites en `tenants` |
 | `1730000000011-CreateLlmProviders.ts` | `llm_providers`, FK en `llm_task_configs` |
 | `1730000000012-EnsureTenantLimitColumns.ts` | Columnas de límites/paquete en `tenants` legacy + perfiles |
+| `1730000000013-DropLegacyPasswordColumn.ts` | Elimina columna legacy `users.password` |
+| `1730000000014-CreateAgentStrategyCommunityTables.ts` | `strategy_adjustments`, `community_manager_batches`, `tone_presets`, `agent_interviews`, `agent_interview_messages`, `agent_competitor_analyses`, `agent_image_generations` |
 | `1729999999999-UpgradeLegacyUsersSchema.ts` | Añade columnas monorepo en `users` legacy; corre **antes** del baseline |
 
 DataSource: `src/database/data-source.ts`.

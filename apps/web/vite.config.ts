@@ -12,7 +12,6 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    appVersionPlugin(appVersion),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
@@ -45,6 +44,8 @@ export default defineConfig({
         clientsClaim: true,
       },
     }),
+    // After PWA so version.json is always emitted in the final bundle.
+    appVersionPlugin(appVersion),
   ],
   resolve: {
     alias: {
