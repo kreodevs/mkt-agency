@@ -10,7 +10,6 @@ import {
 } from '@/config/onboarding-sections';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
-import { Card } from '@/components/molecules/Card';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Progress } from '@/components/molecules/Progress';
 import { Stepper } from '@/components/molecules/Stepper';
@@ -127,7 +126,7 @@ export default function OnboardingWizardPage() {
       });
 
       if (result.status === 'completed') {
-        toast.success('Perfil completado al 80%. ¡Onboarding finalizado!');
+        toast.success(`Perfil completado al ${result.completionPercentage}%. ¡Onboarding finalizado!`);
       } else {
         toast.success('Sección guardada');
       }
@@ -167,35 +166,25 @@ export default function OnboardingWizardPage() {
     );
   }
 
-  if (isCompleted) {
-    return (
-      <DashboardShell navigationOverride={tenantNavigation}>
-        <Card title="Onboarding completado" subtitle="Tu perfil de empresa está activo">
-          <div className="flex flex-col items-start gap-4">
-            <div className="flex items-center gap-2 text-[var(--success)]">
-              <PartyPopper className="h-5 w-5" />
-              <span className="font-medium">
-                {profileQuery.data?.completionPercentage}% completado
-              </span>
-            </div>
-            <p className="text-sm text-[var(--foreground-muted)]">
-              Ya puedes usar la plataforma con el contexto de tu marca configurado.
-            </p>
-            <Link to="/">
-              <Button>Volver al inicio</Button>
-            </Link>
-          </div>
-        </Card>
-      </DashboardShell>
-    );
-  }
-
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
         title="Onboarding de empresa"
         description="Completa las secciones obligatorias para activar tu perfil (80%)"
       />
+
+      {isCompleted && (
+        <div className="mb-6 flex items-center gap-3 rounded-[var(--radius)] border border-[var(--success)]/30 bg-[var(--success)]/5 px-[var(--spacing-lg)] py-[var(--spacing-md)]">
+          <PartyPopper className="h-5 w-5 shrink-0 text-[var(--success)]" />
+          <div className="text-sm">
+            <span className="font-semibold text-[var(--success)]">Perfil activo</span>
+            <span className="text-[var(--foreground-muted)]">
+              {' '}— {profileQuery.data?.completionPercentage}% completado. Puedes seguir editando o ir al{' '}
+              <Link to="/" className="underline hover:no-underline">inicio</Link>.
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 space-y-2">
         <div className="flex items-center justify-between text-sm">
