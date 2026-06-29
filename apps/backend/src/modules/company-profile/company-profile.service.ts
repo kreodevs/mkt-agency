@@ -103,13 +103,6 @@ export class CompanyProfileService {
     }
 
     const profile = await this.ensureProfile(tenantId);
-    if (profile.status === 'completed') {
-      throw new ConflictException({
-        error: 'Company profile is already completed',
-        code: 'CONFLICT',
-      });
-    }
-
     await this.ensureDefaultSections(profile.id);
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -205,12 +198,6 @@ export class CompanyProfileService {
     }
 
     const profile = await this.ensureProfile(tenantId);
-    if (profile.status === 'completed') {
-      throw new ConflictException({
-        error: 'Company profile is already completed',
-        code: 'CONFLICT',
-      });
-    }
 
     const inProgress = await this.suggestionAssignments.findOne({
       where: [
