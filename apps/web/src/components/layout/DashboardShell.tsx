@@ -2,9 +2,11 @@ import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
-import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
+import { ImpersonationSwitcher } from '@/components/admin/ImpersonationSwitcher';
+import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonationSelect';
 import { logout } from '@/services/auth';
 import { useAuthStore } from '@/store/auth';
+import { isImpersonating } from '@/lib/impersonation';
 
 export const superadminNavigation = [
   {
@@ -86,18 +88,22 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     navigate('/login');
   };
 
+  const headerActions = isImpersonating() ? (
+    <ImpersonationSwitcher />
+  ) : user?.isSuperadmin ? (
+    <TenantImpersonationSelect />
+  ) : null;
+
   return (
-    <>
-      <ImpersonationBanner />
-      <AppLayout
-        navigationGroups={navigationGroups}
-        activeHref={location.pathname}
-        linkComponent={Link}
-        user={user ? { name: user.name, email: user.email } : undefined}
-        onLogout={handleLogout}
-      >
-        {children}
-      </AppLayout>
-    </>
+    <AppLayout
+      navigationGroups={navigationGroups}
+      activeHref={location.pathname}
+      linkComponent={Link}
+      user={user ? { name: user.name, email: user.email } : undefined}
+      headerActions={headerActions}
+      onLogout={handleLogout}
+    >
+      {children}
+    </AppLayout>
   );
 }

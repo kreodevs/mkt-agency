@@ -43,7 +43,7 @@ export class SuperadminService {
     body: ImpersonateRequestDto,
   ): Promise<ImpersonateResult> {
     return this.commandBus.execute<ImpersonateCommand, ImpersonateResult>(
-      new ImpersonateCommand(superadmin, body.tenantId, body.userId),
+      new ImpersonateCommand(superadmin, body.tenantId),
     );
   }
 

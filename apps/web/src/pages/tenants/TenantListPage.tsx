@@ -9,9 +9,10 @@ import { DataTable, type DataTableColumn } from '@/components/organisms/DataTabl
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { listTenants } from '@/services/tenants';
+import { impersonateTenant } from '@/services/superadmin';
+import { getApiErrorMessage } from '@/services/api';
 import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
 import { CreateTenantModal } from './CreateTenantModal';
-import { ImpersonateTenantModal } from './ImpersonateTenantModal';
 
 const STATUS_OPTIONS: Array<{ label: string; value: '' | TenantStatus }> = [
   { label: 'Todos los estados', value: '' },
@@ -52,7 +53,7 @@ export default function TenantListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | TenantStatus>('');
   const [planFilter, setPlanFilter] = useState<'' | TenantPlan>('');
   const [createOpen, setCreateOpen] = useState(false);
-  const [impersonateTenant, setImpersonateTenant] = useState<Tenant | null>(null);
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
 
   const tenantsQuery = useQuery({
     queryKey: ['tenants', { status: statusFilter, plan: planFilter }],
@@ -126,7 +127,16 @@ export default function TenantListPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setImpersonateTenant(row)}
+            loading={impersonatingId === row.id}
+            onClick={() => {
+              setImpersonatingId(row.id);
+              void impersonateTenant(row.id)
+                .then(() => navigate('/'))
+                .catch((err) => {
+                  window.alert(getApiErrorMessage(err));
+                })
+                .finally(() => setImpersonatingId(null));
+            }}
             disabled={row.status !== 'active'}
           >
             <UserRoundSearch className="mr-1 h-4 w-4" />
@@ -135,7 +145,7 @@ export default function TenantListPage() {
         ),
       },
     ],
-    [],
+    [impersonatingId, navigate],
   );
 
   return (
@@ -155,13 +165,6 @@ export default function TenantListPage() {
         visible={createOpen}
         onHide={() => setCreateOpen(false)}
         onCreated={() => void queryClient.invalidateQueries({ queryKey: ['tenants'] })}
-      />
-
-      <ImpersonateTenantModal
-        tenant={impersonateTenant}
-        visible={!!impersonateTenant}
-        onHide={() => setImpersonateTenant(null)}
-        onStarted={() => navigate('/')}
       />
 
       <Card>

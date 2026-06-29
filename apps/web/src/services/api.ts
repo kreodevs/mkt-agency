@@ -1,4 +1,5 @@
 import { getAccessToken, getRefreshToken, useAuthStore } from '@/store/auth';
+import { getPlatformAccessToken, restoreSuperadminOnExpiredImpersonation } from '@/lib/impersonation';
 
 export const API_BASE = '/api/v1';
 
@@ -59,14 +60,8 @@ async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
 
-  // If impersonating and we get a 401, the impersonation token expired.
-  // Restore the superadmin session instead of refreshing (refresh would give
-  // a non-impersonated token, causing data mismatch and flicker).
-  if (store.impersonation && store.savedSuperadminSession) {
-    const saved = store.savedSuperadminSession;
-    store.endImpersonation(saved.tokens.accessToken);
-    // The state is now restored to the superadmin. Return null so the caller
-    // gets a 401 and the UI re-renders as the superadmin.
+  if (store.user?.impersonating) {
+    restoreSuperadminOnExpiredImpersonation();
     return null;
   }
 
@@ -94,17 +89,23 @@ async function refreshAccessToken(): Promise<string | null> {
   return data.accessToken;
 }
 
+export interface ApiFetchOptions {
+  retry?: boolean;
+  accessToken?: string;
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
-  retry = true,
+  options: ApiFetchOptions = {},
 ): Promise<T> {
+  const retry = options.retry ?? true;
   const headers = new Headers(init.headers);
   if (!headers.has('Content-Type') && init.body) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const token = getAccessToken();
+  const token = options.accessToken ?? getAccessToken();
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
@@ -112,9 +113,13 @@ export async function apiFetch<T>(
   const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
 
   if (response.status === 401 && retry) {
+    if (options.accessToken) {
+      throw new ApiError('Sesión de plataforma inválida', 401, 'UNAUTHORIZED');
+    }
+
     const newToken = await refreshAccessToken();
     if (newToken) {
-      return apiFetch<T>(path, init, false);
+      return apiFetch<T>(path, init, { ...options, retry: false });
     }
   }
 
@@ -134,4 +139,16 @@ export async function apiFetch<T>(
   }
 
   return response.json() as Promise<T>;
+}
+
+export async function apiFetchAsPlatform<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const platformToken = getPlatformAccessToken() ?? getAccessToken();
+  if (!platformToken) {
+    throw new ApiError('Sesión de plataforma no disponible', 401, 'UNAUTHORIZED');
+  }
+
+  return apiFetch<T>(path, init, { accessToken: platformToken });
 }

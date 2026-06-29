@@ -158,6 +158,22 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
     return users.map((u) => this.toPublicUser(u));
   }
 
+  async findTenantProxyUser(tenantId: string): Promise<PublicUserRecord | null> {
+    const user = await this.users
+      .createQueryBuilder('user')
+      .where('user.tenant_id = :tenantId', { tenantId })
+      .andWhere('user.is_superadmin = false')
+      .andWhere('user.status = :status', { status: 'active' })
+      .orderBy(
+        `CASE user.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END`,
+        'ASC',
+      )
+      .addOrderBy('user.created_at', 'ASC')
+      .getOne();
+
+    return user ? this.toPublicUser(user) : null;
+  }
+
   async findAll(params: ListUsersParams): Promise<ListUsersResult> {
     const { page, limit, search } = params;
     const query = this.users.createQueryBuilder('user');

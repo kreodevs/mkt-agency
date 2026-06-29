@@ -2,7 +2,10 @@
 
 Componentes de administración superadmin.
 
-## Componentes
+## Impersonación (estilo Kreo Eventos)
 
-- `ImpersonationBanner.tsx` — banner fijo «IMPERSONANDO» con acción para finalizar sesión de impersonación.
-- `LlmModelSelect.tsx` — desplegable de modelos LLM con costos por token (entrada/salida) según proveedor.
+- `TenantImpersonationSelect.tsx` — desplegable en header de consola superadmin; elige tenant e impersona al instante.
+- `ImpersonationSwitcher.tsx` — desplegable mientras impersonas; cambia de tenant o vuelve a «Consola superadmin».
+- `LlmModelSelect.tsx` — desplegable de modelos LLM con costos por token.
+
+La lógica de sesión vive en `@/lib/impersonation`.

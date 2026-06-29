@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { JwtTokenService } from '../../../shared/auth/jwt-token.service';
 import {
@@ -27,40 +27,26 @@ export class ImpersonateHandler
   ) {}
 
   async execute(command: ImpersonateCommand): Promise<ImpersonateResult> {
-    if (command.superadmin.impersonating) {
-      throw new HttpException(
-        {
-          error: 'Superadmin is already impersonating a tenant',
-          code: 'CONFLICT',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
-
     const tenant = await this.tenants.findById(command.tenantId);
     if (!tenant) {
       throw new TenantNotFoundException();
     }
 
-    const targetUser = await this.users.findPublicByIdAndTenant(
-      command.userId,
-      command.tenantId,
-    );
-
-    if (!targetUser) {
-      throw new HttpException(
-        { error: 'User not found in tenant', code: 'NOT_FOUND' },
-        HttpStatus.NOT_FOUND,
-      );
+    const proxyUser = await this.users.findTenantProxyUser(command.tenantId);
+    if (!proxyUser) {
+      throw new BadRequestException({
+        error: 'El tenant no tiene usuario administrador activo',
+        code: 'VALIDATION_ERROR',
+      });
     }
 
     const { accessToken, expiresIn } =
       this.jwtTokenService.signImpersonationToken({
-        sub: targetUser.id,
-        email: targetUser.email,
+        sub: proxyUser.id,
+        email: command.superadmin.email,
         isSuperadmin: false,
-        role: targetUser.role,
-        tenantId: targetUser.tenantId,
+        role: proxyUser.role,
+        tenantId: command.tenantId,
         impersonating: true,
         superadminId: command.superadmin.id,
       });
@@ -69,7 +55,7 @@ export class ImpersonateHandler
       superadminId: command.superadmin.id,
       tenantId: command.tenantId,
       action: 'impersonation_started',
-      metadata: { userId: targetUser.id },
+      metadata: { proxyUserId: proxyUser.id },
     });
 
     return {
@@ -77,9 +63,10 @@ export class ImpersonateHandler
       expiresIn,
       tenant: { id: tenant.id, name: tenant.name },
       user: {
-        id: targetUser.id,
-        name: targetUser.name,
-        email: targetUser.email,
+        id: proxyUser.id,
+        name: `${command.superadmin.email} (superadmin)`,
+        email: command.superadmin.email,
+        role: proxyUser.role,
       },
       note: 'All actions are logged. Destructive actions are prohibited.',
     };

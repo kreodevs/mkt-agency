@@ -1,23 +1,13 @@
-import { apiFetch } from '@/services/api';
+import { apiFetch, apiFetchAsPlatform } from '@/services/api';
 import type { LlmModelsListResponse } from '@/lib/llm-models';
 import {
-  useAuthStore,
-  type AuthTokens,
-  type AuthUser,
-} from '@/store/auth';
+  applyImpersonationSession,
+  exitImpersonation,
+  isImpersonating,
+} from '@/lib/impersonation';
+import type { ImpersonateResponse } from '@/types/impersonation';
 
-export interface ImpersonateResponse {
-  impersonationToken: string;
-  expiresIn: number;
-  tenant: { id: string; name: string };
-  user: { id: string; name: string; email: string };
-  note: string;
-}
-
-export interface EndImpersonationResponse {
-  message: string;
-  sessionToken: string;
-}
+export type { ImpersonateResponse };
 
 export interface SuperadminUser {
   id: string;
@@ -39,7 +29,11 @@ export interface ListUsersResponse {
   limit: number;
 }
 
-export async function listSuperadminUsers(params?: { page?: number; limit?: number; search?: string }): Promise<ListUsersResponse> {
+export async function listSuperadminUsers(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<ListUsersResponse> {
   const search = new URLSearchParams();
   if (params?.page) search.set('page', String(params.page));
   if (params?.limit) search.set('limit', String(params.limit));
@@ -141,45 +135,16 @@ export async function updateLlmTask(
   });
 }
 
-export async function startImpersonation(payload: {
-  tenantId: string;
-  userId: string;
-}): Promise<ImpersonateResponse> {
-  const state = useAuthStore.getState();
-  const savedSuperadminSession = {
-    tokens: state.tokens as AuthTokens,
-    user: state.user as AuthUser,
-  };
+export async function impersonateTenant(tenantId: string): Promise<ImpersonateResponse> {
+  const fetcher = isImpersonating() ? apiFetchAsPlatform : apiFetch;
 
-  const data = await apiFetch<ImpersonateResponse>('/superadmin/impersonate', {
+  const data = await fetcher<ImpersonateResponse>('/superadmin/impersonate', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ tenantId }),
   });
 
-  useAuthStore.getState().startImpersonation({
-    impersonationToken: data.impersonationToken,
-    tenantName: data.tenant.name,
-    impersonatedUser: {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.name,
-      role: 'owner',
-      isSuperadmin: false,
-      tenantId: payload.tenantId,
-      impersonating: true,
-    },
-    savedSuperadminSession,
-  });
-
+  applyImpersonationSession(data, tenantId);
   return data;
 }
 
-export async function endImpersonation(): Promise<EndImpersonationResponse> {
-  const data = await apiFetch<EndImpersonationResponse>('/superadmin/impersonate', {
-    method: 'DELETE',
-  });
-
-  useAuthStore.getState().endImpersonation(data.sessionToken);
-
-  return data;
-}
+export { exitImpersonation, isImpersonating };

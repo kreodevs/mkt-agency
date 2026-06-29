@@ -15,33 +15,30 @@ export interface AuthUser {
   impersonating?: boolean;
 }
 
-export interface SavedSuperadminSession {
-  tokens: AuthTokens;
-  user: AuthUser;
-}
-
-export interface ImpersonationContext {
-  tenantName: string;
-  userName: string;
-}
-
 const STORAGE_KEY = 'mkt-agency-auth';
 
 interface PersistedState {
   tokens: AuthTokens | null;
   user: AuthUser | null;
-  impersonation: ImpersonationContext | null;
-  savedSuperadminSession: SavedSuperadminSession | null;
+  impersonationTenantName: string | null;
 }
 
 function loadPersistedState(): PersistedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as PersistedState;
+      const parsed = JSON.parse(raw) as PersistedState & {
+        impersonation?: unknown;
+        savedSuperadminSession?: unknown;
+      };
+      return {
+        tokens: parsed.tokens ?? null,
+        user: parsed.user ?? null,
+        impersonationTenantName: parsed.impersonationTenantName ?? null,
+      };
     }
   } catch { /* ignore */ }
-  return { tokens: null, user: null, impersonation: null, savedSuperadminSession: null };
+  return { tokens: null, user: null, impersonationTenantName: null };
 }
 
 function persistState(state: PersistedState): void {
@@ -66,79 +63,48 @@ export const getRefreshToken = () => memoryTokens?.refreshToken ?? null;
 interface AuthState {
   tokens: AuthTokens | null;
   user: AuthUser | null;
-  impersonation: ImpersonationContext | null;
-  savedSuperadminSession: SavedSuperadminSession | null;
+  impersonationTenantName: string | null;
   setSession: (tokens: AuthTokens, user: AuthUser) => void;
   clearSession: () => void;
   setTokens: (tokens: AuthTokens) => void;
-  startImpersonation: (payload: {
-    impersonationToken: string;
-    tenantName: string;
-    impersonatedUser: AuthUser;
-    savedSuperadminSession: SavedSuperadminSession;
-  }) => void;
-  endImpersonation: (sessionToken: string) => void;
+  setImpersonationSession: (tokens: AuthTokens, user: AuthUser, tenantName: string) => void;
+  restorePlatformSession: (tokens: AuthTokens, user: AuthUser) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   tokens: initial.tokens,
   user: initial.user,
-  impersonation: initial.impersonation,
-  savedSuperadminSession: initial.savedSuperadminSession,
+  impersonationTenantName: initial.impersonationTenantName,
   setSession: (tokens, user) => {
     memoryTokens = tokens;
-    const state = { tokens, user, impersonation: null, savedSuperadminSession: null };
+    const state = { tokens, user, impersonationTenantName: null };
     set(state);
     persistState(state);
   },
   clearSession: () => {
     memoryTokens = null;
-    set({ tokens: null, user: null, impersonation: null, savedSuperadminSession: null });
+    set({ tokens: null, user: null, impersonationTenantName: null });
     clearPersistedState();
   },
   setTokens: (tokens) => {
     memoryTokens = tokens;
     set({ tokens });
     const current = get();
-    persistState({ tokens, user: current.user, impersonation: current.impersonation, savedSuperadminSession: current.savedSuperadminSession });
+    persistState({
+      tokens,
+      user: current.user,
+      impersonationTenantName: current.impersonationTenantName,
+    });
   },
-  startImpersonation: ({
-    impersonationToken,
-    tenantName,
-    impersonatedUser,
-    savedSuperadminSession,
-  }) => {
-    const refreshToken = get().tokens?.refreshToken ?? savedSuperadminSession.tokens.refreshToken;
-    memoryTokens = {
-      accessToken: impersonationToken,
-      refreshToken,
-    };
-    const state = {
-      tokens: memoryTokens,
-      user: impersonatedUser,
-      impersonation: { tenantName, userName: impersonatedUser.name } as ImpersonationContext,
-      savedSuperadminSession,
-    };
+  setImpersonationSession: (tokens, user, tenantName) => {
+    memoryTokens = tokens;
+    const state = { tokens, user, impersonationTenantName: tenantName };
     set(state);
     persistState(state);
   },
-  endImpersonation: (sessionToken) => {
-    const saved = get().savedSuperadminSession;
-    if (!saved) {
-      return;
-    }
-
-    memoryTokens = {
-      accessToken: sessionToken,
-      refreshToken: saved.tokens.refreshToken,
-    };
-
-    const state = {
-      tokens: memoryTokens,
-      user: saved.user,
-      impersonation: null,
-      savedSuperadminSession: null,
-    };
+  restorePlatformSession: (tokens, user) => {
+    memoryTokens = tokens;
+    const state = { tokens, user, impersonationTenantName: null };
     set(state);
     persistState(state);
   },
