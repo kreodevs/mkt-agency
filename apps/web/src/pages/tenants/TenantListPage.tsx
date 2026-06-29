@@ -132,6 +132,7 @@ export default function TenantListPage() {
               <Pencil />
             </IconButton>
             <IconButton
+              tone="primary"
               label="Impersonar tenant"
               loading={impersonatingId === row.id}
               disabled={row.status !== 'active'}

@@ -103,18 +103,21 @@
   --z-tooltip: 1070;
 
   /* Action buttons — icon-only en tablas, cards y toolbars (Letter: plano, hairline, teal) */
-  --action-size: 2rem;
-  --action-icon-size: 1rem;
+  --action-size: 2.25rem;
+  --action-icon-size: 1.125rem;
   --action-gap: var(--spacing-xs);
-  --action-bg: var(--color-paper-white);
-  --action-bg-hover: var(--color-mist-white);
+  --action-bg: var(--color-mist-white);
+  --action-bg-hover: var(--color-paper-white);
   --action-border: var(--color-hairline);
-  --action-border-hover: var(--border-hover);
+  --action-border-hover: var(--color-deep-teal);
   --action-fg: var(--color-vault-ink);
   --action-fg-hover: var(--color-deep-teal);
   --action-bg-selected: var(--color-deep-teal);
   --action-fg-selected: var(--color-paper-white);
   --action-border-selected: var(--color-deep-teal);
+  --action-primary-fg: var(--color-deep-teal);
+  --action-primary-bg-hover: #e8f3f1;
+  --action-primary-border-hover: var(--color-deep-teal);
   --action-destructive-fg: var(--destructive);
   --action-destructive-bg-hover: #fef2f2;
   --action-destructive-border-hover: #fecaca;

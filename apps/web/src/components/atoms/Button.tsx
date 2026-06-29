@@ -21,7 +21,9 @@ const buttonVariants = cva(
           'bg-[var(--destructive)] text-[var(--destructive-foreground)] hover:bg-[var(--destructive)]/90 shadow-sm',
         link: 'bg-transparent text-[var(--primary)] hover:underline underline-offset-4',
         action:
-          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-fg)] hover:bg-[var(--action-bg-hover)] hover:border-[var(--action-border-hover)] hover:text-[var(--action-fg-hover)]',
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-fg)] hover:bg-[var(--action-bg-hover)] hover:border-[var(--action-border-hover)] hover:text-[var(--action-fg-hover)] active:border-[var(--action-border-hover)] active:text-[var(--action-fg-hover)]',
+        'action-primary':
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-bg-hover)] hover:border-[var(--action-primary-border-hover)] active:border-[var(--action-primary-border-hover)]',
         'action-selected':
           'border border-[var(--action-border-selected)] bg-[var(--action-bg-selected)] text-[var(--action-fg-selected)] hover:bg-[var(--primary-hover)] hover:border-[var(--primary-hover)] hover:text-[var(--action-fg-selected)]',
         'action-destructive':

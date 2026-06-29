@@ -5,10 +5,17 @@ export const ACTION_BUTTON_GROUP_CLASS =
 /** Tamaño estándar de íconos Lucide dentro de IconButton (también vía [&_svg] en size action). */
 export const ACTION_ICON_CLASS = 'h-action-icon w-action-icon shrink-0';
 
-export type ActionButtonTone = 'default' | 'selected' | 'destructive' | 'success' | 'danger';
+export type ActionButtonTone =
+  | 'default'
+  | 'primary'
+  | 'selected'
+  | 'destructive'
+  | 'success'
+  | 'danger';
 
 export const actionButtonToneVariant = {
   default: 'action',
+  primary: 'action-primary',
   selected: 'action-selected',
   destructive: 'action-destructive',
   success: 'action-success',

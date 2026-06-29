@@ -91,6 +91,9 @@ export default {
         'panel-sm': '12rem',
         'panel-md': '16rem',
       },
+      minWidth: {
+        action: 'var(--action-size)',
+      },
     },
   },
   plugins: [],
