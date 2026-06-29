@@ -5,7 +5,7 @@ import { DashboardShell, superadminNavigation } from '@/components/layout/Dashbo
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
@@ -152,17 +152,12 @@ export default function PackageListPage() {
       body: (row) => {
         const pkg = row as PackageType;
         return (
-          <div className="flex items-center gap-1">
-            <IconButton variant="ghost" label="Editar paquete" onClick={() => openEdit(pkg)}>
-              <Pencil className="h-4 w-4" />
+          <div className={ACTION_BUTTON_GROUP_CLASS}>
+            <IconButton label="Editar paquete" onClick={() => openEdit(pkg)}>
+              <Pencil />
             </IconButton>
-            <IconButton
-              variant="ghost"
-              label="Eliminar paquete"
-              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
-              onClick={() => deleteMutation.mutate(pkg.id)}
-            >
-              <Trash2 className="h-4 w-4" />
+            <IconButton tone="destructive" label="Eliminar paquete" onClick={() => deleteMutation.mutate(pkg.id)}>
+              <Trash2 />
             </IconButton>
           </div>
         );

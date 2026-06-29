@@ -4,7 +4,7 @@ import { Plus, Settings2, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { DNSVerification } from '@/components/domains/DNSVerification';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -81,24 +81,18 @@ export default function DomainSettingsPage() {
       field: 'actions',
       header: '',
       body: (row: CustomDomain) => (
-        <div className="flex items-center justify-end gap-1">
-          <IconButton
-            type="button"
-            variant="ghost"
-            label="Configurar dominio"
-            onClick={() => setSelectedId(row.id)}
-          >
-            <Settings2 className="h-4 w-4" />
+        <div className={`${ACTION_BUTTON_GROUP_CLASS} justify-end`}>
+          <IconButton type="button" label="Configurar dominio" onClick={() => setSelectedId(row.id)}>
+            <Settings2 />
           </IconButton>
           <IconButton
             type="button"
-            variant="ghost"
+            tone="destructive"
             label="Eliminar dominio"
-            className="text-[var(--destructive)] hover:text-[var(--destructive)]"
             disabled={row.isActive || deleteMutation.isPending}
             onClick={() => deleteMutation.mutate(row.id)}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 />
           </IconButton>
         </div>
       ),

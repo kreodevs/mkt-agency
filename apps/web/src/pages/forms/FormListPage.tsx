@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Code2, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { FormSnippet } from '@/components/forms/FormSnippet';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -82,24 +82,23 @@ export default function FormListPage() {
       body: (row) => {
         const id = String((row as { id?: string }).id);
         return (
-          <div className="flex items-center gap-1">
+          <div className={ACTION_BUTTON_GROUP_CLASS}>
             <IconButton
               type="button"
-              variant={selectedId === id ? 'default' : 'outline'}
+              tone={selectedId === id ? 'selected' : 'default'}
               label="Ver snippet"
               onClick={() => setSelectedId(id)}
             >
-              <Code2 className="h-4 w-4" />
+              <Code2 />
             </IconButton>
             <IconButton
               type="button"
-              variant="ghost"
+              tone="destructive"
               label="Eliminar formulario"
-              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               loading={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(id)}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </IconButton>
           </div>
         );

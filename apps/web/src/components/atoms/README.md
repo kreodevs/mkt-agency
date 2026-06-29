@@ -1,5 +1,8 @@
 # Atoms
 
-- **Button** — variantes `default|secondary|outline|ghost|destructive|link`, tamaños `default|sm|lg|icon` (usa tokens `h-control-*`, no `h-8`).
-- **IconButton** — botón cuadrado con ícono y tooltip/aria-label; usar en columnas de acciones de tablas.
+- **Button** — variantes primarias (`default`, `outline`, `ghost`, …) y de acción (`action`, `action-destructive`, …). Tamaños `default|sm|lg|icon|action`.
+- **IconButton** — acciones con ícono + tooltip. Prop `tone`: `default | selected | destructive | success | danger`. Tamaño por defecto `action`.
+- **action-button.constants** — `ACTION_BUTTON_GROUP_CLASS`, `ACTION_ICON_CLASS`, mapa tone → variant.
 - **InputText**, **Password**, **Textarea**, **Checkbox**, **Avatar**, **StatusPill**
+
+En tablas: agrupar con `ACTION_BUTTON_GROUP_CLASS`; no usar `variant="outline"` ni clases ad-hoc de color.

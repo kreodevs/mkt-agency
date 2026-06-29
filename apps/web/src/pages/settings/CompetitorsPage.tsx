@@ -4,7 +4,7 @@ import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { MentionList, filterSelectClass } from '@/components/competitors/MentionList';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -89,24 +89,18 @@ export default function CompetitorsPage() {
       body: (row) => {
         const competitor = row as Competitor;
         return (
-          <div className="flex items-center justify-end gap-1">
-            <IconButton
-              type="button"
-              variant="ghost"
-              label="Ver menciones"
-              onClick={() => setSelectedId(competitor.id)}
-            >
-              <MessageSquare className="h-4 w-4" />
+          <div className={`${ACTION_BUTTON_GROUP_CLASS} justify-end`}>
+            <IconButton type="button" label="Ver menciones" onClick={() => setSelectedId(competitor.id)}>
+              <MessageSquare />
             </IconButton>
             <IconButton
               type="button"
-              variant="ghost"
+              tone="destructive"
               label="Eliminar competidor"
-              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(competitor.id)}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </IconButton>
           </div>
         );

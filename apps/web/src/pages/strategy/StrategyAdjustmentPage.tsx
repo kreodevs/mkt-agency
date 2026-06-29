@@ -21,7 +21,7 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
@@ -399,12 +399,11 @@ export default function StrategyAdjustmentPage() {
 
                     {/* Actions */}
                     {suggestion.status === 'pending' && (
-                      <div className="flex shrink-0 gap-1">
+                      <div className={ACTION_BUTTON_GROUP_CLASS}>
                         <IconButton
                           type="button"
-                          variant="ghost"
+                          tone="success"
                           label="Aprobar sugerencia"
-                          className="text-emerald-500 hover:bg-emerald-500/10"
                           loading={
                             updateSuggestionMutation.isPending &&
                             updateSuggestionMutation.variables?.suggestionId ===
@@ -418,13 +417,12 @@ export default function StrategyAdjustmentPage() {
                             })
                           }
                         >
-                          <ThumbsUp className="h-4 w-4" />
+                          <ThumbsUp />
                         </IconButton>
                         <IconButton
                           type="button"
-                          variant="ghost"
+                          tone="danger"
                           label="Rechazar sugerencia"
-                          className="text-red-500 hover:bg-red-500/10"
                           onClick={() =>
                             updateSuggestionMutation.mutate({
                               adjustmentId: latest.id,
@@ -433,7 +431,7 @@ export default function StrategyAdjustmentPage() {
                             })
                           }
                         >
-                          <ThumbsDown className="h-4 w-4" />
+                          <ThumbsDown />
                         </IconButton>
                       </div>
                     )}

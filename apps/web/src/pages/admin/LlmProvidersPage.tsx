@@ -5,7 +5,7 @@ import { DashboardShell, superadminNavigation } from '@/components/layout/Dashbo
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
@@ -148,17 +148,16 @@ export default function LlmProvidersPage() {
       body: (row) => {
         const provider = row as LlmProvider;
         return (
-          <div className="flex items-center gap-1">
-            <IconButton variant="ghost" label="Editar proveedor" onClick={() => openEdit(provider)}>
-              <Pencil className="h-4 w-4" />
+          <div className={ACTION_BUTTON_GROUP_CLASS}>
+            <IconButton label="Editar proveedor" onClick={() => openEdit(provider)}>
+              <Pencil />
             </IconButton>
             <IconButton
-              variant="ghost"
+              tone="destructive"
               label="Eliminar proveedor"
-              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               onClick={() => deleteMutation.mutate(provider.id)}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </IconButton>
           </div>
         );

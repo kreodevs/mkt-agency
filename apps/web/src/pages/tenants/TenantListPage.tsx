@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, UserRoundSearch } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
-import { IconButton } from '@/components/atoms/IconButton';
+import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -127,16 +127,11 @@ export default function TenantListPage() {
         header: 'Acciones',
         width: '120px',
         body: (row: Tenant) => (
-          <div className="flex items-center gap-1">
-            <IconButton
-              variant="outline"
-              label="Editar tenant"
-              onClick={() => setEditTenantId(row.id)}
-            >
-              <Pencil className="h-4 w-4" />
+          <div className={ACTION_BUTTON_GROUP_CLASS}>
+            <IconButton label="Editar tenant" onClick={() => setEditTenantId(row.id)}>
+              <Pencil />
             </IconButton>
             <IconButton
-              variant="outline"
               label="Impersonar tenant"
               loading={impersonatingId === row.id}
               disabled={row.status !== 'active'}
@@ -150,7 +145,7 @@ export default function TenantListPage() {
                   .finally(() => setImpersonatingId(null));
               }}
             >
-              <UserRoundSearch className="h-4 w-4" />
+              <UserRoundSearch />
             </IconButton>
           </div>
         ),

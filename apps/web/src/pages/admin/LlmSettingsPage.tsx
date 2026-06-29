@@ -140,8 +140,8 @@ export default function LlmSettingsPage() {
       body: (row) => {
         const task = row as LlmTaskConfig;
         return (
-          <IconButton variant="ghost" label="Configurar tarea" onClick={() => setEditing(task)}>
-            <Settings2 className="h-4 w-4" />
+          <IconButton label="Configurar tarea" onClick={() => setEditing(task)}>
+            <Settings2 />
           </IconButton>
         );
       },

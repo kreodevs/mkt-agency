@@ -80,12 +80,8 @@ export default function ReportListPage() {
       field: 'actions',
       header: '',
       body: (row) => (
-        <IconButton
-          variant="ghost"
-          label="Ver detalle"
-          onClick={() => navigate(`/reports/${(row as Report).id}`)}
-        >
-          <Eye className="h-4 w-4" />
+        <IconButton label="Ver detalle" onClick={() => navigate(`/reports/${(row as Report).id}`)}>
+          <Eye />
         </IconButton>
       ),
     },

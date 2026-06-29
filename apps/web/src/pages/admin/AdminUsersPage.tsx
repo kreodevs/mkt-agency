@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
               setEditName(u.name);
             }}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil />
           </IconButton>
         );
       },

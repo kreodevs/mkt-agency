@@ -101,6 +101,29 @@
   --z-fixed: 1030;
   --z-modal: 1050;
   --z-tooltip: 1070;
+
+  /* Action buttons — icon-only en tablas, cards y toolbars (Letter: plano, hairline, teal) */
+  --action-size: 2rem;
+  --action-icon-size: 1rem;
+  --action-gap: var(--spacing-xs);
+  --action-bg: var(--color-paper-white);
+  --action-bg-hover: var(--color-mist-white);
+  --action-border: var(--color-hairline);
+  --action-border-hover: var(--border-hover);
+  --action-fg: var(--color-vault-ink);
+  --action-fg-hover: var(--color-deep-teal);
+  --action-bg-selected: var(--color-deep-teal);
+  --action-fg-selected: var(--color-paper-white);
+  --action-border-selected: var(--color-deep-teal);
+  --action-destructive-fg: var(--destructive);
+  --action-destructive-bg-hover: #fef2f2;
+  --action-destructive-border-hover: #fecaca;
+  --action-success-fg: var(--success);
+  --action-success-bg-hover: #f0fdf4;
+  --action-success-border-hover: #bbf7d0;
+  --action-danger-fg: var(--destructive);
+  --action-danger-bg-hover: #fef2f2;
+  --action-danger-border-hover: #fecaca;
 }
 
 * {

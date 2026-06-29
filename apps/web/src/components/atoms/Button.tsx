@@ -20,12 +20,24 @@ const buttonVariants = cva(
         destructive:
           'bg-[var(--destructive)] text-[var(--destructive-foreground)] hover:bg-[var(--destructive)]/90 shadow-sm',
         link: 'bg-transparent text-[var(--primary)] hover:underline underline-offset-4',
+        action:
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-fg)] hover:bg-[var(--action-bg-hover)] hover:border-[var(--action-border-hover)] hover:text-[var(--action-fg-hover)]',
+        'action-selected':
+          'border border-[var(--action-border-selected)] bg-[var(--action-bg-selected)] text-[var(--action-fg-selected)] hover:bg-[var(--primary-hover)] hover:border-[var(--primary-hover)] hover:text-[var(--action-fg-selected)]',
+        'action-destructive':
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-destructive-fg)] hover:bg-[var(--action-destructive-bg-hover)] hover:border-[var(--action-destructive-border-hover)]',
+        'action-success':
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-success-fg)] hover:bg-[var(--action-success-bg-hover)] hover:border-[var(--action-success-border-hover)]',
+        'action-danger':
+          'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-danger-fg)] hover:bg-[var(--action-danger-bg-hover)] hover:border-[var(--action-danger-border-hover)]',
       },
       size: {
         default: 'h-control-md min-h-control-md px-[var(--spacing-md)] text-sm',
         sm: 'h-control-sm min-h-control-sm px-[var(--spacing-md)] text-xs',
         lg: 'h-control-lg min-h-control-lg px-[var(--spacing-lg)] text-base',
         icon: 'h-control-icon min-h-control-icon w-control-icon p-0',
+        action:
+          'h-action min-h-action w-action min-w-action p-0 [&_svg]:h-action-icon [&_svg]:w-action-icon [&_svg]:shrink-0',
       },
     },
     defaultVariants: {
