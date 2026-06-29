@@ -89,6 +89,7 @@ Sugerencias del **detector TheForge** según MDD, Blueprint, complejidad y patro
 | `docs/agent-governance/skills/design-system-ui/SKILL.md` | skill | Design system / paquete UI compartido | strong |
 | `docs/agent-governance/skills/deploy-kubernetes/SKILL.md` | skill | Despliegue Kubernetes / Helm según MDD §7 | strong |
 | `docs/agent-governance/skills/monorepo-packages/SKILL.md` | skill | Trabajo en monorepo multi-paquete | strong |
+| `docs/agent-governance/skills/platform-impersonation/SKILL.md` | skill | Impersonación superadmin→tenant (patrón Kreo Eventos) | strong |
 
 **Notas del detector:**
 

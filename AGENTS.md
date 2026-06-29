@@ -34,6 +34,10 @@ El ZIP **no incluye** la carpeta oculta `.cursor/` (macOS/Finder la oculta al ex
 - **Onboarding:** `docs/agent-governance/agent-onboarding.md`
 - **Instalación paso a paso:** `docs/agent-governance/INSTALACION.md`
 
+## Skill impersonación (Kreo Eventos)
+
+Para impersonación, suplantación o switch superadmin→tenant, usar **`docs/agent-governance/skills/platform-impersonation/`** (copia activa en `.cursor/skills/platform-impersonation/`).
+
 ## Hechos del proyecto (Mkt Agency OS)
 
 - **Backend:** NestJS
