@@ -4,7 +4,9 @@ import { LlmModelSelect } from '@/components/admin/LlmModelSelect';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { Settings2 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
@@ -138,9 +140,9 @@ export default function LlmSettingsPage() {
       body: (row) => {
         const task = row as LlmTaskConfig;
         return (
-          <Button size="sm" variant="ghost" onClick={() => setEditing(task)}>
-            Configurar
-          </Button>
+          <IconButton variant="ghost" label="Configurar tarea" onClick={() => setEditing(task)}>
+            <Settings2 className="h-4 w-4" />
+          </IconButton>
         );
       },
     },

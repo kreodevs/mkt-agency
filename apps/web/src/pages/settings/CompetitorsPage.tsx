@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { MentionList, filterSelectClass } from '@/components/competitors/MentionList';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -88,24 +89,25 @@ export default function CompetitorsPage() {
       body: (row) => {
         const competitor = row as Competitor;
         return (
-          <div className="flex justify-end gap-1">
-            <Button
+          <div className="flex items-center justify-end gap-1">
+            <IconButton
               type="button"
               variant="ghost"
-              size="sm"
+              label="Ver menciones"
               onClick={() => setSelectedId(competitor.id)}
             >
-              Menciones
-            </Button>
-            <Button
+              <MessageSquare className="h-4 w-4" />
+            </IconButton>
+            <IconButton
               type="button"
               variant="ghost"
-              size="sm"
+              label="Eliminar competidor"
+              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(competitor.id)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconButton>
           </div>
         );
       },

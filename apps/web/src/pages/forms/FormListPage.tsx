@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { Code2, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { FormSnippet } from '@/components/forms/FormSnippet';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -81,24 +82,25 @@ export default function FormListPage() {
       body: (row) => {
         const id = String((row as { id?: string }).id);
         return (
-          <div className="flex gap-2">
-            <Button
+          <div className="flex items-center gap-1">
+            <IconButton
               type="button"
-              size="sm"
               variant={selectedId === id ? 'default' : 'outline'}
+              label="Ver snippet"
               onClick={() => setSelectedId(id)}
             >
-              Snippet
-            </Button>
-            <Button
+              <Code2 className="h-4 w-4" />
+            </IconButton>
+            <IconButton
               type="button"
-              size="sm"
               variant="ghost"
+              label="Eliminar formulario"
+              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               loading={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(id)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconButton>
           </div>
         );
       },

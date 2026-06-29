@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
@@ -147,18 +148,18 @@ export default function LlmProvidersPage() {
       body: (row) => {
         const provider = row as LlmProvider;
         return (
-          <div className="flex gap-2">
-            <Button size="sm" variant="ghost" onClick={() => openEdit(provider)}>
-              Editar
-            </Button>
-            <Button
-              size="sm"
+          <div className="flex items-center gap-1">
+            <IconButton variant="ghost" label="Editar proveedor" onClick={() => openEdit(provider)}>
+              <Pencil className="h-4 w-4" />
+            </IconButton>
+            <IconButton
               variant="ghost"
-              className="text-[var(--destructive)]"
+              label="Eliminar proveedor"
+              className="text-[var(--destructive)] hover:text-[var(--destructive)]"
               onClick={() => deleteMutation.mutate(provider.id)}
             >
-              Eliminar
-            </Button>
+              <Trash2 className="h-4 w-4" />
+            </IconButton>
           </div>
         );
       },

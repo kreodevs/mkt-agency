@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Settings2, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { DNSVerification } from '@/components/domains/DNSVerification';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -80,24 +81,25 @@ export default function DomainSettingsPage() {
       field: 'actions',
       header: '',
       body: (row: CustomDomain) => (
-        <div className="flex justify-end gap-1">
-          <Button
+        <div className="flex items-center justify-end gap-1">
+          <IconButton
             type="button"
             variant="ghost"
-            size="sm"
+            label="Configurar dominio"
             onClick={() => setSelectedId(row.id)}
           >
-            Configurar
-          </Button>
-          <Button
+            <Settings2 className="h-4 w-4" />
+          </IconButton>
+          <IconButton
             type="button"
             variant="ghost"
-            size="sm"
+            label="Eliminar dominio"
+            className="text-[var(--destructive)] hover:text-[var(--destructive)]"
             disabled={row.isActive || deleteMutation.isPending}
             onClick={() => deleteMutation.mutate(row.id)}
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </IconButton>
         </div>
       ),
     },

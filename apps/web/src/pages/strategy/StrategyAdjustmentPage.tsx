@@ -21,6 +21,7 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
@@ -399,10 +400,10 @@ export default function StrategyAdjustmentPage() {
                     {/* Actions */}
                     {suggestion.status === 'pending' && (
                       <div className="flex shrink-0 gap-1">
-                        <Button
+                        <IconButton
                           type="button"
-                          size="sm"
                           variant="ghost"
+                          label="Aprobar sugerencia"
                           className="text-emerald-500 hover:bg-emerald-500/10"
                           loading={
                             updateSuggestionMutation.isPending &&
@@ -418,11 +419,11 @@ export default function StrategyAdjustmentPage() {
                           }
                         >
                           <ThumbsUp className="h-4 w-4" />
-                        </Button>
-                        <Button
+                        </IconButton>
+                        <IconButton
                           type="button"
-                          size="sm"
                           variant="ghost"
+                          label="Rechazar sugerencia"
                           className="text-red-500 hover:bg-red-500/10"
                           onClick={() =>
                             updateSuggestionMutation.mutate({
@@ -433,7 +434,7 @@ export default function StrategyAdjustmentPage() {
                           }
                         >
                           <ThumbsDown className="h-4 w-4" />
-                        </Button>
+                        </IconButton>
                       </div>
                     )}
                   </div>

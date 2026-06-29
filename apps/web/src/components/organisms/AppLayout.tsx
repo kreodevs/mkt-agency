@@ -80,7 +80,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         )}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="relative z-20 flex min-h-16 shrink-0 items-center gap-3 overflow-visible border-b border-[var(--border)] bg-[var(--card)] px-4 py-2.5 md:min-h-20 md:px-6 md:py-3 lg:px-8">
+          <header className="relative z-20 flex min-h-header shrink-0 items-center gap-3 overflow-visible border-b border-[var(--border)] bg-[var(--card)] px-4 py-2.5 md:min-h-header md:px-6 md:py-3 lg:px-8">
             <div className="flex shrink-0 items-center gap-[var(--spacing-md)]">
               {hasSidebar && (
                 <button

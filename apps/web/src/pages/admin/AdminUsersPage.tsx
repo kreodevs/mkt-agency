@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Pencil } from 'lucide-react';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Dialog } from '@/components/molecules/Dialog';
+import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { InputText } from '@/components/atoms/InputText';
 import { listSuperadminUsers, updateSuperadminUser, type SuperadminUser } from '@/services/superadmin';
@@ -72,7 +74,7 @@ export default function AdminUsersPage() {
         const u = row as SuperadminUser;
         return (
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-medium text-white">
+            <div className="flex h-avatar-sm w-avatar-sm items-center justify-center rounded-full bg-[var(--primary)] text-xs font-medium text-white">
               {u.name.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -134,8 +136,9 @@ export default function AdminUsersPage() {
       body: (row) => {
         const u = row as SuperadminUser;
         return (
-          <button
-            className="rounded-md px-2.5 py-1 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
+          <IconButton
+            variant="ghost"
+            label="Editar usuario"
             onClick={() => {
               setEditingUser(u);
               setEditRole(u.role);
@@ -143,8 +146,8 @@ export default function AdminUsersPage() {
               setEditName(u.name);
             }}
           >
-            Editar
-          </button>
+            <Pencil className="h-4 w-4" />
+          </IconButton>
         );
       },
     },

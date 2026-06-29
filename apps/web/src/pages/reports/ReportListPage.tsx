@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Eye, Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -24,6 +25,7 @@ const filterSelectClass =
 
 export default function ReportListPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [type, setType] = useState<ReportType>('campaign_performance');
 
   const reportsQuery = useQuery({
@@ -78,12 +80,13 @@ export default function ReportListPage() {
       field: 'actions',
       header: '',
       body: (row) => (
-        <Link
-          to={`/reports/${(row as Report).id}`}
-          className="text-sm font-medium text-[var(--primary)] hover:underline"
+        <IconButton
+          variant="ghost"
+          label="Ver detalle"
+          onClick={() => navigate(`/reports/${(row as Report).id}`)}
         >
-          Ver detalle
-        </Link>
+          <Eye className="h-4 w-4" />
+        </IconButton>
       ),
     },
   ];

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Download, Grid3X3, ImageIcon, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetUploader } from '@/components/assets/AssetUploader';
-import { Button } from '@/components/atoms/Button';
+import { IconButton } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -145,37 +145,38 @@ export default function AssetLibraryPage() {
           const asset = row as Asset;
           const locked = asset.isInUse || asset.referenceCount > 0;
           return (
-            <div className="flex gap-1">
-              <Button
+            <div className="flex items-center gap-1">
+              <IconButton
                 type="button"
-                size="sm"
                 variant="ghost"
+                label="Descargar"
                 onClick={async () => {
                   const { url } = await getAssetDownloadUrl(asset.id);
                   window.open(url, '_blank', 'noopener,noreferrer');
                 }}
               >
                 <Download className="h-4 w-4" />
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
                 type="button"
-                size="sm"
                 variant="ghost"
+                label="Duplicar"
                 loading={duplicateMutation.isPending}
                 onClick={() => duplicateMutation.mutate(asset.id)}
               >
                 <Copy className="h-4 w-4" />
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
                 type="button"
-                size="sm"
                 variant="ghost"
+                label="Eliminar"
+                className="text-[var(--destructive)] hover:text-[var(--destructive)]"
                 disabled={locked}
                 loading={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate(asset.id)}
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </IconButton>
             </div>
           );
         },
@@ -357,15 +358,22 @@ function AssetGridCard({
 
       {/* Actions overlay on hover */}
       <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button type="button" size="sm" variant="ghost" onClick={onDownload}>
+        <IconButton type="button" variant="ghost" label="Descargar" onClick={onDownload}>
           <Download className="h-3.5 w-3.5" />
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onDuplicate}>
+        </IconButton>
+        <IconButton type="button" variant="ghost" label="Duplicar" onClick={onDuplicate}>
           <Copy className="h-3.5 w-3.5" />
-        </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={locked} onClick={onDelete}>
+        </IconButton>
+        <IconButton
+          type="button"
+          variant="ghost"
+          label="Eliminar"
+          className="text-[var(--destructive)] hover:text-[var(--destructive)]"
+          disabled={locked}
+          onClick={onDelete}
+        >
           <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        </IconButton>
       </div>
 
       <div className="border-t border-[var(--border)] p-2.5">

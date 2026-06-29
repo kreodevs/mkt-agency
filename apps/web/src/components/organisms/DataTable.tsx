@@ -84,13 +84,13 @@ const ptStyles = {
     rowPerPageDropdown: {
       root: {
         className:
-          'h-8 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-[var(--spacing-sm)] text-sm text-[var(--foreground)]',
+          'h-control-sm min-h-control-sm rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-[var(--spacing-sm)] text-sm text-[var(--foreground)]',
       },
     },
   },
   filterInput: {
     className:
-      'h-8 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-[var(--spacing-sm)] text-sm text-[var(--foreground)]',
+      'h-control-sm min-h-control-sm w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-[var(--spacing-sm)] text-sm text-[var(--foreground)]',
   },
 };
 

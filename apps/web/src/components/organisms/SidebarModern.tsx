@@ -76,12 +76,12 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           <div className="flex items-start gap-[var(--spacing-md)]">
             {collapsed ? (
               <Tooltip content={`Mkt Agency · v${appVersion}`}>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
                   M
                 </div>
               </Tooltip>
             ) : (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+              <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
                 M
               </div>
             )}

@@ -15,10 +15,10 @@ export interface AvatarProps {
 
 const sizeConfig = {
   xs: { container: 'w-6 h-6', text: 'text-[10px]', icon: 'w-3 h-3' },
-  sm: { container: 'w-8 h-8', text: 'text-xs', icon: 'w-4 h-4' },
-  md: { container: 'w-10 h-10', text: 'text-sm', icon: 'w-5 h-5' },
-  lg: { container: 'w-12 h-12', text: 'text-base', icon: 'w-6 h-6' },
-  xl: { container: 'w-16 h-16', text: 'text-lg', icon: 'w-8 h-8' },
+  sm: { container: 'w-avatar-sm h-avatar-sm', text: 'text-xs', icon: 'w-4 h-4' },
+  md: { container: 'w-avatar-md h-avatar-md', text: 'text-sm', icon: 'w-5 h-5' },
+  lg: { container: 'w-avatar-lg h-avatar-lg', text: 'text-base', icon: 'w-6 h-6' },
+  xl: { container: 'w-avatar-xl h-avatar-xl', text: 'text-lg', icon: 'w-8 h-8' },
   '2xl': { container: 'w-20 h-20', text: 'text-xl', icon: 'w-10 h-10' },
 };
 
