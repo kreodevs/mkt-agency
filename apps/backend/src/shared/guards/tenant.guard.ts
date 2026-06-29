@@ -19,6 +19,13 @@ export class TenantGuard implements CanActivate {
       });
     }
 
+    if (user.isSuperadmin && !user.impersonating) {
+      throw new ForbiddenException({
+        error: 'Tenant operations require impersonation for superadmin',
+        code: 'FORBIDDEN',
+      });
+    }
+
     return true;
   }
 }

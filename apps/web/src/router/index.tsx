@@ -56,7 +56,6 @@ export function AppRouter() {
 
         <Route element={<AuthGuard />}>
           <Route path="/" element={<AgencyHomePage />} />
-          <Route path="/dashboard" element={<MetricsDashboardPage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
             <Route path="/admin/packages" element={<PackageListPage />} />
@@ -67,6 +66,7 @@ export function AppRouter() {
             <Route path="/admin/security-events" element={<SecurityEventsPage />} />
           </Route>
           <Route element={<TenantGuard />}>
+            <Route path="/dashboard" element={<MetricsDashboardPage />} />
             <Route path="/agents" element={<AgentListPage />} />
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />

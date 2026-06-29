@@ -45,6 +45,6 @@ yarn build
 
 - `/setup` — bootstrap superadmin (US-001)
 - `/login` — auth JWT (US-004)
-- `/` — dashboard (superadmin: acceso rápido a tenants)
-- `/tenants` — listado superadmin con DataTable Kreo
+- `/` — inicio (superadmin: plataforma + config IA; tenant: escritorio agencia)
+- `/tenants` — listado superadmin, impersonación para operar campañas y agentes
 - `/onboarding` — wizard company-profile (usuarios tenant)

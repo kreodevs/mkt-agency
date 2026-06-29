@@ -17,6 +17,7 @@ import WebsiteAnalyzerFlow from '@/components/onboarding/WebsiteAnalyzerFlow';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Card } from '@/components/molecules/Card';
 import { PageHeader } from '@/components/molecules/PageHeader';
+import { Button } from '@/components/atoms/Button';
 import { apiFetch } from '@/services/api';
 
 interface UpcomingPost {
@@ -77,22 +78,51 @@ function getStatusLabel(status: string): string {
 }
 
 export default function AgencyHomePage() {
+  const user = useAuthStore((s) => s.user);
+  const isSuperadminNative = user?.isSuperadmin && !user?.impersonating;
+
   const homeQuery = useQuery({
     queryKey: ['agency-home'],
     queryFn: () => apiFetch<AgencyHomeData>('/dashboard/agency-home'),
+    enabled: !isSuperadminNative,
   });
 
   const data = homeQuery.data;
-  const user = useAuthStore((s) => s.user);
 
   const hasOnboarded = useMemo(() => {
     return data && (data.upcoming.length > 0 || data.strategy || data.communityBatch || data.leads.total > 0);
   }, [data]);
 
-  // Superadmin with auto-created tenant — skip empty onboarding state
-  const isSuperadminWithTenant = useMemo(() => {
-    return user?.isSuperadmin && !user?.impersonating;
-  }, [user]);
+  if (isSuperadminNative) {
+    return (
+      <DashboardShell>
+        <PageHeader
+          title="Administración"
+          description="Panel de control de la plataforma"
+        />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card title="Organizaciones" subtitle="Tenants e impersonación">
+            <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+              Campañas, agentes IA y operativa de marketing se ejecutan impersonando un tenant
+              desde el listado de organizaciones.
+            </p>
+            <Link to="/tenants">
+              <Button>Ver listado de tenants</Button>
+            </Link>
+          </Card>
+          <Card title="Configuración IA" subtitle="Modelos por tarea">
+            <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+              Asigna proveedor y modelo a cada tarea de IA. No ejecutes agentes desde aquí: eso
+              ocurre en el contexto del tenant.
+            </p>
+            <Link to="/admin/llm-settings">
+              <Button variant="outline">Configurar modelos por tarea</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   if (homeQuery.isLoading) {
     return (
@@ -101,43 +131,6 @@ export default function AgencyHomePage() {
           <div className="text-center">
             <div className="mb-4 text-4xl">🏢</div>
             <p className="text-[var(--foreground-muted)]">Cargando tu agencia...</p>
-          </div>
-        </div>
-      </DashboardShell>
-    );
-  }
-
-  // Superadmin with auto-created tenant — show dashboard (data may be null on error)
-  if (isSuperadminWithTenant && !hasOnboarded) {
-    return (
-      <DashboardShell>
-        <div className="space-y-6">
-          <PageHeader
-            title="Administración"
-            description="Panel de control de la plataforma"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <QuickKpiCard
-              icon={Users}
-              label="Leads hoy"
-              value={data?.leads?.today ?? 0}
-              color="text-blue-600"
-              bg="bg-blue-500/10"
-            />
-            <QuickKpiCard
-              icon={Lightbulb}
-              label="Estrategia"
-              value="Pendiente"
-              color="text-amber-600"
-              bg="bg-amber-500/10"
-            />
-            <QuickKpiCard
-              icon={CalendarDays}
-              label="Próximas publicaciones"
-              value={data?.upcoming?.length ?? 0}
-              color="text-violet-600"
-              bg="bg-violet-500/10"
-            />
           </div>
         </div>
       </DashboardShell>

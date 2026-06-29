@@ -45,5 +45,10 @@ export function TenantGuard() {
     return <Navigate to="/" replace />;
   }
 
+  // Campañas y resto de operativa tenant solo vía impersonación
+  if (user.isSuperadmin && !user.impersonating) {
+    return <Navigate to="/" replace />;
+  }
+
   return <Outlet />;
 }

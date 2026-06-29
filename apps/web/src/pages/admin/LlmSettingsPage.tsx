@@ -151,8 +151,8 @@ export default function LlmSettingsPage() {
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
-        title="Tareas LLM"
-        description="Puedes tener varios proveedores activos y asignar uno distinto a cada tarea o agente."
+        title="Modelos por tarea"
+        description="Asigna proveedor y modelo a cada tarea de IA de la plataforma. Los agentes se operan en el tenant, no desde superadmin."
       />
 
       <Card className="mt-6">

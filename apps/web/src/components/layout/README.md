@@ -1,5 +1,5 @@
 # Layout
 
 - `DashboardShell` — envuelve páginas autenticadas con `AppLayout` Kreo, navegación superadmin/tenant, `ImpersonationBanner` y logout.
-- Superadmin: `/admin/packages` (CRUD paquetes/límites), `/admin/llm-settings` (modelos por tarea IA).
-- Tenant nav incluye `/campaigns` (US-009).
+- **Superadmin:** sección Administración (tenants, paquetes, usuarios, auditoría, seguridad) y **Configuración IA** (proveedores LLM + modelos por tarea). Sin agentes ni marketing en nav.
+- **Tenant / impersonación:** nav operativa con agentes, campañas y marketing.
