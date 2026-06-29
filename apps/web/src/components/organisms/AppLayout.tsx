@@ -91,7 +91,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
                   <MenuIcon className="h-5 w-5" />
                 </button>
               )}
-              <div className="hidden w-64 items-center gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--background)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-[var(--foreground-subtle)] md:flex lg:w-96">
+              <div className="hidden w-search-bar items-center gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--background)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-[var(--foreground-subtle)] md:flex lg:w-search-bar-lg">
                 <Search className="h-4 w-4" />
                 <span className="text-sm font-medium">Buscar...</span>
               </div>

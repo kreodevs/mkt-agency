@@ -1,6 +1,12 @@
 export type TenantPlan = 'starter' | 'professional' | 'enterprise';
 export type TenantStatus = 'active' | 'suspended' | 'deleted';
 
+export interface TenantPlatformAdmin {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -14,6 +20,18 @@ export interface Tenant {
   maxFileSize: number;
   createdAt: string;
   updatedAt: string;
+  platformAdmins?: TenantPlatformAdmin[];
+}
+
+export interface UpdateTenantPayload {
+  name?: string;
+  plan?: TenantPlan;
+  status?: TenantStatus;
+  packageId?: string;
+  maxUsers?: number;
+  maxAssetsSize?: number;
+  maxFileSize?: number;
+  platformAdminIds?: string[];
 }
 
 export interface ListTenantsParams {

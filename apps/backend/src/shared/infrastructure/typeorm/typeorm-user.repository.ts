@@ -171,7 +171,31 @@ export class TypeOrmUserRepository implements UserRepositoryPort {
       .addOrderBy('user.created_at', 'ASC')
       .getOne();
 
-    return user ? this.toPublicUser(user) : null;
+    if (user) {
+      return this.toPublicUser(user);
+    }
+
+    const platformAdmin = await this.users
+      .createQueryBuilder('user')
+      .innerJoin(
+        'tenant_platform_admins',
+        'tpa',
+        'tpa.user_id = user.id AND tpa.tenant_id = :tenantId',
+        { tenantId },
+      )
+      .where('user.is_superadmin = true')
+      .andWhere('user.status = :status', { status: 'active' })
+      .orderBy('tpa.created_at', 'ASC')
+      .getOne();
+
+    if (!platformAdmin) {
+      return null;
+    }
+
+    return {
+      ...this.toPublicUser(platformAdmin),
+      role: 'admin',
+    };
   }
 
   async findAll(params: ListUsersParams): Promise<ListUsersResult> {

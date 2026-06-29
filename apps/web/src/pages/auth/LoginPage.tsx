@@ -22,7 +22,7 @@ export default function LoginPage() {
       await login(email, password);
       toast.success('Sesión iniciada');
       const user = useAuthStore.getState().user;
-      navigate(user?.isSuperadmin ? '/tenants' : '/');
+      navigate(user?.isSuperadmin ? '/' : '/');
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : 'No se pudo iniciar sesión';

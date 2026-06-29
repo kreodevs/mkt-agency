@@ -57,6 +57,8 @@ export default {
       width: {
         sidebar: '18rem',
         'sidebar-collapsed': '5rem',
+        'search-bar': '16rem',
+        'search-bar-lg': '24rem',
       },
     },
   },

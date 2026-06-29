@@ -10,21 +10,24 @@ import { CreateTenantHandler } from './commands/create-tenant.handler';
 import { DeleteTenantHandler } from './commands/delete-tenant.handler';
 import { TENANT_REPOSITORY } from './domain/tenant.repository.port';
 import { TenantEntity } from './infrastructure/typeorm/tenant.entity';
+import { TenantPlatformAdminEntity } from './infrastructure/typeorm/tenant-platform-admin.entity';
 import { TypeOrmTenantRepository } from './infrastructure/typeorm/typeorm-tenant.repository';
 import { TenantController } from './tenant.controller';
 import { TenantSelfController } from './tenant-self.controller';
 import { TenantService } from './tenant.service';
+import { TenantPlatformAdminService } from './services/tenant-platform-admin.service';
 
 @Module({
   imports: [
     CqrsModule,
     AuthSharedModule,
     PackageModule,
-    TypeOrmModule.forFeature([TenantEntity, UserEntity]),
+    TypeOrmModule.forFeature([TenantEntity, TenantPlatformAdminEntity, UserEntity]),
   ],
   controllers: [TenantController, TenantSelfController],
   providers: [
     TenantService,
+    TenantPlatformAdminService,
     CreateTenantHandler,
     DeleteTenantHandler,
     {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, UserRoundSearch } from 'lucide-react';
+import { Plus, Pencil, UserRoundSearch } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -13,6 +13,7 @@ import { impersonateTenant } from '@/services/superadmin';
 import { getApiErrorMessage } from '@/services/api';
 import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
 import { CreateTenantModal } from './CreateTenantModal';
+import { EditTenantModal } from './EditTenantModal';
 
 const STATUS_OPTIONS: Array<{ label: string; value: '' | TenantStatus }> = [
   { label: 'Todos los estados', value: '' },
@@ -53,6 +54,7 @@ export default function TenantListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | TenantStatus>('');
   const [planFilter, setPlanFilter] = useState<'' | TenantPlan>('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTenantId, setEditTenantId] = useState<string | null>(null);
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
 
   const tenantsQuery = useQuery({
@@ -122,26 +124,36 @@ export default function TenantListPage() {
       {
         field: 'actions',
         header: 'Acciones',
-        width: '140px',
+        width: '220px',
         body: (row: Tenant) => (
-          <Button
-            variant="outline"
-            size="sm"
-            loading={impersonatingId === row.id}
-            onClick={() => {
-              setImpersonatingId(row.id);
-              void impersonateTenant(row.id)
-                .then(() => navigate('/'))
-                .catch((err) => {
-                  window.alert(getApiErrorMessage(err));
-                })
-                .finally(() => setImpersonatingId(null));
-            }}
-            disabled={row.status !== 'active'}
-          >
-            <UserRoundSearch className="mr-1 h-4 w-4" />
-            Impersonar
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditTenantId(row.id)}
+            >
+              <Pencil className="mr-1 h-4 w-4" />
+              Editar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              loading={impersonatingId === row.id}
+              onClick={() => {
+                setImpersonatingId(row.id);
+                void impersonateTenant(row.id)
+                  .then(() => navigate('/'))
+                  .catch((err) => {
+                    window.alert(getApiErrorMessage(err));
+                  })
+                  .finally(() => setImpersonatingId(null));
+              }}
+              disabled={row.status !== 'active'}
+            >
+              <UserRoundSearch className="mr-1 h-4 w-4" />
+              Impersonar
+            </Button>
+          </div>
         ),
       },
     ],
@@ -165,6 +177,13 @@ export default function TenantListPage() {
         visible={createOpen}
         onHide={() => setCreateOpen(false)}
         onCreated={() => void queryClient.invalidateQueries({ queryKey: ['tenants'] })}
+      />
+
+      <EditTenantModal
+        tenantId={editTenantId}
+        visible={!!editTenantId}
+        onHide={() => setEditTenantId(null)}
+        onUpdated={() => void queryClient.invalidateQueries({ queryKey: ['tenants'] })}
       />
 
       <Card>

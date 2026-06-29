@@ -73,6 +73,9 @@ export class TypeOrmTenantRepository implements TenantRepositoryPort {
       return null;
     }
 
+    if (data.name !== undefined) {
+      entity.name = data.name.trim();
+    }
     if (data.plan !== undefined) {
       entity.plan = data.plan;
     }

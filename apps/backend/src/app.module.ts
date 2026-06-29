@@ -67,6 +67,7 @@ import { PackageEntity } from './modules/packages/infrastructure/typeorm/package
 import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
 import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
+import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { LoggerModule } from './shared/logger/logger.module';
@@ -103,6 +104,7 @@ import {
         entities: [
           UserEntity,
           TenantEntity,
+          TenantPlatformAdminEntity,
           PackageEntity,
           LlmTaskConfigEntity,
           LlmProviderEntity,

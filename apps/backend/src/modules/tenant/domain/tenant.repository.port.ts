@@ -24,6 +24,7 @@ export interface CreateTenantData {
 }
 
 export interface UpdateTenantData {
+  name?: string;
   plan?: string;
   packageId?: string | null;
   status?: string;

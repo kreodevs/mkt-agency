@@ -19,7 +19,7 @@ Guards: `JwtAuthGuard` + `SuperadminGuard` (`apps/backend/src/shared/guards/`).
 Errores frecuentes en prod legacy: migración `1730000000012` añade `max_users`, `max_assets_size`, `package_id` en `tenants` si faltaban (antes → 500 opaco).
 | GET | `/tenants` | Lista paginada (`page`, `limit`, `status`, `plan`) |
 | GET | `/tenants/:id` | Detalle |
-| PATCH | `/tenants/:id` | Actualiza plan, status, settings, límites |
+| PATCH | `/tenants/:id` | Actualiza nombre, plan, status, settings, límites, `platformAdminIds` |
 | DELETE | `/tenants/:id` | Elimina tenant (cascade users) |
 
 ## Frontend (Kreo UI)

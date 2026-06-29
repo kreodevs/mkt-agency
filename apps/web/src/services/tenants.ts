@@ -4,6 +4,7 @@ import type {
   ListTenantsParams,
   PaginatedTenantsResponse,
   Tenant,
+  UpdateTenantPayload,
 } from '@/types/tenant';
 
 export interface CreateTenantPayload {
@@ -54,6 +55,13 @@ export async function getTenant(id: string): Promise<Tenant> {
 export async function createTenant(payload: CreateTenantPayload): Promise<CreateTenantResponse> {
   return apiFetch<CreateTenantResponse>('/tenants', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateTenant(id: string, payload: UpdateTenantPayload): Promise<Tenant> {
+  return apiFetch<Tenant>(`/tenants/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(payload),
   });
 }

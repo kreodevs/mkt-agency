@@ -10,10 +10,6 @@ import {
   USER_REPOSITORY,
   UserRepositoryPort,
 } from '../../../shared/domain/user.repository.port';
-import {
-  TENANT_REPOSITORY,
-  TenantRepositoryPort,
-} from '../../tenant/domain/tenant.repository.port';
 import { SecurityEventRecorderService } from '../../security/services/security-event-recorder.service';
 import {
   SESSION_REPOSITORY,
@@ -32,8 +28,6 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
     private readonly users: UserRepositoryPort,
     @Inject(SESSION_REPOSITORY)
     private readonly sessions: SessionRepositoryPort,
-    @Inject(TENANT_REPOSITORY)
-    private readonly tenants: TenantRepositoryPort,
     private readonly jwtTokenService: JwtTokenService,
     private readonly securityEvents: SecurityEventRecorderService,
   ) {}
@@ -122,7 +116,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       await this.users.updatePasswordHash(user.id, upgraded.toHash());
     }
 
-    const tenantId = await this.resolveSessionTenantId(user);
+    const tenantId = this.resolveAccessTokenTenantId(user);
 
     await this.users.resetLoginAttempts(user.id);
 
@@ -166,36 +160,12 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
     return user.isSuperadmin ? null : user.tenantId;
   }
 
-  private async resolveSessionTenantId(user: {
-    id: string;
-    name: string;
-    email: string;
+  private resolveAccessTokenTenantId(user: {
     isSuperadmin: boolean;
     tenantId: string | null;
-  }): Promise<string | null> {
-    if (!user.isSuperadmin) {
-      return user.tenantId;
-    }
-
-    // Superadmin without a tenant — auto-create one so they can use
-    // all features (CM, Strategy, Dashboard, etc.) without impersonating.
-    if (!user.tenantId) {
-      const slug = `admin-${user.id.slice(0, 8).toLowerCase()}`;
-      const existing = await this.tenants.findBySlug(slug);
-      if (existing) {
-        await this.users.updateById(user.id, { tenantId: existing.id });
-        return existing.id;
-      }
-      const tenant = await this.tenants.create({
-        name: `${user.name}'s Agency`,
-        slug,
-        plan: 'enterprise',
-        maxUsers: 10,
-        maxAssetsSize: 1_073_741_824, // 1 GB
-        maxFileSize: 52_428_800,       // 50 MB
-      });
-      await this.users.updateById(user.id, { tenantId: tenant.id });
-      return tenant.id;
+  }): string | null {
+    if (user.isSuperadmin) {
+      return null;
     }
 
     return user.tenantId;

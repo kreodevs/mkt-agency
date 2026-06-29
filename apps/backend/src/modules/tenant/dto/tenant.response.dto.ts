@@ -9,6 +9,12 @@ export class TenantOwnerResponseDto {
   tenantId!: string;
 }
 
+export class TenantPlatformAdminResponseDto {
+  id!: string;
+  email!: string;
+  name!: string;
+}
+
 export class TenantResponseDto {
   id!: string;
   name!: string;
@@ -23,6 +29,7 @@ export class TenantResponseDto {
   createdAt!: Date;
   updatedAt!: Date;
   owner?: TenantOwnerResponseDto;
+  platformAdmins?: TenantPlatformAdminResponseDto[];
 }
 
 export class PaginatedTenantsResponseDto {

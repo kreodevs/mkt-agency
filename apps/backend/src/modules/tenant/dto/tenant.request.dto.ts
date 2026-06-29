@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsIn,
   IsInt,
   IsObject,
@@ -7,6 +8,7 @@ import {
   IsString,
   IsUUID,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import {
@@ -15,6 +17,11 @@ import {
 } from '../domain/tenant.constants';
 
 export class UpdateTenantRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  name?: string;
+
   @IsOptional()
   @IsIn([...ALLOWED_TENANT_PLANS])
   plan?: string;
@@ -48,6 +55,11 @@ export class UpdateTenantRequestDto {
   @IsInt()
   @Min(1)
   maxFileSize?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  platformAdminIds?: string[];
 }
 
 export class ListTenantsQueryDto {

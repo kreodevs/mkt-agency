@@ -99,7 +99,7 @@ export class RefreshTokenHandler
       email: user.email,
       isSuperadmin: user.isSuperadmin,
       role: user.role,
-      tenantId: user.tenantId,
+      tenantId: user.isSuperadmin ? null : user.tenantId,
     });
 
     return {

@@ -22,6 +22,7 @@ import {
   TenantRepositoryPort,
 } from './domain/tenant.repository.port';
 import { TenantNotFoundException } from './exceptions/tenant-not-found.exception';
+import { TenantPlatformAdminService } from './services/tenant-platform-admin.service';
 
 @Injectable()
 export class TenantService {
@@ -30,6 +31,7 @@ export class TenantService {
     private readonly tenantRepository: TenantRepositoryPort,
     private readonly commandBus: CommandBus,
     private readonly tenantLimitsService: TenantLimitsService,
+    private readonly tenantPlatformAdmins: TenantPlatformAdminService,
   ) {}
 
   async create(body: CreateTenantRequestDto): Promise<TenantResponseDto> {
@@ -74,32 +76,39 @@ export class TenantService {
       throw new TenantNotFoundException();
     }
 
-    return toTenantResponse(tenant);
+    const response = toTenantResponse(tenant);
+    response.platformAdmins = await this.tenantPlatformAdmins.listForTenant(id);
+    return response;
   }
 
   async update(
     id: string,
     body: UpdateTenantRequestDto,
   ): Promise<TenantResponseDto> {
-    if (body.packageId) {
-      await this.tenantLimitsService.applyPackageLimits(id, body.packageId);
-      const { packageId: _packageId, plan: _plan, ...rest } = body;
-      if (Object.keys(rest).length === 0) {
-        const tenant = await this.tenantRepository.findById(id);
-        if (!tenant) {
-          throw new TenantNotFoundException();
-        }
-        return toTenantResponse(tenant);
-      }
-      body = rest;
+    const { platformAdminIds, ...tenantPatch } = body;
+
+    if (platformAdminIds !== undefined) {
+      await this.tenantPlatformAdmins.replaceForTenant(id, platformAdminIds);
     }
 
-    const tenant = await this.tenantRepository.update(id, body);
+    let patch = { ...tenantPatch };
+
+    if (patch.packageId) {
+      await this.tenantLimitsService.applyPackageLimits(id, patch.packageId);
+      const { packageId: _packageId, plan: _plan, ...rest } = patch;
+      patch = rest;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return this.findById(id);
+    }
+
+    const tenant = await this.tenantRepository.update(id, patch);
     if (!tenant) {
       throw new TenantNotFoundException();
     }
 
-    return toTenantResponse(tenant);
+    return this.findById(id);
   }
 
   async delete(id: string): Promise<void> {
