@@ -22,6 +22,7 @@ import {
 } from '@/services/company-profile';
 import type { SectionKey } from '@/types/company-profile';
 import { SectionStepForm } from './SectionStepForm';
+import { Card } from '@/components/molecules/Card';
 import { AISuggestion } from '@/components/onboarding/AISuggestion';
 
 export default function OnboardingWizardPage() {
