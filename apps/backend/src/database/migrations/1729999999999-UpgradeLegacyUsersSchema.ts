@@ -47,7 +47,8 @@ export class UpgradeLegacyUsersSchema1729999999999 implements MigrationInterface
             ('competitor_mentions', 'competitor_id'),
             ('proposals', 'tenant_id'),
             ('reports', 'tenant_id'),
-            ('audit_logs', 'tenant_id')
+            ('audit_logs', 'tenant_id'),
+            ('products', 'tenant_id')
           ) AS t(table_name, signature_column)
         LOOP
           IF EXISTS (

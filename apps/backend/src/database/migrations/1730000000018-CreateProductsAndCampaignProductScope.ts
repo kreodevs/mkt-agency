@@ -6,6 +6,24 @@ export class CreateProductsAndCampaignProductScope1730000000018
   name = 'CreateProductsAndCampaignProductScope1730000000018';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Legacy/synchronize may have created `products` without tenant scope.
+    await queryRunner.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'products'
+        ) AND NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'products'
+            AND column_name = 'tenant_id'
+        ) THEN
+          ALTER TABLE products RENAME TO products_legacy;
+        END IF;
+      END $$;
+    `);
+
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS products (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

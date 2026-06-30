@@ -121,6 +121,12 @@ El stack **legacy** (pre-monorepo) hasheaba con **SHA256 hex** (64 chars), no bc
 
 **Solución (código ≥ fix sha256):** `Password.verify` acepta SHA256 legacy y rehashea a Argon2id al login exitoso. Si quedaste bloqueado por intentos fallidos, la migración `1730000000009` resetea lockout de superadmins.
 
+### Migración `0018` falla: `column "tenant_id" does not exist` en `products`
+
+En algunos entornos legacy/synchronize ya existía una tabla `products` **sin** `tenant_id`. `CREATE TABLE IF NOT EXISTS` no la reemplaza y el índice `idx_products_tenant` falla.
+
+**Solución (código ≥ fix products legacy):** la migración `1730000000018` renombra esa tabla a `products_legacy` y crea el catálogo tenant-scoped. Redeploy del servicio `api`.
+
 ### Chunks JS devuelven `text/html` / MIME type error en el navegador
 
 Tras un redeploy, el navegador puede conservar un `index.html` antiguo que referencia hashes viejos (`index-*.js`, `DashboardHomePage-*.js`). Nginx respondía `index.html` para assets inexistentes → error de MIME.
