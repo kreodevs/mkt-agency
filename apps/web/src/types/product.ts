@@ -14,9 +14,13 @@ export interface Product {
   priceRange: string | null;
   targetAudience: string | null;
   valueProposition: string | null;
+  websiteUrl: string | null;
   keywords: string[];
   status: ProductStatus;
   isPrimary: boolean;
+  onboardingCompletionPercentage?: number;
+  onboardingReady?: boolean;
+  onboardingCompleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +45,7 @@ export interface CreateProductPayload {
   priceRange?: string;
   targetAudience?: string;
   valueProposition?: string;
+  websiteUrl?: string;
   keywords?: string[];
   isPrimary?: boolean;
 }
@@ -52,6 +57,7 @@ export interface UpdateProductPayload {
   priceRange?: string;
   targetAudience?: string;
   valueProposition?: string;
+  websiteUrl?: string;
   keywords?: string[];
   status?: ProductStatus;
   isPrimary?: boolean;
@@ -67,4 +73,46 @@ export interface BulkCreateProductsPayload {
 export interface BulkCreateProductsResponse {
   created: Product[];
   skipped: number;
+}
+
+export interface ProductOnboardingFieldStatus {
+  key: string;
+  label: string;
+  complete: boolean;
+  required: boolean;
+}
+
+export interface ProductOnboardingStatus {
+  productId: string;
+  productName: string;
+  completionPercentage: number;
+  ready: boolean;
+  completed: boolean;
+  missingFields: string[];
+  fields: ProductOnboardingFieldStatus[];
+}
+
+export interface SuggestProductKeywordsResponse {
+  keywords: string[];
+  sourceUrl?: string | null;
+  generatedFromPage: boolean;
+}
+
+export interface ProductOnboardingAgentsResult {
+  brandInterviewId?: string | null;
+  competitorAnalysisId?: string | null;
+  communityManagerBatchId?: string | null;
+  competitorsDiscovered?: number;
+  skippedAgents?: string[];
+  warnings?: string[];
+}
+
+export interface CompleteProductOnboardingResponse {
+  product: {
+    id: string;
+    name: string;
+    onboardingCompleted: boolean;
+    completionPercentage: number;
+  };
+  agents: ProductOnboardingAgentsResult;
 }

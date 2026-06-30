@@ -10,9 +10,13 @@ export class ProductResponseDto {
   priceRange!: string | null;
   targetAudience!: string | null;
   valueProposition!: string | null;
+  websiteUrl!: string | null;
   keywords!: string[];
   status!: ProductStatus;
   isPrimary!: boolean;
+  onboardingCompletionPercentage!: number;
+  onboardingReady!: boolean;
+  onboardingCompleted!: boolean;
   createdAt!: string;
   updatedAt!: string;
 }

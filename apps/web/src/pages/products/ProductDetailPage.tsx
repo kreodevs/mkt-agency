@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Megaphone } from 'lucide-react';
+import { ClipboardList, Megaphone } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
@@ -115,12 +115,22 @@ export default function ProductDetailPage() {
         title={productQuery.data.name}
         description="Edita la oferta comercial que alimenta tus campañas."
         actions={
-          <Link to={`/campaigns/new?productId=${id}`}>
-            <Button className="gap-2">
-              <Megaphone className="h-4 w-4" />
-              Nueva campaña
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {!productQuery.data.onboardingCompleted && (
+              <Link to={`/products/${id}/onboarding`}>
+                <Button variant="outline" className="gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Completar onboarding
+                </Button>
+              </Link>
+            )}
+            <Link to={`/campaigns/new?productId=${id}`}>
+              <Button className="gap-2">
+                <Megaphone className="h-4 w-4" />
+                Nueva campaña
+              </Button>
+            </Link>
+          </div>
         }
       />
 

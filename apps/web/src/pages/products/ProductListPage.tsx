@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Megaphone, Package, Plus, Star } from 'lucide-react';
+import { ClipboardList, Megaphone, Package, Plus, Star } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -53,6 +53,28 @@ export default function ProductListPage() {
       field: 'category',
       header: 'Tipo',
       body: (row) => (row as Product).category ?? '—',
+    },
+    {
+      field: 'onboarding',
+      header: 'Onboarding',
+      body: (row) => {
+        const product = row as Product;
+        const pct = product.onboardingCompletionPercentage ?? 0;
+        const done = product.onboardingCompleted;
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-sm tabular-nums text-[var(--foreground-muted)]">{pct}%</span>
+            {!done && (
+              <Link to={`/products/${product.id}/onboarding`}>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <ClipboardList className="h-3.5 w-3.5" />
+                  Completar
+                </Button>
+              </Link>
+            )}
+          </div>
+        );
+      },
     },
     {
       field: 'status',

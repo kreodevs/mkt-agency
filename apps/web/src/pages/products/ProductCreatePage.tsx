@@ -36,7 +36,7 @@ export default function ProductCreatePage() {
     mutationFn: (payload: CreateProductPayload) => createProduct(payload),
     onSuccess: (product) => {
       toast.success('Producto creado');
-      navigate(`/products/${product.id}`);
+      navigate(`/products/${product.id}/onboarding`);
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo crear el producto');

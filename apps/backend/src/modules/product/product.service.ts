@@ -14,6 +14,11 @@ import {
   ProductResponseDto,
 } from './dto/product.response.dto';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
+import {
+  calculateProductOnboardingCompletion,
+  isProductOnboardingCompleted,
+  isProductOnboardingReady,
+} from './domain/product-onboarding.util';
 
 @Injectable()
 export class ProductService {
@@ -88,6 +93,7 @@ export class ProductService {
         priceRange: dto.priceRange?.trim() ?? null,
         targetAudience: dto.targetAudience?.trim() ?? null,
         valueProposition: dto.valueProposition?.trim() ?? null,
+        websiteUrl: dto.websiteUrl?.trim() ?? null,
         keywords: dto.keywords ?? [],
         status: 'active',
         isPrimary: dto.isPrimary ?? !hasPrimary,
@@ -125,6 +131,9 @@ export class ProductService {
     }
     if (dto.valueProposition !== undefined) {
       product.valueProposition = dto.valueProposition?.trim() ?? null;
+    }
+    if (dto.websiteUrl !== undefined) {
+      product.websiteUrl = dto.websiteUrl?.trim() ?? null;
     }
     if (dto.keywords !== undefined) {
       product.keywords = dto.keywords;
@@ -286,9 +295,13 @@ export class ProductService {
       priceRange: product.priceRange,
       targetAudience: product.targetAudience,
       valueProposition: product.valueProposition,
+      websiteUrl: product.websiteUrl,
       keywords: product.keywords ?? [],
       status: product.status,
       isPrimary: product.isPrimary,
+      onboardingCompletionPercentage: calculateProductOnboardingCompletion(product),
+      onboardingReady: isProductOnboardingReady(product),
+      onboardingCompleted: isProductOnboardingCompleted(product),
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     };

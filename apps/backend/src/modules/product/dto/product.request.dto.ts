@@ -38,6 +38,11 @@ export class CreateProductDto {
   valueProposition?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  websiteUrl?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   keywords?: string[];
@@ -73,6 +78,11 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   valueProposition?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  websiteUrl?: string;
 
   @IsOptional()
   @IsArray()

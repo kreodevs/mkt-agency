@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Globe, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
@@ -41,12 +41,14 @@ interface CompetitorDiscoveryPanelProps {
   onRegistered?: (count: number) => void;
   title?: string;
   subtitle?: string;
+  defaultProductId?: string;
 }
 
 export function CompetitorDiscoveryPanel({
   onRegistered,
   title = 'Buscar competidores con IA',
   subtitle = 'Usa tu producto y Brand Brief para sugerir competidores del mismo rubro.',
+  defaultProductId,
 }: CompetitorDiscoveryPanelProps) {
   const [scope, setScope] = useState<CompetitorDiscoveryScope>('country');
   const [productId, setProductId] = useState('');
@@ -59,6 +61,12 @@ export function CompetitorDiscoveryPanel({
     queryKey: ['products'],
     queryFn: () => listProducts({ status: 'active', limit: 100 }),
   });
+
+  useEffect(() => {
+    if (defaultProductId && !productId) {
+      setProductId(defaultProductId);
+    }
+  }, [defaultProductId, productId]);
 
   const discoverMutation = useMutation({
     mutationFn: () =>

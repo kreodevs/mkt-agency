@@ -36,6 +36,9 @@ export class ProductEntity {
   @Column({ name: 'value_proposition', type: 'text', nullable: true })
   valueProposition!: string | null;
 
+  @Column({ name: 'website_url', type: 'varchar', length: 500, nullable: true })
+  websiteUrl!: string | null;
+
   @Column({ type: 'jsonb', default: () => "'[]'" })
   keywords!: string[];
 

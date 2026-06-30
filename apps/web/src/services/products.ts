@@ -2,10 +2,13 @@ import { apiFetch } from '@/services/api';
 import type {
   BulkCreateProductsPayload,
   BulkCreateProductsResponse,
+  CompleteProductOnboardingResponse,
   CreateProductPayload,
   ListProductsParams,
   PaginatedProductsResponse,
   Product,
+  ProductOnboardingStatus,
+  SuggestProductKeywordsResponse,
   UpdateProductPayload,
 } from '@/types/product';
 
@@ -58,5 +61,27 @@ export async function bulkCreateProducts(
   return apiFetch<BulkCreateProductsResponse>('/products/bulk', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function getProductOnboardingStatus(id: string): Promise<ProductOnboardingStatus> {
+  return apiFetch<ProductOnboardingStatus>(`/products/${id}/onboarding`);
+}
+
+export async function suggestProductKeywords(
+  id: string,
+  payload: { url: string },
+): Promise<SuggestProductKeywordsResponse> {
+  return apiFetch<SuggestProductKeywordsResponse>(`/products/${id}/suggest-keywords`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function completeProductOnboarding(
+  id: string,
+): Promise<CompleteProductOnboardingResponse> {
+  return apiFetch<CompleteProductOnboardingResponse>(`/products/${id}/onboarding/complete`, {
+    method: 'POST',
   });
 }

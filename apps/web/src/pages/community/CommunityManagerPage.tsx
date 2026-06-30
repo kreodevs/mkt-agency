@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import {
   Bookmark,
   CheckCircle2,
@@ -18,6 +19,7 @@ import {
   Twitter,
 } from 'lucide-react';
 import { CommunityManagerPrerequisites } from '@/components/community/CommunityManagerPrerequisites';
+import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -92,6 +94,8 @@ const PLATFORM_KEYS = Object.keys(PLATFORM_LABELS) as CmPlatform[];
 
 export default function CommunityManagerPage() {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const productIdFromUrl = searchParams.get('productId');
   const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
   const [productId, setProductId] = useState('');
   const [count, setCount] = useState(3);
@@ -119,11 +123,15 @@ export default function CommunityManagerPage() {
 
   useEffect(() => {
     const items = productsQuery.data?.items ?? [];
+    if (productIdFromUrl) {
+      setProductId(productIdFromUrl);
+      return;
+    }
     if (!productId && items.length > 0) {
       const primary = items.find((p) => p.isPrimary) ?? items[0];
       setProductId(primary.id);
     }
-  }, [productsQuery.data, productId]);
+  }, [productsQuery.data, productId, productIdFromUrl]);
 
   useEffect(() => {
     if (!preferencesQuery.data || prefsReady) return;
@@ -227,6 +235,13 @@ export default function CommunityManagerPage() {
         title="Community Manager"
         description="Genera copy para promocionar un producto concreto en redes sociales"
       />
+
+      {productId && (
+        <ProductContextBanner
+          productId={productId}
+          productName={productsQuery.data?.items.find((p) => p.id === productId)?.name}
+        />
+      )}
 
       {readinessQuery.data && readinessQuery.data.completed < readinessQuery.data.total && (
         <div className="mb-6">

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, ChevronLeft, History, Send, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BrandInterviewHistory } from '@/components/agents/BrandInterviewHistory';
+import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -298,6 +299,13 @@ export default function BrandInterviewPage() {
           </Link>
         }
       />
+
+      {activeInterview?.productId && (
+        <ProductContextBanner
+          productId={activeInterview.productId}
+          productName={activeInterview.productName}
+        />
+      )}
 
       <div className="mx-auto mt-4 max-w-2xl space-y-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
