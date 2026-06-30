@@ -67,6 +67,7 @@ import { PackageEntity } from './modules/packages/infrastructure/typeorm/package
 import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
 import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
 import { ProductModule } from './modules/product/product.module';
+import { ProductOnboardingModule } from './modules/product/product-onboarding.module';
 import { ProductEntity } from './modules/product/infrastructure/typeorm/product.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
@@ -160,6 +161,7 @@ import {
     TenantModule,
     CompanyProfileModule,
     ProductModule,
+    ProductOnboardingModule,
     CampaignModule,
     ContentModule,
     CalendarModule,

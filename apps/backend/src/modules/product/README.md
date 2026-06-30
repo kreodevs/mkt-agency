@@ -25,7 +25,7 @@ Al completar (si `ready=true`):
 3. **Competitor Intel** — `triggerAnalysis`
 4. **Community Manager** — `generate` con `productId`
 
-Lógica en `product-onboarding.service.ts` y `domain/product-onboarding.util.ts`.
+Lógica en `product-onboarding.service.ts`, `product-onboarding.module.ts` y `domain/product-onboarding.util.ts`.
 
 ## Reglas
 

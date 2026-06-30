@@ -26,21 +26,11 @@ import {
   ProductResponseDto,
 } from './dto/product.response.dto';
 import { ProductService } from './product.service';
-import { ProductOnboardingService } from './product-onboarding.service';
-import {
-  CompleteProductOnboardingResponseDto,
-  ProductOnboardingStatusDto,
-  SuggestProductKeywordsDto,
-  SuggestProductKeywordsResponseDto,
-} from './dto/product-onboarding.dto';
 
 @Controller('products')
 @UseGuards(TenantGuard)
 export class ProductController {
-  constructor(
-    private readonly productService: ProductService,
-    private readonly productOnboarding: ProductOnboardingService,
-  ) {}
+  constructor(private readonly productService: ProductService) {}
 
   @Get()
   list(
@@ -91,32 +81,5 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ProductResponseDto> {
     return this.productService.archive(user.tenantId!, id);
-  }
-
-  @Get(':id/onboarding')
-  getOnboardingStatus(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<ProductOnboardingStatusDto> {
-    return this.productOnboarding.getStatus(user.tenantId!, id);
-  }
-
-  @Post(':id/suggest-keywords')
-  @HttpCode(HttpStatus.OK)
-  suggestKeywords(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: SuggestProductKeywordsDto,
-  ): Promise<SuggestProductKeywordsResponseDto> {
-    return this.productOnboarding.suggestKeywords(user.tenantId!, id, dto.url);
-  }
-
-  @Post(':id/onboarding/complete')
-  @HttpCode(HttpStatus.ACCEPTED)
-  completeOnboarding(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<CompleteProductOnboardingResponseDto> {
-    return this.productOnboarding.complete(user.tenantId!, id, user.id);
   }
 }
