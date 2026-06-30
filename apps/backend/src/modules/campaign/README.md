@@ -10,6 +10,11 @@ Campañas multicanal del tenant (US-009 backend).
 | Campañas | `/api/v1/campaigns` |
 | Audiencias | `/api/v1/audiences` |
 
+## Orquestación desde agentes
+
+- `GET /campaigns/agent-readiness` — prerrequisitos (perfil, Brand Analyst, Community Manager, Estrategia)
+- `POST /campaigns/auto-generate` — crea campaña, lanza estrategia IA y vincula contenidos del CM
+
 ## IA asíncrona
 
 - `POST /campaigns/:id/generate-strategy` → 202 + `assignmentId`

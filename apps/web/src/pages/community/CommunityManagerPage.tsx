@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bookmark,
@@ -17,6 +17,7 @@ import {
   Target,
   Twitter,
 } from 'lucide-react';
+import { CommunityManagerPrerequisites } from '@/components/community/CommunityManagerPrerequisites';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -24,6 +25,12 @@ import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
+import {
+  getCommunityManagerPreferences,
+  getCommunityManagerReadiness,
+  saveCommunityManagerPreferences,
+  type CmPlatform,
+} from '@/services/community-manager';
 
 interface SocialPost {
   id: string;
@@ -80,15 +87,49 @@ const PLATFORM_LABELS: Record<string, string> = {
   tiktok: 'TikTok',
 };
 
+const PLATFORM_KEYS = Object.keys(PLATFORM_LABELS) as CmPlatform[];
+
 export default function CommunityManagerPage() {
   const queryClient = useQueryClient();
-  const [platforms, setPlatforms] = useState<string[]>(['instagram', 'linkedin']);
+  const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
   const [count, setCount] = useState(3);
   const [tone, setTone] = useState('');
   const [topics, setTopics] = useState('');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
   const [savePresetName, setSavePresetName] = useState('');
   const [showSavePreset, setShowSavePreset] = useState(false);
+  const [prefsReady, setPrefsReady] = useState(false);
+
+  const preferencesQuery = useQuery({
+    queryKey: ['cm-preferences'],
+    queryFn: getCommunityManagerPreferences,
+  });
+
+  const readinessQuery = useQuery({
+    queryKey: ['cm-readiness'],
+    queryFn: getCommunityManagerReadiness,
+  });
+
+  useEffect(() => {
+    if (!preferencesQuery.data || prefsReady) return;
+    setPlatforms(preferencesQuery.data.platforms);
+    setCount(preferencesQuery.data.count);
+    setPrefsReady(true);
+  }, [preferencesQuery.data, prefsReady]);
+
+  const savePreferencesMutation = useMutation({
+    mutationFn: saveCommunityManagerPreferences,
+    onSuccess: (data) => {
+      queryClient.setQueryData(['cm-preferences'], data);
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudieron guardar las preferencias');
+    },
+  });
+
+  const persistPreferences = (nextPlatforms: CmPlatform[], nextCount: number) => {
+    savePreferencesMutation.mutate({ platforms: nextPlatforms, count: nextCount });
+  };
 
   const batchesQuery = useQuery({
     queryKey: ['cm-batches'],
@@ -120,10 +161,23 @@ export default function CommunityManagerPage() {
     },
   });
 
-  const togglePlatform = (p: string) => {
-    setPlatforms((prev) =>
-      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
-    );
+  const togglePlatform = (platform: CmPlatform) => {
+    setPlatforms((prev) => {
+      const next = prev.includes(platform)
+        ? prev.filter((item) => item !== platform)
+        : [...prev, platform];
+      if (next.length === 0) {
+        toast.message('Debes mantener al menos una plataforma activa');
+        return prev;
+      }
+      persistPreferences(next, count);
+      return next;
+    });
+  };
+
+  const handleCountChange = (nextCount: number) => {
+    setCount(nextCount);
+    persistPreferences(platforms, nextCount);
   };
 
   // Tone presets
@@ -158,32 +212,63 @@ export default function CommunityManagerPage() {
         description="Genera copy diario para redes sociales con IA"
       />
 
+      {readinessQuery.data && readinessQuery.data.completed < readinessQuery.data.total && (
+        <div className="mb-6">
+          <CommunityManagerPrerequisites readiness={readinessQuery.data} />
+        </div>
+      )}
+
       {/* Generator form */}
       <Card className="mb-6">
         <div className="space-y-4">
           {/* Platform selector */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
-              Plataformas
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(PLATFORM_LABELS).map(([key, label]) => {
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <label className="text-sm font-medium text-[var(--foreground)]">Plataformas</label>
+              <span className="text-xs text-[var(--foreground-subtle)]">
+                {savePreferencesMutation.isPending
+                  ? 'Guardando…'
+                  : 'Se guardan al activar o desactivar'}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {PLATFORM_KEYS.map((key) => {
                 const Icon = PLATFORM_ICONS[key] ?? Globe;
                 const selected = platforms.includes(key);
                 return (
-                  <button
+                  <div
                     key={key}
-                    type="button"
-                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
-                      selected
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--foreground-subtle)]'
-                    }`}
-                    onClick={() => togglePlatform(key)}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5"
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </button>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                          PLATFORM_COLORS[key] ?? 'bg-[var(--secondary)]'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm font-medium text-[var(--foreground)]">
+                        {PLATFORM_LABELS[key]}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={selected}
+                      aria-label={`${selected ? 'Desactivar' : 'Activar'} ${PLATFORM_LABELS[key]}`}
+                      onClick={() => togglePlatform(key)}
+                      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                        selected ? 'bg-[var(--primary)]' : 'bg-[var(--secondary)]'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                          selected ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -197,7 +282,7 @@ export default function CommunityManagerPage() {
               </label>
               <select
                 value={count}
-                onChange={(e) => setCount(Number(e.target.value))}
+                onChange={(e) => handleCountChange(Number(e.target.value))}
                 className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
               >
                 {[1, 2, 3, 4, 5, 6].map((n) => (

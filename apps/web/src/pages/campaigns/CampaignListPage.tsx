@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutGrid, List, Plus } from 'lucide-react';
+import { LayoutGrid, List, Plus, Sparkles } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { CampaignAgentReadinessPanel } from '@/components/campaigns/CampaignAgentReadinessPanel';
 import { CampaignKanban } from '@/components/campaigns/CampaignKanban';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
-import { listCampaigns, updateCampaign } from '@/services/campaigns';
+import { listCampaigns, updateCampaign, getCampaignAgentReadiness, autoGenerateCampaign } from '@/services/campaigns';
 import type { Campaign, CampaignStatus } from '@/types/campaign';
 
 type ViewMode = 'table' | 'kanban';
@@ -51,6 +52,7 @@ const filterSelectClass =
   'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function CampaignListPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [statusFilter, setStatusFilter] = useState<'' | CampaignStatus>('');
@@ -65,6 +67,24 @@ export default function CampaignListPage() {
         status: statusFilter || undefined,
         platform: platformFilter || undefined,
       }),
+  });
+
+  const readinessQuery = useQuery({
+    queryKey: ['campaign-agent-readiness'],
+    queryFn: getCampaignAgentReadiness,
+  });
+
+  const autoGenerateMutation = useMutation({
+    mutationFn: autoGenerateCampaign,
+    onSuccess: (result) => {
+      toast.success(result.message);
+      void queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      void queryClient.invalidateQueries({ queryKey: ['campaign-agent-readiness'] });
+      navigate(`/campaigns/${result.campaignId}`);
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo generar la campaña');
+    },
   });
 
   const statusMutation = useMutation({
@@ -139,14 +159,36 @@ export default function CampaignListPage() {
         title="Campañas"
         description="Gestiona campañas multicanal y su pipeline de estados"
         actions={
-          <Link to="/campaigns/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nueva campaña
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/campaigns/new">
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Nueva campaña
+              </Button>
+            </Link>
+            {readinessQuery.data?.ready && (
+              <Button
+                loading={autoGenerateMutation.isPending}
+                onClick={() => autoGenerateMutation.mutate()}
+                className="gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                Campaña automática
+              </Button>
+            )}
+          </div>
         }
       />
+
+      {readinessQuery.data && (
+        <div className="mb-6">
+          <CampaignAgentReadinessPanel
+            readiness={readinessQuery.data}
+            loading={autoGenerateMutation.isPending}
+            onAutoGenerate={() => autoGenerateMutation.mutate()}
+          />
+        </div>
+      )}
 
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">

@@ -3,11 +3,14 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { ContentService } from '../content/content.service';
+import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -15,10 +18,21 @@ import {
 } from './adapters/social-copy.adapter.port';
 import { CommunityManagerBatchEntity } from './infrastructure/typeorm/community-manager-batch.entity';
 import {
+  DEFAULT_CM_PLATFORMS,
+  DEFAULT_CM_POST_COUNT,
+  CM_PLATFORMS,
+  type CmPlatform,
+} from './domain/cm-platforms.constants';
+import {
+  CommunityManagerPreferencesResponse,
+  CommunityManagerReadinessResponse,
   GenerateResponse,
   SocialCopyBatchResponse,
 } from './dto/community-manager.response.dto';
-import { GenerateSocialCopyDto } from './dto/community-manager.request.dto';
+import {
+  GenerateSocialCopyDto,
+  UpdateCommunityManagerPreferencesDto,
+} from './dto/community-manager.request.dto';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 
 @Injectable()
@@ -28,11 +42,124 @@ export class CommunityManagerService {
   constructor(
     @InjectRepository(CommunityManagerBatchEntity)
     private readonly batches: Repository<CommunityManagerBatchEntity>,
+    @InjectRepository(TenantEntity)
+    private readonly tenants: Repository<TenantEntity>,
+    @InjectRepository(CompanyProfileEntity)
+    private readonly profiles: Repository<CompanyProfileEntity>,
     @Inject(SOCIAL_COPY_ADAPTER)
     private readonly adapter: SocialCopyAdapterPort,
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
   ) {}
+
+  async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
+    const tenant = await this.tenants.findOne({ where: { id: tenantId } });
+    if (!tenant) {
+      throw new NotFoundException({ error: 'Tenant not found', code: 'NOT_FOUND' });
+    }
+
+    const stored = (tenant.settings?.communityManager ?? {}) as Record<string, unknown>;
+    const platforms = this.normalizePlatforms(stored.platforms);
+    const count =
+      typeof stored.count === 'number' && stored.count >= 1 && stored.count <= 6
+        ? stored.count
+        : DEFAULT_CM_POST_COUNT;
+
+    return { platforms, count };
+  }
+
+  async updatePreferences(
+    tenantId: string,
+    dto: UpdateCommunityManagerPreferencesDto,
+  ): Promise<CommunityManagerPreferencesResponse> {
+    const tenant = await this.tenants.findOne({ where: { id: tenantId } });
+    if (!tenant) {
+      throw new NotFoundException({ error: 'Tenant not found', code: 'NOT_FOUND' });
+    }
+
+    const platforms = this.normalizePlatforms(dto.platforms);
+    const count = dto.count ?? DEFAULT_CM_POST_COUNT;
+
+    tenant.settings = {
+      ...tenant.settings,
+      communityManager: { platforms, count },
+    };
+    await this.tenants.save(tenant);
+
+    return { platforms, count };
+  }
+
+  async getReadiness(tenantId: string): Promise<CommunityManagerReadinessResponse> {
+    const profile = await this.profiles.findOne({ where: { tenantId } });
+    const objectives = Array.isArray(profile?.objectives) ? profile!.objectives : [];
+
+    const items = [
+      {
+        key: 'companyName',
+        label: 'Nombre de empresa',
+        description: 'Identidad básica para contextualizar el copy.',
+        complete: !!profile?.companyName?.trim(),
+        href: '/onboarding',
+      },
+      {
+        key: 'industry',
+        label: 'Industria / sector',
+        description: 'Ayuda a elegir temas y referencias del mercado.',
+        complete: !!profile?.industry?.trim(),
+        href: '/onboarding',
+      },
+      {
+        key: 'brandVoice',
+        label: 'Voz de marca',
+        description: 'Define estilo, registro y personalidad del contenido.',
+        complete: !!profile?.brandVoice?.trim(),
+        href: '/onboarding',
+      },
+      {
+        key: 'targetAudienceDesc',
+        label: 'Audiencia objetivo',
+        description: 'Permite adaptar mensajes y CTAs por segmento.',
+        complete: !!profile?.targetAudienceDesc?.trim(),
+        href: '/onboarding',
+      },
+      {
+        key: 'objectives',
+        label: 'Objetivos de marketing',
+        description: 'Orienta la estrategia detrás de cada publicación.',
+        complete: objectives.length > 0,
+        href: '/onboarding',
+      },
+    ];
+
+    const completed = items.filter((item) => item.complete).length;
+    return { completed, total: items.length, items };
+  }
+
+  private normalizePlatforms(value: unknown): CmPlatform[] {
+    if (!Array.isArray(value)) {
+      return [...DEFAULT_CM_PLATFORMS];
+    }
+    const allowed = new Set<string>(CM_PLATFORMS);
+    const normalized = value.filter(
+      (item): item is CmPlatform => typeof item === 'string' && allowed.has(item),
+    );
+    return normalized.length > 0 ? normalized : [...DEFAULT_CM_PLATFORMS];
+  }
+
+  private buildBrandBrief(profile: CompanyProfileEntity | null): Record<string, unknown> | null {
+    if (!profile) {
+      return null;
+    }
+    return {
+      companyName: profile.companyName,
+      industry: profile.industry,
+      brandVoice: profile.brandVoice,
+      targetAudience: profile.targetAudienceDesc,
+      objectives: profile.objectives,
+      competitors: profile.competitors,
+      website: profile.website,
+    };
+  }
 
   async list(tenantId: string): Promise<SocialCopyBatchResponse[]> {
     const items = await this.batches.find({
@@ -63,6 +190,9 @@ export class CommunityManagerService {
     );
 
     try {
+      const profile = await this.profiles.findOne({ where: { tenantId } });
+      const brandBrief = this.buildBrandBrief(profile);
+
       // Generate social copy via adapter
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await this.adapter.generate({
@@ -72,6 +202,7 @@ export class CommunityManagerService {
         campaignId: dto.campaignId,
         tone: dto.tone,
         topics: dto.topics,
+        brandBrief,
       });
 
       // Save each post as a Content item, spread across next days

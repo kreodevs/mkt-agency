@@ -1,11 +1,11 @@
-import { IsArray, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-
-const PLATFORMS = ['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok'] as const;
+import { ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { CM_PLATFORMS } from '../domain/cm-platforms.constants';
 
 export class GenerateSocialCopyDto {
   @IsArray()
+  @ArrayMinSize(1)
   @IsString({ each: true })
-  @IsIn([...PLATFORMS], { each: true })
+  @IsIn([...CM_PLATFORMS], { each: true })
   platforms!: string[];
 
   @IsInt()
@@ -24,4 +24,18 @@ export class GenerateSocialCopyDto {
   @IsArray()
   @IsString({ each: true })
   topics?: string[];
+}
+
+export class UpdateCommunityManagerPreferencesDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  @IsIn([...CM_PLATFORMS], { each: true })
+  platforms!: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(6)
+  count?: number;
 }

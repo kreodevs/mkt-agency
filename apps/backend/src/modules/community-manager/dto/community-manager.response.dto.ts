@@ -25,3 +25,22 @@ export interface GenerateResponse {
   id: string;
   status: string;
 }
+
+export interface CommunityManagerPreferencesResponse {
+  platforms: string[];
+  count: number;
+}
+
+export interface CommunityManagerReadinessItem {
+  key: string;
+  label: string;
+  description: string;
+  complete: boolean;
+  href: string;
+}
+
+export interface CommunityManagerReadinessResponse {
+  completed: number;
+  total: number;
+  items: CommunityManagerReadinessItem[];
+}

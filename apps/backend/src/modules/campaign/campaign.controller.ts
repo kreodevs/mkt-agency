@@ -16,6 +16,7 @@ import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { CampaignService } from './campaign.service';
+import { CampaignOrchestrationService } from './campaign-orchestration.service';
 import {
   CreateCampaignDto,
   ListCampaignsQueryDto,
@@ -29,11 +30,18 @@ import {
   PaginatedCampaignsResponseDto,
   StrategyAssignmentResponseDto,
 } from './dto/campaign.response.dto';
+import {
+  AutoGenerateCampaignResponse,
+  CampaignAgentReadinessResponse,
+} from './dto/campaign-orchestration.response.dto';
 
 @Controller('campaigns')
 @UseGuards(TenantGuard)
 export class CampaignController {
-  constructor(private readonly campaignService: CampaignService) {}
+  constructor(
+    private readonly campaignService: CampaignService,
+    private readonly orchestration: CampaignOrchestrationService,
+  ) {}
 
   @Get()
   list(
@@ -50,6 +58,21 @@ export class CampaignController {
     @Body() body: CreateCampaignDto,
   ): Promise<CampaignResponseDto> {
     return this.campaignService.create(user.tenantId!, body);
+  }
+
+  @Get('agent-readiness')
+  getAgentReadiness(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CampaignAgentReadinessResponse> {
+    return this.orchestration.getAgentReadiness(user.tenantId!);
+  }
+
+  @Post('auto-generate')
+  @HttpCode(HttpStatus.CREATED)
+  autoGenerate(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AutoGenerateCampaignResponse> {
+    return this.orchestration.autoGenerateFromAgents(user.tenantId!);
   }
 
   @Get('strategy-assignments/:assignmentId')
