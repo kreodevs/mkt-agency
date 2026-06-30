@@ -2,5 +2,5 @@
 
 Ruta: `/community` — `CommunityManagerPage.tsx`
 
-- Preferencias de plataformas y cantidad de posts persistidas por tenant (`PUT /community-manager/preferences`).
+- Selector de plataformas con botones toggle (icono + nombre); preferencias persistidas al activar/desactivar.
 - Panel de prerrequisitos del perfil de empresa cuando falta contexto de marca.

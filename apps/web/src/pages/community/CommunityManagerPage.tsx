@@ -231,44 +231,26 @@ export default function CommunityManagerPage() {
                   : 'Se guardan al activar o desactivar'}
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {PLATFORM_KEYS.map((key) => {
                 const Icon = PLATFORM_ICONS[key] ?? Globe;
                 const selected = platforms.includes(key);
                 return (
-                  <div
+                  <button
                     key={key}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5"
+                    type="button"
+                    aria-pressed={selected}
+                    aria-label={`${selected ? 'Desactivar' : 'Activar'} ${PLATFORM_LABELS[key]}`}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
+                      selected
+                        ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
+                        : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--foreground-subtle)]'
+                    }`}
+                    onClick={() => togglePlatform(key)}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                          PLATFORM_COLORS[key] ?? 'bg-[var(--secondary)]'
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <span className="text-sm font-medium text-[var(--foreground)]">
-                        {PLATFORM_LABELS[key]}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={selected}
-                      aria-label={`${selected ? 'Desactivar' : 'Activar'} ${PLATFORM_LABELS[key]}`}
-                      onClick={() => togglePlatform(key)}
-                      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                        selected ? 'bg-[var(--primary)]' : 'bg-[var(--secondary)]'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                          selected ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
+                    <Icon className="h-3.5 w-3.5" />
+                    {PLATFORM_LABELS[key]}
+                  </button>
                 );
               })}
             </div>
