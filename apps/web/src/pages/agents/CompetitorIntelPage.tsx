@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Crosshair, Loader2, RefreshCw, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CompetitorIntelHistory } from '@/components/agents/CompetitorIntelHistory';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -12,14 +13,18 @@ import { ApiError } from '@/services/api';
 
 export default function CompetitorIntelPage() {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [pollId, setPollId] = useState<string | null>(null);
+  const selectedAnalysisId = searchParams.get('analysis');
 
   const analysesQuery = useQuery({
     queryKey: ['competitor-analyses'],
     queryFn: listCompetitorAnalyses,
   });
 
-  const activeAnalysis = analysesQuery.data?.find(
+  const analyses = analysesQuery.data ?? [];
+
+  const activeAnalysis = analyses.find(
     (a) => a.status === 'pending' || a.status === 'processing',
   );
 
@@ -54,14 +59,17 @@ export default function CompetitorIntelPage() {
     },
   });
 
-  const latestAnalysis = (() => {
-    if (pollQuery.data?.status === 'completed' || pollQuery.data?.status === 'failed') {
+  const selectedAnalysis = useMemo(() => {
+    if (pollQuery.data && (pollId || selectedAnalysisId === pollQuery.data.id)) {
       return pollQuery.data;
     }
-    return analysesQuery.data?.find((a) => a.status === 'completed') ?? null;
-  })();
+    if (selectedAnalysisId) {
+      return analyses.find((item) => item.id === selectedAnalysisId) ?? null;
+    }
+    return analyses.find((item) => item.status === 'completed') ?? null;
+  }, [analyses, pollQuery.data, pollId, selectedAnalysisId]);
 
-  const latestFailed = analysesQuery.data?.find((a) => a.status === 'failed');
+  const latestFailed = analyses.find((a) => a.status === 'failed');
 
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
@@ -78,105 +86,96 @@ export default function CompetitorIntelPage() {
         }
       />
 
-      {/* Trigger card */}
-      <Card className="mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
-            <Crosshair className="h-6 w-6 text-amber-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-black text-[var(--foreground)]">Analizar competidores</h3>
-            <p className="text-sm text-[var(--foreground-muted)]">
-              Usa los competidores registrados en tu perfil de empresa.
+      <div className="mx-auto max-w-3xl space-y-6">
+        {!analysesQuery.isLoading && analyses.length > 0 && (
+          <CompetitorIntelHistory analyses={analyses} selectedId={selectedAnalysis?.id} />
+        )}
+
+        {activeAnalysis && (
+          <Card className="border-amber-200 bg-amber-50/50">
+            <div className="flex items-center gap-3 text-sm text-amber-800">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Analizando competidores... esto puede tomar unos segundos.
+            </div>
+          </Card>
+        )}
+
+        {!activeAnalysis && latestFailed && !selectedAnalysis?.analysis && (
+          <Card className="border-red-200 bg-red-50/50">
+            <div className="text-sm text-red-700">
+              <p className="font-semibold">Error en el último análisis</p>
+              <p className="mt-1">{latestFailed.errorMessage}</p>
+            </div>
+          </Card>
+        )}
+
+        {selectedAnalysis?.analysis && (
+          <Card title="Reporte de análisis competitivo" subtitle="Generado por IA">
+            <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--background-secondary)] p-4 text-xs leading-relaxed text-[var(--foreground-muted)]">
+              {JSON.stringify(selectedAnalysis.analysis, null, 2)}
+            </pre>
+            <p className="mt-4 text-xs text-[var(--foreground-subtle)]">
+              Actualizado:{' '}
+              {new Date(selectedAnalysis.updatedAt).toLocaleString('es-MX')}
             </p>
-          </div>
-          <Button
-            onClick={() => triggerMutation.mutate()}
-            loading={triggerMutation.isPending}
-            disabled={!!activeAnalysis}
-            className="gap-2 shrink-0"
-          >
-            {activeAnalysis ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Analizando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Iniciar análisis
-              </>
-            )}
-          </Button>
-        </div>
-      </Card>
+          </Card>
+        )}
 
-      {/* Active analysis indicator */}
-      {activeAnalysis && (
-        <Card className="mb-6 border-amber-200 bg-amber-50/50">
-          <div className="flex items-center gap-3 text-sm text-amber-800">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Analizando competidores... esto puede tomar unos segundos.
-          </div>
-        </Card>
-      )}
+        {!analysesQuery.isLoading && analyses.length === 0 && (
+          <Card>
+            <div className="py-12 text-center text-sm text-[var(--foreground-muted)]">
+              Aún no hay análisis. Registra competidores en tu perfil de empresa e inicia el
+              primer reporte abajo.
+            </div>
+          </Card>
+        )}
 
-      {/* Last failed */}
-      {!activeAnalysis && latestFailed && !latestAnalysis && (
-        <Card className="mb-6 border-red-200 bg-red-50/50">
-          <div className="text-sm text-red-700">
-            <p className="font-semibold">Error en el último análisis</p>
-            <p className="mt-1">{latestFailed.errorMessage}</p>
+        <Card title={analyses.length > 0 ? 'Nuevo análisis' : 'Primer análisis'}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex flex-1 items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
+                <Crosshair className="h-6 w-6 text-amber-600" />
+              </div>
+              <p className="text-sm text-[var(--foreground-muted)]">
+                Usa los competidores registrados en tu perfil de empresa para generar un reporte
+                con IA.
+              </p>
+            </div>
             <Button
-              variant="outline"
-              size="sm"
-              className="mt-3"
               onClick={() => triggerMutation.mutate()}
-            >
-              Reintentar
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* Analysis result */}
-      {latestAnalysis && latestAnalysis.analysis && (
-        <Card
-          title="Reporte de análisis competitivo"
-          subtitle="Generado por IA"
-        >
-          <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--background-secondary)] p-4 text-xs leading-relaxed text-[var(--foreground-muted)]">
-            {JSON.stringify(latestAnalysis.analysis, null, 2)}
-          </pre>
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-xs text-[var(--foreground-subtle)]">
-              Última actualización:{' '}
-              {new Date(latestAnalysis.updatedAt).toLocaleString('es-MX')}
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={() => triggerMutation.mutate()}
+              loading={triggerMutation.isPending}
               disabled={!!activeAnalysis}
+              className="gap-2 shrink-0"
             >
-              <RefreshCw className="h-4 w-4" />
-              Re-analizar
+              {activeAnalysis ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analizando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  {analyses.length > 0 ? 'Lanzar nuevo análisis' : 'Iniciar análisis'}
+                </>
+              )}
             </Button>
           </div>
+          {selectedAnalysis?.analysis && (
+            <div className="mt-4 border-t border-[var(--border)] pt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() => triggerMutation.mutate()}
+                disabled={!!activeAnalysis}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Re-analizar con datos actuales
+              </Button>
+            </div>
+          )}
         </Card>
-      )}
-
-      {/* Empty state */}
-      {!analysesQuery.isLoading &&
-        !analysesQuery.data?.length && (
-        <Card>
-          <div className="py-12 text-center text-sm text-[var(--foreground-muted)]">
-            Aún no hay análisis. Asegúrate de tener competidores registrados en tu perfil de empresa
-            y haz clic en "Iniciar análisis".
-          </div>
-        </Card>
-      )}
+      </div>
     </DashboardShell>
   );
 }

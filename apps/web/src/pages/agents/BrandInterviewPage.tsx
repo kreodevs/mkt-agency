@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bot, ChevronLeft, FileText, History, Send, Sparkles } from 'lucide-react';
+import { Bot, ChevronLeft, History, Send, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BrandInterviewHistory } from '@/components/agents/BrandInterviewHistory';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
@@ -10,7 +10,7 @@ import { Button } from '@/components/atoms/Button';
 import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
-import { createInterview, getInterview, listInterviews, submitAnswer } from '@/services/agents';
+import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
 
@@ -39,7 +39,7 @@ export default function BrandInterviewPage() {
   });
 
   const interviewsQuery = useQuery({
-    queryKey: ['agent-interviews', 'brand_interview'],
+    queryKey: ['agent-interviews'],
     queryFn: listInterviews,
     enabled: !id,
     select: (items) =>
@@ -53,10 +53,6 @@ export default function BrandInterviewPage() {
     () => brandInterviews.find((item) => item.status === 'in_progress'),
     [brandInterviews],
   );
-  const lastCompletedInterview = useMemo(
-    () => brandInterviews.find((item) => item.status === 'completed'),
-    [brandInterviews],
-  );
 
   const activeInterview = id ? interviewQuery.data : undefined;
 
@@ -64,7 +60,7 @@ export default function BrandInterviewPage() {
     mutationFn: () => createInterview('brand_interview'),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
-      void queryClient.invalidateQueries({ queryKey: ['agent-interviews', 'brand_interview'] });
+      void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
       navigate(`/agents/brand-interview/${result.id}`, { replace: true });
     },
     onError: (error) => {
@@ -85,11 +81,23 @@ export default function BrandInterviewPage() {
     mutationFn: (answerText: string) => submitAnswer(activeInterview!.id, answerText),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
-      void queryClient.invalidateQueries({ queryKey: ['agent-interviews', 'brand_interview'] });
+      void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
       setAnswer('');
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'Error al enviar respuesta');
+    },
+  });
+
+  const retryBriefMutation = useMutation({
+    mutationFn: () => retryBrandBrief(activeInterview!.id),
+    onSuccess: (result) => {
+      queryClient.setQueryData(['agent-interview', result.id], result);
+      void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
+      toast.success('Reintentando generación del Brand Brief...');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo reintentar');
     },
   });
 
@@ -133,59 +141,6 @@ export default function BrandInterviewPage() {
         />
 
         <div className="mx-auto mt-6 max-w-2xl space-y-6">
-          {(inProgressInterview || lastCompletedInterview) && (
-            <Card title="Tus entrevistas" subtitle="Acceso rápido">
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                {inProgressInterview && (
-                  <Link to={`/agents/brand-interview/${inProgressInterview.id}`}>
-                    <Button className="w-full gap-2 sm:w-auto">
-                      <Sparkles className="h-4 w-4" />
-                      Continuar entrevista en progreso
-                    </Button>
-                  </Link>
-                )}
-                {lastCompletedInterview && (
-                  <Link to={`/agents/brand-interview/${lastCompletedInterview.id}`}>
-                    <Button variant="outline" className="w-full gap-2 sm:w-auto">
-                      <FileText className="h-4 w-4" />
-                      Ver mi última entrevista
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </Card>
-          )}
-
-          <Card className="text-center">
-            <div className="flex flex-col items-center gap-4 py-8">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-                <Bot className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-[var(--foreground)]">
-                {inProgressInterview ? 'Nueva entrevista' : 'Brand Analyst'}
-              </h2>
-              <p className="max-w-sm text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos.
-                Al finalizar, generaré un Brand Brief en markdown y actualizaré tu perfil de empresa.
-              </p>
-              <Button
-                size="lg"
-                loading={createMutation.isPending}
-                disabled={!!inProgressInterview}
-                onClick={() => createMutation.mutate()}
-                className="mt-2 gap-2"
-              >
-                <Sparkles className="h-5 w-5" />
-                Iniciar entrevista
-              </Button>
-              {inProgressInterview && (
-                <p className="text-xs text-[var(--foreground-muted)]">
-                  Ya tienes una entrevista activa. Continúala arriba o complétala antes de iniciar otra.
-                </p>
-              )}
-            </div>
-          </Card>
-
           {interviewsQuery.isLoading ? (
             <Card>
               <div className="flex items-center gap-2 py-6 text-sm text-[var(--foreground-muted)]">
@@ -196,6 +151,39 @@ export default function BrandInterviewPage() {
           ) : (
             <BrandInterviewHistory interviews={brandInterviews} />
           )}
+
+          <Card title={brandInterviews.length > 0 ? 'Nueva entrevista' : 'Brand Analyst'}>
+            <div className="flex flex-col items-center gap-4 py-4 text-center sm:py-6">
+              {brandInterviews.length === 0 && (
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+                  <Bot className="h-8 w-8 text-white" />
+                </div>
+              )}
+              <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
+                {brandInterviews.length > 0
+                  ? 'Inicia otra ronda de preguntas para actualizar tu Brand Brief.'
+                  : 'Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos. Al finalizar, generaré un Brand Brief en markdown.'}
+              </p>
+              {inProgressInterview ? (
+                <Link to={`/agents/brand-interview/${inProgressInterview.id}`}>
+                  <Button className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Continuar entrevista en progreso
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  size="lg"
+                  loading={createMutation.isPending}
+                  onClick={() => createMutation.mutate()}
+                  className="gap-2"
+                >
+                  <Sparkles className="h-5 w-5" />
+                  Iniciar entrevista
+                </Button>
+              )}
+            </div>
+          </Card>
         </div>
       </DashboardShell>
     );
@@ -229,6 +217,8 @@ export default function BrandInterviewPage() {
   const isProcessing = isInterviewProcessing(activeInterview);
   const isCompleted = activeInterview.status === 'completed';
   const isFailed = activeInterview.status === 'failed';
+  const briefMarkdown = activeInterview.brandBriefMarkdown;
+  const showBrief = !!briefMarkdown && (isCompleted || isFailed);
   const isSending = answerMutation.isPending;
   const canAnswer =
     activeInterview.status === 'in_progress' &&
@@ -346,8 +336,22 @@ export default function BrandInterviewPage() {
         </div>
 
         {isFailed && (
-          <div className="border-t border-[var(--border)] p-4 text-center text-sm text-[var(--destructive)]">
-            {activeInterview.errorMessage ?? 'Error al generar el Brand Brief.'}
+          <div className="border-t border-[var(--border)] p-4 text-center">
+            <p className="text-sm text-[var(--destructive)]">
+              {activeInterview.errorMessage ?? 'Error al generar el Brand Brief.'}
+            </p>
+            {!showBrief && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                loading={retryBriefMutation.isPending}
+                onClick={() => retryBriefMutation.mutate()}
+              >
+                Reintentar generación
+              </Button>
+            )}
           </div>
         )}
 
@@ -385,8 +389,8 @@ export default function BrandInterviewPage() {
         </div>
       </Card>
 
-      {isCompleted && activeInterview.brandBriefMarkdown && (
-        <Card title="Brand Brief" subtitle="Resultado de tu entrevista">
+      {showBrief && (
+        <Card title="Brand Brief" subtitle={isFailed ? 'Generado con advertencias' : 'Resultado de tu entrevista'}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-[var(--foreground-muted)]">
               Generado el{' '}
@@ -405,7 +409,7 @@ export default function BrandInterviewPage() {
               Ver perfil de empresa actualizado
             </Link>
           </div>
-          <MarkdownEditor value={activeInterview.brandBriefMarkdown} readOnly minHeight="420px" />
+          <MarkdownEditor value={briefMarkdown!} readOnly minHeight="420px" />
         </Card>
       )}
       </div>

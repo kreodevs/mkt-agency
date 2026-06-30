@@ -35,6 +35,8 @@ export default function ImageGeneratorPage() {
     queryFn: listImageGenerations,
   });
 
+  const history = historyQuery.data ?? [];
+
   const generateMutation = useMutation({
     mutationFn: () => generateImage({ prompt: prompt.trim(), style: style || undefined, size }),
     onSuccess: () => {
@@ -62,87 +64,88 @@ export default function ImageGeneratorPage() {
         }
       />
 
-      <Card className="mb-6">
-        <div className="space-y-4">
-          <InputText
-            label="Describe la imagen que necesitas"
-            placeholder="Ej. Un logo moderno para agencia de marketing con colores azul y dorado..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            fullWidth
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Estilo</label>
-              <select
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-              >
-                {STYLE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+      <div className="mx-auto max-w-4xl space-y-6">
+        {history.length > 0 && (
+          <Card title="Imágenes generadas" subtitle="Historial">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {history.map((img) => (
+                <div key={img.id} className="overflow-hidden rounded-xl border border-[var(--border)]">
+                  <div className="flex aspect-square items-center justify-center bg-[var(--background-secondary)]">
+                    {img.imageUrl ? (
+                      <img
+                        src={img.imageUrl}
+                        alt={img.prompt}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : img.status === 'processing' ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-sm text-[var(--foreground-muted)]">
+                        <ImageIcon className="h-8 w-8" />
+                        {img.status === 'failed' ? 'Error' : 'Sin imagen'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-[var(--border)] p-3">
+                    <p className="line-clamp-2 text-xs text-[var(--foreground)]">{img.prompt}</p>
+                    <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">
+                      {new Date(img.createdAt).toLocaleString('es-MX')}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Tamaño</label>
-              <select
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-              >
-                {SIZE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <Button
-            onClick={() => generateMutation.mutate()}
-            loading={generateMutation.isPending}
-            disabled={!prompt.trim()}
-            className="w-full gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            Generar imagen
-          </Button>
-        </div>
-      </Card>
+          </Card>
+        )}
 
-      {/* History */}
-      {historyQuery.data && historyQuery.data.length > 0 && (
-        <Card title="Imágenes generadas" subtitle="Historial">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {historyQuery.data.map((img) => (
-              <div key={img.id} className="overflow-hidden rounded-xl border border-[var(--border)]">
-                <div className="flex aspect-square items-center justify-center bg-[var(--background-secondary)]">
-                  {img.imageUrl ? (
-                    <img
-                      src={img.imageUrl}
-                      alt={img.prompt}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : img.status === 'processing' ? (
-                    <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-sm text-[var(--foreground-muted)]">
-                      <ImageIcon className="h-8 w-8" />
-                      {img.status === 'failed' ? 'Error' : 'Sin imagen'}
-                    </div>
-                  )}
-                </div>
-                <div className="border-t border-[var(--border)] p-3">
-                  <p className="line-clamp-2 text-xs text-[var(--foreground)]">{img.prompt}</p>
-                  <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">
-                    {new Date(img.createdAt).toLocaleString('es-MX')}
-                  </p>
-                </div>
+        <Card title={history.length > 0 ? 'Nueva imagen' : 'Generar imagen'}>
+          <div className="space-y-4">
+            <InputText
+              label="Describe la imagen que necesitas"
+              placeholder="Ej. Un logo moderno para agencia de marketing con colores azul y dorado..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              fullWidth
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Estilo</label>
+                <select
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
+                >
+                  {STYLE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
-            ))}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Tamaño</label>
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
+                >
+                  {SIZE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <Button
+              onClick={() => generateMutation.mutate()}
+              loading={generateMutation.isPending}
+              disabled={!prompt.trim()}
+              className="w-full gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              {history.length > 0 ? 'Generar otra imagen' : 'Generar imagen'}
+            </Button>
           </div>
         </Card>
-      )}
+      </div>
     </DashboardShell>
   );
 }

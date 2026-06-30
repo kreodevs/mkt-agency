@@ -26,6 +26,12 @@ export async function submitAnswer(
   });
 }
 
+export async function retryBrandBrief(interviewId: string): Promise<AgentInterview> {
+  return apiFetch<AgentInterview>(`/agents/interviews/${interviewId}/retry-brief`, {
+    method: 'POST',
+  });
+}
+
 // Competitor Intel
 export async function listCompetitorAnalyses(): Promise<CompetitorAnalysis[]> {
   return apiFetch<CompetitorAnalysis[]>('/agents/competitor-intel');

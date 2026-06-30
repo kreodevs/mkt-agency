@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { QUEUE_BRAND_INTERVIEW } from '../../../shared/queue/queue.constants';
+import { formatWorkerErrorMessage } from '../../../shared/worker-error.util';
 import { CompanyProfileService } from '../../company-profile/company-profile.service';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { brandBriefToMarkdown } from '../brand-brief-markdown.util';
@@ -79,56 +80,69 @@ export class BrandInterviewWorkerService {
         },
       };
 
-      const brandBrief = await this.adapter.generateBrandBrief(context);
+      const brandBrief =
+        interview.brandBrief ?? (await this.adapter.generateBrandBrief(context));
 
-      // Save brand brief to interview
-      interview.brandBrief = brandBrief;
-      interview.brandBriefMarkdown = brandBriefToMarkdown(brandBrief);
-      interview.status = 'completed';
-      interview.errorMessage = null;
-      await this.interviews.save(interview);
-
-      // Write key fields to company profile
-      const objectivesRaw = brandBrief.objectives;
-      const objectivesArr = typeof objectivesRaw === 'string'
-        ? objectivesRaw.split('\n').filter(Boolean).map((s) => s.trim())
-        : Array.isArray(objectivesRaw)
-          ? objectivesRaw
-          : profile?.objectives ?? [];
-
-      await this.companyProfile.updateProfile(interview.tenantId, {
-        companyName: (brandBrief.companyName ?? profile?.companyName ?? undefined) as string | undefined,
-        industry: (brandBrief.industry ?? profile?.industry ?? undefined) as string | undefined,
-        targetAudienceDesc:
-          (brandBrief.targetAudienceDesc ?? profile?.targetAudienceDesc ?? undefined) as string | undefined,
-        brandVoice: (brandBrief.brandVoice ?? profile?.brandVoice ?? undefined) as string | undefined,
-        competitors: (brandBrief.competitors ?? profile?.competitors ?? undefined) as string | undefined,
-        objectives: objectivesArr.length > 0 ? objectivesArr : undefined,
-      });
-
-      // Add completion message
-      await this.messages.save(
-        this.messages.create({
-          interviewId,
-          role: 'agent',
-          content:
-            '✅ **Brand Brief generado con éxito.** El análisis de tu marca está listo. Puedes ver el resumen en la parte inferior de esta página y consultar tu perfil de empresa actualizado.',
-          metadata: { type: 'completed' },
-        }),
-      );
+      await this.finalizeInterview(interview, profile, brandBrief);
     } catch (error) {
       interview.status = 'failed';
-      interview.errorMessage = error instanceof Error ? error.message : 'Brand brief generation failed';
+      interview.errorMessage = formatWorkerErrorMessage(
+        error,
+        'No se pudo generar el Brand Brief',
+      );
       await this.interviews.save(interview);
 
       await this.messages.save(
         this.messages.create({
           interviewId,
           role: 'system',
-          content: `Error al generar el Brand Brief: ${interview.errorMessage}. Verifica que el proveedor LLM esté configurado e intenta de nuevo.`,
+          content: `Error al generar el Brand Brief: ${interview.errorMessage}. Intenta de nuevo en unos segundos.`,
           metadata: { type: 'error' },
         }),
       );
+
+      this.logger.error(`Brand interview ${interviewId} failed`, error);
     }
+  }
+
+  private async finalizeInterview(
+    interview: AgentInterviewEntity,
+    profile: CompanyProfileEntity | null,
+    brandBrief: Record<string, unknown>,
+  ): Promise<void> {
+    interview.brandBrief = brandBrief;
+    interview.brandBriefMarkdown = brandBriefToMarkdown(brandBrief);
+    interview.status = 'completed';
+    interview.errorMessage = null;
+    await this.interviews.save(interview);
+
+    const objectivesRaw = brandBrief.objectives;
+    const objectivesArr =
+      typeof objectivesRaw === 'string'
+        ? objectivesRaw.split('\n').filter(Boolean).map((s) => s.trim())
+        : Array.isArray(objectivesRaw)
+          ? objectivesRaw
+          : profile?.objectives ?? [];
+
+    await this.companyProfile.mergeFromBrandBrief(interview.tenantId, {
+      companyName: (brandBrief.companyName ?? profile?.companyName ?? undefined) as string | undefined,
+      industry: (brandBrief.industry ?? profile?.industry ?? undefined) as string | undefined,
+      targetAudienceDesc: (brandBrief.targetAudienceDesc ??
+        profile?.targetAudienceDesc ??
+        undefined) as string | undefined,
+      brandVoice: (brandBrief.brandVoice ?? profile?.brandVoice ?? undefined) as string | undefined,
+      competitors: (brandBrief.competitors ?? profile?.competitors ?? undefined) as string | undefined,
+      objectives: objectivesArr.length > 0 ? objectivesArr : undefined,
+    });
+
+    await this.messages.save(
+      this.messages.create({
+        interviewId: interview.id,
+        role: 'agent',
+        content:
+          '✅ **Brand Brief generado con éxito.** El análisis de tu marca está listo. Puedes ver el resumen en la parte inferior de esta página y consultar tu perfil de empresa actualizado.',
+        metadata: { type: 'completed' },
+      }),
+    );
   }
 }

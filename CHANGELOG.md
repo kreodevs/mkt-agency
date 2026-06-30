@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.2] — 2026-06-30
+
+### Added
+
+- **Hub de agentes con historial**: `/agents` muestra estado por agente (en progreso, completadas, sin ejecuciones) y botones contextuales — **Ver historial**, **Continuar**, **Último resultado** o **Iniciar** según corresponda (`useAgentHubStats`).
+- **Brand Analyst — hub**: historial de entrevistas arriba; **Iniciar entrevista** / continuar abajo. Resultado en markdown con Kreo `MarkdownEditor` (readOnly).
+- **Competitor Intel — historial**: listado de análisis con enlace al reporte (`?analysis=id`); formulario de **nuevo análisis** al final.
+- **Image Generator — hub**: galería de imágenes arriba; formulario **Generar otra imagen** abajo.
+- **Reintento de Brand Brief**: `POST /agents/interviews/:id/retry-brief` y botón en UI cuando la generación falla.
+
+### Fixed
+
+- **Brand Brief tras onboarding completado**: el worker ya no falla con `ConflictException` al actualizar el perfil; usa `mergeFromBrandBrief` en lugar de `updateProfile`.
+- **Mensajes de error del worker**: textos legibles vía `formatWorkerErrorMessage` (sin "Conflict Exception" crudo).
+- **Recuperación de brief**: si el JSON ya se generó, el reintento finaliza sin volver a llamar al LLM.
+
+### Changed
+
+- Páginas hub de agentes documentadas en `apps/web/src/pages/agents/README.md`.
+- Componentes `BrandInterviewHistory` y `CompetitorIntelHistory` en `components/agents/`.
+
 ## [0.2.1] — 2026-06-28
 
 ### Changed
