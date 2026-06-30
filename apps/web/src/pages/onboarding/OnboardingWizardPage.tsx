@@ -171,7 +171,11 @@ export default function OnboardingWizardPage() {
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
         title="Onboarding de empresa"
-        description="Completa las secciones obligatorias para activar tu perfil (80%)"
+        description={
+          isCompleted
+            ? 'Tu perfil está activo. Puedes revisar o editar cualquier sección.'
+            : 'Completa las secciones obligatorias para activar tu perfil (80%)'
+        }
       />
 
       {isCompleted && (

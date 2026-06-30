@@ -19,6 +19,7 @@ import { Card } from '@/components/molecules/Card';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Button } from '@/components/atoms/Button';
 import { apiFetch } from '@/services/api';
+import { getCompanyProfile } from '@/services/company-profile';
 
 interface UpcomingPost {
   id: string;
@@ -87,11 +88,27 @@ export default function AgencyHomePage() {
     enabled: !isSuperadminNative,
   });
 
+  const profileQuery = useQuery({
+    queryKey: ['company-profile'],
+    queryFn: getCompanyProfile,
+    enabled: !isSuperadminNative,
+  });
+
   const data = homeQuery.data;
 
   const hasOnboarded = useMemo(() => {
-    return data && (data.upcoming.length > 0 || data.strategy || data.communityBatch || data.leads.total > 0);
-  }, [data]);
+    if (profileQuery.data?.status === 'completed') {
+      return true;
+    }
+
+    return Boolean(
+      data &&
+        (data.upcoming.length > 0 ||
+          data.strategy ||
+          data.communityBatch ||
+          data.leads.total > 0),
+    );
+  }, [data, profileQuery.data?.status]);
 
   if (isSuperadminNative) {
     return (
@@ -124,7 +141,7 @@ export default function AgencyHomePage() {
     );
   }
 
-  if (homeQuery.isLoading) {
+  if (homeQuery.isLoading || profileQuery.isLoading) {
     return (
       <DashboardShell>
         <div className="flex min-h-[60vh] items-center justify-center">
