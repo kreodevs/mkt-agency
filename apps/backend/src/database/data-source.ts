@@ -33,6 +33,7 @@ import { ReportEntity } from '../modules/reports/infrastructure/typeorm/report.e
 import { SecurityEventEntity } from '../modules/security/infrastructure/typeorm/security-event.entity';
 import { ImpersonationLogEntity } from '../modules/superadmin/infrastructure/typeorm/impersonation-log.entity';
 import { TenantEntity } from '../modules/tenant/infrastructure/typeorm/tenant.entity';
+import { ProductEntity } from '../modules/products/infrastructure/typeorm/product.entity';
 import { UserEntity } from '../shared/infrastructure/typeorm/user.entity';
 import {
   resolveDatabaseName,
@@ -81,6 +82,7 @@ export default new DataSource({
     ReportEntity,
     CompetitorEntity,
     CompetitorMentionEntity,
+    ProductEntity,
   ],
   migrations: [
     join(

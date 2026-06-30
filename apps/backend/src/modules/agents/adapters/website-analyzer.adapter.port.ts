@@ -7,6 +7,15 @@ export interface WebsiteAnalysisResult {
   valueProposition: string;
   brandVoice: string;
   productsServices: string;
+  seoTags?: {
+    title: string;
+    description: string;
+    keywords: string[];
+    h1: string;
+    focusKeyphrase?: string;
+    ogTitle?: string;
+    ogDescription?: string;
+  };
   competitors: string;
   marketingObjectives: string;
   socialMediaChannels: string[];

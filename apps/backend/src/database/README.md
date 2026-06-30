@@ -32,6 +32,10 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000013-DropLegacyPasswordColumn.ts` | Elimina columna legacy `users.password` |
 | `1730000000014-CreateAgentStrategyCommunityTables.ts` | `strategy_adjustments`, `community_manager_batches`, `tone_presets`, `agent_interviews`, `agent_interview_messages`, `agent_competitor_analyses`, `agent_image_generations` |
 | `1730000000015-CreateTenantPlatformAdmins.ts` | `tenant_platform_admins` — superadmins asignados por tenant (impersonación) |
+| `1730000000016-AddLlmTaskFallbackModel.ts` | Columna `fallback_model` en `llm_task_configs` |
+| `1730000000017-AddBrandBriefMarkdown.ts` | Columna brand brief markdown en perfiles |
+| `1730000000018-CreateProducts.ts` | `products` (entidad raíz del pivot) + índice `idx_products_tenant_id` |
+| `1730000000019-AddProductIdToCompetitorsAndCampaigns.ts` | `competitors.product_id`, `campaigns.product_id` (FK nullable a `products`) |
 | `1729999999999-UpgradeLegacyUsersSchema.ts` | Añade columnas monorepo en `users` legacy; corre **antes** del baseline |
 
 DataSource: `src/database/data-source.ts`.

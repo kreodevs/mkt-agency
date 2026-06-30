@@ -9,7 +9,7 @@ export class OpenRouterWebsiteAnalyzerAdapter implements WebsiteAnalyzerAdapterP
   constructor(private readonly llm: LlmClient) {}
 
   async analyze(url: string): Promise<WebsiteAnalysisResult> {
-    const pageContent = await this.fetchPage(url);
+    const { text: pageContent, seoTags } = await this.fetchPage(url);
 
     const systemPrompt =
       'Eres un analista de negocios experto. Analiza el contenido de una página web ' +
@@ -43,11 +43,14 @@ export class OpenRouterWebsiteAnalyzerAdapter implements WebsiteAnalyzerAdapterP
 
     return {
       ...result,
+      seoTags,
       extractedFrom: url,
     };
   }
 
-  private async fetchPage(url: string): Promise<string> {
+  private async fetchPage(
+    url: string,
+  ): Promise<{ text: string; seoTags: WebsiteAnalysisResult['seoTags'] }> {
     const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
 
     const response = await fetch(cleanUrl, {
@@ -64,6 +67,7 @@ export class OpenRouterWebsiteAnalyzerAdapter implements WebsiteAnalyzerAdapterP
     }
 
     const html = await response.text();
+    const seoTags = this.extractSeoTags(html);
 
     const text = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
@@ -73,6 +77,46 @@ export class OpenRouterWebsiteAnalyzerAdapter implements WebsiteAnalyzerAdapterP
       .replace(/\s+/g, ' ')
       .trim();
 
-    return text.slice(0, 20000);
+    return { text: text.slice(0, 20000), seoTags };
+  }
+
+  private extractSeoTags(html: string): WebsiteAnalysisResult['seoTags'] {
+    const meta = (re: RegExp): string => {
+      const m = html.match(re);
+      return m?.[1]?.trim() ?? '';
+    };
+
+    const title =
+      meta(/<title[^>]*>([\s\S]*?)<\/title>/i).replace(/\s+/g, ' ') || '';
+    const description = meta(
+      /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i,
+    );
+    const keywordsRaw = meta(
+      /<meta[^>]+name=["']keywords["'][^>]+content=["']([^"']*)["']/i,
+    );
+    const h1 = meta(/<h1[^>]*>([\s\S]*?)<\/h1>/i)
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const ogTitle = meta(
+      /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i,
+    );
+    const ogDescription = meta(
+      /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i,
+    );
+
+    return {
+      title,
+      description,
+      keywords: keywordsRaw
+        ? keywordsRaw
+            .split(',')
+            .map((k) => k.trim())
+            .filter(Boolean)
+        : [],
+      h1,
+      ogTitle: ogTitle || undefined,
+      ogDescription: ogDescription || undefined,
+    };
   }
 }

@@ -38,6 +38,8 @@ import { ReportEntity } from './modules/reports/infrastructure/typeorm/report.en
 import { CompetitorsModule } from './modules/competitors/competitors.module';
 import { CompetitorEntity } from './modules/competitors/infrastructure/typeorm/competitor.entity';
 import { CompetitorMentionEntity } from './modules/competitors/infrastructure/typeorm/competitor-mention.entity';
+import { ProductsModule } from './modules/products/products.module';
+import { ProductEntity } from './modules/products/infrastructure/typeorm/product.entity';
 import { AgentsModule } from './modules/agents/agents.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AgentInterviewEntity } from './modules/agents/domain/agent-interview.entity';
@@ -139,6 +141,7 @@ import {
           ReportEntity,
           CompetitorEntity,
           CompetitorMentionEntity,
+          ProductEntity,
           AgentInterviewEntity,
           AgentInterviewMessageEntity,
           AgentCompetitorAnalysisEntity,
@@ -166,6 +169,7 @@ import {
     ProposalsModule,
     ReportsModule,
     CompetitorsModule,
+    ProductsModule,
     AgentsModule,
     DashboardModule,
     StrategyModule,

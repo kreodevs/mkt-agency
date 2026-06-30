@@ -14,6 +14,7 @@ export class StubWebsiteAnalyzerAdapter implements WebsiteAnalyzerAdapterPort {
       valueProposition: '',
       brandVoice: '',
       productsServices: '',
+      seoTags: undefined,
       competitors: '',
       marketingObjectives: '',
       socialMediaChannels: [],

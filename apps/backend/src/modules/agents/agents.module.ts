@@ -142,6 +142,6 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
       inject: [StubImageGenerationAdapter, OpenRouterImageGenerationAdapter, LlmProviderService],
     },
   ],
-  exports: [AgentInterviewService, CompetitorIntelService],
+  exports: [AgentInterviewService, CompetitorIntelService, WebsiteAnalyzerService],
 })
 export class AgentsModule {}
