@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
+import { DashboardModule } from '../dashboard/dashboard.module';
 import { OpenRouterStrategyAdapter } from './adapters/openrouter-strategy.adapter';
 import { StubStrategyAdapter } from './adapters/stub-strategy.adapter';
 import { STRATEGY_ADAPTER, StrategyAdjustmentAdapterPort } from './adapters/strategy.adapter.port';
@@ -14,6 +15,7 @@ import { StrategyService } from './strategy.service';
   imports: [
     TypeOrmModule.forFeature([StrategyAdjustmentEntity, CampaignEntity]),
     LlmModule,
+    DashboardModule,
   ],
   controllers: [StrategyController],
   providers: [

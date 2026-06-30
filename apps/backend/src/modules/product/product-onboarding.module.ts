@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { AgentsModule } from '../agents/agents.module';
 import { CommunityManagerModule } from '../community-manager/community-manager.module';
+import { PublicationInboxModule } from '../publication-inbox/publication-inbox.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductOnboardingController } from './product-onboarding.controller';
@@ -16,6 +17,7 @@ import { ProductModule } from './product.module';
     AgentsModule,
     CompetitorsModule,
     CommunityManagerModule,
+    PublicationInboxModule,
     TypeOrmModule.forFeature([ProductEntity]),
   ],
   controllers: [ProductOnboardingController],

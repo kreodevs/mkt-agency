@@ -13,6 +13,8 @@ import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
 import { listProducts } from '@/services/products';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import { useActiveProductStore } from '@/store/active-product';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
 import { getEffectiveInterviewStatus, hasBrandBriefResult } from '@/utils/brandInterview';
@@ -33,6 +35,8 @@ export default function BrandInterviewPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [answer, setAnswer] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
+  const resolvedProductId = useResolvedProductId();
+  const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
 
   const productsQuery = useQuery({
     queryKey: ['products'],
@@ -43,11 +47,15 @@ export default function BrandInterviewPage() {
   const products = productsQuery.data?.items ?? [];
 
   useEffect(() => {
+    if (resolvedProductId && !selectedProductId) {
+      setSelectedProductId(resolvedProductId);
+    }
     if (!selectedProductId && products.length > 0) {
       const primary = products.find((p) => p.isPrimary) ?? products[0];
       setSelectedProductId(primary.id);
+      setActiveProduct(primary.id, primary.name);
     }
-  }, [products, selectedProductId]);
+  }, [products, selectedProductId, resolvedProductId, setActiveProduct]);
 
   const interviewQuery = useQuery({
     queryKey: ['agent-interview', id],

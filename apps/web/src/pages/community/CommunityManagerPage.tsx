@@ -34,6 +34,7 @@ import {
   type CmPlatform,
 } from '@/services/community-manager';
 import { listProducts } from '@/services/products';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 interface SocialPost {
   id: string;
@@ -96,6 +97,7 @@ export default function CommunityManagerPage() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const productIdFromUrl = searchParams.get('productId');
+  const resolvedProductId = useResolvedProductId();
   const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
   const [productId, setProductId] = useState('');
   const [count, setCount] = useState(3);
@@ -127,11 +129,15 @@ export default function CommunityManagerPage() {
       setProductId(productIdFromUrl);
       return;
     }
+    if (resolvedProductId) {
+      setProductId(resolvedProductId);
+      return;
+    }
     if (!productId && items.length > 0) {
       const primary = items.find((p) => p.isPrimary) ?? items[0];
       setProductId(primary.id);
     }
-  }, [productsQuery.data, productId, productIdFromUrl]);
+  }, [productsQuery.data, productId, productIdFromUrl, resolvedProductId]);
 
   useEffect(() => {
     if (!preferencesQuery.data || prefsReady) return;

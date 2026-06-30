@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { QUEUE_BRAND_INTERVIEW, QUEUE_COMPETITOR_INTEL, QUEUE_IMAGE_GENERATION } from '../../shared/queue/queue.constants';
+import { ContentModule } from '../content/content.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
 import { ProductModule } from '../product/product.module';
@@ -35,6 +36,7 @@ import { CompetitorIntelProcessor } from './workers/competitor-intel.processor';
 import { CompetitorIntelService } from './competitor-intel.service';
 import { CompetitorIntelController } from './competitor-intel.controller';
 import { ImageGenerationController } from './image-generation.controller';
+import { ImageGenerationService } from './image-generation.service';
 import { WebsiteAnalyzerService } from './website-analyzer.service';
 
 @Module({
@@ -57,6 +59,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     CompetitorsModule,
     ProductModule,
     AssetsModule,
+    ContentModule,
   ],
   controllers: [AgentInterviewController, CompetitorIntelController, ImageGenerationController],
   providers: [
@@ -75,6 +78,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     StubWebsiteAnalyzerAdapter,
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
+    ImageGenerationService,
     {
       provide: WEBSITE_ANALYZER_ADAPTER,
       useFactory: (
@@ -146,6 +150,6 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
       inject: [StubImageGenerationAdapter, OpenRouterImageGenerationAdapter, LlmProviderService],
     },
   ],
-  exports: [AgentInterviewService, CompetitorIntelService],
+  exports: [AgentInterviewService, CompetitorIntelService, ImageGenerationService],
 })
 export class AgentsModule {}

@@ -24,6 +24,8 @@ export interface SocialCopyBatchResponse {
 export interface GenerateResponse {
   id: string;
   status: string;
+  postsGenerated?: number;
+  imagesAttached?: number;
 }
 
 export interface CommunityManagerPreferencesResponse {

@@ -1,5 +1,8 @@
 # Onboarding components
 
-- `AISuggestion` — solicita sugerencia IA por sección (`POST .../sections/:key/suggest`), filtra solo campos del paso actual y muestra etiquetas legibles.
+| Componente | Uso |
+|---|---|
+| `AISuggestion` | Sugerencia IA por sección del perfil de empresa |
+| `BrandProductGuide` | Explica la separación **Perfil de empresa** vs **Onboarding de producto** |
 
-Import: `@/components/onboarding/AISuggestion`
+Import: `@/components/onboarding/AISuggestion`, `@/components/onboarding/BrandProductGuide`

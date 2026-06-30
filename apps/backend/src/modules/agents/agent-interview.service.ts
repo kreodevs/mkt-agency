@@ -38,6 +38,21 @@ export class AgentInterviewService {
     return Promise.all(interviews.map((i) => this.toResponse(i)));
   }
 
+  async findCompletedBrandInterview(
+    tenantId: string,
+    productId: string,
+  ): Promise<AgentInterviewEntity | null> {
+    return this.interviews.findOne({
+      where: {
+        tenantId,
+        productId,
+        agentType: 'brand_interview',
+        status: 'completed',
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async createInterview(
     tenantId: string,
     agentType: AgentType,

@@ -24,6 +24,7 @@ import type { SectionKey } from '@/types/company-profile';
 import { SectionStepForm } from './SectionStepForm';
 import { Card } from '@/components/molecules/Card';
 import { AISuggestion } from '@/components/onboarding/AISuggestion';
+import { BrandProductGuide } from '@/components/onboarding/BrandProductGuide';
 
 export default function OnboardingWizardPage() {
   const navigate = useNavigate();
@@ -176,13 +177,15 @@ export default function OnboardingWizardPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
-        title="Onboarding de empresa"
+        title="Perfil de empresa"
         description={
           isCompleted
-            ? 'Tu perfil está activo. Puedes revisar o editar cualquier sección.'
-            : 'Completa las secciones obligatorias para activar tu perfil (80%)'
+            ? 'Contexto global de marca activo. Para activar la agencia sobre un producto, usa Mis productos.'
+            : 'Completa las secciones obligatorias del perfil de empresa (80%)'
         }
       />
+
+      <BrandProductGuide variant="company" />
 
       {isCompleted && (
         <div className="mb-6 flex items-center gap-3 rounded-[var(--radius)] border border-[var(--success)]/30 bg-[var(--success)]/5 px-[var(--spacing-lg)] py-[var(--spacing-md)]">

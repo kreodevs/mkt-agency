@@ -16,6 +16,7 @@ import {
   ResolvedProfileValues,
 } from '../company-profile/services/profile-section-sync.service';
 import { ContentService } from '../content/content.service';
+import { ImageGenerationService } from '../agents/image-generation.service';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import {
   mergeBrandAndProductBrief,
@@ -69,6 +70,7 @@ export class CommunityManagerService {
     private readonly adapter: SocialCopyAdapterPort,
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
+    private readonly imageGeneration: ImageGenerationService,
     private readonly productService: ProductService,
     private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
@@ -285,6 +287,7 @@ export class CommunityManagerService {
 
       // Save each post as a Content item, spread across next days
       const publishedPosts: string[] = [];
+      let imagesAttached = 0;
       const today = new Date();
       for (let i = 0; i < result.posts.length; i++) {
         const post = result.posts[i];
@@ -304,6 +307,23 @@ export class CommunityManagerService {
 
           post.contentId = content.id;
           publishedPosts.push(content.id);
+
+          if (dto.attachImages !== false && post.visualDescription?.trim()) {
+            try {
+              const imageResult = await this.imageGeneration.attachVisualToContent(
+                tenantId,
+                userId,
+                content.id,
+                post.visualDescription,
+                productContext?.id ?? dto.productId,
+              );
+              if (imageResult?.status === 'completed') {
+                imagesAttached += 1;
+              }
+            } catch (imageError) {
+              this.logger.warn(`Image attach failed for content ${content.id}`, imageError);
+            }
+          }
         } catch (err) {
           this.logger.warn(`Failed to save post "${post.title}" as content: ${err}`);
         }
@@ -320,12 +340,17 @@ export class CommunityManagerService {
       batch.publishedPosts = publishedPosts;
       await this.batches.save(batch);
 
-      return { id: batch.id, status: 'completed' };
+      return {
+        id: batch.id,
+        status: 'completed',
+        postsGenerated: publishedPosts.length,
+        imagesAttached,
+      };
     } catch (error) {
       this.logger.error(`Social copy generation failed: ${error instanceof Error ? error.message : error}`);
       batch.errorMessage = error instanceof Error ? error.message : 'Generation failed';
       await this.batches.save(batch);
-      return { id: batch.id, status: 'failed' };
+      return { id: batch.id, status: 'failed', postsGenerated: 0, imagesAttached: 0 };
     }
   }
 

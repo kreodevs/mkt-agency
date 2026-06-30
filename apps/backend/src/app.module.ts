@@ -48,6 +48,7 @@ import { StrategyModule } from './modules/strategy/strategy.module';
 import { StrategyAdjustmentEntity } from './modules/strategy/infrastructure/typeorm/strategy-adjustment.entity';
 import { CommunityManagerModule } from './modules/community-manager/community-manager.module';
 import { CommunityManagerBatchEntity } from './modules/community-manager/infrastructure/typeorm/community-manager-batch.entity';
+import { AgencyNotificationEntity } from './modules/publication-inbox/infrastructure/typeorm/agency-notification.entity';
 import { TonePresetEntity } from './modules/community-manager/infrastructure/typeorm/tone-preset.entity';
 import { AuditModule } from './modules/audit/audit.module';
 import { CrmModule } from './modules/crm/crm.module';
@@ -68,6 +69,7 @@ import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/l
 import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
 import { ProductModule } from './modules/product/product.module';
 import { ProductOnboardingModule } from './modules/product/product-onboarding.module';
+import { PublicationInboxModule } from './modules/publication-inbox/publication-inbox.module';
 import { ProductEntity } from './modules/product/infrastructure/typeorm/product.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
@@ -150,6 +152,7 @@ import {
           StrategyAdjustmentEntity,
           CommunityManagerBatchEntity,
           TonePresetEntity,
+          AgencyNotificationEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -176,6 +179,7 @@ import {
     DashboardModule,
     StrategyModule,
     CommunityManagerModule,
+    PublicationInboxModule,
     AuditModule,
     SuperadminModule,
     UsersModule,

@@ -9,6 +9,8 @@ import {
   QUEUE_SECTION_SUGGESTION,
   QUEUE_SECURITY_ALERT,
   QUEUE_SSL_PROVISION,
+  QUEUE_AGENCY_WEEKLY_RUN,
+  QUEUE_APPROVAL_REMINDER,
 } from './queue.constants';
 
 @Module({
@@ -30,6 +32,8 @@ import {
       { name: QUEUE_REPORT_GENERATION },
       { name: QUEUE_AUDIT_RETENTION },
       { name: QUEUE_SECURITY_ALERT },
+      { name: QUEUE_AGENCY_WEEKLY_RUN },
+      { name: QUEUE_APPROVAL_REMINDER },
     ),
   ],
   exports: [BullModule],

@@ -35,7 +35,10 @@ export class StrategyController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: TriggerAnalysisDto,
   ): Promise<TriggerAnalysisResponse> {
-    return this.strategyService.triggerAnalysis(user.tenantId!, dto.brandBriefId);
+    return this.strategyService.triggerAnalysis(user.tenantId!, {
+      brandBriefId: dto.brandBriefId,
+      productId: dto.productId,
+    });
   }
 
   @Get('adjustments/:id')

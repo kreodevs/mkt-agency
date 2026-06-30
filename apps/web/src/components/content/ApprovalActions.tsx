@@ -28,6 +28,7 @@ export function ApprovalActions({ contentId, version, disabled }: ApprovalAction
     void queryClient.invalidateQueries({ queryKey: ['content-versions', contentId] });
     void queryClient.invalidateQueries({ queryKey: ['calendar'] });
     void queryClient.invalidateQueries({ queryKey: ['calendar-day'] });
+    void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
   };
 
   const approveMutation = useMutation({

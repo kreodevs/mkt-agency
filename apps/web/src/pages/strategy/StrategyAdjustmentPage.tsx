@@ -18,6 +18,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
+import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
@@ -25,6 +26,7 @@ import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconBu
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 interface Suggestion {
   id: string;
@@ -73,6 +75,7 @@ const HEALTH_CONFIG: Record<string, { icon: typeof TrendingUp; label: string; co
 export default function StrategyAdjustmentPage() {
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const resolvedProductId = useResolvedProductId();
 
   const adjustmentsQuery = useQuery({
     queryKey: ['strategy-adjustments'],
@@ -83,7 +86,7 @@ export default function StrategyAdjustmentPage() {
     mutationFn: () =>
       apiFetch<{ id: string; status: string }>('/strategy/adjustments/analyze', {
         method: 'POST',
-        body: '{}',
+        body: JSON.stringify(resolvedProductId ? { productId: resolvedProductId } : {}),
       }),
     onSuccess: () => {
       toast.success('Análisis iniciado');
@@ -154,6 +157,8 @@ export default function StrategyAdjustmentPage() {
           </Button>
         }
       />
+
+      {resolvedProductId && <ProductContextBanner productId={resolvedProductId} />}
 
       {adjustmentsQuery.isLoading ? (
         <div className="py-20 text-center text-[var(--foreground-muted)]">

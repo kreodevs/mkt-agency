@@ -10,6 +10,8 @@ import { toast } from '@/components/molecules/Sonner';
 import { listImageGenerations, generateImage } from '@/services/agents';
 import { ApiError } from '@/services/api';
 import { InputText } from '@/components/atoms/InputText';
+import { ProductContextBanner } from '@/components/products/ProductContextBanner';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 const STYLE_OPTIONS = [
   { label: 'Sin estilo', value: '' },
@@ -29,6 +31,7 @@ export default function ImageGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('');
   const [size, setSize] = useState('1024x1024');
+  const resolvedProductId = useResolvedProductId();
 
   const historyQuery = useQuery({
     queryKey: ['image-generations'],
@@ -38,7 +41,13 @@ export default function ImageGeneratorPage() {
   const history = historyQuery.data ?? [];
 
   const generateMutation = useMutation({
-    mutationFn: () => generateImage({ prompt: prompt.trim(), style: style || undefined, size }),
+    mutationFn: () =>
+      generateImage({
+        prompt: prompt.trim(),
+        style: style || undefined,
+        size,
+        productId: resolvedProductId,
+      }),
     onSuccess: () => {
       toast.success('Imagen generada');
       setPrompt('');
@@ -63,6 +72,8 @@ export default function ImageGeneratorPage() {
           </Link>
         }
       />
+
+      {resolvedProductId && <ProductContextBanner productId={resolvedProductId} />}
 
       <div className="mx-auto max-w-4xl space-y-6">
         {history.length > 0 && (

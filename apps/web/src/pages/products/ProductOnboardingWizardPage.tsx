@@ -17,6 +17,7 @@ import { Stepper } from '@/components/molecules/Stepper';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductPageInference } from '@/components/products/ProductPageInference';
+import { BrandProductGuide } from '@/components/onboarding/BrandProductGuide';
 import { ProductKeywordSuggestion } from '@/components/products/ProductKeywordSuggestion';
 import { ProductKeywordTagsInput } from '@/components/products/ProductKeywordTagsInput';
 import { SectionStepForm } from '@/pages/onboarding/SectionStepForm';
@@ -303,7 +304,12 @@ export default function ProductOnboardingWizardPage() {
           )}
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button onClick={() => navigate(`/products/${id}`)}>Ver producto</Button>
+            <Button onClick={() => navigate(`/?productId=${id}&welcome=1`)}>
+              Ir a la bandeja de publicación
+            </Button>
+            <Button variant="outline" onClick={() => navigate(`/products/${id}`)}>
+              Ver producto
+            </Button>
             <Button variant="outline" onClick={() => navigate('/products')}>
               Catálogo
             </Button>
@@ -323,6 +329,8 @@ export default function ProductOnboardingWizardPage() {
             : `Configura ${productQuery.data.name} para que los agentes trabajen sobre tu oferta.`
         }
       />
+
+      <BrandProductGuide variant="product" productId={id} />
 
       {isCompleted && (
         <div className="mb-6 flex items-center gap-3 rounded-[var(--radius)] border border-[var(--success)]/30 bg-[var(--success)]/5 px-[var(--spacing-lg)] py-[var(--spacing-md)]">

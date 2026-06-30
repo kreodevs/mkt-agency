@@ -1,9 +1,10 @@
-import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, FileInput, FileSignature, FileText, FolderOpen, Globe, Lightbulb, Megaphone, MessageSquare, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, FileInput, FileSignature, FileText, FolderOpen, Globe, Inbox, Lightbulb, Megaphone, MessageSquare, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
 import { ImpersonationSwitcher } from '@/components/admin/ImpersonationSwitcher';
 import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonationSelect';
+import { ActiveProductSelector } from '@/components/products/ActiveProductSelector';
 import { logout } from '@/services/auth';
 import { useAuthStore } from '@/store/auth';
 import { isImpersonating } from '@/lib/impersonation';
@@ -33,10 +34,10 @@ export const tenantNavigation = [
   {
     title: 'Mi negocio',
     items: [
-      { label: 'Inicio', href: '/', icon: Shield },
+      { label: 'Bandeja', href: '/', icon: Inbox },
       { label: 'Mis productos', href: '/products', icon: Package },
       { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-      { label: 'Marca', href: '/onboarding', icon: ClipboardList },
+      { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
     ],
   },
   {
@@ -90,9 +91,14 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   };
 
   const headerActions = isImpersonating() ? (
-    <ImpersonationSwitcher />
+    <div className="flex items-center gap-3">
+      <ActiveProductSelector />
+      <ImpersonationSwitcher />
+    </div>
   ) : user?.isSuperadmin ? (
     <TenantImpersonationSelect />
+  ) : user?.tenantId ? (
+    <ActiveProductSelector />
   ) : null;
 
   return (

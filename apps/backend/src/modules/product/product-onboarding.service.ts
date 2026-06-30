@@ -11,7 +11,7 @@ import { fetchPageContent, type PageMetadata } from '../../shared/web/page-conte
 import { AgentInterviewService } from '../agents/agent-interview.service';
 import { CompetitorIntelService } from '../agents/competitor-intel.service';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
-import { DEFAULT_CM_PLATFORMS, DEFAULT_CM_POST_COUNT } from '../community-manager/domain/cm-platforms.constants';
+import { DEFAULT_CM_PLATFORMS, ONBOARDING_CM_POST_COUNT } from '../community-manager/domain/cm-platforms.constants';
 import { CompetitorService } from '../competitors/competitor.service';
 import {
   calculateProductOnboardingCompletion,
@@ -29,6 +29,8 @@ import {
 } from './dto/product-onboarding.dto';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductService } from './product.service';
+import { AGENCY_NOTIFICATION_TYPES } from '../publication-inbox/domain/publication-inbox.constants';
+import { PublicationInboxService } from '../publication-inbox/publication-inbox.service';
 
 @Injectable()
 export class ProductOnboardingService {
@@ -43,6 +45,7 @@ export class ProductOnboardingService {
     private readonly competitorIntel: CompetitorIntelService,
     private readonly competitorService: CompetitorService,
     private readonly communityManager: CommunityManagerService,
+    private readonly inboxService: PublicationInboxService,
   ) {}
 
   async getStatus(tenantId: string, productId: string): Promise<ProductOnboardingStatusDto> {
@@ -330,6 +333,18 @@ export class ProductOnboardingService {
 
     const agents = await this.triggerAgents(tenantId, productId, userId);
 
+    await this.inboxService.createNotification({
+      tenantId,
+      productId,
+      type: AGENCY_NOTIFICATION_TYPES.ONBOARDING_COMPLETE,
+      title: 'Tu semana está lista',
+      body: `Onboarding de ${product.name} completado. Revisa y aprueba las publicaciones sugeridas en la bandeja.`,
+      metadata: {
+        productId,
+        communityManagerBatchId: agents.communityManagerBatchId ?? null,
+      },
+    });
+
     return {
       product: {
         id: product.id,
@@ -352,12 +367,18 @@ export class ProductOnboardingService {
     };
 
     try {
-      const interview = await this.agentInterview.createInterview(
-        tenantId,
-        'brand_interview',
-        productId,
-      );
-      result.brandInterviewId = interview.id;
+      const existing = await this.agentInterview.findCompletedBrandInterview(tenantId, productId);
+      if (existing) {
+        result.brandInterviewId = existing.id;
+        result.warnings?.push('Brand Analyst ya completado para este producto.');
+      } else {
+        const interview = await this.agentInterview.createInterview(
+          tenantId,
+          'brand_interview',
+          productId,
+        );
+        result.brandInterviewId = interview.id;
+      }
     } catch (error) {
       if (error instanceof ConflictException) {
         const body = error.getResponse() as { interviewId?: string };
@@ -408,8 +429,9 @@ export class ProductOnboardingService {
       const prefs = await this.communityManager.getPreferences(tenantId);
       const generated = await this.communityManager.generate(tenantId, userId, {
         platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
-        count: prefs.count ?? DEFAULT_CM_POST_COUNT,
+        count: ONBOARDING_CM_POST_COUNT,
         productId,
+        attachImages: true,
       });
       result.communityManagerBatchId = generated.id;
     } catch (error) {

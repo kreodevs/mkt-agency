@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { CM_PLATFORMS } from '../domain/cm-platforms.constants';
 
 export class GenerateSocialCopyDto {
@@ -28,6 +28,10 @@ export class GenerateSocialCopyDto {
   @IsArray()
   @IsString({ each: true })
   topics?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  attachImages?: boolean;
 }
 
 export class UpdateCommunityManagerPreferencesDto {

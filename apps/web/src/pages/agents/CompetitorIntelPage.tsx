@@ -13,13 +13,14 @@ import { listCompetitors } from '@/services/competitors';
 import { ApiError } from '@/services/api';
 import { CompetitorDiscoveryPanel } from '@/components/competitors/CompetitorDiscoveryPanel';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 export default function CompetitorIntelPage() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [pollId, setPollId] = useState<string | null>(null);
   const selectedAnalysisId = searchParams.get('analysis');
-  const productIdFromUrl = searchParams.get('productId');
+  const resolvedProductId = useResolvedProductId();
 
   const analysesQuery = useQuery({
     queryKey: ['competitor-analyses'],
@@ -96,7 +97,7 @@ export default function CompetitorIntelPage() {
         }
       />
 
-      {productIdFromUrl && <ProductContextBanner productId={productIdFromUrl} />}
+      {resolvedProductId && <ProductContextBanner productId={resolvedProductId} />}
 
       <div className="mx-auto max-w-3xl space-y-6">
         {!analysesQuery.isLoading && analyses.length > 0 && (
@@ -144,7 +145,7 @@ export default function CompetitorIntelPage() {
 
         {!hasCompetitors && (
           <CompetitorDiscoveryPanel
-            defaultProductId={productIdFromUrl ?? undefined}
+            defaultProductId={resolvedProductId}
             subtitle="Sin competidores registrados. Elige alcance global, por país o por ciudad."
             onRegistered={() => {
               void queryClient.invalidateQueries({ queryKey: ['competitors'] });

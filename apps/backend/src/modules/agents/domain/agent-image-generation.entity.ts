@@ -26,6 +26,12 @@ export class AgentImageGenerationEntity {
   @Column({ name: 'asset_id', type: 'uuid', nullable: true })
   assetId!: string | null;
 
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
+  @Column({ name: 'content_id', type: 'uuid', nullable: true })
+  contentId!: string | null;
+
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage!: string | null;
 

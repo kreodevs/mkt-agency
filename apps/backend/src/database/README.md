@@ -36,8 +36,24 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000018-CreateProductsAndCampaignProductScope.ts` | `products`, `campaigns.product_id`, `campaigns.scope` |
 | `1730000000019-AddProductIdToContents.ts` | `contents.product_id` |
 | `1730000000020-AddProductIdToFormsLeadsAndInterviews.ts` | `product_id` en forms, leads, agent_interviews |
+| `1730000000021-AddProductWebsiteUrl.ts` | `products.website_url` |
+| `1730000000022-CreateAgencyNotifications.ts` | `agency_notifications` |
+| `1730000000023-AddImageGenerationContentLink.ts` | `product_id`, `content_id` en `agent_image_generations` |
+| `1730000000024-ResetTenantOperationalData.ts` | **One-shot:** trunca datos operativos; conserva `users`, `tenants`, LLM y paquetes. Omitir: `SKIP_OPERATIONAL_DATA_RESET=true` |
 
 Si existe una tabla legacy `products` sin `tenant_id`, la migración 0018 la renombra a `products_legacy` antes de crear el catálogo tenant-scoped.
+
+## Reset de datos operativos (pruebas desde cero)
+
+Migración **`1730000000024-ResetTenantOperationalData`**: al desplegar con `RUN_MIGRATIONS=true` (default en Docker/Dokploy), vacía onboarding, productos, campañas, contenido, agentes, CRM, reportes, etc. **No** borra usuarios ni tenants.
+
+```bash
+# Local (sin Docker)
+./scripts/reset-tenant-operational-data.sh
+
+# Omitir en un deploy concreto
+SKIP_OPERATIONAL_DATA_RESET=true
+```
 
 DataSource: `src/database/data-source.ts`.
 

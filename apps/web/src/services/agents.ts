@@ -56,7 +56,13 @@ export async function listImageGenerations(): Promise<ImageGeneration[]> {
   return apiFetch<ImageGeneration[]>('/agents/image-generation');
 }
 
-export async function generateImage(payload: { prompt: string; style?: string; size?: string }): Promise<ImageGeneration> {
+export async function generateImage(payload: {
+  prompt: string;
+  style?: string;
+  size?: string;
+  productId?: string;
+  contentId?: string;
+}): Promise<ImageGeneration> {
   return apiFetch<ImageGeneration>('/agents/image-generation', {
     method: 'POST',
     body: JSON.stringify(payload),
