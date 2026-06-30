@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, ChevronLeft, Send, Sparkles } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -12,15 +12,15 @@ import { ApiError } from '@/services/api';
 
 export default function BrandInterviewPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [answer, setAnswer] = useState('');
-  const [isNew, setIsNew] = useState(!id);
 
   const interviewQuery = useQuery({
     queryKey: ['agent-interview', id],
     queryFn: () => getInterview(id!),
-    enabled: !!id && !isNew,
+    enabled: !!id,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return false;
@@ -37,8 +37,7 @@ export default function BrandInterviewPage() {
     mutationFn: () => createInterview('brand_interview'),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
-      window.history.replaceState(null, '', `/agents/brand-interview/${result.id}`);
-      setIsNew(false);
+      navigate(`/agents/brand-interview/${result.id}`, { replace: true });
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'Error al iniciar entrevista');
@@ -75,8 +74,18 @@ export default function BrandInterviewPage() {
     </Link>
   );
 
+  if (!id && (createMutation.isPending || createMutation.isSuccess)) {
+    return (
+      <DashboardShell navigationOverride={tenantNavigation}>
+        <div className="py-20 text-center text-[var(--foreground-muted)]">
+          Preparando entrevista...
+        </div>
+      </DashboardShell>
+    );
+  }
+
   // Starting state — no interview yet
-  if (isNew) {
+  if (!id) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
         <PageHeader
@@ -124,7 +133,7 @@ export default function BrandInterviewPage() {
   }
 
   // Error state
-  if (!activeInterview) {
+  if (interviewQuery.isError || !activeInterview) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
         <div className="py-20 text-center">
