@@ -169,6 +169,34 @@ export class AgentInterviewService {
     return this.toResponse(reloaded!);
   }
 
+  async retryBrandBrief(tenantId: string, interviewId: string): Promise<InterviewResponseDto> {
+    const interview = await this.interviews.findOne({
+      where: { id: interviewId, tenantId },
+    });
+    if (!interview) {
+      throw new NotFoundException({ error: 'Entrevista no encontrada', code: 'NOT_FOUND' });
+    }
+    if (interview.status !== 'failed') {
+      throw new BadRequestException({
+        error: 'Solo puedes reintentar entrevistas fallidas',
+        code: 'BAD_REQUEST',
+      });
+    }
+    if (interview.currentStep < interview.totalSteps) {
+      throw new BadRequestException({
+        error: 'Completa todas las preguntas antes de reintentar',
+        code: 'BAD_REQUEST',
+      });
+    }
+
+    interview.status = 'in_progress';
+    interview.errorMessage = null;
+    await this.interviews.save(interview);
+    this.interviewWorker.enqueue(interviewId);
+
+    return this.toResponse(interview);
+  }
+
   private async toResponse(interview: AgentInterviewEntity): Promise<InterviewResponseDto> {
     const msgs = await this.messages.find({
       where: { interviewId: interview.id },

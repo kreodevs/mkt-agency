@@ -59,6 +59,15 @@ export class AgentInterviewController {
     return this.agentInterview.submitAnswer(user.tenantId!, id, body.answer);
   }
 
+  @Post('interviews/:id/retry-brief')
+  @HttpCode(HttpStatus.ACCEPTED)
+  retryBrandBrief(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    return this.agentInterview.retryBrandBrief(user.tenantId!, id);
+  }
+
   @Post('analyze-website')
   async analyzeWebsite(
     @CurrentUser() user: AuthenticatedUser,

@@ -74,6 +74,25 @@ export class CompanyProfileService {
     return this.toProfileResponse(saved);
   }
 
+  /** Fusiona campos del Brand Brief aunque el onboarding ya esté completado. */
+  async mergeFromBrandBrief(tenantId: string, dto: UpdateCompanyProfileDto) {
+    const profile = await this.ensureProfile(tenantId);
+
+    Object.assign(profile, {
+      companyName: dto.companyName ?? profile.companyName,
+      industry: dto.industry ?? profile.industry,
+      website: dto.website ?? profile.website,
+      brandVoice: dto.brandVoice ?? profile.brandVoice,
+      targetAudienceDesc: dto.targetAudienceDesc ?? profile.targetAudienceDesc,
+      competitors: dto.competitors ?? profile.competitors,
+      objectives: dto.objectives ?? profile.objectives,
+      visualPreferences: dto.visualPreferences ?? profile.visualPreferences,
+    });
+
+    const saved = await this.profiles.save(profile);
+    return this.toProfileResponse(saved);
+  }
+
   async listSections(tenantId: string) {
     const profile = await this.ensureProfile(tenantId);
     await this.ensureDefaultSections(profile.id);

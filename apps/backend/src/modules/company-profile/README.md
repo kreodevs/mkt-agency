@@ -2,7 +2,7 @@
 
 Onboarding progresivo del tenant: `/api/v1/company-profile` y `/sections`.
 
-- 5 secciones obligatorias → `completion_percentage` (80% activa perfil).
+- `PATCH /company-profile` bloquea edición si `status === completed`; Brand Analyst usa `mergeFromBrandBrief` para fusionar campos del brief.
 - Evento `CompanyProfileCompleted` en tabla `outbox` (misma transacción).
 - `POST /sections/:key/suggest` → 202 + `assignmentId`; cola BullMQ `section-suggestion`; polling `GET /suggestions/:id`.
 
