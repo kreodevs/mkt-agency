@@ -13,9 +13,10 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 
 Wizard de 7 pasos alineado al de empresa (`/onboarding`):
 
-1. Nombre, tipo, descripción, propuesta de valor, audiencia (obligatorios)
-2. Precio (opcional)
-3. Tags SEO (mín. 3) — scraping de la URL del producto + IA semántica (`POST /products/:id/suggest-keywords` con `{ url }`)
+1. Nombre + **URL del producto** (paso 1) — botón **Analizar e inferir campos** (`POST /products/:id/infer-from-page`)
+2. Tipo, descripción, propuesta de valor, audiencia (prellenables por IA)
+3. Precio (opcional)
+4. Tags SEO (mín. 3) — también generables desde la misma URL
 
 Al completar (`POST /products/:id/onboarding/complete`) se detonan Brand Analyst, descubrimiento de competidores, Competitor Intel y Community Manager con `productId`.
 

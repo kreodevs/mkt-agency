@@ -75,6 +75,18 @@ export interface BulkCreateProductsResponse {
   skipped: number;
 }
 
+export interface InferProductFromPageResponse {
+  sourceUrl: string;
+  inferredFromPage: boolean;
+  name?: string | null;
+  category?: string | null;
+  description?: string | null;
+  valueProposition?: string | null;
+  targetAudience?: string | null;
+  priceRange?: string | null;
+  keywords?: string[];
+}
+
 export interface ProductOnboardingFieldStatus {
   key: string;
   label: string;

@@ -25,6 +25,7 @@ import {
   ProductOnboardingAgentsDto,
   ProductOnboardingStatusDto,
   SuggestProductKeywordsResponseDto,
+  InferProductFromPageResponseDto,
 } from './dto/product-onboarding.dto';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductService } from './product.service';
@@ -55,31 +56,7 @@ export class ProductOnboardingService {
     url?: string,
   ): Promise<SuggestProductKeywordsResponseDto> {
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const targetUrl = url?.trim() || product.websiteUrl?.trim() || '';
-
-    if (!targetUrl) {
-      throw new BadRequestException({
-        error: 'Indica la URL de la página del producto para analizar y generar tags',
-        code: 'VALIDATION_ERROR',
-      });
-    }
-
-    let pageContent: Awaited<ReturnType<typeof fetchPageContent>> | null = null;
-    try {
-      pageContent = await fetchPageContent(targetUrl);
-    } catch (error) {
-      this.logger.warn(`Page fetch failed for product ${productId}`, error);
-      throw new BadRequestException({
-        error: 'No se pudo acceder a la página del producto. Verifica la URL.',
-        code: 'FETCH_ERROR',
-      });
-    }
-
-    if (product.websiteUrl !== pageContent.url) {
-      product.websiteUrl = pageContent.url;
-      await this.products.save(product);
-    }
-
+    const pageContent = await this.fetchProductPage(product, url);
     const keywords = await this.generateSemanticKeywords(product, pageContent);
 
     return {
@@ -87,6 +64,144 @@ export class ProductOnboardingService {
       sourceUrl: pageContent.url,
       generatedFromPage: true,
     };
+  }
+
+  async inferFromPage(
+    tenantId: string,
+    productId: string,
+    url?: string,
+  ): Promise<InferProductFromPageResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const page = await this.fetchProductPage(product, url);
+    const inferred = await this.inferProductProfile(product, page);
+
+    product.name = inferred.name?.trim() || product.name;
+    product.category = inferred.category ?? product.category;
+    product.description = inferred.description ?? product.description;
+    product.valueProposition = inferred.valueProposition ?? product.valueProposition;
+    product.targetAudience = inferred.targetAudience ?? product.targetAudience;
+    product.priceRange = inferred.priceRange ?? product.priceRange;
+    product.keywords = inferred.keywords?.length ? inferred.keywords : product.keywords;
+    product.websiteUrl = page.url;
+    await this.products.save(product);
+
+    return {
+      ...inferred,
+      sourceUrl: page.url,
+      inferredFromPage: true,
+    };
+  }
+
+  private async fetchProductPage(
+    product: ProductEntity,
+    url?: string,
+  ): Promise<Awaited<ReturnType<typeof fetchPageContent>>> {
+    const targetUrl = url?.trim() || product.websiteUrl?.trim() || '';
+
+    if (!targetUrl) {
+      throw new BadRequestException({
+        error: 'Indica la URL de la página del producto',
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    try {
+      const pageContent = await fetchPageContent(targetUrl);
+      if (product.websiteUrl !== pageContent.url) {
+        product.websiteUrl = pageContent.url;
+        await this.products.save(product);
+      }
+      return pageContent;
+    } catch (error) {
+      this.logger.warn(`Page fetch failed for product ${product.id}`, error);
+      throw new BadRequestException({
+        error: 'No se pudo acceder a la página del producto. Verifica la URL.',
+        code: 'FETCH_ERROR',
+      });
+    }
+  }
+
+  private async inferProductProfile(
+    product: ProductEntity,
+    page: Awaited<ReturnType<typeof fetchPageContent>>,
+  ): Promise<Omit<InferProductFromPageResponseDto, 'sourceUrl' | 'inferredFromPage'>> {
+    if (!(await this.llmClient.isConfigured())) {
+      return this.stubInferredProfile(product, page);
+    }
+
+    const systemPrompt =
+      'Eres consultor de marketing para PYMEs en México. Analiza la página de un producto o servicio ' +
+      'e infiere cómo lo describiría un dueño de negocio que NO tiene claro su propuesta de valor. ' +
+      'Redacta en español claro, concreto y orientado a ventas. ' +
+      'NO copies meta tags ni textos legales del footer. Responde SOLO JSON válido.';
+
+    const userPrompt = JSON.stringify({
+      task: 'Inferir perfil comercial del producto para onboarding',
+      currentProductName: product.name,
+      pageReference: { url: page.url, metadata: page.metadata },
+      pageTextSample: page.text.slice(0, 12000),
+      outputFormat: {
+        name: 'nombre comercial sugerido',
+        category: 'physical|digital|service|subscription|other',
+        description: '2-3 frases: qué es y qué problema resuelve',
+        valueProposition: 'por qué elegir este producto frente a alternativas',
+        targetAudience: 'cliente ideal en México',
+        priceRange: 'rango estimado en MXN o null si no hay pistas',
+        keywords: ['8-12 tags SEO para buscar competidores'],
+      },
+    });
+
+    try {
+      const result = await this.llmClient.chatJson<{
+        name?: string;
+        category?: string;
+        description?: string;
+        valueProposition?: string;
+        targetAudience?: string;
+        priceRange?: string | null;
+        keywords?: string[];
+      }>(systemPrompt, userPrompt, { taskType: 'brand_interview', temperature: 0.45 });
+
+      return {
+        name: result.name?.trim() || product.name,
+        category: this.normalizeCategory(result.category),
+        description: result.description?.trim() || null,
+        valueProposition: result.valueProposition?.trim() || null,
+        targetAudience: result.targetAudience?.trim() || null,
+        priceRange: result.priceRange?.trim() || null,
+        keywords: this.normalizeKeywords(result.keywords ?? []),
+      };
+    } catch (error) {
+      this.logger.warn('Product profile inference failed, using fallback', error);
+      return this.stubInferredProfile(product, page);
+    }
+  }
+
+  private stubInferredProfile(
+    product: ProductEntity,
+    page: Awaited<ReturnType<typeof fetchPageContent>>,
+  ): Omit<InferProductFromPageResponseDto, 'sourceUrl' | 'inferredFromPage'> {
+    const title = page.metadata.title ?? page.metadata.ogTitle ?? product.name;
+    const blurb =
+      page.metadata.ogDescription ??
+      page.metadata.metaDescription ??
+      page.text.slice(0, 280);
+
+    return {
+      name: title?.trim() || product.name,
+      category: product.category ?? 'service',
+      description: blurb.trim() || null,
+      valueProposition: blurb.trim() || null,
+      targetAudience: 'Pequeñas y medianas empresas en México que buscan esta solución.',
+      priceRange: null,
+      keywords: this.stubKeywordsFromPage(product, page),
+    };
+  }
+
+  private normalizeCategory(value?: string | null): string | null {
+    const allowed = new Set(['physical', 'digital', 'service', 'subscription', 'other']);
+    const normalized = value?.trim().toLowerCase() ?? '';
+    return allowed.has(normalized) ? normalized : 'service';
   }
 
   private async generateSemanticKeywords(

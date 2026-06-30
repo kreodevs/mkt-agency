@@ -28,6 +28,25 @@ export class SuggestProductKeywordsDto {
   url?: string;
 }
 
+export class InferProductFromPageDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  url?: string;
+}
+
+export class InferProductFromPageResponseDto {
+  sourceUrl!: string;
+  inferredFromPage!: boolean;
+  name?: string | null;
+  category?: string | null;
+  description?: string | null;
+  valueProposition?: string | null;
+  targetAudience?: string | null;
+  priceRange?: string | null;
+  keywords?: string[];
+}
+
 export class ProductOnboardingAgentsDto {
   brandInterviewId?: string | null;
   competitorAnalysisId?: string | null;

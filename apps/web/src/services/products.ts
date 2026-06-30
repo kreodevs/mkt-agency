@@ -8,6 +8,7 @@ import type {
   PaginatedProductsResponse,
   Product,
   ProductOnboardingStatus,
+  InferProductFromPageResponse,
   SuggestProductKeywordsResponse,
   UpdateProductPayload,
 } from '@/types/product';
@@ -73,6 +74,16 @@ export async function suggestProductKeywords(
   payload: { url: string },
 ): Promise<SuggestProductKeywordsResponse> {
   return apiFetch<SuggestProductKeywordsResponse>(`/products/${id}/suggest-keywords`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function inferProductFromPage(
+  id: string,
+  payload: { url: string },
+): Promise<InferProductFromPageResponse> {
+  return apiFetch<InferProductFromPageResponse>(`/products/${id}/infer-from-page`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });

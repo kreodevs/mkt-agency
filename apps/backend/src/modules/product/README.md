@@ -11,6 +11,7 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `PATCH /api/v1/products/:id` — actualizar
 - `POST /api/v1/products/:id/archive` — archivar
 - `GET /api/v1/products/:id/onboarding` — estado del onboarding (% campos, missing, ready)
+- `POST /api/v1/products/:id/infer-from-page` — scrapea URL e infiere nombre, tipo, descripción, propuesta de valor, audiencia, precio y tags
 - `POST /api/v1/products/:id/suggest-keywords` — scrapea URL del producto, analiza contenido/concepto con IA y devuelve tags semánticos (no copia meta keywords del HTML)
 - `POST /api/v1/products/:id/onboarding/complete` — marcar completado y detonar agentes
 

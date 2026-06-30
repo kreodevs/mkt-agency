@@ -16,6 +16,7 @@ import { Progress } from '@/components/molecules/Progress';
 import { Stepper } from '@/components/molecules/Stepper';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
+import { ProductPageInference } from '@/components/products/ProductPageInference';
 import { ProductKeywordSuggestion } from '@/components/products/ProductKeywordSuggestion';
 import { ProductKeywordTagsInput } from '@/components/products/ProductKeywordTagsInput';
 import { SectionStepForm } from '@/pages/onboarding/SectionStepForm';
@@ -26,7 +27,7 @@ import {
   getProductOnboardingStatus,
   updateProduct,
 } from '@/services/products';
-import type { CompleteProductOnboardingResponse } from '@/types/product';
+import type { CompleteProductOnboardingResponse, InferProductFromPageResponse } from '@/types/product';
 
 export default function ProductOnboardingWizardPage() {
   const { id = '' } = useParams();
@@ -37,7 +38,6 @@ export default function ProductOnboardingWizardPage() {
     Record<ProductOnboardingStepKey, Record<string, string>>
   >({} as Record<ProductOnboardingStepKey, Record<string, string>>);
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [websiteUrl, setWebsiteUrl] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [completionResult, setCompletionResult] = useState<CompleteProductOnboardingResponse | null>(
     null,
@@ -62,7 +62,6 @@ export default function ProductOnboardingWizardPage() {
 
     setFormValues(productToFormValues(product));
     setKeywords(product.keywords ?? []);
-    setWebsiteUrl(product.websiteUrl ?? '');
 
     const fields = statusQuery.data?.fields ?? [];
     const firstIncomplete = PRODUCT_ONBOARDING_SECTIONS.findIndex((section) => {
@@ -118,6 +117,38 @@ export default function ProductOnboardingWizardPage() {
     [],
   );
 
+  const productWebsiteUrl = formValues.name?.websiteUrl ?? '';
+
+  const applyInferredFields = (result: InferProductFromPageResponse) => {
+    setFieldError(null);
+    setFormValues((prev) => ({
+      ...prev,
+      name: {
+        name: result.name?.trim() || prev.name?.name || '',
+        websiteUrl: result.sourceUrl,
+      },
+      category: {
+        category: result.category?.trim() || prev.category?.category || 'service',
+      },
+      description: { description: result.description?.trim() || '' },
+      valueProposition: { valueProposition: result.valueProposition?.trim() || '' },
+      targetAudience: { targetAudience: result.targetAudience?.trim() || '' },
+      priceRange: { priceRange: result.priceRange?.trim() || '' },
+    }));
+    if (result.keywords && result.keywords.length > 0) {
+      setKeywords(result.keywords);
+    }
+    void queryClient.invalidateQueries({ queryKey: ['product', id] });
+    void queryClient.invalidateQueries({ queryKey: ['product-onboarding', id] });
+  };
+
+  const setProductWebsiteUrl = (url: string) => {
+    setFormValues((prev) => ({
+      ...prev,
+      name: { ...prev.name, websiteUrl: url },
+    }));
+  };
+
   const handleFieldChange = (name: string, value: string) => {
     if (!currentSection) return;
     setFieldError(null);
@@ -142,7 +173,7 @@ export default function ProductOnboardingWizardPage() {
 
     try {
       await saveMutation.mutateAsync(
-        stepToUpdatePayload(currentSection.key, values, keywords, websiteUrl),
+        stepToUpdatePayload(currentSection.key, values, keywords, productWebsiteUrl),
       );
       toast.success('Paso guardado');
       return true;
@@ -329,11 +360,13 @@ export default function ProductOnboardingWizardPage() {
                 {currentSection.label}
               </h2>
               <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-                {currentSection.key === 'keywords'
-                  ? 'Indica la URL del producto, analiza la página y genera tags semánticos para competidores'
-                  : currentSection.mandatory
-                    ? 'Campo obligatorio para activar agentes sobre este producto'
-                    : 'Opcional — enriquece el contexto de la IA'}
+                {currentSection.key === 'name'
+                  ? 'Indica nombre y URL; la IA puede inferir el resto del perfil comercial'
+                  : currentSection.key === 'keywords'
+                    ? 'Genera o ajusta tags semánticos para descubrir competidores'
+                    : currentSection.mandatory
+                      ? 'Campo obligatorio para activar agentes sobre este producto'
+                      : 'Opcional — enriquece el contexto de la IA'}
               </p>
             </div>
 
@@ -341,9 +374,9 @@ export default function ProductOnboardingWizardPage() {
               <>
                 <ProductKeywordSuggestion
                   productId={id}
-                  initialWebsiteUrl={websiteUrl}
+                  initialWebsiteUrl={productWebsiteUrl}
                   disabled={saveMutation.isPending}
-                  onWebsiteUrlChange={setWebsiteUrl}
+                  onWebsiteUrlChange={setProductWebsiteUrl}
                   onAccept={(suggested) => {
                     setFieldError(null);
                     setKeywords((prev) => {
@@ -367,12 +400,22 @@ export default function ProductOnboardingWizardPage() {
                 />
               </>
             ) : (
-              <SectionStepForm
-                fields={currentSection.fields}
-                values={formValues[currentSection.key] ?? {}}
-                onChange={handleFieldChange}
-                error={fieldError}
-              />
+              <>
+                <SectionStepForm
+                  fields={currentSection.fields}
+                  values={formValues[currentSection.key] ?? {}}
+                  onChange={handleFieldChange}
+                  error={fieldError}
+                />
+                {currentSection.key === 'name' && (
+                  <ProductPageInference
+                    productId={id}
+                    websiteUrl={productWebsiteUrl}
+                    disabled={saveMutation.isPending}
+                    onInferred={applyInferredFields}
+                  />
+                )}
+              </>
             )}
           </div>
         </main>

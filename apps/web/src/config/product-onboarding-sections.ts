@@ -38,6 +38,12 @@ export const PRODUCT_ONBOARDING_SECTIONS: ProductOnboardingSectionConfig[] = [
         placeholder: 'Ej. Plan de consultoría SEO',
         required: true,
       },
+      {
+        name: 'websiteUrl',
+        label: 'URL de la página del producto',
+        type: 'url',
+        placeholder: 'https://tuempresa.com/producto',
+      },
     ],
   },
   {
@@ -127,9 +133,13 @@ export function productToFormValues(product: {
   valueProposition: string | null;
   targetAudience: string | null;
   priceRange: string | null;
+  websiteUrl?: string | null;
 }): Record<ProductOnboardingStepKey, Record<string, string>> {
   return {
-    name: { name: product.name ?? '' },
+    name: {
+      name: product.name ?? '',
+      websiteUrl: product.websiteUrl ?? '',
+    },
     category: { category: product.category ?? '' },
     description: { description: product.description ?? '' },
     valueProposition: { valueProposition: product.valueProposition ?? '' },
@@ -168,7 +178,10 @@ export function stepToUpdatePayload(
 ): Record<string, unknown> {
   switch (key) {
     case 'name':
-      return { name: values.name?.trim() };
+      return {
+        name: values.name?.trim(),
+        ...(values.websiteUrl?.trim() ? { websiteUrl: values.websiteUrl.trim() } : {}),
+      };
     case 'category':
       return { category: values.category?.trim() };
     case 'description':

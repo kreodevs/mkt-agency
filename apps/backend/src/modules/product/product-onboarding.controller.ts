@@ -15,6 +15,8 @@ import { TenantGuard } from '../../shared/guards/tenant.guard';
 import {
   CompleteProductOnboardingResponseDto,
   ProductOnboardingStatusDto,
+  InferProductFromPageDto,
+  InferProductFromPageResponseDto,
   SuggestProductKeywordsDto,
   SuggestProductKeywordsResponseDto,
 } from './dto/product-onboarding.dto';
@@ -41,6 +43,16 @@ export class ProductOnboardingController {
     @Body() dto: SuggestProductKeywordsDto,
   ): Promise<SuggestProductKeywordsResponseDto> {
     return this.productOnboarding.suggestKeywords(user.tenantId!, id, dto.url);
+  }
+
+  @Post(':id/infer-from-page')
+  @HttpCode(HttpStatus.OK)
+  inferFromPage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: InferProductFromPageDto,
+  ): Promise<InferProductFromPageResponseDto> {
+    return this.productOnboarding.inferFromPage(user.tenantId!, id, dto.url);
   }
 
   @Post(':id/onboarding/complete')
