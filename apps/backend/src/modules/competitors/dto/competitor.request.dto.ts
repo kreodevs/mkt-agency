@@ -5,6 +5,7 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   ValidateIf,
   ValidateNested,
@@ -46,6 +47,10 @@ export class DiscoverCompetitorsDto {
   @IsString()
   @MaxLength(120)
   city?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
 }
 
 export class BulkCreateCompetitorsDto {

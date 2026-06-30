@@ -14,6 +14,15 @@ export interface StrategyGenerationContext {
     targetAudienceDesc: string | null;
     objectives: string | null | unknown[];
   };
+  product?: {
+    id: string;
+    name: string;
+    description: string | null;
+    valueProposition: string | null;
+    targetAudience: string | null;
+    keywords: string[];
+    category: string | null;
+  } | null;
 }
 
 export interface GeneratedStrategyResult {

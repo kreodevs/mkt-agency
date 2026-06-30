@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompanyProfileService } from '../company-profile/company-profile.service';
+import { ProductService } from '../product/product.service';
 import { getInterviewQuestion, getInterviewQuestions } from './adapters/interview.questions';
 import { brandBriefToMarkdown } from './brand-brief-markdown.util';
 import { AgentInterviewMessageEntity } from './domain/agent-interview-message.entity';
@@ -25,6 +26,7 @@ export class AgentInterviewService {
     @InjectRepository(AgentInterviewMessageEntity)
     private readonly messages: Repository<AgentInterviewMessageEntity>,
     private readonly companyProfile: CompanyProfileService,
+    private readonly productService: ProductService,
     private readonly interviewWorker: BrandInterviewWorkerService,
   ) {}
 
@@ -39,6 +41,7 @@ export class AgentInterviewService {
   async createInterview(
     tenantId: string,
     agentType: AgentType,
+    productId?: string,
   ): Promise<InterviewResponseDto> {
     const active = await this.interviews.findOne({
       where: { tenantId, agentType, status: 'in_progress' },
@@ -51,11 +54,18 @@ export class AgentInterviewService {
       });
     }
 
+    let productName: string | null = null;
+    if (productId) {
+      const product = await this.productService.findOwnedEntity(tenantId, productId);
+      productName = product.name;
+    }
+
     const questions = getInterviewQuestions(agentType);
     const interview = await this.interviews.save(
       this.interviews.create({
         tenantId,
         agentType,
+        productId: productId ?? null,
         status: 'in_progress',
         currentStep: 0,
         totalSteps: questions.length,
@@ -65,16 +75,20 @@ export class AgentInterviewService {
     );
 
     const firstQuestion = questions[0];
+    const firstContent = productName
+      ? `Enfoque de esta entrevista: **${productName}**. ${firstQuestion.question}`
+      : firstQuestion.question;
+
     await this.messages.save(
       this.messages.create({
         interviewId: interview.id,
         role: 'agent',
-        content: firstQuestion.question,
-        metadata: { hint: firstQuestion.hint, step: 1 },
+        content: firstContent,
+        metadata: { hint: firstQuestion.hint, step: 1, productId: productId ?? null },
       }),
     );
 
-    return this.toResponse(interview);
+    return this.toResponse(interview, productName);
   }
 
   async getInterview(tenantId: string, interviewId: string): Promise<InterviewResponseDto> {
@@ -211,7 +225,10 @@ export class AgentInterviewService {
     this.logger.log(`Reconciled interview ${interview.id}: brief exists, status set to completed`);
   }
 
-  private async toResponse(interview: AgentInterviewEntity): Promise<InterviewResponseDto> {
+  private async toResponse(
+    interview: AgentInterviewEntity,
+    productNameOverride?: string | null,
+  ): Promise<InterviewResponseDto> {
     await this.reconcileStaleFailure(interview);
 
     const msgs = await this.messages.find({
@@ -219,9 +236,21 @@ export class AgentInterviewService {
       order: { createdAt: 'ASC' },
     });
 
+    let productName = productNameOverride ?? null;
+    if (!productName && interview.productId) {
+      try {
+        const product = await this.productService.findOne(interview.tenantId, interview.productId);
+        productName = product.name;
+      } catch {
+        productName = null;
+      }
+    }
+
     return {
       id: interview.id,
       agentType: interview.agentType,
+      productId: interview.productId,
+      productName,
       status: interview.status,
       currentStep: interview.currentStep,
       totalSteps: interview.totalSteps,

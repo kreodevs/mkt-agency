@@ -19,6 +19,9 @@ export class LeadEntity {
   @Column({ name: 'form_submission_id', type: 'uuid', nullable: true })
   formSubmissionId!: string | null;
 
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   email!: string;
 

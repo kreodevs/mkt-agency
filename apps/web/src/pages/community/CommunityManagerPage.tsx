@@ -31,6 +31,7 @@ import {
   saveCommunityManagerPreferences,
   type CmPlatform,
 } from '@/services/community-manager';
+import { listProducts } from '@/services/products';
 
 interface SocialPost {
   id: string;
@@ -92,6 +93,7 @@ const PLATFORM_KEYS = Object.keys(PLATFORM_LABELS) as CmPlatform[];
 export default function CommunityManagerPage() {
   const queryClient = useQueryClient();
   const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
+  const [productId, setProductId] = useState('');
   const [count, setCount] = useState(3);
   const [tone, setTone] = useState('');
   const [topics, setTopics] = useState('');
@@ -109,6 +111,19 @@ export default function CommunityManagerPage() {
     queryKey: ['cm-readiness'],
     queryFn: getCommunityManagerReadiness,
   });
+
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
+
+  useEffect(() => {
+    const items = productsQuery.data?.items ?? [];
+    if (!productId && items.length > 0) {
+      const primary = items.find((p) => p.isPrimary) ?? items[0];
+      setProductId(primary.id);
+    }
+  }, [productsQuery.data, productId]);
 
   useEffect(() => {
     if (!preferencesQuery.data || prefsReady) return;
@@ -143,6 +158,7 @@ export default function CommunityManagerPage() {
         body: JSON.stringify({
           platforms,
           count,
+          productId: productId || undefined,
           tone: tone.trim() || undefined,
           topics: topics
             .split(',')
@@ -209,7 +225,7 @@ export default function CommunityManagerPage() {
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
         title="Community Manager"
-        description="Genera copy diario para redes sociales con IA"
+        description="Genera copy para promocionar un producto concreto en redes sociales"
       />
 
       {readinessQuery.data && readinessQuery.data.completed < readinessQuery.data.total && (
@@ -221,6 +237,25 @@ export default function CommunityManagerPage() {
       {/* Generator form */}
       <Card className="mb-6">
         <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+              Producto a promocionar
+            </label>
+            <select
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
+            >
+              <option value="">Selecciona un producto</option>
+              {(productsQuery.data?.items ?? []).map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                  {product.isPrimary ? ' (principal)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Platform selector */}
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

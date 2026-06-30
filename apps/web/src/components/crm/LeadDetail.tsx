@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Mail, Phone, Building2, Trash2 } from 'lucide-react';
+import { Mail, Phone, Building2, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { Card } from '@/components/molecules/Card';
@@ -14,13 +14,14 @@ function scoreVariant(score: number) {
 
 interface LeadDetailProps {
   lead: Lead | null;
+  productName?: string | null;
   loading?: boolean;
   onClose?: () => void;
   onDelete?: (leadId: string) => void;
   deleting?: boolean;
 }
 
-export function LeadDetail({ lead, loading, onClose, onDelete, deleting }: LeadDetailProps) {
+export function LeadDetail({ lead, productName, loading, onClose, onDelete, deleting }: LeadDetailProps) {
   const interactionsQuery = useQuery({
     queryKey: ['lead-interactions', lead?.id],
     queryFn: () => listLeadInteractions(lead!.id),
@@ -84,6 +85,12 @@ export function LeadDetail({ lead, loading, onClose, onDelete, deleting }: LeadD
           <li className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             {lead.company}
+          </li>
+        )}
+        {productName && (
+          <li className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            {productName}
           </li>
         )}
       </ul>

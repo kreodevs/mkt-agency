@@ -8,6 +8,7 @@ export interface FormFieldDefinition {
 export interface Form {
   id: string;
   tenantId: string;
+  productId: string | null;
   name: string;
   fields: FormFieldDefinition[];
   style: Record<string, unknown>;
@@ -50,6 +51,7 @@ export interface CreateFormPayload {
   fields: FormFieldDefinition[];
   style?: Record<string, unknown>;
   isActive?: boolean;
+  productId?: string | null;
 }
 
 export interface UpdateFormPayload {
@@ -57,6 +59,7 @@ export interface UpdateFormPayload {
   fields?: FormFieldDefinition[];
   style?: Record<string, unknown>;
   isActive?: boolean;
+  productId?: string | null;
 }
 
 export const DEFAULT_FORM_FIELDS: FormFieldDefinition[] = [

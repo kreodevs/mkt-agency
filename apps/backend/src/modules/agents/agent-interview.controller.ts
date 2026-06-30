@@ -39,6 +39,7 @@ export class AgentInterviewController {
     return this.agentInterview.createInterview(
       user.tenantId!,
       body.agentType as AgentType,
+      body.productId,
     );
   }
 

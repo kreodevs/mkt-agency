@@ -16,6 +16,13 @@ import {
   ResolvedProfileValues,
 } from '../company-profile/services/profile-section-sync.service';
 import { ContentService } from '../content/content.service';
+import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
+import {
+  mergeBrandAndProductBrief,
+  toProductContext,
+} from '../product/domain/product-context.util';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
+import { ProductService } from '../product/product.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import {
   SOCIAL_COPY_ADAPTER,
@@ -54,10 +61,15 @@ export class CommunityManagerService {
     private readonly profiles: Repository<CompanyProfileEntity>,
     @InjectRepository(CompanyProfileSectionEntity)
     private readonly profileSections: Repository<CompanyProfileSectionEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productEntities: Repository<ProductEntity>,
+    @InjectRepository(CampaignEntity)
+    private readonly campaigns: Repository<CampaignEntity>,
     @Inject(SOCIAL_COPY_ADAPTER)
     private readonly adapter: SocialCopyAdapterPort,
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
+    private readonly productService: ProductService,
     private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
 
@@ -104,8 +116,22 @@ export class CommunityManagerService {
       ? await this.profileSections.find({ where: { profileId: profile.id } })
       : [];
     const values = this.profileSectionSync.resolveProfileValues(profile, sections);
+    const primaryProduct = await this.productService.findPrimary(tenantId);
+    const productReady =
+      !!primaryProduct &&
+      Boolean(
+        (primaryProduct.description?.trim() || primaryProduct.valueProposition?.trim()) &&
+          primaryProduct.targetAudience?.trim(),
+      );
 
     const items = [
+      {
+        key: 'product',
+        label: 'Producto a promocionar',
+        description: 'Define qué vendes: descripción y audiencia del producto principal.',
+        complete: productReady,
+        href: '/products',
+      },
       {
         key: 'companyName',
         label: 'Nombre de empresa',
@@ -160,19 +186,35 @@ export class CommunityManagerService {
 
   private buildBrandBrief(
     values: ResolvedProfileValues | null,
+    productContext: ReturnType<typeof toProductContext> | null,
   ): Record<string, unknown> | null {
-    if (!values?.companyName?.trim()) {
-      return null;
+    return mergeBrandAndProductBrief(values, productContext);
+  }
+
+  private async resolveProductForGeneration(
+    tenantId: string,
+    productId?: string,
+    campaignId?: string,
+  ): Promise<ReturnType<typeof toProductContext> | null> {
+    if (productId) {
+      const product = await this.productService.findOwnedEntity(tenantId, productId);
+      return toProductContext(product);
     }
-    return {
-      companyName: values.companyName,
-      industry: values.industry,
-      brandVoice: values.brandVoice,
-      targetAudience: values.targetAudienceDesc,
-      objectives: values.objectives,
-      competitors: values.competitors,
-      website: values.website,
-    };
+
+    if (campaignId) {
+      const campaign = await this.campaigns.findOne({ where: { id: campaignId, tenantId } });
+      if (campaign?.productId) {
+        const product = await this.productEntities.findOne({
+          where: { id: campaign.productId, tenantId },
+        });
+        if (product) {
+          return toProductContext(product);
+        }
+      }
+    }
+
+    const primary = await this.productService.findPrimary(tenantId);
+    return primary ? toProductContext(primary) : null;
   }
 
   private async loadResolvedProfile(tenantId: string): Promise<ResolvedProfileValues | null> {
@@ -206,7 +248,13 @@ export class CommunityManagerService {
     const batch = await this.batches.save(
       this.batches.create({
         tenantId,
-        data: { platforms: dto.platforms, tone: dto.tone, topics: dto.topics },
+        data: {
+          platforms: dto.platforms,
+          tone: dto.tone,
+          topics: dto.topics,
+          productId: dto.productId,
+          campaignId: dto.campaignId,
+        },
         posts: [],
         publishedPosts: [],
       }),
@@ -214,18 +262,25 @@ export class CommunityManagerService {
 
     try {
       const resolvedProfile = await this.loadResolvedProfile(tenantId);
-      const brandBrief = this.buildBrandBrief(resolvedProfile);
+      const productContext = await this.resolveProductForGeneration(
+        tenantId,
+        dto.productId,
+        dto.campaignId,
+      );
+      const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
 
-      // Generate social copy via adapter
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await this.adapter.generate({
         tenantId,
         platforms: dto.platforms,
         count: dto.count,
         campaignId: dto.campaignId,
+        productId: productContext?.id ?? dto.productId,
         tone: dto.tone,
         topics: dto.topics,
         brandBrief,
+        productContext: productContext as unknown as Record<string, unknown>,
+        focusProductName: productContext?.name ?? null,
       });
 
       // Save each post as a Content item, spread across next days
@@ -239,6 +294,7 @@ export class CommunityManagerService {
           contentDto.type = 'social';
           contentDto.body = this.formatPostBody(post);
           contentDto.campaignId = dto.campaignId;
+          contentDto.productId = productContext?.id ?? dto.productId;
           // Spread posts across next days (starting tomorrow)
           const scheduleDate = new Date(today);
           scheduleDate.setDate(scheduleDate.getDate() + i + 1);

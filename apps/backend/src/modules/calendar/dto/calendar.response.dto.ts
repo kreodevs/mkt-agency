@@ -20,6 +20,8 @@ export class CalendarDayItemDto {
   status!: ContentStatus;
   campaignId!: string | null;
   campaignName!: string | null;
+  productId!: string | null;
+  productName!: string | null;
   versionId!: string | null;
   versionNumber!: number | null;
   signatureHash!: string | null;

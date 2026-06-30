@@ -9,6 +9,8 @@ export interface InterviewMessageDto {
 export interface InterviewResponseDto {
   id: string;
   agentType: string;
+  productId: string | null;
+  productName: string | null;
   status: string;
   currentStep: number;
   totalSteps: number;

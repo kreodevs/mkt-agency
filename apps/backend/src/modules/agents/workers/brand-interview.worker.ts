@@ -7,8 +7,11 @@ import { QUEUE_BRAND_INTERVIEW } from '../../../shared/queue/queue.constants';
 import { formatWorkerErrorMessage } from '../../../shared/worker-error.util';
 import { CompanyProfileService } from '../../company-profile/company-profile.service';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
+import { toProductContext } from '../../product/domain/product-context.util';
 import { brandBriefToMarkdown } from '../brand-brief-markdown.util';
 import { INTERVIEW_ADAPTER, InterviewAdapterPort } from '../adapters/interview.adapter.port';
+import { InterviewContext } from '../adapters/interview.context';
 import { AgentInterviewEntity } from '../domain/agent-interview.entity';
 import { AgentInterviewMessageEntity } from '../domain/agent-interview-message.entity';
 
@@ -28,6 +31,8 @@ export class BrandInterviewWorkerService {
     private readonly messages: Repository<AgentInterviewMessageEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly products: Repository<ProductEntity>,
     private readonly companyProfile: CompanyProfileService,
     @Inject(INTERVIEW_ADAPTER)
     private readonly adapter: InterviewAdapterPort,
@@ -63,7 +68,24 @@ export class BrandInterviewWorkerService {
         where: { tenantId: interview.tenantId },
       });
 
-      const context = {
+      let productContext: InterviewContext['product'] = null;
+      if (interview.productId) {
+        const product = await this.products.findOne({
+          where: { id: interview.productId, tenantId: interview.tenantId },
+        });
+        if (product) {
+          const ctx = toProductContext(product);
+          productContext = {
+            id: ctx.id,
+            name: ctx.name,
+            description: ctx.description,
+            valueProposition: ctx.valueProposition,
+            targetAudience: ctx.targetAudience,
+          };
+        }
+      }
+
+      const context: InterviewContext = {
         agentType: interview.agentType,
         tenantId: interview.tenantId,
         currentStep: interview.currentStep,
@@ -78,6 +100,7 @@ export class BrandInterviewWorkerService {
           competitors: profile?.competitors ?? null,
           objectives: profile?.objectives ? JSON.stringify(profile.objectives) : null,
         },
+        product: productContext,
       };
 
       const brandBrief =

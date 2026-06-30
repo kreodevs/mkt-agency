@@ -42,6 +42,9 @@ export function BrandInterviewHistory({ interviews }: BrandInterviewHistoryProps
                 })}
               </p>
               <p className="text-xs text-[var(--foreground-muted)]">
+                {interview.productName
+                  ? `Producto: ${interview.productName} · `
+                  : ''}
                 {status === 'completed'
                   ? 'Brand Brief generado'
                   : status === 'failed'

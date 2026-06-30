@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Not, Repository } from 'typeorm';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
+import { ProductService } from '../product/product.service';
 import { ContentStatus } from './domain/content.constants';
 import {
   CreateContentDto,
@@ -39,6 +40,7 @@ export class ContentService {
     private readonly approvals: Repository<ContentApprovalEntity>,
     @InjectRepository(CampaignEntity)
     private readonly campaigns: Repository<CampaignEntity>,
+    private readonly productService: ProductService,
     private readonly dataSource: DataSource,
     private readonly signatureService: DigitalSignatureService,
     private readonly eventSourcing: ContentEventSourcingService,
@@ -67,6 +69,9 @@ export class ContentService {
     if (query.status) {
       qb.andWhere('c.status = :status', { status: query.status });
     }
+    if (query.productId) {
+      qb.andWhere('c.product_id = :productId', { productId: query.productId });
+    }
 
     const [items, total] = await qb.getManyAndCount();
     const responses = await Promise.all(
@@ -85,6 +90,8 @@ export class ContentService {
       await this.ensureCampaign(tenantId, dto.campaignId);
     }
 
+    const productId = await this.resolveProductId(tenantId, dto);
+
     return this.dataSource.transaction(async (manager) => {
       const contentRepo = manager.getRepository(ContentEntity);
       const versionRepo = manager.getRepository(ContentVersionEntity);
@@ -93,6 +100,7 @@ export class ContentService {
         contentRepo.create({
           tenantId,
           campaignId: dto.campaignId ?? null,
+          productId,
           title: dto.title,
           type: dto.type,
           status: 'draft',
@@ -534,7 +542,7 @@ export class ContentService {
     return content;
   }
 
-  private async ensureCampaign(tenantId: string, campaignId: string): Promise<void> {
+  private async ensureCampaign(tenantId: string, campaignId: string): Promise<CampaignEntity> {
     const campaign = await this.campaigns.findOne({ where: { id: campaignId, tenantId } });
     if (!campaign) {
       throw new NotFoundException({
@@ -542,6 +550,30 @@ export class ContentService {
         code: 'NOT_FOUND',
       });
     }
+    return campaign;
+  }
+
+  private async resolveProductId(
+    tenantId: string,
+    dto: Pick<CreateContentDto, 'productId' | 'campaignId'>,
+  ): Promise<string | null> {
+    if (dto.productId) {
+      const product = await this.productService.findOwnedEntity(tenantId, dto.productId);
+      if (product.status !== 'active') {
+        throw new BadRequestException({
+          error: 'Cannot attach content to archived product',
+          code: 'PRODUCT_ARCHIVED',
+        });
+      }
+      return product.id;
+    }
+
+    if (dto.campaignId) {
+      const campaign = await this.ensureCampaign(tenantId, dto.campaignId);
+      return campaign.productId;
+    }
+
+    return null;
   }
 
   private async getCurrentVersion(content: ContentEntity): Promise<ContentVersionEntity> {
@@ -591,6 +623,7 @@ export class ContentService {
       id: content.id,
       tenantId: content.tenantId,
       campaignId: content.campaignId,
+      productId: content.productId ?? null,
       title: content.title,
       type: content.type,
       status: content.status,

@@ -11,9 +11,13 @@ import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
+import { listProducts } from '@/services/products';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
 import { getEffectiveInterviewStatus, hasBrandBriefResult } from '@/utils/brandInterview';
+
+const selectClass =
+  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 function isInterviewProcessing(interview: AgentInterview): boolean {
   if (interview.status !== 'in_progress') return false;
@@ -27,6 +31,22 @@ export default function BrandInterviewPage() {
   const queryClient = useQueryClient();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [answer, setAnswer] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
+
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+    enabled: !id,
+  });
+
+  const products = productsQuery.data?.items ?? [];
+
+  useEffect(() => {
+    if (!selectedProductId && products.length > 0) {
+      const primary = products.find((p) => p.isPrimary) ?? products[0];
+      setSelectedProductId(primary.id);
+    }
+  }, [products, selectedProductId]);
 
   const interviewQuery = useQuery({
     queryKey: ['agent-interview', id],
@@ -58,7 +78,7 @@ export default function BrandInterviewPage() {
   const activeInterview = id ? interviewQuery.data : undefined;
 
   const createMutation = useMutation({
-    mutationFn: () => createInterview('brand_interview'),
+    mutationFn: () => createInterview('brand_interview', selectedProductId || undefined),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
       void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
@@ -165,6 +185,25 @@ export default function BrandInterviewPage() {
                   ? 'Inicia otra ronda de preguntas para actualizar tu Brand Brief.'
                   : 'Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos. Al finalizar, generaré un Brand Brief en markdown.'}
               </p>
+              {!inProgressInterview && products.length > 0 && (
+                <div className="w-full max-w-sm text-left">
+                  <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
+                    Enfocar en producto (opcional)
+                  </label>
+                  <select
+                    className={selectClass}
+                    value={selectedProductId}
+                    onChange={(e) => setSelectedProductId(e.target.value)}
+                  >
+                    <option value="">Marca general</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {inProgressInterview ? (
                 <Link to={`/agents/brand-interview/${inProgressInterview.id}`}>
                   <Button className="gap-2">
@@ -236,11 +275,19 @@ export default function BrandInterviewPage() {
       <PageHeader
         title="Brand Analyst"
         description={
-          isProcessing
-            ? 'Generando tu Brand Brief con IA...'
-            : isSending
-              ? 'Enviando respuesta...'
-              : `Paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
+          activeInterview.productName
+            ? `Entrevista enfocada en ${activeInterview.productName}${
+                isProcessing
+                  ? ' — generando Brand Brief...'
+                  : isSending
+                    ? ' — enviando respuesta...'
+                    : ` — paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
+              }`
+            : isProcessing
+              ? 'Generando tu Brand Brief con IA...'
+              : isSending
+                ? 'Enviando respuesta...'
+                : `Paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
         }
         actions={
           <Link to="/agents">

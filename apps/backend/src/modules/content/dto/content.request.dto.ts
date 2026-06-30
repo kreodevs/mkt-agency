@@ -29,6 +29,10 @@ export class CreateContentDto {
   campaignId?: string;
 
   @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsOptional()
   @IsArray()
   assets?: unknown[];
 
@@ -69,6 +73,10 @@ export class ListContentsQueryDto {
   @IsOptional()
   @IsUUID()
   campaignId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
 
   @IsOptional()
   @IsString()

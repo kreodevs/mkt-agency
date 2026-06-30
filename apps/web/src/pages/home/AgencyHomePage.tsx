@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Lightbulb,
   MessageSquare,
+  Package,
   Sparkles,
   TrendingUp,
   Users,
@@ -377,7 +378,19 @@ export default function AgencyHomePage() {
 
         {/* Row 3: Quick actions */}
         <Card title="Acciones rápidas" subtitle="Lo que puedes hacer ahora">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              to="/products"
+              className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-4 transition-all hover:border-[var(--primary)] hover:shadow-sm"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
+                <Package className="h-5 w-5 text-indigo-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--foreground)]">Mis productos</p>
+                <p className="text-xs text-[var(--foreground-muted)]">Catálogo y campañas</p>
+              </div>
+            </Link>
             <Link
               to="/community"
               className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-4 transition-all hover:border-[var(--primary)] hover:shadow-sm"

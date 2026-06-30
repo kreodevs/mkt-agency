@@ -5,6 +5,7 @@ import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.enti
 import { ContentStatus } from '../content/domain/content.constants';
 import { ContentVersionEntity } from '../content/infrastructure/typeorm/content-version.entity';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import {
   CalendarDayDetailResponseDto,
   CalendarDayItemDto,
@@ -19,6 +20,8 @@ interface ContentCalendarRow {
   status: ContentStatus;
   campaignId: string | null;
   campaignName: string | null;
+  productId: string | null;
+  productName: string | null;
   currentVersionId: string | null;
   scheduledDate: string | null;
   createdAt: Date;
@@ -39,8 +42,9 @@ export class CalendarService {
     tenantId: string,
     month: number,
     year: number,
+    productId?: string,
   ): Promise<CalendarMonthResponseDto> {
-    const rows = await this.fetchCalendarRows(tenantId, month, year);
+    const rows = await this.fetchCalendarRows(tenantId, month, year, productId);
     const byDate = new Map<string, ContentCalendarRow[]>();
 
     for (const row of rows) {
@@ -72,6 +76,7 @@ export class CalendarService {
   async getDayDetail(
     tenantId: string,
     date: string,
+    productId?: string,
   ): Promise<CalendarDayDetailResponseDto> {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new NotFoundException({
@@ -81,7 +86,7 @@ export class CalendarService {
     }
 
     const [year, month] = date.split('-').map(Number);
-    const rows = await this.fetchCalendarRows(tenantId, month, year);
+    const rows = await this.fetchCalendarRows(tenantId, month, year, productId);
     const items = rows
       .filter((row) => this.effectiveDate(row) === date)
       .map((row) => this.toDayItem(row));
@@ -93,10 +98,12 @@ export class CalendarService {
     tenantId: string,
     month: number,
     year: number,
+    productId?: string,
   ): Promise<ContentCalendarRow[]> {
     const qb = this.contents
       .createQueryBuilder('c')
       .leftJoin(CampaignEntity, 'camp', 'camp.id = c.campaign_id')
+      .leftJoin(ProductEntity, 'prod', 'prod.id = c.product_id')
       .leftJoin(ContentVersionEntity, 'v', 'v.id = c.current_version_id')
       .select([
         'c.id AS id',
@@ -105,6 +112,8 @@ export class CalendarService {
         'c.status AS status',
         'c.campaign_id AS "campaignId"',
         'camp.name AS "campaignName"',
+        'c.product_id AS "productId"',
+        'prod.name AS "productName"',
         'c.current_version_id AS "currentVersionId"',
         'c.scheduled_date AS "scheduledDate"',
         'c.created_at AS "createdAt"',
@@ -119,6 +128,10 @@ export class CalendarService {
          AND EXTRACT(YEAR FROM COALESCE(c.scheduled_date, c.created_at)) = :year`,
         { month, year },
       );
+
+    if (productId) {
+      qb.andWhere('c.product_id = :productId', { productId });
+    }
 
     return qb.getRawMany<ContentCalendarRow>();
   }
@@ -151,6 +164,8 @@ export class CalendarService {
       status: row.status,
       campaignId: row.campaignId,
       campaignName: row.campaignName,
+      productId: row.productId,
+      productName: row.productName,
       versionId: row.versionId,
       versionNumber: row.versionNumber,
       signatureHash: row.signatureHash,

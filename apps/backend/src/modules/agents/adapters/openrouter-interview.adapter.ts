@@ -31,6 +31,7 @@ export class OpenRouterInterviewAdapter implements InterviewAdapterPort {
       task: 'Generar la siguiente pregunta de la entrevista de marca.',
       context: {
         companyProfile: context.profile,
+        focusProduct: context.product,
         previouslyAnswered: previousAnswers
           ? `Respuestas previas del usuario:\n${previousAnswers}`
           : 'Primera pregunta de la entrevista.',
@@ -38,7 +39,9 @@ export class OpenRouterInterviewAdapter implements InterviewAdapterPort {
         nextQuestionHint: question.hint,
       },
       instructions:
-        'Toma la pregunta base y adáptala con un tono natural y conversacional. Si tienes respuestas previas, conéctalas.',
+        context.product
+          ? `Toma la pregunta base y adáptala con un tono natural. La entrevista está enfocada en el producto/servicio "${context.product.name}" — conecta las preguntas con ese contexto cuando aplique.`
+          : 'Toma la pregunta base y adáptala con un tono natural y conversacional. Si tienes respuestas previas, conéctalas.',
       step: context.currentStep + 1,
       totalSteps: context.totalSteps,
     });
@@ -60,9 +63,12 @@ export class OpenRouterInterviewAdapter implements InterviewAdapterPort {
       'y genera un Brand Brief profesional en español. Responde SOLO con un objeto JSON válido.';
 
     const userPrompt = JSON.stringify({
-      task: 'Generar un Brand Brief estructurado a partir de las respuestas de la entrevista.',
+      task: context.product
+        ? `Generar un Brand Brief enfocado en el producto/servicio "${context.product.name}".`
+        : 'Generar un Brand Brief estructurado a partir de las respuestas de la entrevista.',
       answers: `{\n${answersText}\n}`,
       profile: context.profile,
+      focusProduct: context.product,
       outputFormat: {
         companyName: 'Nombre de la empresa',
         industry: 'Industria o sector',

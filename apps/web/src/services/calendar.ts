@@ -4,10 +4,17 @@ import type { CalendarDayDetailResponse, CalendarMonthResponse } from '@/types/c
 export async function getCalendarMonth(
   month: number,
   year: number,
+  productId?: string,
 ): Promise<CalendarMonthResponse> {
-  return apiFetch<CalendarMonthResponse>(`/calendar?month=${month}&year=${year}`);
+  const params = new URLSearchParams({ month: String(month), year: String(year) });
+  if (productId) params.set('productId', productId);
+  return apiFetch<CalendarMonthResponse>(`/calendar?${params.toString()}`);
 }
 
-export async function getCalendarDay(date: string): Promise<CalendarDayDetailResponse> {
-  return apiFetch<CalendarDayDetailResponse>(`/calendar/${date}`);
+export async function getCalendarDay(
+  date: string,
+  productId?: string,
+): Promise<CalendarDayDetailResponse> {
+  const suffix = productId ? `?productId=${encodeURIComponent(productId)}` : '';
+  return apiFetch<CalendarDayDetailResponse>(`/calendar/${date}${suffix}`);
 }

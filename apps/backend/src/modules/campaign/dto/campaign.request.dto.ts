@@ -2,13 +2,16 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
 } from 'class-validator';
+import { CAMPAIGN_SCOPES } from '../../product/domain/product.constants';
 
 export class CreateCampaignTemplateDto {
   @IsString()
@@ -92,6 +95,14 @@ export class CreateCampaignDto {
   objective?: string;
 
   @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsOptional()
+  @IsIn([...CAMPAIGN_SCOPES])
+  scope?: (typeof CAMPAIGN_SCOPES)[number];
+
+  @IsOptional()
   @IsString()
   templateId?: string;
 
@@ -138,6 +149,14 @@ export class ListCampaignsQueryDto {
   @IsOptional()
   @IsString()
   platform?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsOptional()
+  @IsIn([...CAMPAIGN_SCOPES])
+  scope?: (typeof CAMPAIGN_SCOPES)[number];
 
   @IsOptional()
   @Type(() => Number)

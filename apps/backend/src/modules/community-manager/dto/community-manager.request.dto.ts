@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { CM_PLATFORMS } from '../domain/cm-platforms.constants';
 
 export class GenerateSocialCopyDto {
@@ -15,6 +15,10 @@ export class GenerateSocialCopyDto {
   @IsOptional()
   @IsString()
   campaignId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
 
   @IsOptional()
   @IsString()

@@ -32,6 +32,7 @@ import { ProposalEntity } from '../modules/proposals/infrastructure/typeorm/prop
 import { ReportEntity } from '../modules/reports/infrastructure/typeorm/report.entity';
 import { SecurityEventEntity } from '../modules/security/infrastructure/typeorm/security-event.entity';
 import { ImpersonationLogEntity } from '../modules/superadmin/infrastructure/typeorm/impersonation-log.entity';
+import { ProductEntity } from '../modules/product/infrastructure/typeorm/product.entity';
 import { TenantEntity } from '../modules/tenant/infrastructure/typeorm/tenant.entity';
 import { UserEntity } from '../shared/infrastructure/typeorm/user.entity';
 import {
@@ -60,6 +61,7 @@ export default new DataSource({
     SectionSuggestionAssignmentEntity,
     CampaignTemplateEntity,
     CampaignEntity,
+    ProductEntity,
     BudgetEntity,
     AudienceEntity,
     CampaignStrategyAssignmentEntity,

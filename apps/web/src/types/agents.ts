@@ -9,6 +9,8 @@ export interface InterviewMessage {
 export interface AgentInterview {
   id: string;
   agentType: string;
+  productId: string | null;
+  productName: string | null;
   status: 'in_progress' | 'completed' | 'failed';
   currentStep: number;
   totalSteps: number;

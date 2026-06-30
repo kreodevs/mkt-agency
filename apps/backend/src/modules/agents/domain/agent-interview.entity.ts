@@ -19,6 +19,9 @@ export class AgentInterviewEntity {
   @Column({ name: 'tenant_id', type: 'uuid' })
   tenantId!: string;
 
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
   @Column({ name: 'agent_type', type: 'varchar', length: 50 })
   agentType!: AgentType;
 

@@ -32,12 +32,17 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       : 'Temas: contenido orgánico variado relevante para la industria del cliente';
 
     const brandContext = context.brandBrief
-      ? `Contexto de marca: ${JSON.stringify(context.brandBrief)}`
+      ? `Contexto de marca y producto: ${JSON.stringify(context.brandBrief)}`
+      : '';
+
+    const productFocus = context.focusProductName
+      ? `IMPORTANTE: Todo el copy debe promocionar exclusivamente el producto/servicio "${context.focusProductName}". No mezcles otros productos del catálogo.`
       : '';
 
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
+      'Si hay un producto en foco, todos los posts deben vender o dar valor sobre ESE producto únicamente. ' +
       'Responde SOLO con JSON válido con esta estructura exacta:\n' +
       JSON.stringify({
         summary: 'resumen de la tanda de publicaciones generadas',
@@ -67,6 +72,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       toneGuide,
       topicsGuide,
       brandContext,
+      productFocus,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
     ]
       .filter(Boolean)

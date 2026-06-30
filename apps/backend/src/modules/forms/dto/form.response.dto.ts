@@ -3,6 +3,7 @@ import type { FormFieldDefinition } from '../infrastructure/typeorm/form.entity'
 export class FormResponseDto {
   id!: string;
   tenantId!: string;
+  productId!: string | null;
   name!: string;
   fields!: FormFieldDefinition[];
   style!: Record<string, unknown>;

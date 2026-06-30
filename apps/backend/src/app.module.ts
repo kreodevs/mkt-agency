@@ -66,6 +66,8 @@ import { PackageModule } from './modules/packages/package.module';
 import { PackageEntity } from './modules/packages/infrastructure/typeorm/package.entity';
 import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
 import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
+import { ProductModule } from './modules/product/product.module';
+import { ProductEntity } from './modules/product/infrastructure/typeorm/product.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
@@ -118,6 +120,7 @@ import {
           SectionSuggestionAssignmentEntity,
           CampaignTemplateEntity,
           CampaignEntity,
+          ProductEntity,
           BudgetEntity,
           AudienceEntity,
           CampaignStrategyAssignmentEntity,
@@ -156,6 +159,7 @@ import {
     PackageModule,
     TenantModule,
     CompanyProfileModule,
+    ProductModule,
     CampaignModule,
     ContentModule,
     CalendarModule,

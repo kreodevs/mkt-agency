@@ -11,6 +11,9 @@ const PackageListPage = lazy(() => import('@/pages/admin/PackageListPage'));
 const LlmProvidersPage = lazy(() => import('@/pages/admin/LlmProvidersPage'));
 const LlmSettingsPage = lazy(() => import('@/pages/admin/LlmSettingsPage'));
 const SecurityEventsPage = lazy(() => import('@/pages/admin/SecurityEventsPage'));
+const ProductListPage = lazy(() => import('@/pages/products/ProductListPage'));
+const ProductCreatePage = lazy(() => import('@/pages/products/ProductCreatePage'));
+const ProductDetailPage = lazy(() => import('@/pages/products/ProductDetailPage'));
 const CampaignListPage = lazy(() => import('@/pages/campaigns/CampaignListPage'));
 const CampaignCreatePage = lazy(() => import('@/pages/campaigns/CampaignCreatePage'));
 const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetailPage'));
@@ -75,6 +78,9 @@ export function AppRouter() {
             <Route path="/strategy" element={<StrategyAdjustmentPage />} />
             <Route path="/community" element={<CommunityManagerPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
+            <Route path="/products" element={<ProductListPage />} />
+            <Route path="/products/new" element={<ProductCreatePage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />
             <Route path="/campaigns/:id" element={<CampaignDetailPage />} />

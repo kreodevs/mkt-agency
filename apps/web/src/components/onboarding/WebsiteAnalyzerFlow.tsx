@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/atoms/Button';
 import type { SectionKey } from '@/types/company-profile';
 import { updateCompanyProfileSection } from '@/services/company-profile';
+import { bulkCreateProducts } from '@/services/products';
 import { analyzeWebsite, type WebsiteAnalysisResult } from '@/services/website-analyzer';
 import { toast } from '@/components/molecules/Sonner';
 
@@ -46,10 +47,31 @@ export default function WebsiteAnalyzerFlow() {
       for (const section of sections) {
         await updateCompanyProfileSection(section.key, section.data);
       }
+
+      const productNames = result.productsServices
+        .split(/[\n;•]|(?:,\s)/)
+        .map((part) => part.replace(/^[-*•\d.)]+\s*/, '').trim())
+        .filter((part) => part.length >= 2);
+
+      if (productNames.length > 0) {
+        await bulkCreateProducts({
+          names: productNames.slice(0, 8),
+          defaultTargetAudience: result.targetAudience,
+          defaultValueProposition: result.valueProposition || result.description,
+          markFirstAsPrimary: true,
+        });
+      } else if (result.companyName.trim()) {
+        await bulkCreateProducts({
+          names: [result.companyName.trim()],
+          defaultTargetAudience: result.targetAudience,
+          defaultValueProposition: result.valueProposition || result.description,
+          markFirstAsPrimary: true,
+        });
+      }
     },
     onSuccess: () => {
-      toast.success('Datos guardados en tu perfil');
-      navigate('/onboarding');
+      toast.success('Perfil y productos guardados');
+      navigate('/products');
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Error al guardar los datos');
@@ -229,7 +251,7 @@ export default function WebsiteAnalyzerFlow() {
           size="lg"
         >
           <Sparkles className="h-4 w-4" />
-          {saveMutation.isPending ? 'Guardando...' : 'Ir al onboarding'}
+          {saveMutation.isPending ? 'Guardando...' : 'Ir a mis productos'}
         </Button>
         <Button
           variant="outline"

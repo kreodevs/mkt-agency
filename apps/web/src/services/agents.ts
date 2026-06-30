@@ -5,10 +5,13 @@ export async function listInterviews(): Promise<AgentInterview[]> {
   return apiFetch<AgentInterview[]>('/agents/interviews');
 }
 
-export async function createInterview(agentType: string): Promise<AgentInterview> {
+export async function createInterview(
+  agentType: string,
+  productId?: string,
+): Promise<AgentInterview> {
   return apiFetch<AgentInterview>('/agents/interviews', {
     method: 'POST',
-    body: JSON.stringify({ agentType }),
+    body: JSON.stringify({ agentType, ...(productId ? { productId } : {}) }),
   });
 }
 

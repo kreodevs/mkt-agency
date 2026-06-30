@@ -18,9 +18,13 @@ export interface CampaignTemplate {
   updatedAt: string;
 }
 
+export type CampaignScope = 'product' | 'brand';
+
 export interface Campaign {
   id: string;
   tenantId: string;
+  productId: string | null;
+  scope: CampaignScope;
   templateId: string | null;
   name: string;
   objective: string | null;
@@ -89,11 +93,15 @@ export interface ListCampaignsParams {
   limit?: number;
   status?: CampaignStatus;
   platform?: string;
+  productId?: string;
+  scope?: CampaignScope;
 }
 
 export interface CreateCampaignPayload {
   name: string;
   objective?: string;
+  productId?: string;
+  scope?: CampaignScope;
   templateId?: string;
   platforms?: string[];
   totalBudget?: number;
@@ -129,6 +137,8 @@ export interface CampaignAgentReadiness {
 
 export interface AutoGenerateCampaignPayload {
   mode?: CampaignExecutionMode;
+  productId?: string;
+  scope?: CampaignScope;
 }
 
 export interface AutoGenerateCampaignResponse {

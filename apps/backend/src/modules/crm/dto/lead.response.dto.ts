@@ -20,6 +20,7 @@ export class LeadResponseDto {
   stage!: LeadStage;
   metadata!: Record<string, unknown>;
   formSubmissionId!: string | null;
+  productId!: string | null;
   createdAt!: string;
   updatedAt!: string;
   recentInteractions?: LeadInteractionResponseDto[];

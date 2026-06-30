@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from '@/components/organisms/DataTabl
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { listContents } from '@/services/content';
+import { listProducts } from '@/services/products';
 import type { Content, ContentStatus, ContentType } from '@/types/content';
 
 const STATUS_OPTIONS: Array<{ label: string; value: '' | ContentStatus }> = [
@@ -45,14 +46,29 @@ export default function ContentListPage() {
   const campaignId = searchParams.get('campaignId') ?? '';
   const [statusFilter, setStatusFilter] = useState<'' | ContentStatus>('');
   const [typeFilter, setTypeFilter] = useState<'' | ContentType>('');
+  const [productFilter, setProductFilter] = useState('');
+
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
+
+  const productMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const product of productsQuery.data?.items ?? []) {
+      map.set(product.id, product.name);
+    }
+    return map;
+  }, [productsQuery.data?.items]);
 
   const contentsQuery = useQuery({
-    queryKey: ['contents', { campaignId, status: statusFilter, type: typeFilter }],
+    queryKey: ['contents', { campaignId, status: statusFilter, type: typeFilter, productId: productFilter }],
     queryFn: () =>
       listContents({
         page: 1,
         limit: 100,
         campaignId: campaignId || undefined,
+        productId: productFilter || undefined,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
       }),
@@ -83,6 +99,12 @@ export default function ContentListPage() {
         width: '100px',
       },
       {
+        field: 'productId',
+        header: 'Producto',
+        body: (row: Content) =>
+          row.productId ? productMap.get(row.productId) ?? '—' : 'Marca',
+      },
+      {
         field: 'status',
         header: 'Estado',
         sortable: true,
@@ -100,7 +122,7 @@ export default function ContentListPage() {
         body: (row: Content) => row.currentVersion?.versionNumber ?? '—',
       },
     ],
-    [],
+    [productMap],
   );
 
   const newHref = campaignId ? `/contents/new?campaignId=${campaignId}` : '/contents/new';
@@ -147,6 +169,19 @@ export default function ContentListPage() {
             {TYPE_OPTIONS.map((option) => (
               <option key={option.label} value={option.value}>
                 {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={filterSelectClass}
+            value={productFilter}
+            onChange={(e) => setProductFilter(e.target.value)}
+            aria-label="Filtrar por producto"
+          >
+            <option value="">Todos los productos</option>
+            {(productsQuery.data?.items ?? []).map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name}
               </option>
             ))}
           </select>

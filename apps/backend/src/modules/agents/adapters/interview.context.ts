@@ -15,4 +15,11 @@ export interface InterviewContext {
     competitors?: string | null;
     objectives?: string | null;
   };
+  product?: {
+    id: string;
+    name: string;
+    description: string | null;
+    valueProposition: string | null;
+    targetAudience: string | null;
+  } | null;
 }

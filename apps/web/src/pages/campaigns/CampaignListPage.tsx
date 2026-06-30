@@ -13,6 +13,7 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { listCampaigns, updateCampaign, getCampaignAgentReadiness, autoGenerateCampaign } from '@/services/campaigns';
+import { listProducts } from '@/services/products';
 import type { Campaign, CampaignExecutionMode, CampaignStatus } from '@/types/campaign';
 import { DEFAULT_CAMPAIGN_EXECUTION_MODE } from '@/utils/campaignExecutionMode';
 
@@ -58,18 +59,25 @@ export default function CampaignListPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [statusFilter, setStatusFilter] = useState<'' | CampaignStatus>('');
   const [platformFilter, setPlatformFilter] = useState('');
+  const [productFilter, setProductFilter] = useState('');
   const [executionMode, setExecutionMode] = useState<CampaignExecutionMode>(
     DEFAULT_CAMPAIGN_EXECUTION_MODE,
   );
 
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
+
   const campaignsQuery = useQuery({
-    queryKey: ['campaigns', { status: statusFilter, platform: platformFilter }],
+    queryKey: ['campaigns', { status: statusFilter, platform: platformFilter, productId: productFilter }],
     queryFn: () =>
       listCampaigns({
         page: 1,
         limit: 100,
         status: statusFilter || undefined,
         platform: platformFilter || undefined,
+        productId: productFilter || undefined,
       }),
   });
 
@@ -79,7 +87,12 @@ export default function CampaignListPage() {
   });
 
   const autoGenerateMutation = useMutation({
-    mutationFn: () => autoGenerateCampaign({ mode: executionMode }),
+    mutationFn: () =>
+      autoGenerateCampaign({
+        mode: executionMode,
+        productId: productFilter || undefined,
+        scope: productFilter ? 'product' : 'product',
+      }),
     onSuccess: (result) => {
       toast.success(result.message);
       void queryClient.invalidateQueries({ queryKey: ['campaigns'] });
@@ -107,6 +120,13 @@ export default function CampaignListPage() {
   });
 
   const tableData = useMemo(() => campaignsQuery.data?.items ?? [], [campaignsQuery.data?.items]);
+  const productMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const product of productsQuery.data?.items ?? []) {
+      map.set(product.id, product.name);
+    }
+    return map;
+  }, [productsQuery.data?.items]);
 
   const columns: DataTableColumn[] = useMemo(
     () => [
@@ -123,6 +143,13 @@ export default function CampaignListPage() {
             {row.name}
           </Link>
         ),
+      },
+      {
+        field: 'scope',
+        header: 'Enfoque',
+        width: '120px',
+        body: (row: Campaign) =>
+          row.scope === 'brand' ? 'Marca' : productMap.get(row.productId ?? '') ?? 'Producto',
       },
       {
         field: 'status',
@@ -154,7 +181,7 @@ export default function CampaignListPage() {
         body: (row: Campaign) => formatDate(row.createdAt),
       },
     ],
-    [],
+    [productMap],
   );
 
   return (
@@ -219,6 +246,20 @@ export default function CampaignListPage() {
             {PLATFORM_OPTIONS.map((option) => (
               <option key={option.label} value={option.value}>
                 {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={filterSelectClass}
+            value={productFilter}
+            onChange={(e) => setProductFilter(e.target.value)}
+            aria-label="Filtrar por producto"
+          >
+            <option value="">Todos los productos</option>
+            {(productsQuery.data?.items ?? []).map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name}
               </option>
             ))}
           </select>

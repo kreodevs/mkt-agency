@@ -69,6 +69,9 @@ export class SubmitFormHandler {
         if (command.payload.company) {
           lead.company = String(command.payload.company);
         }
+        if (form.productId) {
+          lead.productId = form.productId;
+        }
         await manager.save(lead);
 
         await manager.save(
@@ -76,7 +79,7 @@ export class SubmitFormHandler {
             leadId: lead.id,
             type: 'duplicate_submission',
             description: 'Form resubmitted with the same email',
-            metadata: { formId: form.id, submissionId: submission.id },
+            metadata: { formId: form.id, submissionId: submission.id, productId: form.productId },
           }),
         );
       } else {
@@ -86,9 +89,10 @@ export class SubmitFormHandler {
           name: command.payload.name ? String(command.payload.name) : null,
           phone: command.payload.phone ? String(command.payload.phone) : null,
           company: command.payload.company ? String(command.payload.company) : null,
+          productId: form.productId,
           stage: 'prospect',
           score: 0,
-          metadata: {},
+          metadata: form.productId ? { productId: form.productId } : {},
           formSubmissionId: submission.id,
         });
         lead = await manager.save(lead);
@@ -98,7 +102,7 @@ export class SubmitFormHandler {
             leadId: lead.id,
             type: 'form_capture',
             description: 'Lead captured from embedded form',
-            metadata: { formId: form.id, submissionId: submission.id },
+            metadata: { formId: form.id, submissionId: submission.id, productId: form.productId },
           }),
         );
       }

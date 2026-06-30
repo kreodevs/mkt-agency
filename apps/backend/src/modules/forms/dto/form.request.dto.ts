@@ -9,6 +9,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -51,6 +52,10 @@ export class CreateFormDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string | null;
 }
 
 export class UpdateFormDto {
@@ -74,6 +79,10 @@ export class UpdateFormDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string | null;
 }
 
 export class SubmitFormDto {

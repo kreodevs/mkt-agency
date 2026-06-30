@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
+import { ProductModule } from '../product/product.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
@@ -19,6 +20,7 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
   imports: [
     AuthSharedModule,
     LlmModule,
+    ProductModule,
     CompanyProfileModule,
     TypeOrmModule.forFeature([
       CompetitorEntity,

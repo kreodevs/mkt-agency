@@ -21,6 +21,9 @@ export class FormEntity {
   @Column({ name: 'tenant_id', type: 'uuid' })
   tenantId!: string;
 
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 

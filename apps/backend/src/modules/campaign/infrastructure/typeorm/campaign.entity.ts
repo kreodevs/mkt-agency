@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CampaignStatus } from '../../domain/campaign.constants';
+import type { CampaignScope } from '../../../product/domain/product.constants';
 
 @Entity({ name: 'campaigns' })
 export class CampaignEntity {
@@ -14,6 +15,12 @@ export class CampaignEntity {
 
   @Column({ name: 'tenant_id', type: 'uuid' })
   tenantId!: string;
+
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'product' })
+  scope!: CampaignScope;
 
   @Column({ name: 'template_id', type: 'uuid', nullable: true })
   templateId!: string | null;

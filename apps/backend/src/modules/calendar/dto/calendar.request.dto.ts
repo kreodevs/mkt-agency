@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 
 export class GetCalendarQueryDto {
   @Type(() => Number)
@@ -13,4 +13,8 @@ export class GetCalendarQueryDto {
   @Min(2000)
   @Max(2100)
   year!: number;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
 }

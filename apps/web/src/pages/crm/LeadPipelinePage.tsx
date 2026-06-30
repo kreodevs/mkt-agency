@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { LeadDetail } from '@/components/crm/LeadDetail';
@@ -8,15 +8,36 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { changeLeadStage, deleteLead, getLead, listLeads } from '@/services/leads';
+import { listProducts } from '@/services/products';
 import type { LeadStage } from '@/types/lead.constants';
+
+const selectClass =
+  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function LeadPipelinePage() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [productFilter, setProductFilter] = useState('');
+
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
+
+  const products = productsQuery.data?.items ?? [];
+  const productNameById = useMemo(
+    () => new Map(products.map((p) => [p.id, p.name])),
+    [products],
+  );
 
   const leadsQuery = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => listLeads({ page: 1, limit: 100 }),
+    queryKey: ['leads', productFilter],
+    queryFn: () =>
+      listLeads({
+        page: 1,
+        limit: 100,
+        ...(productFilter ? { productId: productFilter } : {}),
+      }),
   });
 
   const leadDetailQuery = useQuery({
@@ -53,12 +74,35 @@ export default function LeadPipelinePage() {
   });
 
   const leads = leadsQuery.data?.items ?? [];
+  const selectedLead = leadDetailQuery.data ?? null;
+  const selectedProductName = selectedLead?.productId
+    ? productNameById.get(selectedLead.productId) ?? null
+    : null;
 
   return (
     <DashboardShell>
       <PageHeader
         title="Pipeline CRM"
-        description="Leads capturados desde formularios — score IA y etapas Kanban"
+        description="Leads capturados desde formularios — filtra por producto, score IA y etapas Kanban"
+        actions={
+          <div className="min-w-[200px]">
+            <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
+              Filtrar por producto
+            </label>
+            <select
+              className={selectClass}
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value)}
+            >
+              <option value="">Todos los productos</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-5">
@@ -67,6 +111,7 @@ export default function LeadPipelinePage() {
             leads={leads}
             loading={leadsQuery.isLoading}
             selectedId={selectedId}
+            productNameById={productNameById}
             onStageChange={(id, stage) => stageMutation.mutate({ id, stage })}
             onSelectLead={setSelectedId}
           />
@@ -74,7 +119,8 @@ export default function LeadPipelinePage() {
 
         <div className="lg:col-span-2">
           <LeadDetail
-            lead={leadDetailQuery.data ?? null}
+            lead={selectedLead}
+            productName={selectedProductName}
             loading={!!selectedId && leadDetailQuery.isLoading}
             onClose={() => setSelectedId(null)}
             onDelete={(id) => deleteMutation.mutate(id)}

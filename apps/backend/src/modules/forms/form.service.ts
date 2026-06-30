@@ -5,6 +5,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ProductService } from '../product/product.service';
 import {
   CreateFormDto,
   SubmitFormDto,
@@ -32,6 +33,7 @@ export class FormService {
     private readonly submissions: Repository<FormSubmissionEntity>,
     private readonly submitFormHandler: SubmitFormHandler,
     private readonly config: ConfigService,
+    private readonly productService: ProductService,
   ) {}
 
   async list(
@@ -55,10 +57,12 @@ export class FormService {
   }
 
   async create(tenantId: string, dto: CreateFormDto): Promise<FormResponseDto> {
-    const snippetJs = this.buildSnippetJs('PLACEHOLDER', dto.fields);
+    const productId = await this.resolveProductId(tenantId, dto.productId);
+    const snippetJs = this.buildSnippetJs('PLACEHOLDER', dto.fields, productId);
     const saved = await this.forms.save(
       this.forms.create({
         tenantId,
+        productId,
         name: dto.name,
         fields: dto.fields,
         style: dto.style ?? {},
@@ -67,7 +71,7 @@ export class FormService {
       }),
     );
 
-    saved.snippetJs = this.buildSnippetJs(saved.id, saved.fields);
+    saved.snippetJs = this.buildSnippetJs(saved.id, saved.fields, saved.productId);
     await this.forms.save(saved);
 
     return this.toResponse(saved);
@@ -89,8 +93,11 @@ export class FormService {
     if (dto.fields !== undefined) form.fields = dto.fields;
     if (dto.style !== undefined) form.style = dto.style;
     if (dto.isActive !== undefined) form.isActive = dto.isActive;
+    if (dto.productId !== undefined) {
+      form.productId = await this.resolveProductId(tenantId, dto.productId);
+    }
 
-    form.snippetJs = this.buildSnippetJs(form.id, form.fields);
+    form.snippetJs = this.buildSnippetJs(form.id, form.fields, form.productId);
     const saved = await this.forms.save(form);
     return this.toResponse(saved);
   }
@@ -102,7 +109,7 @@ export class FormService {
 
   async getSnippet(tenantId: string, id: string): Promise<FormSnippetResponseDto> {
     const form = await this.findOwnedForm(tenantId, id);
-    const snippetJs = form.snippetJs ?? this.buildSnippetJs(form.id, form.fields);
+    const snippetJs = form.snippetJs ?? this.buildSnippetJs(form.id, form.fields, form.productId);
 
     return {
       formId: form.id,
@@ -155,6 +162,7 @@ export class FormService {
     return {
       id: form.id,
       tenantId: form.tenantId,
+      productId: form.productId,
       name: form.name,
       fields: form.fields,
       style: form.style,
@@ -179,14 +187,20 @@ export class FormService {
     return this.config.get<string>('API_PUBLIC_URL', 'http://localhost:3000/api/v1');
   }
 
-  private buildSnippetJs(formId: string, fields: FormEntity['fields']): string {
+  private buildSnippetJs(
+    formId: string,
+    fields: FormEntity['fields'],
+    productId?: string | null,
+  ): string {
     const apiBase = this.apiBaseUrl();
     const fieldConfig = JSON.stringify(fields);
+    const productIdLiteral = productId ? `"${productId}"` : 'null';
 
     return `(function(){
   var FORM_ID = "${formId}";
   var API = "${apiBase}/forms/" + FORM_ID + "/submit";
   var FIELDS = ${fieldConfig};
+  var PRODUCT_ID = ${productIdLiteral};
 
   function renderForm(container) {
     if (!container) return;
@@ -221,6 +235,7 @@ export class FormService {
         var el = form.querySelector("[name='" + field.name + "']");
         data[field.name] = el ? el.value : "";
       });
+      if (PRODUCT_ID) data.productId = PRODUCT_ID;
       fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -260,5 +275,17 @@ export class FormService {
       .join('');
 
     return `<div id="mkt-form-${formId}" style="font-family:sans-serif;max-width:420px">${inputs}<button type="button" style="background:${primary};color:#fff;border:0;padding:8px 16px;border-radius:6px">Usar snippet JS para envío</button></div>`;
+  }
+
+  private async resolveProductId(
+    tenantId: string,
+    productId?: string | null,
+  ): Promise<string | null> {
+    if (productId === undefined || productId === null) {
+      return null;
+    }
+
+    await this.productService.findOwnedEntity(tenantId, productId);
+    return productId;
   }
 }

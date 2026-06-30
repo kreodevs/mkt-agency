@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Globe, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Checkbox } from '@/components/atoms/Checkbox';
@@ -8,6 +8,7 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { bulkCreateCompetitors, discoverCompetitors } from '@/services/competitors';
+import { listProducts } from '@/services/products';
 import type { CompetitorDiscoveryScope, DiscoveredCompetitor } from '@/types/competitors';
 
 const SCOPE_OPTIONS: Array<{
@@ -45,13 +46,19 @@ interface CompetitorDiscoveryPanelProps {
 export function CompetitorDiscoveryPanel({
   onRegistered,
   title = 'Buscar competidores con IA',
-  subtitle = 'Usa tu perfil de empresa y Brand Brief para sugerir competidores del mismo rubro (no retail genérico).',
+  subtitle = 'Usa tu producto y Brand Brief para sugerir competidores del mismo rubro.',
 }: CompetitorDiscoveryPanelProps) {
   const [scope, setScope] = useState<CompetitorDiscoveryScope>('country');
+  const [productId, setProductId] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [results, setResults] = useState<DiscoveredCompetitor[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+
+  const productsQuery = useQuery({
+    queryKey: ['products'],
+    queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
 
   const discoverMutation = useMutation({
     mutationFn: () =>
@@ -59,6 +66,7 @@ export function CompetitorDiscoveryPanel({
         scope,
         country: scope === 'global' ? undefined : country.trim(),
         city: scope === 'city' ? city.trim() : undefined,
+        productId: productId || undefined,
       }),
     onSuccess: (response) => {
       setResults(response.items);
@@ -114,6 +122,22 @@ export function CompetitorDiscoveryPanel({
   return (
     <Card title={title} subtitle={subtitle}>
       <div className="space-y-4">
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium text-[var(--foreground)]">Producto (opcional)</span>
+          <select
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
+            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
+          >
+            <option value="">Contexto general de marca</option>
+            {(productsQuery.data?.items ?? []).map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="grid gap-2 sm:grid-cols-3">
           {SCOPE_OPTIONS.map((option) => {
             const Icon = option.icon;

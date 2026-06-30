@@ -18,11 +18,15 @@ import {
 } from './adapters/competitor-discovery.adapter.port';
 import type { MentionSentiment } from './domain/competitor.constants';
 import {
-  extractProductSummary,
   filterIrrelevantCompetitors,
   formatIndustryLabel,
   hasMinimalDiscoveryContext,
 } from './domain/competitor-discovery-context.util';
+import {
+  productSummaryForDiscovery,
+  toProductContext,
+} from '../product/domain/product-context.util';
+import { ProductService } from '../product/product.service';
 import {
   BulkCreateCompetitorsDto,
   CreateCompetitorDto,
@@ -56,6 +60,7 @@ export class CompetitorService {
     @Inject(COMPETITOR_DISCOVERY_ADAPTER)
     private readonly discoveryAdapter: CompetitorDiscoveryAdapterPort,
     private readonly companyProfile: CompanyProfileService,
+    private readonly productService: ProductService,
     private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
 
@@ -259,6 +264,12 @@ export class CompetitorService {
 
     const existing = await this.competitors.find({ where: { tenantId } });
 
+    let productContext = null;
+    if (dto.productId) {
+      const product = await this.productService.findOwnedEntity(tenantId, dto.productId);
+      productContext = toProductContext(product);
+    }
+
     return {
       scope: dto.scope,
       country,
@@ -266,11 +277,15 @@ export class CompetitorService {
       companyName: values.companyName,
       industry: values.industry,
       industryLabel: formatIndustryLabel(values.industry),
-      targetAudience: values.targetAudienceDesc,
+      targetAudience: productContext?.targetAudience ?? values.targetAudienceDesc,
       website: values.website,
       brandVoice: values.brandVoice,
       objectives: values.objectives,
-      productSummary: extractProductSummary(values, interview?.brandBrief),
+      productSummary: productSummaryForDiscovery(
+        productContext,
+        values,
+        interview?.brandBrief ?? null,
+      ),
       brandBriefExcerpt,
       existingCompetitorNames: existing.map((item) => item.name),
     };

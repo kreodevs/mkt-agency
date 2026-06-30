@@ -13,6 +13,7 @@ interface LeadPipelineProps {
   leads: Lead[];
   loading?: boolean;
   selectedId?: string | null;
+  productNameById?: Map<string, string>;
   onStageChange: (leadId: string, stage: LeadStage) => void;
   onSelectLead: (leadId: string) => void;
 }
@@ -21,6 +22,7 @@ export function LeadPipeline({
   leads,
   loading,
   selectedId,
+  productNameById,
   onStageChange,
   onSelectLead,
 }: LeadPipelineProps) {
@@ -70,6 +72,11 @@ export function LeadPipeline({
                 <StatusPill status={scoreVariant(lead.score)} size="sm">
                   {lead.score}/100
                 </StatusPill>
+              )}
+              {lead?.productId && productNameById?.get(lead.productId) && (
+                <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
+                  {productNameById.get(lead.productId)}
+                </span>
               )}
               {lead && (
                 <span className="text-[10px] uppercase text-[var(--foreground-muted)]">

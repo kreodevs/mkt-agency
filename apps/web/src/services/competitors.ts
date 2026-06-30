@@ -31,6 +31,7 @@ export async function discoverCompetitors(payload: {
   scope: CompetitorDiscoveryScope;
   country?: string;
   city?: string;
+  productId?: string;
 }): Promise<DiscoverCompetitorsResponse> {
   return apiFetch<DiscoverCompetitorsResponse>('/competitors/discover', {
     method: 'POST',

@@ -20,6 +20,7 @@ export interface Content {
   id: string;
   tenantId: string;
   campaignId: string | null;
+  productId: string | null;
   title: string;
   type: ContentType;
   status: ContentStatus;
@@ -39,6 +40,7 @@ export interface PaginatedContentsResponse {
 
 export interface ListContentsParams {
   campaignId?: string;
+  productId?: string;
   type?: ContentType;
   status?: ContentStatus;
   page?: number;

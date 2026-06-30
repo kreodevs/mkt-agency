@@ -31,11 +31,12 @@ export const superadminNavigation = [
 
 export const tenantNavigation = [
   {
-    title: 'Mi empresa',
+    title: 'Mi negocio',
     items: [
       { label: 'Inicio', href: '/', icon: Shield },
+      { label: 'Mis productos', href: '/products', icon: Package },
       { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-      { label: 'Onboarding', href: '/onboarding', icon: ClipboardList },
+      { label: 'Marca', href: '/onboarding', icon: ClipboardList },
     ],
   },
   {

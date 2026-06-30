@@ -3,8 +3,8 @@
 | Ruta | Hub |
 |------|-----|
 | `/agents` | Catálogo con estado e historial por agente |
-| `/agents/brand-interview` | Historial + nueva entrevista |
-| `/agents/brand-interview/:id` | Chat + Brand Brief |
+| `/agents/brand-interview` | Historial + nueva entrevista (selector de producto opcional) |
+| `/agents/brand-interview/:id` | Chat + Brand Brief (muestra producto si aplica) |
 | `/agents/competitor-intel` | Historial + reporte + nuevo análisis; búsqueda IA de competidores si no hay registros |
 | `/agents/image-generator` | Galería + formulario de generación |
 

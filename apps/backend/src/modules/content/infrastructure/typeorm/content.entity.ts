@@ -18,6 +18,9 @@ export class ContentEntity {
   @Column({ name: 'campaign_id', type: 'uuid', nullable: true })
   campaignId!: string | null;
 
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
+
   @Column({ type: 'varchar', length: 500 })
   title!: string;
 

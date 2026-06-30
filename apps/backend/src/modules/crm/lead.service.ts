@@ -64,6 +64,10 @@ export class LeadService {
       );
     }
 
+    if (query.productId) {
+      qb.andWhere('l.product_id = :productId', { productId: query.productId });
+    }
+
     const [items, total] = await qb.getManyAndCount();
 
     return {
@@ -181,6 +185,7 @@ export class LeadService {
       stage: lead.stage,
       metadata: lead.metadata,
       formSubmissionId: lead.formSubmissionId,
+      productId: lead.productId,
       createdAt: lead.createdAt.toISOString(),
       updatedAt: lead.updatedAt.toISOString(),
     };

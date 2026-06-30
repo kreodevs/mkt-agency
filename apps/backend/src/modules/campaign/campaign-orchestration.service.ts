@@ -8,7 +8,6 @@ import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/t
 import {
   isCompanyProfileReady,
   ProfileSectionSyncService,
-  ResolvedProfileValues,
 } from '../company-profile/services/profile-section-sync.service';
 import { CommunityManagerBatchEntity } from '../community-manager/infrastructure/typeorm/community-manager-batch.entity';
 import { DEFAULT_CM_PLATFORMS } from '../community-manager/domain/cm-platforms.constants';
@@ -16,6 +15,14 @@ import { CompetitorEntity } from '../competitors/infrastructure/typeorm/competit
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { StrategyAdjustmentEntity } from '../strategy/infrastructure/typeorm/strategy-adjustment.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
+import {
+  buildCampaignObjective,
+  isProductReadyForCampaign,
+  toProductContext,
+} from '../product/domain/product-context.util';
+import type { CampaignScope } from '../product/domain/product.constants';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
+import { ProductService } from '../product/product.service';
 import { PLATFORMS } from './domain/campaign.constants';
 import {
   CampaignExecutionMode,
@@ -60,7 +67,10 @@ export class CampaignOrchestrationService {
     private readonly contents: Repository<ContentEntity>,
     @InjectRepository(CampaignEntity)
     private readonly campaigns: Repository<CampaignEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productEntities: Repository<ProductEntity>,
     private readonly campaignService: CampaignService,
+    private readonly productService: ProductService,
     private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
 
@@ -104,18 +114,28 @@ export class CampaignOrchestrationService {
       ? await this.profileSections.find({ where: { profileId: profile.id } })
       : [];
     const resolvedProfile = this.profileSectionSync.resolveProfileValues(profile, profileSections);
-    const objective = this.buildObjective(resolvedProfile);
-    const companyLabel = resolvedProfile.companyName?.trim() || 'Mi empresa';
+
+    const scope: CampaignScope = dto.scope ?? 'product';
+    const product = await this.resolveProductForGeneration(tenantId, scope, dto.productId);
+    const productContext = product ? toProductContext(product) : null;
+
+    const objective = buildCampaignObjective(productContext, resolvedProfile);
+    const label =
+      scope === 'brand'
+        ? resolvedProfile.companyName?.trim() || 'Marca'
+        : (product?.name ?? resolvedProfile.companyName?.trim()) || 'Mi producto';
     const dateLabel = new Intl.DateTimeFormat('es-MX', {
       month: 'short',
       year: 'numeric',
     }).format(new Date());
-    const name = `${companyLabel} — Campaña IA ${dateLabel}`;
+    const name = `${label} — Campaña IA ${dateLabel}`;
 
     const campaign = await this.campaignService.create(tenantId, {
       name,
       objective,
       platforms,
+      productId: product?.id,
+      scope,
     });
 
     const linkedContentCount = await this.linkCommunityContent(tenantId, campaign.id);
@@ -259,11 +279,25 @@ export class CampaignOrchestrationService {
       order: { createdAt: 'DESC' },
     });
 
+    const activeProductCount = await this.productEntities.count({
+      where: { tenantId, status: 'active' },
+    });
+    const primaryProduct = await this.productService.findPrimary(tenantId);
+    const productReady = isProductReadyForCampaign(primaryProduct);
+
     return [
       {
+        key: 'products',
+        label: 'Catálogo de productos',
+        description: 'Al menos un producto activo con descripción y audiencia.',
+        complete: activeProductCount > 0 && productReady,
+        href: '/products',
+        required: true,
+      },
+      {
         key: 'profile',
-        label: 'Perfil de empresa',
-        description: 'Onboarding completado: empresa, industria, web, voz y audiencia.',
+        label: 'Configuración de marca',
+        description: 'Contexto corporativo: empresa, industria, web y voz de marca.',
         complete: profileComplete,
         href: '/onboarding',
         required: true,
@@ -326,14 +360,37 @@ export class CampaignOrchestrationService {
     return ['instagram', 'linkedin', 'google'];
   }
 
-  private buildObjective(values: ResolvedProfileValues): string {
-    if (values.objectives.length > 0) {
-      return `Campaña multicanal alineada a: ${values.objectives.slice(0, 3).join('; ')}`;
+  private async resolveProductForGeneration(
+    tenantId: string,
+    scope: CampaignScope,
+    productId?: string,
+  ): Promise<ProductEntity | null> {
+    if (scope === 'brand') {
+      return null;
     }
-    if (values.targetAudienceDesc?.trim()) {
-      return `Generar awareness y conversión con ${values.targetAudienceDesc.trim()}`;
+
+    if (productId) {
+      return this.productService.findOwnedEntity(tenantId, productId);
     }
-    return 'Campaña multicanal generada automáticamente a partir del contexto de agentes IA';
+
+    const primary = await this.productService.findPrimary(tenantId);
+    if (primary) {
+      return primary;
+    }
+
+    const fallback = await this.productEntities.findOne({
+      where: { tenantId, status: 'active' },
+      order: { createdAt: 'ASC' },
+    });
+
+    if (!fallback) {
+      throw new BadRequestException({
+        error: 'Registra al menos un producto antes de generar la campaña automática',
+        code: 'PRODUCT_REQUIRED',
+      });
+    }
+
+    return fallback;
   }
 
   private async linkCommunityContent(tenantId: string, campaignId: string): Promise<number> {

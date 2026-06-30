@@ -22,9 +22,12 @@ export interface SocialCopyBatch {
 export interface SocialCopyContext {
   tenantId: string;
   brandBrief?: Record<string, unknown> | null;
+  productContext?: Record<string, unknown> | null;
+  focusProductName?: string | null;
   platforms: string[];
   count: number;
   campaignId?: string;
+  productId?: string;
   tone?: string;
   topics?: string[];
 }

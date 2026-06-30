@@ -29,6 +29,10 @@ export class ListLeadsQueryDto {
   formId?: string;
 
   @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)

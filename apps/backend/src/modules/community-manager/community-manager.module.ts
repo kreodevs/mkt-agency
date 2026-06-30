@@ -4,6 +4,9 @@ import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { ContentModule } from '../content/content.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
+import { ProductModule } from '../product/product.module';
+import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
@@ -27,8 +30,11 @@ import { TonePresetController } from './tone-preset.controller';
       TenantEntity,
       CompanyProfileEntity,
       CompanyProfileSectionEntity,
+      ProductEntity,
+      CampaignEntity,
     ]),
     CompanyProfileModule,
+    ProductModule,
     LlmModule,
     ContentModule,
   ],

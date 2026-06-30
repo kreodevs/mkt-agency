@@ -14,6 +14,8 @@ import { CompetitorEntity } from '../competitors/infrastructure/typeorm/competit
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { StrategyAdjustmentEntity } from '../strategy/infrastructure/typeorm/strategy-adjustment.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
+import { ProductModule } from '../product/product.module';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { OpenRouterStrategyAdapter } from './adapters/openrouter-strategy.adapter';
 import {
   STRATEGY_ADAPTER,
@@ -41,6 +43,7 @@ import { StrategyGeneratorWorkerService } from './workers/strategy-generator.wor
     QueueModule,
     LlmModule,
     CompanyProfileModule,
+    ProductModule,
     TypeOrmModule.forFeature([
       CampaignTemplateEntity,
       CampaignEntity,
@@ -56,6 +59,7 @@ import { StrategyGeneratorWorkerService } from './workers/strategy-generator.wor
       AgentCompetitorAnalysisEntity,
       TenantEntity,
       ContentEntity,
+      ProductEntity,
     ]),
   ],
   controllers: [CampaignTemplateController, CampaignController, AudienceController],

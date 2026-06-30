@@ -19,14 +19,15 @@ export class CalendarController {
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: GetCalendarQueryDto,
   ): Promise<CalendarMonthResponseDto> {
-    return this.calendarService.getMonth(user.tenantId!, query.month, query.year);
+    return this.calendarService.getMonth(user.tenantId!, query.month, query.year, query.productId);
   }
 
   @Get(':date')
   getDayDetail(
     @CurrentUser() user: AuthenticatedUser,
     @Param('date') date: string,
+    @Query('productId') productId?: string,
   ): Promise<CalendarDayDetailResponseDto> {
-    return this.calendarService.getDayDetail(user.tenantId!, date);
+    return this.calendarService.getDayDetail(user.tenantId!, date, productId);
   }
 }

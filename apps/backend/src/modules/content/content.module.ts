@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
+import { ProductModule } from '../product/product.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
 import { ContentController } from './content.controller';
@@ -15,6 +16,7 @@ import { DigitalSignatureService } from './services/digital-signature.service';
 @Module({
   imports: [
     AuthSharedModule,
+    ProductModule,
     TypeOrmModule.forFeature([
       ContentEntity,
       ContentVersionEntity,

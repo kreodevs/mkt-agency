@@ -22,6 +22,7 @@ export interface Lead {
   stage: LeadStage;
   metadata: Record<string, unknown>;
   formSubmissionId: string | null;
+  productId: string | null;
   createdAt: string;
   updatedAt: string;
   recentInteractions?: LeadInteraction[];
@@ -43,6 +44,7 @@ export interface ListLeadsParams {
   stage?: LeadStage;
   minScore?: number;
   formId?: string;
+  productId?: string;
   page?: number;
   limit?: number;
 }

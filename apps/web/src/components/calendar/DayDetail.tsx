@@ -89,6 +89,11 @@ export function DayDetail({ date, items, loading, onClose }: DayDetailProps) {
                 <span className="text-xs uppercase text-[var(--foreground-muted)]">
                   {item.type}
                 </span>
+                {item.productName && (
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
+                    {item.productName}
+                  </span>
+                )}
               </div>
 
               {item.campaignName && (

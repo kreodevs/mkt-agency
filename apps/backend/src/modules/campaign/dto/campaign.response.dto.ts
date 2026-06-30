@@ -1,4 +1,5 @@
 import { CampaignStatus } from '../domain/campaign.constants';
+import type { CampaignScope } from '../../product/domain/product.constants';
 import { StrategyAssignmentStatus } from '../infrastructure/typeorm/campaign-strategy-assignment.entity';
 
 export class CampaignTemplateResponseDto {
@@ -36,6 +37,8 @@ export class BudgetResponseDto {
 export class CampaignResponseDto {
   id!: string;
   tenantId!: string;
+  productId!: string | null;
+  scope!: CampaignScope;
   templateId!: string | null;
   name!: string;
   objective!: string | null;

@@ -25,6 +25,8 @@ import { CampaignEntity } from './infrastructure/typeorm/campaign.entity';
 import { CampaignStrategyAssignmentEntity } from './infrastructure/typeorm/campaign-strategy-assignment.entity';
 import { CampaignTemplateEntity } from './infrastructure/typeorm/campaign-template.entity';
 import { StrategyGeneratorWorkerService } from './workers/strategy-generator.worker';
+import { ProductService } from '../product/product.service';
+import type { CampaignScope } from '../product/domain/product.constants';
 
 @Injectable()
 export class CampaignService {
@@ -38,6 +40,7 @@ export class CampaignService {
     @InjectRepository(CampaignStrategyAssignmentEntity)
     private readonly strategyAssignments: Repository<CampaignStrategyAssignmentEntity>,
     private readonly strategyWorker: StrategyGeneratorWorkerService,
+    private readonly productService: ProductService,
   ) {}
 
   async list(
@@ -62,6 +65,14 @@ export class CampaignService {
       qb.andWhere('c.platforms @> :platform', {
         platform: JSON.stringify([query.platform]),
       });
+    }
+
+    if (query.productId) {
+      qb.andWhere('c.product_id = :productId', { productId: query.productId });
+    }
+
+    if (query.scope) {
+      qb.andWhere('c.scope = :scope', { scope: query.scope });
     }
 
     const [items, total] = await qb.getManyAndCount();
@@ -90,12 +101,22 @@ export class CampaignService {
       }
     }
 
+    const scope: CampaignScope = dto.scope ?? 'product';
+    const { productId, objective } = await this.resolveCampaignProductContext(
+      tenantId,
+      scope,
+      dto.productId,
+      dto.objective ?? template?.objective ?? null,
+    );
+
     const saved = await this.campaigns.save(
       this.campaigns.create({
         tenantId,
+        productId,
+        scope,
         templateId: dto.templateId ?? null,
         name: dto.name,
-        objective: dto.objective ?? template?.objective ?? null,
+        objective,
         status: 'draft',
         totalBudget:
           dto.totalBudget !== undefined ? String(dto.totalBudget) : null,
@@ -282,6 +303,49 @@ export class CampaignService {
     return campaign;
   }
 
+  private async resolveCampaignProductContext(
+    tenantId: string,
+    scope: CampaignScope,
+    productIdInput: string | undefined,
+    objectiveInput: string | null,
+  ): Promise<{ productId: string | null; objective: string | null }> {
+    if (scope === 'brand') {
+      return { productId: null, objective: objectiveInput };
+    }
+
+    if (productIdInput) {
+      const product = await this.productService.findOwnedEntity(tenantId, productIdInput);
+      if (product.status !== 'active') {
+        throw new BadRequestException({
+          error: 'Cannot create campaign for archived product',
+          code: 'PRODUCT_ARCHIVED',
+        });
+      }
+
+      const objective =
+        objectiveInput ??
+        product.valueProposition ??
+        (product.description ? `Promocionar ${product.name}` : null);
+
+      return { productId: product.id, objective };
+    }
+
+    const primary = await this.productService.findPrimary(tenantId);
+    if (!primary) {
+      throw new BadRequestException({
+        error: 'Registra al menos un producto antes de crear una campaña',
+        code: 'PRODUCT_REQUIRED',
+      });
+    }
+
+    const objective =
+      objectiveInput ??
+      primary.valueProposition ??
+      (primary.description ? `Promocionar ${primary.name}` : null);
+
+    return { productId: primary.id, objective };
+  }
+
   private toResponse(
     campaign: CampaignEntity,
     budgetRows?: BudgetEntity[],
@@ -289,6 +353,8 @@ export class CampaignService {
     const response: CampaignResponseDto = {
       id: campaign.id,
       tenantId: campaign.tenantId,
+      productId: campaign.productId ?? null,
+      scope: campaign.scope ?? 'product',
       templateId: campaign.templateId,
       name: campaign.name,
       objective: campaign.objective,

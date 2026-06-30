@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { toProductContext } from '../../product/domain/product-context.util';
+import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
 import { QUEUE_CAMPAIGN_STRATEGY } from '../../../shared/queue/queue.constants';
 import {
   STRATEGY_ADAPTER,
@@ -30,6 +32,8 @@ export class StrategyGeneratorWorkerService {
     private readonly budgets: Repository<BudgetEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly products: Repository<ProductEntity>,
     @Inject(STRATEGY_ADAPTER)
     private readonly strategyAdapter: StrategyAdapterPort,
     @InjectQueue(QUEUE_CAMPAIGN_STRATEGY)
@@ -75,6 +79,13 @@ export class StrategyGeneratorWorkerService {
         (await this.profiles.findOne({ where: { tenantId: assignment.tenantId } })) ??
         null;
 
+      const productEntity = campaign.productId
+        ? await this.products.findOne({
+            where: { id: campaign.productId, tenantId: assignment.tenantId },
+          })
+        : null;
+      const productContext = productEntity ? toProductContext(productEntity) : null;
+
       const generated = await this.strategyAdapter.generate({
         tenantId: assignment.tenantId,
         campaign: {
@@ -88,9 +99,21 @@ export class StrategyGeneratorWorkerService {
           companyName: profile?.companyName ?? null,
           industry: profile?.industry ?? null,
           brandVoice: profile?.brandVoice ?? null,
-          targetAudienceDesc: profile?.targetAudienceDesc ?? null,
+          targetAudienceDesc:
+            productContext?.targetAudience ?? profile?.targetAudienceDesc ?? null,
           objectives: profile?.objectives ?? null,
         },
+        product: productContext
+          ? {
+              id: productContext.id,
+              name: productContext.name,
+              description: productContext.description,
+              valueProposition: productContext.valueProposition,
+              targetAudience: productContext.targetAudience,
+              keywords: productContext.keywords,
+              category: productContext.category,
+            }
+          : null,
       });
 
       await this.budgets.delete({ campaignId: campaign.id, proposedByAi: true });

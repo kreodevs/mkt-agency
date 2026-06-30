@@ -13,6 +13,7 @@ function buildQuery(params: ListLeadsParams): string {
   if (params.stage) search.set('stage', params.stage);
   if (params.minScore !== undefined) search.set('minScore', String(params.minScore));
   if (params.formId) search.set('formId', params.formId);
+  if (params.productId) search.set('productId', params.productId);
   if (params.page) search.set('page', String(params.page));
   if (params.limit) search.set('limit', String(params.limit));
   const qs = search.toString();

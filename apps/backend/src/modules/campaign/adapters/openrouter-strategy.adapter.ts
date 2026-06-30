@@ -21,6 +21,10 @@ export class OpenRouterStrategyAdapter implements StrategyAdapterPort {
       task: 'Generar estrategia de campaña y presupuestos por plataforma.',
       campaign: context.campaign,
       companyProfile: context.companyProfile,
+      product: context.product,
+      instruction: context.product
+        ? `La campaña promociona el producto "${context.product.name}". Toda la estrategia y creatividades deben centrarse en ese producto.`
+        : 'Campaña de marca corporativa.',
     });
 
     const result = await this.llm.chatJson<GeneratedStrategyResult>(

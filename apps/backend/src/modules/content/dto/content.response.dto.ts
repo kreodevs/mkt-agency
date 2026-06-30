@@ -18,6 +18,7 @@ export class ContentResponseDto {
   id!: string;
   tenantId!: string;
   campaignId!: string | null;
+  productId!: string | null;
   title!: string;
   type!: string;
   status!: ContentStatus;
