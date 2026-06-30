@@ -1,15 +1,31 @@
 import {
+  BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import type { MentionSentiment } from './domain/competitor.constants';
-import { CreateCompetitorDto, ListMentionsQueryDto } from './dto/competitor.request.dto';
+import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { CompanyProfileService } from '../company-profile/company-profile.service';
+import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import {
+  COMPETITOR_DISCOVERY_ADAPTER,
+  CompetitorDiscoveryAdapterPort,
+} from './adapters/competitor-discovery.adapter.port';
+import type { MentionSentiment } from './domain/competitor.constants';
+import {
+  BulkCreateCompetitorsDto,
+  CreateCompetitorDto,
+  DiscoverCompetitorsDto,
+  ListMentionsQueryDto,
+} from './dto/competitor.request.dto';
+import {
+  BulkCreateCompetitorsResponseDto,
   CompetitorListResponseDto,
   CompetitorMentionResponseDto,
   CompetitorResponseDto,
+  DiscoverCompetitorsResponseDto,
   PaginatedMentionsResponseDto,
 } from './dto/competitor.response.dto';
 import { CompetitorMentionEntity } from './infrastructure/typeorm/competitor-mention.entity';
@@ -22,6 +38,11 @@ export class CompetitorService {
     private readonly competitors: Repository<CompetitorEntity>,
     @InjectRepository(CompetitorMentionEntity)
     private readonly mentions: Repository<CompetitorMentionEntity>,
+    @InjectRepository(CompanyProfileEntity)
+    private readonly profiles: Repository<CompanyProfileEntity>,
+    @Inject(COMPETITOR_DISCOVERY_ADAPTER)
+    private readonly discoveryAdapter: CompetitorDiscoveryAdapterPort,
+    private readonly companyProfile: CompanyProfileService,
   ) {}
 
   async list(tenantId: string): Promise<CompetitorListResponseDto> {
@@ -47,13 +68,115 @@ export class CompetitorService {
     );
 
     await this.seedDemoMentions(saved);
+    await this.syncProfileCompetitorsText(tenantId);
 
     return this.toCompetitorResponse(saved);
+  }
+
+  async bulkCreate(
+    tenantId: string,
+    dto: BulkCreateCompetitorsDto,
+  ): Promise<BulkCreateCompetitorsResponseDto> {
+    const existing = await this.competitors.find({ where: { tenantId } });
+    const existingNames = new Set(existing.map((item) => item.name.trim().toLowerCase()));
+
+    const created: CompetitorResponseDto[] = [];
+    let skipped = 0;
+
+    for (const item of dto.items) {
+      const name = item.name.trim();
+      const key = name.toLowerCase();
+      if (!name || existingNames.has(key)) {
+        skipped += 1;
+        continue;
+      }
+
+      const saved = await this.competitors.save(
+        this.competitors.create({
+          tenantId,
+          name,
+          website: item.website?.trim() ?? null,
+          industry: item.industry?.trim() ?? null,
+        }),
+      );
+      await this.seedDemoMentions(saved);
+      existingNames.add(key);
+      created.push(this.toCompetitorResponse(saved));
+    }
+
+    if (created.length > 0) {
+      await this.syncProfileCompetitorsText(tenantId);
+    }
+
+    return { created, skipped };
+  }
+
+  async discover(
+    tenantId: string,
+    dto: DiscoverCompetitorsDto,
+  ): Promise<DiscoverCompetitorsResponseDto> {
+    const country = dto.country?.trim() ?? null;
+    const city = dto.city?.trim() ?? null;
+
+    if (dto.scope === 'country' && !country) {
+      throw new BadRequestException({
+        error: 'Indica el país para la búsqueda',
+        code: 'BAD_REQUEST',
+      });
+    }
+    if (dto.scope === 'city' && (!country || !city)) {
+      throw new BadRequestException({
+        error: 'Indica país y ciudad para la búsqueda',
+        code: 'BAD_REQUEST',
+      });
+    }
+
+    const profile = await this.profiles.findOne({ where: { tenantId } });
+    const items = await this.discoveryAdapter.discover({
+      scope: dto.scope,
+      country,
+      city,
+      companyName: profile?.companyName ?? null,
+      industry: profile?.industry ?? null,
+      targetAudience: profile?.targetAudienceDesc ?? null,
+      website: profile?.website ?? null,
+    });
+
+    return {
+      scope: dto.scope,
+      country,
+      city,
+      items: items.map((item) => ({
+        name: item.name,
+        website: item.website ?? null,
+        industry: item.industry ?? null,
+        rationale: item.rationale ?? null,
+      })),
+    };
+  }
+
+  async buildCompetitorsText(tenantId: string): Promise<string> {
+    const items = await this.competitors.find({
+      where: { tenantId },
+      order: { name: 'ASC' },
+    });
+    if (items.length === 0) {
+      return '';
+    }
+    return items
+      .map((item) => {
+        const parts = [item.name];
+        if (item.website) parts.push(item.website);
+        if (item.industry) parts.push(item.industry);
+        return parts.join(' — ');
+      })
+      .join('\n');
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
     const competitor = await this.findOwnedCompetitor(tenantId, id);
     await this.competitors.remove(competitor);
+    await this.syncProfileCompetitorsText(tenantId);
   }
 
   async listMentions(
@@ -87,6 +210,11 @@ export class CompetitorService {
       page,
       limit,
     };
+  }
+
+  private async syncProfileCompetitorsText(tenantId: string): Promise<void> {
+    const text = await this.buildCompetitorsText(tenantId);
+    await this.companyProfile.syncCompetitorsText(tenantId, text);
   }
 
   private async seedDemoMentions(competitor: CompetitorEntity): Promise<void> {

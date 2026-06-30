@@ -1,4 +1,14 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateCompetitorDto {
   @IsString()
@@ -21,4 +31,27 @@ export class ListMentionsQueryDto {
   @IsString()
   @MaxLength(50)
   sentiment?: string;
+}
+
+export class DiscoverCompetitorsDto {
+  @IsIn(['global', 'country', 'city'])
+  scope!: 'global' | 'country' | 'city';
+
+  @ValidateIf((dto) => dto.scope === 'country' || dto.scope === 'city')
+  @IsString()
+  @MaxLength(120)
+  country?: string;
+
+  @ValidateIf((dto) => dto.scope === 'city')
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+}
+
+export class BulkCreateCompetitorsDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateCompetitorDto)
+  items!: CreateCompetitorDto[];
 }

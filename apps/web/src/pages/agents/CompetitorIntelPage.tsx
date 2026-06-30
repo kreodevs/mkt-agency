@@ -9,7 +9,9 @@ import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import { listCompetitorAnalyses, triggerCompetitorAnalysis, getCompetitorAnalysis } from '@/services/agents';
+import { listCompetitors } from '@/services/competitors';
 import { ApiError } from '@/services/api';
+import { CompetitorDiscoveryPanel } from '@/components/competitors/CompetitorDiscoveryPanel';
 
 export default function CompetitorIntelPage() {
   const queryClient = useQueryClient();
@@ -22,7 +24,13 @@ export default function CompetitorIntelPage() {
     queryFn: listCompetitorAnalyses,
   });
 
+  const competitorsQuery = useQuery({
+    queryKey: ['competitors'],
+    queryFn: listCompetitors,
+  });
+
   const analyses = analysesQuery.data ?? [];
+  const hasCompetitors = (competitorsQuery.data?.items.length ?? 0) > 0;
 
   const activeAnalysis = analyses.find(
     (a) => a.status === 'pending' || a.status === 'processing',
@@ -121,11 +129,28 @@ export default function CompetitorIntelPage() {
           </Card>
         )}
 
-        {!analysesQuery.isLoading && analyses.length === 0 && (
+        {!analysesQuery.isLoading && analyses.length === 0 && !hasCompetitors && (
+          <Card>
+            <div className="py-6 text-center text-sm text-[var(--foreground-muted)]">
+              Aún no hay análisis ni competidores registrados. Usa la búsqueda con IA abajo para
+              empezar.
+            </div>
+          </Card>
+        )}
+
+        {!hasCompetitors && (
+          <CompetitorDiscoveryPanel
+            subtitle="Sin competidores registrados. Elige alcance global, por país o por ciudad."
+            onRegistered={() => {
+              void queryClient.invalidateQueries({ queryKey: ['competitors'] });
+            }}
+          />
+        )}
+
+        {!analysesQuery.isLoading && analyses.length === 0 && hasCompetitors && (
           <Card>
             <div className="py-12 text-center text-sm text-[var(--foreground-muted)]">
-              Aún no hay análisis. Registra competidores en tu perfil de empresa e inicia el
-              primer reporte abajo.
+              Ya tienes competidores registrados. Inicia el primer reporte abajo.
             </div>
           </Card>
         )}
@@ -137,14 +162,15 @@ export default function CompetitorIntelPage() {
                 <Crosshair className="h-6 w-6 text-amber-600" />
               </div>
               <p className="text-sm text-[var(--foreground-muted)]">
-                Usa los competidores registrados en tu perfil de empresa para generar un reporte
-                con IA.
+                {hasCompetitors
+                  ? 'Analiza los competidores registrados y genera un reporte estratégico con IA.'
+                  : 'Registra competidores (manual o con IA arriba) para habilitar el análisis.'}
               </p>
             </div>
             <Button
               onClick={() => triggerMutation.mutate()}
               loading={triggerMutation.isPending}
-              disabled={!!activeAnalysis}
+              disabled={!!activeAnalysis || !hasCompetitors}
               className="gap-2 shrink-0"
             >
               {activeAnalysis ? (

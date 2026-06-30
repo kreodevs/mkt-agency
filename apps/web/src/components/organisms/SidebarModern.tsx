@@ -67,13 +67,13 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       <aside
         ref={ref}
         className={cn(
-          'relative z-[var(--z-fixed)] flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
+          'relative flex h-full min-h-0 w-full shrink-0 flex-col overflow-visible border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
           collapsed ? 'lg:w-sidebar-collapsed' : 'lg:w-sidebar',
           className,
         )}
       >
-        <div className="mb-[var(--spacing-md)] shrink-0 border-b border-[var(--border)] px-[var(--spacing-lg)] py-[var(--spacing-md)]">
-          <div className="flex items-start gap-[var(--spacing-md)]">
+        <div className="relative flex min-h-header shrink-0 items-center overflow-visible border-b border-[var(--border)] px-[var(--spacing-lg)] py-2.5 md:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
             {collapsed ? (
               <Tooltip content={`Mkt Agency · v${appVersion}`}>
                 <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
@@ -86,14 +86,14 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
               </div>
             )}
             {!collapsed && (
-              <div className="min-w-0 pt-0.5">
+              <div className="min-w-0">
                 {brand ?? (
                   <span className="block whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
                     Mkt <span className="text-[var(--primary)]">Agency</span>
                   </span>
                 )}
                 <p
-                  className="mt-1 truncate font-mono text-[10px] text-[var(--foreground-subtle)]"
+                  className="mt-0.5 truncate font-mono text-[10px] text-[var(--foreground-subtle)]"
                   title={`Versión en ejecución: ${appVersion}`}
                 >
                   v{appVersion}
@@ -101,9 +101,25 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
               </div>
             )}
           </div>
+
+          {collapsible && (
+            <button
+              type="button"
+              data-collapse-trigger
+              onClick={toggleCollapse}
+              className="absolute top-1/2 -right-3 z-50 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] lg:flex"
+              aria-label={collapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-[var(--spacing-md)] py-[var(--spacing-md)]">
             {groups.map((group, idx) => (
               <div key={idx} className="mb-[var(--spacing-xl)]">
@@ -202,20 +218,6 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           )}
         </div>
 
-        {collapsible && (
-          <button
-            type="button"
-            data-collapse-trigger
-            onClick={toggleCollapse}
-            className="absolute -right-3 top-24 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] lg:flex"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
-        )}
       </aside>
     );
   },

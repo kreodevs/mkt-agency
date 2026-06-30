@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { Card } from '@/components/molecules/Card';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import type { AgentInterview } from '@/types/agents';
+import { getEffectiveInterviewStatus } from '@/utils/brandInterview';
 
 const STATUS_LABELS: Record<AgentInterview['status'], string> = {
   in_progress: 'En progreso',
@@ -22,7 +23,10 @@ export function BrandInterviewHistory({ interviews }: BrandInterviewHistoryProps
   return (
     <Card title="Historial de entrevistas" subtitle="Brand Analyst">
       <div className="divide-y divide-[var(--border)]">
-        {interviews.map((interview) => (
+        {interviews.map((interview) => {
+          const status = getEffectiveInterviewStatus(interview);
+
+          return (
           <div
             key={interview.id}
             className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
@@ -38,9 +42,9 @@ export function BrandInterviewHistory({ interviews }: BrandInterviewHistoryProps
                 })}
               </p>
               <p className="text-xs text-[var(--foreground-muted)]">
-                {interview.status === 'completed'
+                {status === 'completed'
                   ? 'Brand Brief generado'
-                  : interview.status === 'failed'
+                  : status === 'failed'
                     ? (interview.errorMessage ?? 'Error al generar el brief')
                     : `${interview.currentStep} de ${interview.totalSteps} preguntas`}
               </p>
@@ -49,25 +53,26 @@ export function BrandInterviewHistory({ interviews }: BrandInterviewHistoryProps
             <div className="flex items-center gap-3">
               <StatusPill
                 status={
-                  interview.status === 'completed'
+                  status === 'completed'
                     ? 'success'
-                    : interview.status === 'failed'
+                    : status === 'failed'
                       ? 'error'
                       : 'warning'
                 }
               >
-                {STATUS_LABELS[interview.status]}
+                {STATUS_LABELS[status]}
               </StatusPill>
               <Link
                 to={`/agents/brand-interview/${interview.id}`}
                 className="inline-flex items-center gap-1 text-sm font-medium text-[var(--primary)] hover:underline"
               >
-                {interview.status === 'in_progress' ? 'Continuar' : 'Ver resultado'}
+                {status === 'in_progress' ? 'Continuar' : 'Ver resultado'}
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </Card>
   );

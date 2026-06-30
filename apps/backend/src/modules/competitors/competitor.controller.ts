@@ -15,10 +15,12 @@ import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { CompetitorService } from './competitor.service';
-import { CreateCompetitorDto, ListMentionsQueryDto } from './dto/competitor.request.dto';
+import { CreateCompetitorDto, DiscoverCompetitorsDto, BulkCreateCompetitorsDto, ListMentionsQueryDto } from './dto/competitor.request.dto';
 import {
+  BulkCreateCompetitorsResponseDto,
   CompetitorListResponseDto,
   CompetitorResponseDto,
+  DiscoverCompetitorsResponseDto,
   PaginatedMentionsResponseDto,
 } from './dto/competitor.response.dto';
 
@@ -39,6 +41,23 @@ export class CompetitorController {
     @Body() dto: CreateCompetitorDto,
   ): Promise<CompetitorResponseDto> {
     return this.competitorService.create(user.tenantId!, dto);
+  }
+
+  @Post('discover')
+  discover(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: DiscoverCompetitorsDto,
+  ): Promise<DiscoverCompetitorsResponseDto> {
+    return this.competitorService.discover(user.tenantId!, dto);
+  }
+
+  @Post('bulk')
+  @HttpCode(HttpStatus.CREATED)
+  bulkCreate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: BulkCreateCompetitorsDto,
+  ): Promise<BulkCreateCompetitorsResponseDto> {
+    return this.competitorService.bulkCreate(user.tenantId!, dto);
   }
 
   @Delete(':id')

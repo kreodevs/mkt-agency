@@ -12,6 +12,7 @@ import { DataTable, type DataTableColumn } from '@/components/organisms/DataTabl
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { createCompetitor, deleteCompetitor, listCompetitors } from '@/services/competitors';
+import { CompetitorDiscoveryPanel } from '@/components/competitors/CompetitorDiscoveryPanel';
 import { SENTIMENT_LABELS, type Competitor, type MentionSentiment } from '@/types/competitors';
 
 export default function CompetitorsPage() {
@@ -144,6 +145,14 @@ export default function CompetitorsPage() {
             Registrar
           </Button>
         </Card>
+
+        {items.length === 0 && !competitorsQuery.isLoading && (
+          <CompetitorDiscoveryPanel
+            onRegistered={() => {
+              void queryClient.invalidateQueries({ queryKey: ['competitors'] });
+            }}
+          />
+        )}
 
         <DataTable
           columns={columns}

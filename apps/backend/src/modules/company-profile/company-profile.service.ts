@@ -93,6 +93,12 @@ export class CompanyProfileService {
     return this.toProfileResponse(saved);
   }
 
+  async syncCompetitorsText(tenantId: string, competitors: string): Promise<void> {
+    const profile = await this.ensureProfile(tenantId);
+    profile.competitors = competitors.trim() || null;
+    await this.profiles.save(profile);
+  }
+
   async listSections(tenantId: string) {
     const profile = await this.ensureProfile(tenantId);
     await this.ensureDefaultSections(profile.id);

@@ -197,7 +197,23 @@ export class AgentInterviewService {
     return this.toResponse(interview);
   }
 
+  private async reconcileStaleFailure(interview: AgentInterviewEntity): Promise<void> {
+    if (interview.status !== 'failed') {
+      return;
+    }
+    if (!this.resolveBrandBriefMarkdown(interview)) {
+      return;
+    }
+
+    interview.status = 'completed';
+    interview.errorMessage = null;
+    await this.interviews.save(interview);
+    this.logger.log(`Reconciled interview ${interview.id}: brief exists, status set to completed`);
+  }
+
   private async toResponse(interview: AgentInterviewEntity): Promise<InterviewResponseDto> {
+    await this.reconcileStaleFailure(interview);
+
     const msgs = await this.messages.find({
       where: { interviewId: interview.id },
       order: { createdAt: 'ASC' },

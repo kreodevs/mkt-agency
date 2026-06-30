@@ -29,3 +29,22 @@ export class PaginatedMentionsResponseDto {
   page!: number;
   limit!: number;
 }
+
+export class DiscoveredCompetitorDto {
+  name!: string;
+  website!: string | null;
+  industry!: string | null;
+  rationale!: string | null;
+}
+
+export class DiscoverCompetitorsResponseDto {
+  scope!: 'global' | 'country' | 'city';
+  country!: string | null;
+  city!: string | null;
+  items!: DiscoveredCompetitorDto[];
+}
+
+export class BulkCreateCompetitorsResponseDto {
+  created!: CompetitorResponseDto[];
+  skipped!: number;
+}

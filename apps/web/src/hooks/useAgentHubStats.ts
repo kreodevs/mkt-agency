@@ -4,7 +4,8 @@ import {
   listImageGenerations,
   listInterviews,
 } from '@/services/agents';
-import type { AgentCatalogItem } from '@/types/agents';
+import type { AgentCatalogItem, AgentInterview } from '@/types/agents';
+import { getEffectiveInterviewStatus } from '@/utils/brandInterview';
 
 export interface AgentHubStat {
   total: number;
@@ -18,12 +19,19 @@ export interface AgentHubStat {
   statusTone: 'success' | 'warning' | 'error' | 'neutral';
 }
 
+function effectiveStatus(item: AgentInterview): AgentInterview['status'] {
+  return getEffectiveInterviewStatus(item);
+}
+
 function buildInterviewStats(items: Awaited<ReturnType<typeof listInterviews>>): AgentHubStat {
   const brandItems = items.filter((item) => item.agentType === 'brand_interview');
-  const inProgress = brandItems.find((item) => item.status === 'in_progress');
-  const lastCompleted = brandItems.find((item) => item.status === 'completed');
-  const lastFailed = brandItems.find((item) => item.status === 'failed');
+  const inProgress = brandItems.find((item) => effectiveStatus(item) === 'in_progress');
+  const lastCompleted = brandItems.find((item) => effectiveStatus(item) === 'completed');
+  const lastFailed = brandItems.find((item) => effectiveStatus(item) === 'failed');
   const lastItem = brandItems[0];
+  const completedCount = brandItems.filter(
+    (item) => effectiveStatus(item) === 'completed',
+  ).length;
 
   let statusLabel = 'Sin ejecuciones';
   let statusTone: AgentHubStat['statusTone'] = 'neutral';
@@ -31,7 +39,7 @@ function buildInterviewStats(items: Awaited<ReturnType<typeof listInterviews>>):
     statusLabel = 'En progreso';
     statusTone = 'warning';
   } else if (lastCompleted) {
-    statusLabel = `${brandItems.filter((item) => item.status === 'completed').length} completada(s)`;
+    statusLabel = `${completedCount} completada(s)`;
     statusTone = 'success';
   } else if (lastFailed) {
     statusLabel = 'Última fallida';
@@ -40,9 +48,9 @@ function buildInterviewStats(items: Awaited<ReturnType<typeof listInterviews>>):
 
   return {
     total: brandItems.length,
-    inProgress: brandItems.filter((item) => item.status === 'in_progress').length,
-    completed: brandItems.filter((item) => item.status === 'completed').length,
-    failed: brandItems.filter((item) => item.status === 'failed').length,
+    inProgress: brandItems.filter((item) => effectiveStatus(item) === 'in_progress').length,
+    completed: completedCount,
+    failed: brandItems.filter((item) => effectiveStatus(item) === 'failed').length,
     lastActivityAt: lastItem?.updatedAt ?? null,
     inProgressHref: inProgress ? `/agents/brand-interview/${inProgress.id}` : null,
     lastResultHref: lastCompleted

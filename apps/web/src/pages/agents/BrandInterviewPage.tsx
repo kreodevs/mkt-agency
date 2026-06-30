@@ -13,6 +13,7 @@ import { Progress } from '@/components/molecules/Progress';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
+import { getEffectiveInterviewStatus, hasBrandBriefResult } from '@/utils/brandInterview';
 
 function isInterviewProcessing(interview: AgentInterview): boolean {
   if (interview.status !== 'in_progress') return false;
@@ -214,11 +215,12 @@ export default function BrandInterviewPage() {
     );
   }
 
+  const effectiveStatus = getEffectiveInterviewStatus(activeInterview);
   const isProcessing = isInterviewProcessing(activeInterview);
-  const isCompleted = activeInterview.status === 'completed';
-  const isFailed = activeInterview.status === 'failed';
+  const isCompleted = effectiveStatus === 'completed';
+  const isFailed = effectiveStatus === 'failed';
   const briefMarkdown = activeInterview.brandBriefMarkdown;
-  const showBrief = !!briefMarkdown && (isCompleted || isFailed);
+  const showBrief = hasBrandBriefResult(activeInterview) && isCompleted;
   const isSending = answerMutation.isPending;
   const canAnswer =
     activeInterview.status === 'in_progress' &&
@@ -279,6 +281,9 @@ export default function BrandInterviewPage() {
             const isError = msg.metadata?.type === 'error';
 
             if (isSystem && isError) {
+              if (showBrief) {
+                return null;
+              }
               return (
                 <div
                   key={msg.id}
@@ -390,7 +395,7 @@ export default function BrandInterviewPage() {
       </Card>
 
       {showBrief && (
-        <Card title="Brand Brief" subtitle={isFailed ? 'Generado con advertencias' : 'Resultado de tu entrevista'}>
+        <Card title="Brand Brief" subtitle="Resultado de tu entrevista">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-[var(--foreground-muted)]">
               Generado el{' '}

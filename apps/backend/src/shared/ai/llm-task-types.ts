@@ -6,6 +6,7 @@ export const LLM_TASK_TYPES = [
   'report_generation',
   'brand_interview',
   'competitor_intel',
+  'competitor_discovery',
   'image_generation',
   'strategy_adjustment',
   'social_copy',

@@ -1,5 +1,26 @@
 export type MentionSentiment = 'positive' | 'negative' | 'neutral';
 
+export type CompetitorDiscoveryScope = 'global' | 'country' | 'city';
+
+export interface DiscoveredCompetitor {
+  name: string;
+  website: string | null;
+  industry: string | null;
+  rationale: string | null;
+}
+
+export interface DiscoverCompetitorsResponse {
+  scope: CompetitorDiscoveryScope;
+  country: string | null;
+  city: string | null;
+  items: DiscoveredCompetitor[];
+}
+
+export interface BulkCreateCompetitorsResponse {
+  created: Competitor[];
+  skipped: number;
+}
+
 export interface Competitor {
   id: string;
   name: string;

@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { QUEUE_COMPETITOR_INTEL } from '../../../shared/queue/queue.constants';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompetitorService } from '../../competitors/competitor.service';
 import { COMPETITOR_INTEL_ADAPTER, CompetitorIntelAdapterPort } from '../adapters/competitor-intel.adapter.port';
 import { AgentCompetitorAnalysisEntity } from '../domain/agent-competitor-analysis.entity';
 
@@ -21,6 +22,7 @@ export class CompetitorIntelWorkerService {
     private readonly analyses: Repository<AgentCompetitorAnalysisEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    private readonly competitorService: CompetitorService,
     @Inject(COMPETITOR_INTEL_ADAPTER)
     private readonly adapter: CompetitorIntelAdapterPort,
     @InjectQueue(QUEUE_COMPETITOR_INTEL)
@@ -52,9 +54,13 @@ export class CompetitorIntelWorkerService {
         where: { tenantId: analysis.tenantId },
       });
 
-      const competitors = analysis.competitorsInput ?? profile?.competitors ?? '';
-      if (!competitors.trim()) {
-        throw new Error('No hay competidores registrados para analizar. Completa el perfil de empresa primero.');
+      const fromTable = await this.competitorService.buildCompetitorsText(analysis.tenantId);
+      const competitors =
+        analysis.competitorsInput?.trim() || fromTable || profile?.competitors?.trim() || '';
+      if (!competitors) {
+        throw new Error(
+          'No hay competidores registrados para analizar. Búscalos con IA o regístralos manualmente.',
+        );
       }
 
       const result = await this.adapter.generateAnalysis(competitors, {

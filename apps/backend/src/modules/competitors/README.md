@@ -8,8 +8,14 @@ Monitoreo de competencia: registro de competidores y consulta de menciones.
 |--------|------|-------------|
 | GET | `/api/v1/competitors` | Listar competidores del tenant |
 | POST | `/api/v1/competitors` | Registrar competidor |
+| POST | `/api/v1/competitors/discover` | Búsqueda IA por alcance `global` \| `country` \| `city` |
+| POST | `/api/v1/competitors/bulk` | Registrar varios competidores (p. ej. sugerencias IA) |
 | DELETE | `/api/v1/competitors/:id` | Eliminar (cascade menciones) |
 | GET | `/api/v1/competitors/:id/mentions` | Menciones (filtro `sentiment`, paginación) |
+
+Tras crear o eliminar competidores se sincroniza `company_profiles.competitors` para Competitor Intel.
+
+Task LLM: `competitor_discovery` (auto-creada por `LlmConfigService` si falta).
 
 ## Notas MVP
 

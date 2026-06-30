@@ -5,6 +5,7 @@ import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { QUEUE_BRAND_INTERVIEW, QUEUE_COMPETITOR_INTEL, QUEUE_IMAGE_GENERATION } from '../../shared/queue/queue.constants';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
+import { CompetitorsModule } from '../competitors/competitors.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { AssetsModule } from '../assets/assets.module';
 import { OpenRouterInterviewAdapter } from './adapters/openrouter-interview.adapter';
@@ -50,6 +51,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     ),
     LlmModule,
     CompanyProfileModule,
+    CompetitorsModule,
     AssetsModule,
   ],
   controllers: [AgentInterviewController, CompetitorIntelController, ImageGenerationController],

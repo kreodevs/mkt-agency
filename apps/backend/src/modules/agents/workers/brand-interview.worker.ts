@@ -124,16 +124,29 @@ export class BrandInterviewWorkerService {
           ? objectivesRaw
           : profile?.objectives ?? [];
 
-    await this.companyProfile.mergeFromBrandBrief(interview.tenantId, {
-      companyName: (brandBrief.companyName ?? profile?.companyName ?? undefined) as string | undefined,
-      industry: (brandBrief.industry ?? profile?.industry ?? undefined) as string | undefined,
-      targetAudienceDesc: (brandBrief.targetAudienceDesc ??
-        profile?.targetAudienceDesc ??
-        undefined) as string | undefined,
-      brandVoice: (brandBrief.brandVoice ?? profile?.brandVoice ?? undefined) as string | undefined,
-      competitors: (brandBrief.competitors ?? profile?.competitors ?? undefined) as string | undefined,
-      objectives: objectivesArr.length > 0 ? objectivesArr : undefined,
-    });
+    try {
+      await this.companyProfile.mergeFromBrandBrief(interview.tenantId, {
+        companyName: (brandBrief.companyName ?? profile?.companyName ?? undefined) as
+          | string
+          | undefined,
+        industry: (brandBrief.industry ?? profile?.industry ?? undefined) as string | undefined,
+        targetAudienceDesc: (brandBrief.targetAudienceDesc ??
+          profile?.targetAudienceDesc ??
+          undefined) as string | undefined,
+        brandVoice: (brandBrief.brandVoice ?? profile?.brandVoice ?? undefined) as
+          | string
+          | undefined,
+        competitors: (brandBrief.competitors ?? profile?.competitors ?? undefined) as
+          | string
+          | undefined,
+        objectives: objectivesArr.length > 0 ? objectivesArr : undefined,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Brand interview ${interview.id}: brief saved but profile merge failed`,
+        error,
+      );
+    }
 
     await this.messages.save(
       this.messages.create({
