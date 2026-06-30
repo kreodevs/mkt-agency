@@ -1,5 +1,7 @@
 export type CampaignStatus = 'draft' | 'scheduled' | 'active' | 'paused' | 'completed';
 
+export type CampaignExecutionMode = 'organic' | 'paid';
+
 export type StrategyAssignmentStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface CampaignTemplate {
@@ -116,6 +118,7 @@ export interface CampaignAgentReadinessItem {
 
 export interface CampaignAgentReadiness {
   ready: boolean;
+  mode: CampaignExecutionMode;
   completed: number;
   total: number;
   requiredCompleted: number;
@@ -124,11 +127,16 @@ export interface CampaignAgentReadiness {
   deliverables: string[];
 }
 
+export interface AutoGenerateCampaignPayload {
+  mode?: CampaignExecutionMode;
+}
+
 export interface AutoGenerateCampaignResponse {
   campaignId: string;
   campaignName: string;
-  strategyAssignmentId: string;
-  strategyStatus: string;
+  executionMode: CampaignExecutionMode;
+  strategyAssignmentId: string | null;
+  strategyStatus: string | null;
   linkedContentCount: number;
   platforms: string[];
   message: string;

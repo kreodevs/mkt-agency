@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
@@ -13,21 +13,37 @@ import type { SectionKey, SuggestionAssignmentStatus } from '@/types/company-pro
 
 interface AISuggestionProps {
   sectionKey: SectionKey;
+  allowedFieldNames: string[];
+  fieldLabels: Record<string, string>;
   onAccept: (values: Record<string, string>) => void;
   disabled?: boolean;
 }
 
 const POLL_STATUSES: SuggestionAssignmentStatus[] = ['pending', 'processing'];
 
-function suggestionToStrings(data: Record<string, unknown>): Record<string, string> {
+function pickAllowedSuggestionFields(
+  data: Record<string, unknown>,
+  allowedFieldNames: string[],
+): Record<string, string> {
+  const allowed = new Set(allowedFieldNames);
   const result: Record<string, string> = {};
+
   for (const [key, value] of Object.entries(data)) {
-    if (value != null) result[key] = String(value);
+    if (!allowed.has(key) || value == null) continue;
+    const trimmed = String(value).trim();
+    if (trimmed) result[key] = trimmed;
   }
+
   return result;
 }
 
-export function AISuggestion({ sectionKey, onAccept, disabled }: AISuggestionProps) {
+export function AISuggestion({
+  sectionKey,
+  allowedFieldNames,
+  fieldLabels,
+  onAccept,
+  disabled,
+}: AISuggestionProps) {
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
@@ -60,12 +76,17 @@ export function AISuggestion({ sectionKey, onAccept, disabled }: AISuggestionPro
   }, [sectionKey]);
 
   const assignment = assignmentQuery.data;
-  const isPolling =
-    !!assignment && POLL_STATUSES.includes(assignment.status);
+  const isPolling = !!assignment && POLL_STATUSES.includes(assignment.status);
+
+  const filteredSuggestion = useMemo(() => {
+    if (!assignment?.suggestion) return null;
+    const picked = pickAllowedSuggestionFields(assignment.suggestion, allowedFieldNames);
+    return Object.keys(picked).length > 0 ? picked : null;
+  }, [assignment?.suggestion, allowedFieldNames]);
 
   const handleAccept = () => {
-    if (!assignment?.suggestion) return;
-    onAccept(suggestionToStrings(assignment.suggestion));
+    if (!filteredSuggestion) return;
+    onAccept(filteredSuggestion);
     setDismissed(true);
     toast.success('Sugerencia aplicada al formulario');
   };
@@ -75,37 +96,27 @@ export function AISuggestion({ sectionKey, onAccept, disabled }: AISuggestionPro
     toast.message('Sugerencia descartada');
   };
 
-  if (dismissed || disabled) {
-    return (
-      <div className="mb-6">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => suggestMutation.mutate()}
-          loading={suggestMutation.isPending || isPolling}
-          disabled={disabled}
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          Sugerir con IA
-        </Button>
-      </div>
-    );
+  const button = (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={() => suggestMutation.mutate()}
+      loading={suggestMutation.isPending || isPolling}
+      disabled={disabled}
+    >
+      <Sparkles className="mr-2 h-4 w-4" />
+      {isPolling ? 'Generando sugerencia...' : 'Sugerir con IA'}
+    </Button>
+  );
+
+  if (dismissed) {
+    return <div className="mb-6">{button}</div>;
   }
 
   return (
     <div className="mb-6 space-y-3">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => suggestMutation.mutate()}
-        loading={suggestMutation.isPending || isPolling}
-        disabled={disabled}
-      >
-        <Sparkles className="mr-2 h-4 w-4" />
-        {isPolling ? 'Generando sugerencia...' : 'Sugerir con IA'}
-      </Button>
+      {button}
 
       {assignment?.status === 'failed' && (
         <p className="text-sm text-[var(--destructive)]">
@@ -113,16 +124,18 @@ export function AISuggestion({ sectionKey, onAccept, disabled }: AISuggestionPro
         </p>
       )}
 
-      {assignment?.status === 'completed' && assignment.suggestion && (
+      {assignment?.status === 'completed' && filteredSuggestion && (
         <Card
           title="Sugerencia IA"
-          subtitle="Revisa y aplica solo lo que encaje con tu marca"
+          subtitle="Solo para esta sección — revisa y aplica si encaja con tu marca"
         >
           <ul className="mb-4 space-y-2 text-sm text-[var(--foreground-muted)]">
-            {Object.entries(assignment.suggestion).map(([key, value]) => (
+            {Object.entries(filteredSuggestion).map(([key, value]) => (
               <li key={key}>
-                <span className="font-medium text-[var(--foreground)]">{key}: </span>
-                {String(value)}
+                <span className="font-medium text-[var(--foreground)]">
+                  {fieldLabels[key] ?? key}:{' '}
+                </span>
+                {value}
               </li>
             ))}
           </ul>
@@ -135,6 +148,12 @@ export function AISuggestion({ sectionKey, onAccept, disabled }: AISuggestionPro
             </Button>
           </div>
         </Card>
+      )}
+
+      {assignment?.status === 'completed' && !filteredSuggestion && (
+        <p className="text-sm text-[var(--destructive)]">
+          La sugerencia no incluyó campos válidos para esta sección. Intenta de nuevo.
+        </p>
       )}
     </div>
   );

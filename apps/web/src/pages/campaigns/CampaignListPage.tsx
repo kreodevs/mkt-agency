@@ -13,7 +13,8 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { listCampaigns, updateCampaign, getCampaignAgentReadiness, autoGenerateCampaign } from '@/services/campaigns';
-import type { Campaign, CampaignStatus } from '@/types/campaign';
+import type { Campaign, CampaignExecutionMode, CampaignStatus } from '@/types/campaign';
+import { DEFAULT_CAMPAIGN_EXECUTION_MODE } from '@/utils/campaignExecutionMode';
 
 type ViewMode = 'table' | 'kanban';
 
@@ -57,6 +58,9 @@ export default function CampaignListPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [statusFilter, setStatusFilter] = useState<'' | CampaignStatus>('');
   const [platformFilter, setPlatformFilter] = useState('');
+  const [executionMode, setExecutionMode] = useState<CampaignExecutionMode>(
+    DEFAULT_CAMPAIGN_EXECUTION_MODE,
+  );
 
   const campaignsQuery = useQuery({
     queryKey: ['campaigns', { status: statusFilter, platform: platformFilter }],
@@ -70,12 +74,12 @@ export default function CampaignListPage() {
   });
 
   const readinessQuery = useQuery({
-    queryKey: ['campaign-agent-readiness'],
-    queryFn: getCampaignAgentReadiness,
+    queryKey: ['campaign-agent-readiness', executionMode],
+    queryFn: () => getCampaignAgentReadiness(executionMode),
   });
 
   const autoGenerateMutation = useMutation({
-    mutationFn: autoGenerateCampaign,
+    mutationFn: () => autoGenerateCampaign({ mode: executionMode }),
     onSuccess: (result) => {
       toast.success(result.message);
       void queryClient.invalidateQueries({ queryKey: ['campaigns'] });
@@ -173,7 +177,7 @@ export default function CampaignListPage() {
                 className="gap-2"
               >
                 <Sparkles className="h-4 w-4" />
-                Campaña automática
+                {executionMode === 'paid' ? 'Campaña pagada' : 'Campaña editorial'}
               </Button>
             )}
           </div>
@@ -184,6 +188,8 @@ export default function CampaignListPage() {
         <div className="mb-6">
           <CampaignAgentReadinessPanel
             readiness={readinessQuery.data}
+            executionMode={executionMode}
+            onExecutionModeChange={setExecutionMode}
             loading={autoGenerateMutation.isPending}
             onAutoGenerate={() => autoGenerateMutation.mutate()}
           />

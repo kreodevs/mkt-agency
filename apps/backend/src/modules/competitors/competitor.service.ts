@@ -7,13 +7,22 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { AgentInterviewEntity } from '../agents/domain/agent-interview.entity';
 import { CompanyProfileService } from '../company-profile/company-profile.service';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
+import { ProfileSectionSyncService } from '../company-profile/services/profile-section-sync.service';
 import {
   COMPETITOR_DISCOVERY_ADAPTER,
   CompetitorDiscoveryAdapterPort,
 } from './adapters/competitor-discovery.adapter.port';
 import type { MentionSentiment } from './domain/competitor.constants';
+import {
+  extractProductSummary,
+  filterIrrelevantCompetitors,
+  formatIndustryLabel,
+  hasMinimalDiscoveryContext,
+} from './domain/competitor-discovery-context.util';
 import {
   BulkCreateCompetitorsDto,
   CreateCompetitorDto,
@@ -40,9 +49,14 @@ export class CompetitorService {
     private readonly mentions: Repository<CompetitorMentionEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    @InjectRepository(CompanyProfileSectionEntity)
+    private readonly profileSections: Repository<CompanyProfileSectionEntity>,
+    @InjectRepository(AgentInterviewEntity)
+    private readonly interviews: Repository<AgentInterviewEntity>,
     @Inject(COMPETITOR_DISCOVERY_ADAPTER)
     private readonly discoveryAdapter: CompetitorDiscoveryAdapterPort,
     private readonly companyProfile: CompanyProfileService,
+    private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
 
   async list(tenantId: string): Promise<CompetitorListResponseDto> {
@@ -131,21 +145,22 @@ export class CompetitorService {
       });
     }
 
-    const profile = await this.profiles.findOne({ where: { tenantId } });
-    const items = await this.discoveryAdapter.discover({
-      scope: dto.scope,
-      country,
-      city,
-      companyName: profile?.companyName ?? null,
-      industry: profile?.industry ?? null,
-      targetAudience: profile?.targetAudienceDesc ?? null,
-      website: profile?.website ?? null,
-    });
+    const discoveryContext = await this.buildDiscoveryContext(tenantId, dto);
+    const rawItems = await this.discoveryAdapter.discover(discoveryContext);
+    const items = filterIrrelevantCompetitors(discoveryContext, rawItems);
+
+    if (items.length === 0) {
+      throw new BadRequestException({
+        error:
+          'No se encontraron competidores relevantes para tu sector. Completa el onboarding o el Brand Brief y vuelve a intentar.',
+        code: 'NO_RELEVANT_COMPETITORS',
+      });
+    }
 
     return {
-      scope: dto.scope,
-      country,
-      city,
+      scope: discoveryContext.scope,
+      country: discoveryContext.country ?? null,
+      city: discoveryContext.city ?? null,
       items: items.map((item) => ({
         name: item.name,
         website: item.website ?? null,
@@ -209,6 +224,55 @@ export class CompetitorService {
       total,
       page,
       limit,
+    };
+  }
+
+  private async buildDiscoveryContext(
+    tenantId: string,
+    dto: DiscoverCompetitorsDto,
+  ) {
+    const country = dto.country?.trim() ?? null;
+    const city = dto.city?.trim() ?? null;
+
+    const profile = await this.profiles.findOne({ where: { tenantId } });
+    const sections = profile
+      ? await this.profileSections.find({ where: { profileId: profile.id } })
+      : [];
+    const values = this.profileSectionSync.resolveProfileValues(profile, sections);
+
+    const interview = await this.interviews.findOne({
+      where: { tenantId, agentType: 'brand_interview' },
+      order: { updatedAt: 'DESC' },
+    });
+
+    const brandBriefExcerpt =
+      interview?.brandBriefMarkdown?.trim().slice(0, 1200) ??
+      null;
+
+    if (!hasMinimalDiscoveryContext(values, brandBriefExcerpt)) {
+      throw new BadRequestException({
+        error:
+          'Completa el perfil de empresa (onboarding) o el Brand Brief antes de buscar competidores con IA.',
+        code: 'PROFILE_INCOMPLETE',
+      });
+    }
+
+    const existing = await this.competitors.find({ where: { tenantId } });
+
+    return {
+      scope: dto.scope,
+      country,
+      city,
+      companyName: values.companyName,
+      industry: values.industry,
+      industryLabel: formatIndustryLabel(values.industry),
+      targetAudience: values.targetAudienceDesc,
+      website: values.website,
+      brandVoice: values.brandVoice,
+      objectives: values.objectives,
+      productSummary: extractProductSummary(values, interview?.brandBrief),
+      brandBriefExcerpt,
+      existingCompetitorNames: existing.map((item) => item.name),
     };
   }
 

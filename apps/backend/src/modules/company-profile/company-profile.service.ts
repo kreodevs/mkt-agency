@@ -11,6 +11,7 @@ import { CompanyProfileSectionEntity } from './infrastructure/typeorm/company-pr
 import { CompanyProfileEntity } from './infrastructure/typeorm/company-profile.entity';
 import { OutboxEntity } from './infrastructure/typeorm/outbox.entity';
 import { CompletionCalculatorService } from './services/completion-calculator.service';
+import { ProfileSectionSyncService } from './services/profile-section-sync.service';
 import {
   ALL_SECTION_KEYS,
   MANDATORY_SECTION_KEYS,
@@ -35,6 +36,7 @@ export class CompanyProfileService {
     @InjectRepository(SectionSuggestionAssignmentEntity)
     private readonly suggestionAssignments: Repository<SectionSuggestionAssignmentEntity>,
     private readonly completionCalculator: CompletionCalculatorService,
+    private readonly profileSectionSync: ProfileSectionSyncService,
     private readonly suggestionWorker: SuggestionWorkerService,
     private readonly dataSource: DataSource,
   ) {}
@@ -161,6 +163,8 @@ export class CompanyProfileService {
       const allSections = await sectionRepo.find({
         where: { profileId: profile.id },
       });
+
+      this.profileSectionSync.syncProfileFromSections(profile, allSections);
 
       const previousPercentage = profile.completionPercentage;
       const completionPercentage =

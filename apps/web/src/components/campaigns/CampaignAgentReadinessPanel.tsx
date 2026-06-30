@@ -1,32 +1,87 @@
 import { Link } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Megaphone, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { Progress } from '@/components/molecules/Progress';
-import type { CampaignAgentReadiness } from '@/types/campaign';
+import type { CampaignAgentReadiness, CampaignExecutionMode } from '@/types/campaign';
+import { executionModeLabel } from '@/utils/campaignExecutionMode';
 
 interface CampaignAgentReadinessPanelProps {
   readiness: CampaignAgentReadiness;
+  executionMode: CampaignExecutionMode;
+  onExecutionModeChange: (mode: CampaignExecutionMode) => void;
   loading?: boolean;
   onAutoGenerate: () => void;
 }
 
+const MODE_COPY: Record<
+  CampaignExecutionMode,
+  { subtitleReady: string; subtitlePending: string; cta: string }
+> = {
+  organic: {
+    subtitleReady:
+      'Tienes el contexto necesario. Crearemos la campaña editorial y vincularemos posts para que publiques tú mismo.',
+    subtitlePending:
+      'Completa perfil y Community Manager para habilitar la campaña con publicación manual.',
+    cta: 'Crear campaña editorial',
+  },
+  paid: {
+    subtitleReady:
+      'Tienes el contexto necesario. La IA creará campaña, estrategia de medios y presupuestos por plataforma.',
+    subtitlePending:
+      'Completa los agentes requeridos (incluye Estrategia) para campañas de medios pagados.',
+    cta: 'Crear campaña de medios pagados',
+  },
+};
+
 export function CampaignAgentReadinessPanel({
   readiness,
+  executionMode,
+  onExecutionModeChange,
   loading,
   onAutoGenerate,
 }: CampaignAgentReadinessPanelProps) {
-  const progress = Math.round((readiness.requiredCompleted / readiness.requiredTotal) * 100);
+  const progress =
+    readiness.requiredTotal > 0
+      ? Math.round((readiness.requiredCompleted / readiness.requiredTotal) * 100)
+      : 0;
+  const copy = MODE_COPY[executionMode];
 
   return (
     <Card
       title="Campaña automática desde agentes"
-      subtitle={
-        readiness.ready
-          ? 'Tienes el contexto necesario. La IA creará campaña, estrategia y vinculará contenidos.'
-          : 'Completa los agentes requeridos para habilitar la generación automática.'
-      }
+      subtitle={readiness.ready ? copy.subtitleReady : copy.subtitlePending}
     >
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={executionMode === 'organic' ? 'default' : 'outline'}
+          className="gap-2"
+          onClick={() => onExecutionModeChange('organic')}
+        >
+          <UserRound className="h-4 w-4" />
+          Publicación orgánica
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={executionMode === 'paid' ? 'default' : 'outline'}
+          className="gap-2"
+          onClick={() => onExecutionModeChange('paid')}
+        >
+          <Megaphone className="h-4 w-4" />
+          Medios pagados
+        </Button>
+      </div>
+
+      <p className="mb-4 text-xs text-[var(--foreground-muted)]">
+        Modo activo: <span className="font-medium text-[var(--foreground)]">{executionModeLabel(executionMode)}</span>
+        {executionMode === 'organic'
+          ? ' — para SoHo que publica en redes sin Ads Manager.'
+          : ' — requiere configurar anuncios en Meta/Google/LinkedIn.'}
+      </p>
+
       <div className="mb-4 space-y-2">
         <div className="flex items-center justify-between text-xs text-[var(--foreground-muted)]">
           <span>
@@ -94,7 +149,7 @@ export function CampaignAgentReadinessPanel({
         onClick={onAutoGenerate}
       >
         <Sparkles className="h-4 w-4" />
-        Crear campaña automáticamente
+        {copy.cta}
       </Button>
     </Card>
   );

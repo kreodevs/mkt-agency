@@ -10,6 +10,7 @@ import { CompanyProfileEntity } from './infrastructure/typeorm/company-profile.e
 import { OutboxEntity } from './infrastructure/typeorm/outbox.entity';
 import { SectionSuggestionAssignmentEntity } from './infrastructure/typeorm/section-suggestion-assignment.entity';
 import { CompletionCalculatorService } from './services/completion-calculator.service';
+import { ProfileSectionSyncService } from './services/profile-section-sync.service';
 import { OutboxWriterService } from './services/outbox-writer.service';
 import { SuggestionProcessor } from './workers/suggestion.processor';
 import { SuggestionWorkerService } from './workers/suggestion.worker';
@@ -30,10 +31,11 @@ import { SuggestionWorkerService } from './workers/suggestion.worker';
   providers: [
     CompanyProfileService,
     CompletionCalculatorService,
+    ProfileSectionSyncService,
     OutboxWriterService,
     SuggestionWorkerService,
     SuggestionProcessor,
   ],
-  exports: [CompanyProfileService],
+  exports: [CompanyProfileService, ProfileSectionSyncService],
 })
 export class CompanyProfileModule {}

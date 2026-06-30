@@ -9,5 +9,5 @@ Componentes para monitoreo de competencia.
 
 ## API relacionada
 
-- `POST /competitors/discover` — `{ scope, country?, city? }`
+- `POST /competitors/discover` — `{ scope, country?, city? }`; contexto desde onboarding + Brand Brief
 - `POST /competitors/bulk` — `{ items: [{ name, website?, industry? }] }`

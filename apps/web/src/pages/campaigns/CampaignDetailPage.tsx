@@ -5,11 +5,13 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { BudgetApproval } from '@/components/campaigns/BudgetApproval';
+import { OrganicPublishingGuide } from '@/components/campaigns/OrganicPublishingGuide';
 import { StrategyGeneration } from '@/components/campaigns/StrategyGeneration';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { getCampaign, listCampaignBudgets } from '@/services/campaigns';
 import type { CampaignStatus } from '@/types/campaign';
+import { executionModeLabel, getCampaignExecutionMode } from '@/utils/campaignExecutionMode';
 
 function statusVariant(status: CampaignStatus) {
   if (status === 'active') return 'success';
@@ -36,6 +38,7 @@ function StrategySummary({ strategy }: { strategy: Record<string, unknown> }) {
   }
 
   const summary = strategy.summary;
+  const publishingGuide = strategy.publishingGuide;
   const channels = strategy.channels;
   const timeline = strategy.timeline;
   const kpis = strategy.kpis;
@@ -44,6 +47,11 @@ function StrategySummary({ strategy }: { strategy: Record<string, unknown> }) {
     <div className="space-y-3 text-sm text-[var(--foreground-muted)]">
       {typeof summary === 'string' && (
         <p className="text-[var(--foreground)]">{summary}</p>
+      )}
+      {typeof publishingGuide === 'string' && (
+        <p className="rounded-lg bg-[var(--secondary)]/30 px-3 py-2 text-[var(--foreground)]">
+          {publishingGuide}
+        </p>
       )}
       {Array.isArray(channels) && channels.length > 0 && (
         <div>
@@ -88,13 +96,17 @@ export default function CampaignDetailPage() {
     enabled: !!id,
   });
 
+  const campaign = campaignQuery.data;
+  const executionMode = campaign ? getCampaignExecutionMode(campaign.strategy) : undefined;
+  const isOrganic = executionMode === 'organic';
+  const isPaidCampaign = executionMode === 'paid';
+
   const budgetsQuery = useQuery({
     queryKey: ['campaign-budgets', id],
     queryFn: () => listCampaignBudgets(id!),
-    enabled: !!id,
+    enabled: !!id && isPaidCampaign,
   });
 
-  const campaign = campaignQuery.data;
   const budgets = budgetsQuery.data ?? campaign?.budgets ?? [];
 
   const invalidate = () => {
@@ -127,7 +139,12 @@ export default function CampaignDetailPage() {
     <DashboardShell>
       <PageHeader
         title={campaign.name}
-        description={campaign.objective ?? 'Detalle de campaña multicanal'}
+        description={
+          campaign.objective ??
+          (isOrganic
+            ? 'Campaña editorial con publicación manual en redes'
+            : 'Detalle de campaña multicanal')
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             <Link to={`/contents?campaignId=${campaign.id}`}>
@@ -156,11 +173,19 @@ export default function CampaignDetailPage() {
                 </dd>
               </div>
               <div>
+                <dt className="text-[var(--foreground-muted)]">Modo</dt>
+                <dd className="mt-1 text-[var(--foreground)]">
+                  {executionModeLabel(getCampaignExecutionMode(campaign.strategy))}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-[var(--foreground-muted)]">Presupuesto total</dt>
                 <dd className="mt-1 font-medium text-[var(--foreground)]">
-                  {campaign.totalBudget != null
-                    ? `$${campaign.totalBudget.toLocaleString('es-ES')}`
-                    : '—'}
+                  {isOrganic
+                    ? 'Sin medios pagados'
+                    : campaign.totalBudget != null
+                      ? `$${campaign.totalBudget.toLocaleString('es-ES')}`
+                      : '—'}
                 </dd>
               </div>
               <div>
@@ -176,29 +201,35 @@ export default function CampaignDetailPage() {
             </dl>
           </Card>
 
-          <Card title="Estrategia">
+          <Card title={isOrganic ? 'Plan editorial' : 'Estrategia'}>
             <StrategySummary strategy={campaign.strategy} />
           </Card>
 
-          <Card title="Presupuestos por plataforma">
-            {budgetsQuery.isLoading && (
-              <p className="text-sm text-[var(--foreground-muted)]">Cargando presupuestos...</p>
-            )}
-            {!budgetsQuery.isLoading && budgets.length === 0 && (
-              <p className="text-sm text-[var(--foreground-muted)]">
-                No hay presupuestos. Genera una estrategia IA para crear propuestas.
-              </p>
-            )}
-            <div className="space-y-3">
-              {budgets.map((budget) => (
-                <BudgetApproval key={budget.id} campaignId={campaign.id} budget={budget} />
-              ))}
-            </div>
-          </Card>
+          {isOrganic ? (
+            <OrganicPublishingGuide strategy={campaign.strategy} campaignId={campaign.id} />
+          ) : (
+            <Card title="Presupuestos por plataforma">
+              {budgetsQuery.isLoading && (
+                <p className="text-sm text-[var(--foreground-muted)]">Cargando presupuestos...</p>
+              )}
+              {!budgetsQuery.isLoading && budgets.length === 0 && (
+                <p className="text-sm text-[var(--foreground-muted)]">
+                  No hay presupuestos. Genera una estrategia IA para crear propuestas.
+                </p>
+              )}
+              <div className="space-y-3">
+                {budgets.map((budget) => (
+                  <BudgetApproval key={budget.id} campaignId={campaign.id} budget={budget} />
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         <div>
-          <StrategyGeneration campaignId={campaign.id} onCompleted={invalidate} />
+          {!isOrganic && (
+            <StrategyGeneration campaignId={campaign.id} onCompleted={invalidate} />
+          )}
         </div>
       </div>
     </DashboardShell>

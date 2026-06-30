@@ -9,6 +9,7 @@ import {
   SuggestionAdapterPort,
 } from '../../ai-agents/adapters/suggestion.adapter.port';
 import { ALL_SECTION_KEYS, SectionKey } from '../domain/section-keys';
+import { pickSectionSuggestionFields } from '../domain/section-field-keys';
 import { CompanyProfileSectionEntity } from '../infrastructure/typeorm/company-profile-section.entity';
 import { CompanyProfileEntity } from '../infrastructure/typeorm/company-profile.entity';
 import { SectionSuggestionAssignmentEntity } from '../infrastructure/typeorm/section-suggestion-assignment.entity';
@@ -74,7 +75,7 @@ export class SuggestionWorkerService {
         throw new Error('Invalid section key');
       }
 
-      const suggestion = await this.suggestionAdapter.generate({
+      const rawSuggestion = await this.suggestionAdapter.generate({
         sectionKey: assignment.sectionKey as SectionKey,
         tenantId: assignment.tenantId,
         profile: {
@@ -86,6 +87,15 @@ export class SuggestionWorkerService {
         },
         currentSectionData: section?.data ?? {},
       });
+
+      const suggestion = pickSectionSuggestionFields(
+        assignment.sectionKey as SectionKey,
+        rawSuggestion,
+      );
+
+      if (Object.keys(suggestion).length === 0) {
+        throw new Error('La IA no devolvió campos válidos para esta sección');
+      }
 
       assignment.status = 'completed';
       assignment.result = suggestion;

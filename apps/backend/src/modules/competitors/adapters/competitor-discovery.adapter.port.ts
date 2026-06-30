@@ -8,8 +8,14 @@ export interface CompetitorDiscoveryContext {
   city?: string | null;
   companyName?: string | null;
   industry?: string | null;
+  industryLabel?: string | null;
   targetAudience?: string | null;
   website?: string | null;
+  brandVoice?: string | null;
+  objectives?: string[];
+  productSummary?: string | null;
+  brandBriefExcerpt?: string | null;
+  existingCompetitorNames?: string[];
 }
 
 export interface DiscoveredCompetitorResult {

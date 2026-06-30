@@ -45,7 +45,7 @@ interface CompetitorDiscoveryPanelProps {
 export function CompetitorDiscoveryPanel({
   onRegistered,
   title = 'Buscar competidores con IA',
-  subtitle = 'Define el alcance geográfico y deja que la IA proponga empresas relevantes para tu sector.',
+  subtitle = 'Usa tu perfil de empresa y Brand Brief para sugerir competidores del mismo rubro (no retail genérico).',
 }: CompetitorDiscoveryPanelProps) {
   const [scope, setScope] = useState<CompetitorDiscoveryScope>('country');
   const [country, setCountry] = useState('');

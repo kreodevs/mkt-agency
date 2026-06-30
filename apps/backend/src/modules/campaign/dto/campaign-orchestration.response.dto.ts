@@ -9,6 +9,7 @@ export interface AgentReadinessItem {
 
 export interface CampaignAgentReadinessResponse {
   ready: boolean;
+  mode: 'organic' | 'paid';
   completed: number;
   total: number;
   requiredCompleted: number;
@@ -20,8 +21,9 @@ export interface CampaignAgentReadinessResponse {
 export interface AutoGenerateCampaignResponse {
   campaignId: string;
   campaignName: string;
-  strategyAssignmentId: string;
-  strategyStatus: string;
+  executionMode: 'organic' | 'paid';
+  strategyAssignmentId: string | null;
+  strategyStatus: string | null;
   linkedContentCount: number;
   platforms: string[];
   message: string;

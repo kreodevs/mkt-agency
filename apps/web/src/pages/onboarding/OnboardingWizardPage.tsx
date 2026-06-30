@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -33,6 +33,7 @@ export default function OnboardingWizardPage() {
     {} as Record<SectionKey, Record<string, string>>,
   );
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const initializedRef = useRef(false);
 
   const profileQuery = useQuery({
     queryKey: ['company-profile'],
@@ -67,7 +68,7 @@ export default function OnboardingWizardPage() {
   });
 
   useEffect(() => {
-    if (!sectionsQuery.data) return;
+    if (!sectionsQuery.data || initializedRef.current) return;
 
     const nextValues = {} as Record<SectionKey, Record<string, string>>;
     for (const section of ONBOARDING_SECTIONS) {
@@ -81,9 +82,14 @@ export default function OnboardingWizardPage() {
       return section.mandatory && !remote?.isCompleted;
     });
     if (firstIncomplete >= 0) setCurrentStep(firstIncomplete);
+    initializedRef.current = true;
   }, [sectionsQuery.data]);
 
   const currentSection = ONBOARDING_SECTIONS[currentStep];
+  const sectionFieldLabels = useMemo(() => {
+    if (!currentSection) return {};
+    return Object.fromEntries(currentSection.fields.map((field) => [field.name, field.label]));
+  }, [currentSection]);
   const isLastStep = currentStep === ONBOARDING_SECTIONS.length - 1;
   const isFirstStep = currentStep === 0;
   const isLoading = profileQuery.isLoading || sectionsQuery.isLoading;
@@ -221,6 +227,8 @@ export default function OnboardingWizardPage() {
 
             <AISuggestion
               sectionKey={currentSection.key}
+              allowedFieldNames={currentSection.fields.map((field) => field.name)}
+              fieldLabels={sectionFieldLabels}
               disabled={saveMutation.isPending}
               onAccept={(suggestion) => {
                 setFormValues((prev) => ({

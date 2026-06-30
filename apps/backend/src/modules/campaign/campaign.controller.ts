@@ -31,9 +31,16 @@ import {
   StrategyAssignmentResponseDto,
 } from './dto/campaign.response.dto';
 import {
+  AutoGenerateCampaignDto,
+} from './dto/campaign-orchestration.request.dto';
+import {
   AutoGenerateCampaignResponse,
   CampaignAgentReadinessResponse,
 } from './dto/campaign-orchestration.response.dto';
+import {
+  CampaignExecutionMode,
+  DEFAULT_CAMPAIGN_EXECUTION_MODE,
+} from './domain/campaign-execution-mode.constants';
 
 @Controller('campaigns')
 @UseGuards(TenantGuard)
@@ -63,16 +70,19 @@ export class CampaignController {
   @Get('agent-readiness')
   getAgentReadiness(
     @CurrentUser() user: AuthenticatedUser,
+    @Query('mode') mode?: string,
   ): Promise<CampaignAgentReadinessResponse> {
-    return this.orchestration.getAgentReadiness(user.tenantId!);
+    const executionMode: CampaignExecutionMode = mode === 'paid' ? 'paid' : DEFAULT_CAMPAIGN_EXECUTION_MODE;
+    return this.orchestration.getAgentReadiness(user.tenantId!, executionMode);
   }
 
   @Post('auto-generate')
   @HttpCode(HttpStatus.CREATED)
   autoGenerate(
     @CurrentUser() user: AuthenticatedUser,
+    @Body() body: AutoGenerateCampaignDto,
   ): Promise<AutoGenerateCampaignResponse> {
-    return this.orchestration.autoGenerateFromAgents(user.tenantId!);
+    return this.orchestration.autoGenerateFromAgents(user.tenantId!, body);
   }
 
   @Get('strategy-assignments/:assignmentId')

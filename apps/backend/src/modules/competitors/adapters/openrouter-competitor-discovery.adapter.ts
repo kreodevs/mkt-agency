@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LlmClient } from '../../../shared/ai/llm.client';
+import { isRetailBusiness } from '../domain/competitor-discovery-context.util';
 import {
   CompetitorDiscoveryAdapterPort,
   CompetitorDiscoveryContext,
@@ -27,30 +28,46 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
           ? `país: ${context.country}`
           : `ciudad: ${context.city}, ${context.country}`;
 
+    const retail = isRetailBusiness(context);
+
     const systemPrompt =
-      'Eres un analista de mercado. Identifica competidores reales y relevantes para la empresa descrita. ' +
+      'Eres un analista de inteligencia competitiva B2B. ' +
+      'Identifica empresas que compiten DIRECTAMENTE con la empresa descrita, vendiendo productos o servicios del MISMO tipo. ' +
+      'No confundas alcance geográfico con sector: un país no implica supermercados ni retail masivo salvo que la empresa sea retail. ' +
       'Responde SOLO con JSON válido en español, sin markdown.';
 
     const userPrompt = JSON.stringify({
-      task: `Sugiere entre 5 y 8 competidores para el alcance: ${scopeLabel}.`,
-      companyContext: {
+      task: `Sugiere entre 5 y 8 competidores reales para el alcance: ${scopeLabel}.`,
+      companyProfile: {
         companyName: context.companyName,
-        industry: context.industry,
-        targetAudience: context.targetAudience,
+        industryCode: context.industry,
+        industryLabel: context.industryLabel,
         website: context.website,
+        targetAudience: context.targetAudience,
+        brandVoice: context.brandVoice,
+        objectives: context.objectives ?? [],
+        productOrServiceSummary: context.productSummary,
+        brandBriefExcerpt: context.brandBriefExcerpt,
       },
-      rules: [
-        'Incluye solo empresas plausibles en el sector indicado.',
-        'Prioriza competidores activos en el alcance geográfico solicitado.',
-        'website puede ser dominio sin https.',
+      strictRules: [
+        'Competidor = alternativa real que un cliente consideraría en lugar de esta empresa.',
+        'Misma categoría de producto/servicio y audiencia similar.',
+        retail
+          ? 'La empresa ES de retail/ecommerce de consumo: puedes incluir retailers del sector.'
+          : 'PROHIBIDO sugerir supermercados, tiendas departamentales, marketplaces genéricos (Walmart, Liverpool, Mercado Libre, Amazon, Chedraui, etc.) salvo que la empresa vende lo mismo.',
+        'Prioriza competidores activos en el alcance geográfico sin cambiar de sector.',
+        'No repitas empresas en existingCompetitorNames.',
+        'website: dominio sin https o null si no se conoce.',
+        'rationale: explica el solapamiento de producto/servicio en una frase.',
       ],
+      existingCompetitorNames: context.existingCompetitorNames ?? [],
       outputFormat: {
         competitors: [
           {
             name: 'Nombre comercial',
             website: 'dominio.com o null',
-            industry: 'sector o null',
-            rationale: 'Por qué compite con esta empresa (1 frase)',
+            industry: 'sector del competidor',
+            rationale: 'Por qué compite en el mismo rubro (1 frase)',
           },
         ],
       },
@@ -58,7 +75,7 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
 
     const parsed = await this.llm.chatJson<DiscoveryJsonResponse>(systemPrompt, userPrompt, {
       taskType: 'competitor_discovery',
-      temperature: 0.6,
+      temperature: 0.35,
     });
 
     return (parsed.competitors ?? [])

@@ -12,8 +12,15 @@ Campañas multicanal del tenant (US-009 backend).
 
 ## Orquestación desde agentes
 
-- `GET /campaigns/agent-readiness` — prerrequisitos (perfil, Brand Analyst, Community Manager, Estrategia)
-- `POST /campaigns/auto-generate` — crea campaña, lanza estrategia IA y vincula contenidos del CM
+Dos modos de ejecución (`campaign.strategy.executionMode`):
+
+| Modo | Uso | Generación |
+|------|-----|------------|
+| `organic` (default) | SoHo publica manualmente en redes | Campaña + contenidos CM + plan editorial. **Sin** estrategia IA ni presupuestos |
+| `paid` | Cliente configura anuncios en Ads Manager | Campaña + estrategia IA + presupuestos + contenidos vinculados |
+
+- `GET /campaigns/agent-readiness?mode=organic|paid` — prerrequisitos (Estrategia solo obligatoria en `paid`)
+- `POST /campaigns/auto-generate` body `{ "mode": "organic" | "paid" }` — crea campaña según modo
 
 ## IA asíncrona
 

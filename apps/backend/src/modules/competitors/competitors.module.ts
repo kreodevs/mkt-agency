@@ -5,6 +5,8 @@ import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
+import { AgentInterviewEntity } from '../agents/domain/agent-interview.entity';
 import { COMPETITOR_DISCOVERY_ADAPTER } from './adapters/competitor-discovery.adapter.port';
 import { OpenRouterCompetitorDiscoveryAdapter } from './adapters/openrouter-competitor-discovery.adapter';
 import { StubCompetitorDiscoveryAdapter } from './adapters/stub-competitor-discovery.adapter';
@@ -22,6 +24,8 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
       CompetitorEntity,
       CompetitorMentionEntity,
       CompanyProfileEntity,
+      CompanyProfileSectionEntity,
+      AgentInterviewEntity,
     ]),
   ],
   controllers: [CompetitorController],

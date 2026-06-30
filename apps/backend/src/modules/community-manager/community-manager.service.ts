@@ -8,7 +8,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
+import {
+  ProfileSectionSyncService,
+  ResolvedProfileValues,
+} from '../company-profile/services/profile-section-sync.service';
 import { ContentService } from '../content/content.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import {
@@ -46,10 +52,13 @@ export class CommunityManagerService {
     private readonly tenants: Repository<TenantEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    @InjectRepository(CompanyProfileSectionEntity)
+    private readonly profileSections: Repository<CompanyProfileSectionEntity>,
     @Inject(SOCIAL_COPY_ADAPTER)
     private readonly adapter: SocialCopyAdapterPort,
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
+    private readonly profileSectionSync: ProfileSectionSyncService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -91,42 +100,45 @@ export class CommunityManagerService {
 
   async getReadiness(tenantId: string): Promise<CommunityManagerReadinessResponse> {
     const profile = await this.profiles.findOne({ where: { tenantId } });
-    const objectives = Array.isArray(profile?.objectives) ? profile!.objectives : [];
+    const sections = profile
+      ? await this.profileSections.find({ where: { profileId: profile.id } })
+      : [];
+    const values = this.profileSectionSync.resolveProfileValues(profile, sections);
 
     const items = [
       {
         key: 'companyName',
         label: 'Nombre de empresa',
         description: 'Identidad básica para contextualizar el copy.',
-        complete: !!profile?.companyName?.trim(),
+        complete: !!values.companyName?.trim(),
         href: '/onboarding',
       },
       {
         key: 'industry',
         label: 'Industria / sector',
         description: 'Ayuda a elegir temas y referencias del mercado.',
-        complete: !!profile?.industry?.trim(),
+        complete: !!values.industry?.trim(),
         href: '/onboarding',
       },
       {
         key: 'brandVoice',
         label: 'Voz de marca',
         description: 'Define estilo, registro y personalidad del contenido.',
-        complete: !!profile?.brandVoice?.trim(),
+        complete: !!values.brandVoice?.trim(),
         href: '/onboarding',
       },
       {
         key: 'targetAudienceDesc',
         label: 'Audiencia objetivo',
         description: 'Permite adaptar mensajes y CTAs por segmento.',
-        complete: !!profile?.targetAudienceDesc?.trim(),
+        complete: !!values.targetAudienceDesc?.trim(),
         href: '/onboarding',
       },
       {
         key: 'objectives',
         label: 'Objetivos de marketing',
-        description: 'Orienta la estrategia detrás de cada publicación.',
-        complete: objectives.length > 0,
+        description: 'Orienta la estrategia detrás de cada publicación (recomendado).',
+        complete: values.objectives.length > 0,
         href: '/onboarding',
       },
     ];
@@ -146,19 +158,30 @@ export class CommunityManagerService {
     return normalized.length > 0 ? normalized : [...DEFAULT_CM_PLATFORMS];
   }
 
-  private buildBrandBrief(profile: CompanyProfileEntity | null): Record<string, unknown> | null {
-    if (!profile) {
+  private buildBrandBrief(
+    values: ResolvedProfileValues | null,
+  ): Record<string, unknown> | null {
+    if (!values?.companyName?.trim()) {
       return null;
     }
     return {
-      companyName: profile.companyName,
-      industry: profile.industry,
-      brandVoice: profile.brandVoice,
-      targetAudience: profile.targetAudienceDesc,
-      objectives: profile.objectives,
-      competitors: profile.competitors,
-      website: profile.website,
+      companyName: values.companyName,
+      industry: values.industry,
+      brandVoice: values.brandVoice,
+      targetAudience: values.targetAudienceDesc,
+      objectives: values.objectives,
+      competitors: values.competitors,
+      website: values.website,
     };
+  }
+
+  private async loadResolvedProfile(tenantId: string): Promise<ResolvedProfileValues | null> {
+    const profile = await this.profiles.findOne({ where: { tenantId } });
+    if (!profile) {
+      return null;
+    }
+    const sections = await this.profileSections.find({ where: { profileId: profile.id } });
+    return this.profileSectionSync.resolveProfileValues(profile, sections);
   }
 
   async list(tenantId: string): Promise<SocialCopyBatchResponse[]> {
@@ -190,8 +213,8 @@ export class CommunityManagerService {
     );
 
     try {
-      const profile = await this.profiles.findOne({ where: { tenantId } });
-      const brandBrief = this.buildBrandBrief(profile);
+      const resolvedProfile = await this.loadResolvedProfile(tenantId);
+      const brandBrief = this.buildBrandBrief(resolvedProfile);
 
       // Generate social copy via adapter
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);

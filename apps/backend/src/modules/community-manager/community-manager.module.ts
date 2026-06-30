@@ -3,7 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { ContentModule } from '../content/content.module';
+import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { OpenRouterSocialCopyAdapter } from './adapters/openrouter-social-copy.adapter';
 import { StubSocialCopyAdapter } from './adapters/stub-social-copy.adapter';
@@ -24,7 +26,9 @@ import { TonePresetController } from './tone-preset.controller';
       TonePresetEntity,
       TenantEntity,
       CompanyProfileEntity,
+      CompanyProfileSectionEntity,
     ]),
+    CompanyProfileModule,
     LlmModule,
     ContentModule,
   ],

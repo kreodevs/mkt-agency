@@ -1,9 +1,11 @@
 import { apiFetch } from '@/services/api';
 import type {
+  AutoGenerateCampaignPayload,
   AutoGenerateCampaignResponse,
   Budget,
   Campaign,
   CampaignAgentReadiness,
+  CampaignExecutionMode,
   CreateCampaignPayload,
   GenerateStrategyAccepted,
   ListCampaignsParams,
@@ -95,12 +97,19 @@ export async function listCampaignTemplates(params?: {
   );
 }
 
-export async function getCampaignAgentReadiness(): Promise<CampaignAgentReadiness> {
-  return apiFetch<CampaignAgentReadiness>('/campaigns/agent-readiness');
+export async function getCampaignAgentReadiness(
+  mode: CampaignExecutionMode = 'organic',
+): Promise<CampaignAgentReadiness> {
+  return apiFetch<CampaignAgentReadiness>(
+    `/campaigns/agent-readiness${buildQuery({ mode })}`,
+  );
 }
 
-export async function autoGenerateCampaign(): Promise<AutoGenerateCampaignResponse> {
+export async function autoGenerateCampaign(
+  payload: AutoGenerateCampaignPayload = {},
+): Promise<AutoGenerateCampaignResponse> {
   return apiFetch<AutoGenerateCampaignResponse>('/campaigns/auto-generate', {
     method: 'POST',
+    body: JSON.stringify(payload),
   });
 }
