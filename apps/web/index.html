@@ -10,9 +10,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      (function(){var b="%BUILD_ID%";function c(){fetch("/version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json()}).then(function(v){if(v.version&&v.version!==b){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(r){return r.unregister()})}).then(function(){window.location.reload()})}}).catch(function(){})}c();setInterval(c,6e4)})();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

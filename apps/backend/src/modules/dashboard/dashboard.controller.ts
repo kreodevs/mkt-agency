@@ -130,12 +130,11 @@ export class DashboardController {
     const tenantId = user.tenantId!;
     const today = new Date().toISOString().split('T')[0];
 
-    const [nextContent, latestStrategy, latestCmBatch, leadCount] = await Promise.all([
-      // Next upcoming content (scheduled for today or later, earliest first)
+    const [nextContent, latestStrategy, latestCmBatch] = await Promise.all([
       this.contents
         .createQueryBuilder('c')
-        .leftJoinAndMapOne('c.version', ContentVersionEntity, 'v', 'v.id = c.current_version_id')
         .where('c.tenant_id = :tenantId', { tenantId })
+        .andWhere('c.scheduled_date IS NOT NULL')
         .andWhere('c.scheduled_date >= :today', { today })
         .orderBy('c.scheduled_date', 'ASC')
         .take(5)

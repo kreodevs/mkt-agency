@@ -38,7 +38,13 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2,webmanifest}'],
         globIgnores: ['**/version.json'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/version\.json$/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname === '/version.json',
+            handler: 'NetworkOnly',
+          },
+        ],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,

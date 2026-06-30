@@ -95,9 +95,17 @@ export default function AgencyHomePage() {
   });
 
   const data = homeQuery.data;
+  const profileCompleted = profileQuery.data?.status === 'completed';
+
+  const homeData: AgencyHomeData = data ?? {
+    upcoming: [],
+    strategy: null,
+    communityBatch: null,
+    leads: { today: 0, total: 0, clients: 0, conversionRate: 0 },
+  };
 
   const hasOnboarded = useMemo(() => {
-    if (profileQuery.data?.status === 'completed') {
+    if (profileCompleted) {
       return true;
     }
 
@@ -108,7 +116,7 @@ export default function AgencyHomePage() {
           data.communityBatch ||
           data.leads.total > 0),
     );
-  }, [data, profileQuery.data?.status]);
+  }, [data, profileCompleted]);
 
   if (isSuperadminNative) {
     return (
@@ -154,6 +162,23 @@ export default function AgencyHomePage() {
     );
   }
 
+  if (homeQuery.isError && !profileCompleted) {
+    return (
+      <DashboardShell>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Card title="No se pudo cargar el inicio" subtitle="Error al conectar con el servidor">
+            <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+              Intenta de nuevo en unos segundos. Si el problema continúa, contacta soporte.
+            </p>
+            <Button type="button" onClick={() => void homeQuery.refetch()}>
+              Reintentar
+            </Button>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   // Empty state - new user who hasn't onboarded
   if (!hasOnboarded) {
     return (
@@ -173,6 +198,18 @@ export default function AgencyHomePage() {
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
           Escritorio de tu agencia de marketing IA
         </p>
+        {homeQuery.isError && (
+          <p className="mt-2 text-sm text-[var(--warning)]">
+            Algunos datos no se pudieron cargar.{' '}
+            <button
+              type="button"
+              className="font-medium text-[var(--primary)] underline"
+              onClick={() => void homeQuery.refetch()}
+            >
+              Reintentar
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -181,7 +218,7 @@ export default function AgencyHomePage() {
           <QuickKpiCard
             icon={CalendarDays}
             label="Próximas publicaciones"
-            value={data!.upcoming.length}
+            value={homeData.upcoming.length}
             color="text-violet-600"
             bg="bg-violet-500/10"
             linkTo="/calendar"
@@ -190,17 +227,17 @@ export default function AgencyHomePage() {
           <QuickKpiCard
             icon={Users}
             label="Leads hoy"
-            value={data!.leads.today}
+            value={homeData.leads.today}
             color="text-blue-600"
             bg="bg-blue-500/10"
-            detail={`${data!.leads.total} total · ${data!.leads.clients} clientes`}
+            detail={`${homeData.leads.total} total · ${homeData.leads.clients} clientes`}
             linkTo="/leads"
             linkText="Ver leads"
           />
           <QuickKpiCard
             icon={TrendingUp}
             label="Tasa conversión"
-            value={`${data!.leads.conversionRate}%`}
+            value={`${homeData.leads.conversionRate}%`}
             color="text-emerald-600"
             bg="bg-emerald-500/10"
             linkTo="/"
@@ -209,7 +246,7 @@ export default function AgencyHomePage() {
           <QuickKpiCard
             icon={Lightbulb}
             label="Ajustes pendientes"
-            value={data!.strategy?.suggestionsCount ?? 0}
+            value={homeData.strategy?.suggestionsCount ?? 0}
             color="text-amber-600"
             bg="bg-amber-500/10"
             linkTo="/strategy"
@@ -221,13 +258,13 @@ export default function AgencyHomePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Upcoming posts */}
           <Card title="Próximas publicaciones" subtitle="Contenido programado">
-            {data!.upcoming.length === 0 ? (
+            {homeData.upcoming.length === 0 ? (
               <div className="py-8 text-center text-sm text-[var(--foreground-muted)]">
                 Sin contenido programado. Genera copy en Community Manager.
               </div>
             ) : (
               <div className="space-y-2">
-                {data!.upcoming.slice(0, 4).map((post) => (
+                {homeData.upcoming.slice(0, 4).map((post) => (
                   <Link
                     key={post.id}
                     to={`/contents/${post.id}`}
@@ -265,12 +302,12 @@ export default function AgencyHomePage() {
                     </div>
                   </Link>
                 ))}
-                {data!.upcoming.length > 4 && (
+                {homeData.upcoming.length > 4 && (
                   <Link
                     to="/calendar"
                     className="flex items-center justify-center gap-1 pt-2 text-xs font-medium text-[var(--primary)] hover:underline"
                   >
-                    Ver las {data!.upcoming.length} programadas
+                    Ver las {homeData.upcoming.length} programadas
                     <ArrowRight className="h-3 w-3" />
                   </Link>
                 )}
@@ -280,7 +317,7 @@ export default function AgencyHomePage() {
 
           {/* Strategy summary */}
           <Card title="Estrategia" subtitle="Último análisis">
-            {!data!.strategy ? (
+            {!homeData.strategy ? (
               <div className="py-8 text-center text-sm text-[var(--foreground-muted)]">
                 Sin análisis de estrategia aún. Genera uno en la sección Estrategia.
               </div>
@@ -289,25 +326,25 @@ export default function AgencyHomePage() {
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                      data!.strategy.overallHealth === 'good'
+                      homeData.strategy.overallHealth === 'good'
                         ? 'bg-emerald-500/10'
-                        : data!.strategy.overallHealth === 'poor'
+                        : homeData.strategy.overallHealth === 'poor'
                           ? 'bg-red-500/10'
                           : 'bg-amber-500/10'
                     }`}
                   >
                     <BarChart3
                       className={`h-6 w-6 ${
-                        HEALTH_CONFIG[data!.strategy.overallHealth ?? 'fair']?.color ?? 'text-amber-500'
+                        HEALTH_CONFIG[homeData.strategy.overallHealth ?? 'fair']?.color ?? 'text-amber-500'
                       }`}
                     />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-[var(--foreground)]">
-                      Salud: {HEALTH_CONFIG[data!.strategy.overallHealth ?? 'fair']?.label ?? 'Estable'}
+                      Salud: {HEALTH_CONFIG[homeData.strategy.overallHealth ?? 'fair']?.label ?? 'Estable'}
                     </p>
                     <p className="text-xs text-[var(--foreground-muted)]">
-                      {new Date(data!.strategy.createdAt).toLocaleDateString('es-MX', {
+                      {new Date(homeData.strategy.createdAt).toLocaleDateString('es-MX', {
                         day: 'numeric',
                         month: 'long',
                         hour: '2-digit',
@@ -317,19 +354,19 @@ export default function AgencyHomePage() {
                   </div>
                 </div>
 
-                {data!.strategy.summary && (
+                {homeData.strategy.summary && (
                   <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-                    {data!.strategy.summary}
+                    {homeData.strategy.summary}
                   </p>
                 )}
 
-                {data!.strategy.suggestionsCount > 0 && (
+                {homeData.strategy.suggestionsCount > 0 && (
                   <Link
                     to="/strategy"
                     className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-500/10"
                   >
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    {data!.strategy.suggestionsCount} sugerencia(s) pendiente(s) de revisar
+                    {homeData.strategy.suggestionsCount} sugerencia(s) pendiente(s) de revisar
                     <ArrowRight className="ml-auto h-4 w-4" />
                   </Link>
                 )}
