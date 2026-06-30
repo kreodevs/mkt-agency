@@ -1,6 +1,8 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { LlmConfigService } from './llm-config.service';
 import { LlmProviderService } from './llm-provider.service';
+import { isLlmRetryableWithFallback } from './llm-fallback.util';
+import type { ResolvedLlmExecutionConfig } from './llm-task-types';
 import type { LlmTaskType } from './llm-task-types';
 
 interface ChatCompletionResponse {
@@ -16,6 +18,8 @@ export interface LlmChatOptions {
 
 @Injectable()
 export class LlmClient {
+  private readonly logger = new Logger(LlmClient.name);
+
   constructor(
     private readonly llmConfig: LlmConfigService,
     private readonly llmProviders: LlmProviderService,
@@ -44,9 +48,74 @@ export class LlmClient {
       });
     }
 
-    const model = options.model ?? resolved.model;
-    const temperature = options.temperature ?? resolved.temperature ?? 0.7;
-    const maxTokens = options.maxTokens ?? resolved.maxTokens;
+    const primaryModel = options.model ?? resolved.model;
+    const modelsToTry = this.buildModelAttempts(primaryModel, resolved.fallbackModel);
+
+    let lastError: Error | null = null;
+
+    for (let index = 0; index < modelsToTry.length; index += 1) {
+      const model = modelsToTry[index];
+      const isFallbackAttempt = index > 0;
+
+      try {
+        if (isFallbackAttempt) {
+          this.logger.warn(
+            `Retrying LLM task ${resolved.taskType} with fallback model ${model} (primary: ${primaryModel})`,
+          );
+        }
+
+        return await this.requestChatJson<T>({
+          resolved,
+          systemPrompt,
+          userPrompt,
+          model,
+          temperature: options.temperature ?? resolved.temperature ?? 0.7,
+          maxTokens: options.maxTokens ?? resolved.maxTokens,
+        });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        const hasNextModel = index < modelsToTry.length - 1;
+
+        if (!hasNextModel || !this.shouldRetryWithFallback(lastError)) {
+          throw lastError;
+        }
+      }
+    }
+
+    throw lastError ?? new Error('LLM request failed');
+  }
+
+  private buildModelAttempts(primaryModel: string, fallbackModel?: string | null): string[] {
+    const attempts = [primaryModel.trim()];
+    const fallback = fallbackModel?.trim();
+
+    if (fallback && fallback !== attempts[0]) {
+      attempts.push(fallback);
+    }
+
+    return attempts;
+  }
+
+  private shouldRetryWithFallback(error: Error): boolean {
+    const match = error.message.match(/^LLM request failed \((\d+)\):([\s\S]*)$/);
+    if (!match) {
+      return false;
+    }
+
+    const status = Number(match[1]);
+    const body = match[2] ?? '';
+    return isLlmRetryableWithFallback(status, body);
+  }
+
+  private async requestChatJson<T>(params: {
+    resolved: ResolvedLlmExecutionConfig;
+    systemPrompt: string;
+    userPrompt: string;
+    model: string;
+    temperature: number;
+    maxTokens?: number;
+  }): Promise<T> {
+    const { resolved, systemPrompt, userPrompt, model, temperature, maxTokens } = params;
     const effectiveSystemPrompt =
       resolved.systemPromptTemplate?.trim() || systemPrompt;
 

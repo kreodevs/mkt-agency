@@ -11,7 +11,7 @@ Páginas de administración superadmin (plataforma + configuración IA).
 
 - `PackageListPage.tsx` — CRUD de paquetes/planes con límites (`/admin/packages`)
 - `LlmProvidersPage.tsx` — proveedores LLM con URL, API key y selector de modelo con costos (`/admin/llm-providers`)
-- `LlmSettingsPage.tsx` — proveedor y modelo por tarea de IA (`/admin/llm-settings`)
+- `LlmSettingsPage.tsx` — proveedor, modelo principal y **fallback de pago** por tarea (`/admin/llm-settings`); la API reintenta con fallback ante 429
 - `AdminUsersPage.tsx` — usuarios globales (`/admin/users`)
 - `AuditLogsPage.tsx` — consulta de audit logs (`/admin/audit-logs`)
 - `SecurityEventsPage.tsx` — eventos de seguridad (`/admin/security-events`)

@@ -29,6 +29,9 @@ export class LlmTaskConfigEntity {
   @Column({ type: 'varchar', length: 255 })
   model!: string;
 
+  @Column({ name: 'fallback_model', type: 'varchar', length: 255, nullable: true })
+  fallbackModel!: string | null;
+
   @Column({ type: 'numeric', precision: 4, scale: 2, default: 0.7 })
   temperature!: string;
 

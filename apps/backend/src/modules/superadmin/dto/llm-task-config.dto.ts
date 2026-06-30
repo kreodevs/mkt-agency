@@ -104,6 +104,11 @@ export class UpdateLlmTaskConfigDto {
   model?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  fallbackModel?: string | null;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)

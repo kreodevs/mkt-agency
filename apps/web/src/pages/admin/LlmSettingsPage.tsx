@@ -12,6 +12,7 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
+import { suggestPaidFallbackModelId } from '@/lib/llm-models';
 import {
   listLlmProviderModels,
   listLlmProviders,
@@ -28,6 +29,7 @@ export default function LlmSettingsPage() {
   const [editing, setEditing] = useState<LlmTaskConfig | null>(null);
   const [providerId, setProviderId] = useState('');
   const [model, setModel] = useState('');
+  const [fallbackModel, setFallbackModel] = useState('');
   const [temperature, setTemperature] = useState('0.7');
   const [enabled, setEnabled] = useState(true);
 
@@ -53,6 +55,7 @@ export default function LlmSettingsPage() {
 
     setProviderId(editing.providerId ?? configuredProviders[0]?.id ?? '');
     setModel(editing.model);
+    setFallbackModel(editing.fallbackModel ?? '');
     setTemperature(String(editing.temperature));
     setEnabled(editing.enabled);
   }, [editing, configuredProviders]);
@@ -85,6 +88,22 @@ export default function LlmSettingsPage() {
           const match = preferred ? models.find((item) => item.id === preferred) : null;
           return match?.id ?? models[0].id;
         });
+
+        setFallbackModel((current) => {
+          if (current && models.some((item) => item.id === current)) {
+            return current;
+          }
+
+          const preferred =
+            editing.fallbackModel && editing.providerId === providerId
+              ? editing.fallbackModel
+              : null;
+          if (preferred && models.some((item) => item.id === preferred)) {
+            return preferred;
+          }
+
+          return current;
+        });
       })
       .catch(() => {
         /* LlmModelSelect muestra error y reintento */
@@ -95,11 +114,14 @@ export default function LlmSettingsPage() {
     };
   }, [editing, providerId]);
 
+  const suggestedFallback = useMemo(() => suggestPaidFallbackModelId(model), [model]);
+
   const saveMutation = useMutation({
     mutationFn: () =>
       updateLlmTask(editing!.taskType, {
         providerId,
         model: model.trim(),
+        fallbackModel: fallbackModel.trim() || null,
         temperature: Number(temperature),
         enabled,
       }),
@@ -120,6 +142,11 @@ export default function LlmSettingsPage() {
       body: (row) => (row as LlmTaskConfig).providerName ?? '—',
     },
     { field: 'model', header: 'Modelo' },
+    {
+      field: 'fallbackModel',
+      header: 'Fallback',
+      body: (row) => (row as LlmTaskConfig).fallbackModel ?? '—',
+    },
     {
       field: 'temperature',
       header: 'Temp.',
@@ -154,7 +181,7 @@ export default function LlmSettingsPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
         title="Modelos por tarea"
-        description="Asigna proveedor y modelo a cada tarea de IA de la plataforma. Los agentes se operan en el tenant, no desde superadmin."
+        description="Asigna proveedor, modelo principal y fallback de pago por tarea. Ante rate limit (429) la API reintenta con el fallback."
       />
 
       <Card className="mt-6">
@@ -202,6 +229,7 @@ export default function LlmSettingsPage() {
                   onChange={(event) => {
                     setProviderId(event.target.value);
                     setModel('');
+                    setFallbackModel('');
                   }}
                 >
                   {configuredProviders.map((provider) => (
@@ -215,9 +243,50 @@ export default function LlmSettingsPage() {
               <LlmModelSelect
                 providerId={providerId}
                 value={model}
-                onChange={setModel}
+                onChange={(nextModel) => {
+                  setModel(nextModel);
+                  const suggested = suggestPaidFallbackModelId(nextModel);
+                  if (suggested && !fallbackModel.trim()) {
+                    setFallbackModel(suggested);
+                  }
+                }}
                 enabled={Boolean(editing && providerId)}
+                label="Modelo principal"
+                selectId="llm-task-model"
               />
+
+              <div className="space-y-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--secondary)] p-3">
+                <LlmModelSelect
+                  providerId={providerId}
+                  value={fallbackModel}
+                  onChange={setFallbackModel}
+                  enabled={Boolean(editing && providerId)}
+                  label="Modelo fallback (pago)"
+                  selectId="llm-task-fallback-model"
+                  allowEmpty
+                  emptyLabel="Sin fallback"
+                />
+                {suggestedFallback ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs text-[var(--foreground-muted)]">
+                      Sugerido para modelos `:free`:{' '}
+                      <code className="text-[var(--foreground)]">{suggestedFallback}</code>
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFallbackModel(suggestedFallback)}
+                    >
+                      Usar sugerido
+                    </Button>
+                  </div>
+                ) : null}
+                <p className="text-xs text-[var(--foreground-muted)]">
+                  Si el modelo principal devuelve 429 (rate limit) o 502/503, la API reintenta
+                  automáticamente con este modelo.
+                </p>
+              </div>
             </>
           )}
 

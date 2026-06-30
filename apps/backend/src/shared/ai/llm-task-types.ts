@@ -21,6 +21,7 @@ export interface LlmTaskConfigResponse {
   providerName: string | null;
   providerSlug: string | null;
   model: string;
+  fallbackModel?: string | null;
   temperature: number;
   maxTokens?: number;
   systemPromptTemplate?: string | null;

@@ -17,6 +17,10 @@ interface LlmModelSelectProps {
   value: string;
   onChange: (modelId: string) => void;
   enabled?: boolean;
+  label?: string;
+  selectId?: string;
+  allowEmpty?: boolean;
+  emptyLabel?: string;
 }
 
 export function LlmModelSelect({
@@ -24,6 +28,10 @@ export function LlmModelSelect({
   value,
   onChange,
   enabled = true,
+  label = 'Modelo',
+  selectId = 'llm-model-select',
+  allowEmpty = false,
+  emptyLabel = 'Sin fallback',
 }: LlmModelSelectProps) {
   const modelsQuery = useQuery({
     queryKey: ['llm-provider-models', providerId],
@@ -56,17 +64,18 @@ export function LlmModelSelect({
 
   return (
     <div className="flex flex-col gap-[var(--spacing-xs)]">
-      <label htmlFor="llm-model-select" className="text-sm font-medium">
-        Modelo
+      <label htmlFor={selectId} className="text-sm font-medium">
+        {label}
       </label>
       <div className="relative">
         <select
-          id="llm-model-select"
+          id={selectId}
           className={selectClass}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          disabled={!providerId || modelsQuery.isLoading || options.length === 0}
+          disabled={!providerId || modelsQuery.isLoading || (!allowEmpty && options.length === 0)}
         >
+          {allowEmpty ? <option value="">{emptyLabel}</option> : null}
           {modelsQuery.isLoading ? (
             <option value="">Cargando modelos…</option>
           ) : options.length === 0 ? (

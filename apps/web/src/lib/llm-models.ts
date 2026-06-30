@@ -28,3 +28,14 @@ export function formatModelOptionLabel(model: LlmModelOption): string {
     : '';
   return `${model.name} — entrada: ${input}/1M · salida: ${output}/1M${ctx}`;
 }
+
+/** OpenRouter: quita el sufijo `:free` para obtener el modelo de pago equivalente. */
+export function suggestPaidFallbackModelId(modelId: string): string | null {
+  const trimmed = modelId.trim();
+  if (!trimmed.endsWith(':free')) {
+    return null;
+  }
+
+  const paid = trimmed.replace(/:free$/, '');
+  return paid.length > 0 && paid !== trimmed ? paid : null;
+}

@@ -75,6 +75,7 @@ export class LlmConfigService {
       description: string | null;
       providerId: string;
       model: string;
+      fallbackModel: string | null;
       temperature: number;
       maxTokens: number | null;
       systemPromptTemplate: string | null;
@@ -136,6 +137,9 @@ export class LlmConfigService {
     if (data.label !== undefined) row.label = data.label;
     if (data.description !== undefined) row.description = data.description;
     if (data.model !== undefined) row.model = data.model;
+    if (data.fallbackModel !== undefined) {
+      row.fallbackModel = data.fallbackModel?.trim() || null;
+    }
     if (data.temperature !== undefined) {
       row.temperature = String(data.temperature);
     }
@@ -163,6 +167,7 @@ export class LlmConfigService {
       providerName: row.providerEntity?.name ?? null,
       providerSlug: row.providerEntity?.slug ?? null,
       model: row.model,
+      fallbackModel: row.fallbackModel,
       temperature: Number(row.temperature),
       maxTokens: row.maxTokens ?? undefined,
       systemPromptTemplate: row.systemPromptTemplate,
