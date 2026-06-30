@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompanyProfileService } from '../company-profile/company-profile.service';
 import { getInterviewQuestion, getInterviewQuestions } from './adapters/interview.questions';
+import { brandBriefToMarkdown } from './brand-brief-markdown.util';
 import { AgentInterviewMessageEntity } from './domain/agent-interview-message.entity';
 import { AgentInterviewEntity, AgentType } from './domain/agent-interview.entity';
 import { InterviewResponseDto } from './dto/interview-response.dto';
@@ -184,12 +185,24 @@ export class AgentInterviewService {
         id: m.id,
         role: m.role,
         content: m.content,
+        metadata: m.metadata,
         createdAt: m.createdAt.toISOString(),
       })),
       brandBrief: interview.brandBrief,
+      brandBriefMarkdown: this.resolveBrandBriefMarkdown(interview),
       errorMessage: interview.errorMessage,
       createdAt: interview.createdAt.toISOString(),
       updatedAt: interview.updatedAt.toISOString(),
     };
+  }
+
+  private resolveBrandBriefMarkdown(interview: AgentInterviewEntity): string | null {
+    if (interview.brandBriefMarkdown?.trim()) {
+      return interview.brandBriefMarkdown.trim();
+    }
+    if (!interview.brandBrief) {
+      return null;
+    }
+    return brandBriefToMarkdown(interview.brandBrief);
   }
 }

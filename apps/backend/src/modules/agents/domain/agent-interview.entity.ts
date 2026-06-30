@@ -37,6 +37,9 @@ export class AgentInterviewEntity {
   @Column({ name: 'brand_brief', type: 'jsonb', nullable: true })
   brandBrief!: Record<string, unknown> | null;
 
+  @Column({ name: 'brand_brief_markdown', type: 'text', nullable: true })
+  brandBriefMarkdown!: string | null;
+
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage!: string | null;
 

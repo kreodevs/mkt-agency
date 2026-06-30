@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { QUEUE_BRAND_INTERVIEW } from '../../../shared/queue/queue.constants';
 import { CompanyProfileService } from '../../company-profile/company-profile.service';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { brandBriefToMarkdown } from '../brand-brief-markdown.util';
 import { INTERVIEW_ADAPTER, InterviewAdapterPort } from '../adapters/interview.adapter.port';
 import { AgentInterviewEntity } from '../domain/agent-interview.entity';
 import { AgentInterviewMessageEntity } from '../domain/agent-interview-message.entity';
@@ -82,6 +83,7 @@ export class BrandInterviewWorkerService {
 
       // Save brand brief to interview
       interview.brandBrief = brandBrief;
+      interview.brandBriefMarkdown = brandBriefToMarkdown(brandBrief);
       interview.status = 'completed';
       interview.errorMessage = null;
       await this.interviews.save(interview);

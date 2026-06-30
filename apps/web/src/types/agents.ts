@@ -14,6 +14,7 @@ export interface AgentInterview {
   totalSteps: number;
   messages: InterviewMessage[];
   brandBrief: Record<string, unknown> | null;
+  brandBriefMarkdown: string | null;
   errorMessage: string | null;
   createdAt: string;
   updatedAt: string;
