@@ -35,14 +35,19 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2,webmanifest}'],
-        globIgnores: ['**/version.json'],
+        // index.html fuera de precache: iOS Safari servía HTML viejo con poller inline en bucle.
+        globPatterns: ['**/*.{js,css,ico,svg,woff2,webmanifest}'],
+        globIgnores: ['**/version.json', '**/index.html'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/version\.json$/],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname === '/version.json',
-            handler: 'NetworkOnly',
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-navigations',
+              networkTimeoutSeconds: 5,
+            },
           },
         ],
         cleanupOutdatedCaches: true,

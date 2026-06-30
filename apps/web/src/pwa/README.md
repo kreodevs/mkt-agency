@@ -1,10 +1,9 @@
 # PWA y auto-actualización
 
-- **vite-plugin-pwa** con `registerType: 'autoUpdate'` (un solo flujo de reload vía Workbox).
-- **`/version.json`**: polling en `registerPwa.ts` con timeout 8s; **NetworkOnly** (no pasa por caché del SW).
-- **Sin script inline en `index.html`**: evita doble reload + `unregister()` que ciclaba en iOS Safari.
-- **Sin listener `controllerchange`**: `autoUpdate` ya recarga; duplicarlo provocaba bucles.
-- Recarga forzada sin SW: máximo una vez por versión (`sessionStorage`).
+- **vite-plugin-pwa** con `registerType: 'autoUpdate'` — único mecanismo de actualización (sin polling).
+- **`index.html` no se precachea** — NetworkFirst en navegaciones; evita HTML viejo con poller inline en iOS.
+- **`version.json`** solo informativo (`build`, `builtAt`); el cliente ya no lo consulta.
+- **Migración one-shot** en `index.html`: desregistra SW + borra caches una vez (`localStorage mkt:pwa-reset:v5`).
 
 Registro en `main.tsx` → `initPwaUpdates()`.
 

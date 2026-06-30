@@ -15,7 +15,8 @@ export function resolveAppVersion(): string {
 }
 
 function versionPayload(version: string): string {
-  return `${JSON.stringify({ version, builtAt: new Date().toISOString() }, null, 2)}\n`;
+  // Campo "build", no "version": el poller inline legacy (ya eliminado) comparaba v.version.
+  return `${JSON.stringify({ build: version, builtAt: new Date().toISOString() }, null, 2)}\n`;
 }
 
 export function appVersionPlugin(version: string): Plugin {
@@ -28,7 +29,7 @@ export function appVersionPlugin(version: string): Plugin {
       server.middlewares.use('/version.json', (_req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
-        res.end(JSON.stringify({ version: 'dev', builtAt: new Date().toISOString() }));
+        res.end(JSON.stringify({ build: 'dev', builtAt: new Date().toISOString() }));
       });
     },
     generateBundle() {

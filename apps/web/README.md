@@ -20,7 +20,7 @@ yarn build
 
 - Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`).
 - Cada build genera `version.json` con el **commit del deploy** (hash inyectado por Dokploy en el build del frontend).
-- Tras un deploy nuevo, Workbox `autoUpdate` aplica el bundle; `registerPwa.ts` consulta `version.json` (NetworkOnly, timeout 8s) como respaldo sin bucles en iOS.
+- Tras un deploy nuevo, Workbox `autoUpdate` recarga la app; `index.html` se obtiene de red (no precache).
 - Detalle: `src/pwa/README.md`
 
 ## Componentes Kreo instalados
