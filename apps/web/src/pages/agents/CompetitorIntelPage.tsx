@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Crosshair, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { CompetitorAnalysisReport } from '@/components/agents/CompetitorAnalysisReport';
 import { CompetitorIntelHistory } from '@/components/agents/CompetitorIntelHistory';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -124,10 +125,8 @@ export default function CompetitorIntelPage() {
 
         {selectedAnalysis?.analysis && (
           <Card title="Reporte de análisis competitivo" subtitle="Generado por IA">
-            <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--background-secondary)] p-4 text-xs leading-relaxed text-[var(--foreground-muted)]">
-              {JSON.stringify(selectedAnalysis.analysis, null, 2)}
-            </pre>
-            <p className="mt-4 text-xs text-[var(--foreground-subtle)]">
+            <CompetitorAnalysisReport analysis={selectedAnalysis.analysis} />
+            <p className="px-[var(--spacing-md)] pb-[var(--spacing-md)] text-xs text-[var(--foreground-subtle)]">
               Actualizado:{' '}
               {new Date(selectedAnalysis.updatedAt).toLocaleString('es-MX')}
             </p>
