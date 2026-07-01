@@ -116,7 +116,7 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
                       <div className="rounded-md bg-red-50/50 p-2 text-xs text-red-800">
                         <span className="font-medium">Debilidades:</span>
                         <ul className="mt-1 list-disc pl-4 space-y-0.5">
-                          {renderList(typeof c.weaknesses === 'string' ? c.weaknesses : Array.isArray(c.weaknesses) ? c.weaknesses as string[] : undefined, '').map((s, j) => (
+                          {renderList(typeof c.weaknesses === 'string' ? c.weaknesses : Array.isArray(c.weaknesses) ? c.weaknesses as string[] : undefined).map((s, j) => (
                             <li key={j}>{s}</li>
                           ))}
                         </ul>
