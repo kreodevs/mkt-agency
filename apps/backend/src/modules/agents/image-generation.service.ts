@@ -16,6 +16,7 @@ import {
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
 import {
   buildFramePrompt,
+  buildContentImagePrompt,
   detectReelFrameCount,
   isImageGenerationMetadata,
   type ImageGenerationFrameMeta,
@@ -238,7 +239,54 @@ export class ImageGenerationService {
     tenantId: string,
     contentId: string,
   ): Promise<AgentImageGenerationEntity | null> {
-    return this.generations.findOne({ where: { tenantId, contentId } });
+    return this.generations.findOne({
+      where: { tenantId, contentId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async generateForContent(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+  ): Promise<GenerateImageResult> {
+    const content = await this.contentService.findOne(tenantId, contentId);
+    const version = content.currentVersion;
+    if (!version) {
+      throw new NotFoundException({ error: 'Content has no version', code: 'NOT_FOUND' });
+    }
+
+    const existing = await this.findByContentId(tenantId, contentId);
+    if (existing?.status === 'processing') {
+      return this.toResult(existing);
+    }
+    if (existing?.status === 'completed') {
+      return this.toResult(existing);
+    }
+    if (existing?.status === 'failed') {
+      return this.retry(tenantId, userId, existing.id);
+    }
+
+    const prompt = buildContentImagePrompt(version.title, version.body);
+    return this.generate(tenantId, userId, prompt, {
+      contentId,
+      productId: content.productId ?? undefined,
+      size: '1024x1024',
+      style: 'social media post, professional',
+    });
+  }
+
+  async regenerateForContent(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+  ): Promise<GenerateImageResult> {
+    const existing = await this.findByContentId(tenantId, contentId);
+    if (existing) {
+      return this.retry(tenantId, userId, existing.id);
+    }
+
+    return this.generateForContent(tenantId, userId, contentId);
   }
 
   async list(tenantId: string, limit = 50): Promise<AgentImageGenerationEntity[]> {

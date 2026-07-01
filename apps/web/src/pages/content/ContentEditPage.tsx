@@ -8,6 +8,7 @@ import { InputText } from '@/components/atoms/InputText';
 import { Textarea } from '@/components/atoms/Textarea';
 import { StatusBadge } from '@/components/content/StatusBadge';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
+import { ContentVisualPanel } from '@/components/content/ContentVisualPanel';
 import { SignatureBadge } from '@/components/content/SignatureBadge';
 import { VersionHistory } from '@/components/content/VersionHistory';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -187,6 +188,11 @@ export default function ContentEditPage() {
               </Button>
             </form>
           </Card>
+
+          <ContentVisualPanel
+            contentId={content.id}
+            versionAssets={currentVersion.assets}
+          />
 
           <SignatureBadge
             signatureHash={currentVersion.signatureHash}

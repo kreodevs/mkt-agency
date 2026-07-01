@@ -80,3 +80,24 @@ export async function deleteImageGeneration(id: string): Promise<void> {
 export async function retryImageGeneration(id: string): Promise<ImageGeneration> {
   return apiFetch<ImageGeneration>(`/agents/image-generation/${id}/retry`, { method: 'POST' });
 }
+
+export async function getImageGenerationByContentId(
+  contentId: string,
+): Promise<{ generation: ImageGeneration | null }> {
+  return apiFetch<{ generation: ImageGeneration | null }>(
+    `/agents/image-generation/by-content/${contentId}`,
+  );
+}
+
+export async function generateImageForContent(contentId: string): Promise<ImageGeneration> {
+  return apiFetch<ImageGeneration>(`/agents/image-generation/for-content/${contentId}`, {
+    method: 'POST',
+  });
+}
+
+export async function regenerateImageForContent(contentId: string): Promise<ImageGeneration> {
+  return apiFetch<ImageGeneration>(
+    `/agents/image-generation/for-content/${contentId}/regenerate`,
+    { method: 'POST' },
+  );
+}

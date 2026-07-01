@@ -46,6 +46,32 @@ export class ImageGenerationController {
     });
   }
 
+  @Get('by-content/:contentId')
+  async getGenerationByContent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ) {
+    const record = await this.imageGeneration.findByContentId(user.tenantId!, contentId);
+    return { generation: record };
+  }
+
+  @Post('for-content/:contentId')
+  @HttpCode(HttpStatus.CREATED)
+  generateForContent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ) {
+    return this.imageGeneration.generateForContent(user.tenantId!, user.id, contentId);
+  }
+
+  @Post('for-content/:contentId/regenerate')
+  regenerateForContent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ) {
+    return this.imageGeneration.regenerateForContent(user.tenantId!, user.id, contentId);
+  }
+
   @Get(':id')
   async getGeneration(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     const record = await this.imageGeneration.findOne(user.tenantId!, id);

@@ -32,3 +32,36 @@ export function listGenerationAssetIds(generation: {
 
   return generation.assetId ? [generation.assetId] : [];
 }
+
+export function extractContentAssetIds(assets: unknown[] | undefined): string[] {
+  if (!assets?.length) {
+    return [];
+  }
+
+  return assets
+    .map((asset) => {
+      if (typeof asset === 'string') {
+        return asset;
+      }
+      if (asset && typeof asset === 'object' && 'id' in asset) {
+        const id = (asset as { id?: unknown }).id;
+        return typeof id === 'string' ? id : null;
+      }
+      return null;
+    })
+    .filter((id): id is string => Boolean(id));
+}
+
+export function resolveContentVisualAssetIds(input: {
+  generation?: { assetId: string | null; metadata?: unknown; status?: string } | null;
+  versionAssets?: unknown[];
+}): string[] {
+  if (input.generation?.status === 'completed') {
+    const fromGeneration = listGenerationAssetIds(input.generation);
+    if (fromGeneration.length) {
+      return fromGeneration;
+    }
+  }
+
+  return extractContentAssetIds(input.versionAssets);
+}

@@ -5,10 +5,15 @@ import { Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import {
+  ContentVisualActions,
+  buildContentGenerationMap,
+} from '@/components/content/ContentVisualPanel';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { listContents } from '@/services/content';
+import { listImageGenerations } from '@/services/agents';
 import { listProducts } from '@/services/products';
 import type { Content, ContentStatus, ContentType } from '@/types/content';
 
@@ -74,6 +79,16 @@ export default function ContentListPage() {
       }),
   });
 
+  const generationsQuery = useQuery({
+    queryKey: ['image-generations'],
+    queryFn: listImageGenerations,
+  });
+
+  const generationByContentId = useMemo(
+    () => buildContentGenerationMap(generationsQuery.data ?? []),
+    [generationsQuery.data],
+  );
+
   const tableData = useMemo(() => contentsQuery.data?.items ?? [], [contentsQuery.data?.items]);
 
   const columns: DataTableColumn[] = useMemo(
@@ -121,8 +136,20 @@ export default function ContentListPage() {
         width: '90px',
         body: (row: Content) => row.currentVersion?.versionNumber ?? '—',
       },
+      {
+        field: 'visual',
+        header: 'Imagen',
+        width: '120px',
+        body: (row: Content) => (
+          <ContentVisualActions
+            contentId={row.id}
+            generation={generationByContentId.get(row.id) ?? null}
+            versionAssets={row.currentVersion?.assets}
+          />
+        ),
+      },
     ],
-    [productMap],
+    [productMap, generationByContentId],
   );
 
   const newHref = campaignId ? `/contents/new?campaignId=${campaignId}` : '/contents/new';

@@ -7,3 +7,4 @@
 | `StatusBadge.tsx` | Estado con color semáforo |
 | `DownloadKit.tsx` | Kit diario "Copiar y Llevar" (solo aprobado+firmado) |
 | `VersionHistory.tsx` | Historial y revertir |
+| `ContentVisualPanel.tsx` | Preview de imagen IA + generar / ver detalle / regenerar |

@@ -33,3 +33,14 @@ export function isImageGenerationMetadata(value: unknown): value is ImageGenerat
   const record = value as ImageGenerationMetadata;
   return Array.isArray(record.frames);
 }
+
+export function buildContentImagePrompt(title: string, body: string): string {
+  const normalizedBody = body.replace(/\s+/g, ' ').trim().slice(0, 500);
+  return [
+    `Imagen para publicación en redes sociales: "${title.trim()}".`,
+    normalizedBody ? `Contexto del copy: ${normalizedBody}` : '',
+    'Estilo profesional, apto para Instagram/LinkedIn, sin texto superpuesto ilegible.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
