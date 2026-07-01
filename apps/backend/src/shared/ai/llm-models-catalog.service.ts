@@ -10,9 +10,20 @@ interface OpenRouterModelRow {
   id?: string;
   name?: string;
   context_length?: number;
+  architecture?: {
+    output_modalities?: string[];
+  };
   pricing?: {
     prompt?: string;
     completion?: string;
+  };
+}
+
+interface OpenRouterImageModelRow {
+  id?: string;
+  name?: string;
+  architecture?: {
+    output_modalities?: string[];
   };
 }
 
@@ -78,14 +89,57 @@ export class LlmModelsCatalogService {
     apiKey: string,
   ): Promise<LlmModelOption[]> {
     const baseUrl = apiUrl.replace(/\/$/, '');
-    const modelsUrl = `${baseUrl}/models`;
+    const headers = {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/json',
+    };
 
-    const response = await fetch(modelsUrl, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: 'application/json',
-      },
-    });
+    const [chatModels, imageModels] = await Promise.all([
+      this.fetchChatModels(baseUrl, headers),
+      this.fetchImageModels(baseUrl, headers),
+    ]);
+
+    const byId = new Map<string, LlmModelOption>();
+    for (const model of chatModels) {
+      byId.set(model.id, model);
+    }
+
+    for (const model of imageModels) {
+      const existing = byId.get(model.id);
+      if (existing) {
+        byId.set(model.id, {
+          ...existing,
+          source: 'image',
+          outputModalities: this.mergeModalities(
+            existing.outputModalities,
+            model.outputModalities,
+          ),
+        });
+      } else {
+        byId.set(model.id, model);
+      }
+    }
+
+    const models = Array.from(byId.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'es'),
+    );
+
+    if (!models.length) {
+      throw new ServiceUnavailableException({
+        error: 'Provider returned no models',
+        code: 'LLM_MODELS_EMPTY',
+      });
+    }
+
+    return models;
+  }
+
+  private async fetchChatModels(
+    baseUrl: string,
+    headers: Record<string, string>,
+  ): Promise<LlmModelOption[]> {
+    const modelsUrl = `${baseUrl}/models`;
+    const response = await fetch(modelsUrl, { headers });
 
     if (!response.ok) {
       const body = await response.text();
@@ -101,23 +155,38 @@ export class LlmModelsCatalogService {
       data?: OpenRouterModelRow[] | OpenAiModelRow[];
     };
 
-    const rows = payload.data ?? [];
-    const models = rows
-      .map((row) => this.normalizeRow(row))
-      .filter((row): row is LlmModelOption => Boolean(row?.id))
-      .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-
-    if (!models.length) {
-      throw new ServiceUnavailableException({
-        error: 'Provider returned no models',
-        code: 'LLM_MODELS_EMPTY',
-      });
-    }
-
-    return models;
+    return (payload.data ?? [])
+      .map((row) => this.normalizeChatRow(row))
+      .filter((row): row is LlmModelOption => Boolean(row?.id));
   }
 
-  private normalizeRow(
+  private async fetchImageModels(
+    baseUrl: string,
+    headers: Record<string, string>,
+  ): Promise<LlmModelOption[]> {
+    const imageModelsUrl = baseUrl.includes('/api/v1')
+      ? `${baseUrl}/images/models`
+      : `${baseUrl}/api/v1/images/models`;
+
+    try {
+      const response = await fetch(imageModelsUrl, { headers });
+      if (!response.ok) {
+        return [];
+      }
+
+      const payload = (await response.json()) as {
+        data?: OpenRouterImageModelRow[];
+      };
+
+      return (payload.data ?? [])
+        .map((row) => this.normalizeImageRow(row))
+        .filter((row): row is LlmModelOption => Boolean(row?.id));
+    } catch {
+      return [];
+    }
+  }
+
+  private normalizeChatRow(
     row: OpenRouterModelRow | OpenAiModelRow,
   ): LlmModelOption | null {
     const id = row.id?.trim();
@@ -135,7 +204,34 @@ export class LlmModelsCatalogService {
       inputCostPer1M: this.tokenPriceToPer1M(prompt),
       outputCostPer1M: this.tokenPriceToPer1M(completion),
       contextLength: openRouter.context_length ?? null,
+      source: 'chat',
+      outputModalities: openRouter.architecture?.output_modalities ?? undefined,
     };
+  }
+
+  private normalizeImageRow(row: OpenRouterImageModelRow): LlmModelOption | null {
+    const id = row.id?.trim();
+    if (!id) {
+      return null;
+    }
+
+    return {
+      id,
+      name: row.name?.trim() || id,
+      inputCostPer1M: null,
+      outputCostPer1M: null,
+      contextLength: null,
+      source: 'image',
+      outputModalities: row.architecture?.output_modalities ?? ['image'],
+    };
+  }
+
+  private mergeModalities(
+    left?: string[],
+    right?: string[],
+  ): string[] | undefined {
+    const merged = new Set([...(left ?? []), ...(right ?? [])]);
+    return merged.size ? Array.from(merged) : undefined;
   }
 
   private tokenPriceToPer1M(price?: string): number | null {

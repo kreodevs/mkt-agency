@@ -85,8 +85,11 @@ export default function LlmSettingsPage() {
 
           const preferred =
             editing.model && editing.providerId === providerId ? editing.model : null;
-          const match = preferred ? models.find((item) => item.id === preferred) : null;
-          return match?.id ?? models[0].id;
+          if (preferred) {
+            return preferred;
+          }
+
+          return current || models[0]?.id || '';
         });
 
         setFallbackModel((current) => {
@@ -98,7 +101,7 @@ export default function LlmSettingsPage() {
             editing.fallbackModel && editing.providerId === providerId
               ? editing.fallbackModel
               : null;
-          if (preferred && models.some((item) => item.id === preferred)) {
+          if (preferred) {
             return preferred;
           }
 
@@ -253,6 +256,7 @@ export default function LlmSettingsPage() {
                 enabled={Boolean(editing && providerId)}
                 label="Modelo principal"
                 selectId="llm-task-model"
+                taskType={editing?.taskType}
               />
 
               <div className="space-y-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--secondary)] p-3">
@@ -265,6 +269,7 @@ export default function LlmSettingsPage() {
                   selectId="llm-task-fallback-model"
                   allowEmpty
                   emptyLabel="Sin fallback"
+                  taskType={editing?.taskType}
                 />
                 {suggestedFallback ? (
                   <div className="flex flex-wrap items-center gap-2">
@@ -307,7 +312,8 @@ export default function LlmSettingsPage() {
             Tarea habilitada
           </label>
           <p className="text-xs text-[var(--foreground-muted)]">
-            El desplegable de modelo muestra el costo USD por millón de tokens (entrada / salida).
+            Busca en el catálogo de OpenRouter o escribe el slug del modelo (p. ej.{' '}
+            <code>bytedance-seed/seedream-4.5</code>). Para Image Generator usa modelos Image API.
             Configura proveedores en{' '}
             <a href="/admin/llm-providers" className="text-[var(--primary)] underline">
               Proveedores LLM

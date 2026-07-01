@@ -1,16 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown } from 'lucide-react';
-import { useMemo } from 'react';
+import { ChevronDown, Search } from 'lucide-react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import {
+  filterLlmModels,
   formatCostPer1M,
   formatModelOptionLabel,
+  modelSupportsImages,
+  sortModelsForTask,
   type LlmModelOption,
 } from '@/lib/llm-models';
 import { listLlmProviderModels } from '@/services/superadmin';
 
-const selectClass =
-  'h-10 w-full appearance-none rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 pr-10 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60';
+const inputClass =
+  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 pr-10 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60';
 
 interface LlmModelSelectProps {
   providerId: string;
@@ -21,6 +24,8 @@ interface LlmModelSelectProps {
   selectId?: string;
   allowEmpty?: boolean;
   emptyLabel?: string;
+  /** Prioriza modelos Image API al buscar (p. ej. tarea image_generation). */
+  taskType?: string;
 }
 
 export function LlmModelSelect({
@@ -32,7 +37,13 @@ export function LlmModelSelect({
   selectId = 'llm-model-select',
   allowEmpty = false,
   emptyLabel = 'Sin fallback',
+  taskType,
 }: LlmModelSelectProps) {
+  const listboxId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
   const modelsQuery = useQuery({
     queryKey: ['llm-provider-models', providerId],
     queryFn: () => listLlmProviderModels(providerId),
@@ -40,11 +51,12 @@ export function LlmModelSelect({
     staleTime: 5 * 60 * 1000,
   });
 
-  const models = modelsQuery.data?.models ?? [];
+  const catalog = modelsQuery.data?.models ?? [];
 
   const options: LlmModelOption[] = useMemo(() => {
-    if (models.length) {
-      return models;
+    const sorted = sortModelsForTask(catalog, taskType);
+    if (sorted.length) {
+      return sorted;
     }
     if (value.trim()) {
       return [
@@ -58,40 +70,182 @@ export function LlmModelSelect({
       ];
     }
     return [];
-  }, [models, value]);
+  }, [catalog, taskType, value]);
 
-  const selected = options.find((item) => item.id === value);
+  const filtered = useMemo(
+    () => filterLlmModels(options, query),
+    [options, query],
+  );
+
+  const selected = useMemo(() => {
+    const match = options.find((item) => item.id === value);
+    if (match) {
+      return match;
+    }
+    if (value.trim()) {
+      return {
+        id: value,
+        name: value,
+        inputCostPer1M: null,
+        outputCostPer1M: null,
+        contextLength: null,
+      } satisfies LlmModelOption;
+    }
+    return null;
+  }, [options, value]);
+
+  const displayValue = open ? query : (selected ? formatModelOptionLabel(selected) : '');
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [open]);
+
+  const commitCustomValue = () => {
+    const next = query.trim();
+    if (!next) {
+      if (allowEmpty) {
+        onChange('');
+      }
+      setOpen(false);
+      setQuery('');
+      return;
+    }
+
+    onChange(next);
+    setOpen(false);
+    setQuery('');
+  };
+
+  const handleSelect = (modelId: string) => {
+    onChange(modelId);
+    setOpen(false);
+    setQuery('');
+  };
+
+  const showCustomHint =
+    open &&
+    query.trim().length > 0 &&
+    !filtered.some((item) => item.id.toLowerCase() === query.trim().toLowerCase());
+
+  const disabled =
+    !providerId || modelsQuery.isLoading || (!allowEmpty && options.length === 0);
 
   return (
-    <div className="flex flex-col gap-[var(--spacing-xs)]">
+    <div className="flex flex-col gap-[var(--spacing-xs)]" ref={containerRef}>
       <label htmlFor={selectId} className="text-sm font-medium">
         {label}
       </label>
+
       <div className="relative">
-        <select
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
+        />
+        <input
           id={selectId}
-          className={selectClass}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={!providerId || modelsQuery.isLoading || (!allowEmpty && options.length === 0)}
-        >
-          {allowEmpty ? <option value="">{emptyLabel}</option> : null}
-          {modelsQuery.isLoading ? (
-            <option value="">Cargando modelos…</option>
-          ) : options.length === 0 ? (
-            <option value="">Sin modelos disponibles</option>
-          ) : (
-            options.map((item) => (
-              <option key={item.id} value={item.id}>
-                {formatModelOptionLabel(item)}
-              </option>
-            ))
-          )}
-        </select>
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          className={`${inputClass} pl-9`}
+          value={displayValue}
+          placeholder={
+            modelsQuery.isLoading
+              ? 'Cargando catálogo…'
+              : 'Buscar o escribir slug del modelo…'
+          }
+          disabled={disabled}
+          onFocus={() => {
+            setOpen(true);
+            setQuery(value);
+          }}
+          onChange={(event) => {
+            setOpen(true);
+            setQuery(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              commitCustomValue();
+            }
+            if (event.key === 'Escape') {
+              setOpen(false);
+              setQuery('');
+            }
+          }}
+        />
         <ChevronDown
           aria-hidden
           className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
         />
+
+        {open && !disabled ? (
+          <ul
+            id={listboxId}
+            role="listbox"
+            className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--popover)] py-1 shadow-lg"
+          >
+            {allowEmpty ? (
+              <li>
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--secondary)]"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSelect('')}
+                >
+                  {emptyLabel}
+                </button>
+              </li>
+            ) : null}
+
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-[var(--foreground-muted)]">
+                Sin coincidencias en el catálogo
+              </li>
+            ) : (
+              filtered.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={item.id === value}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--secondary)] ${
+                      item.id === value ? 'bg-[var(--secondary)] font-medium' : ''
+                    }`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handleSelect(item.id)}
+                  >
+                    <span className="block truncate">{formatModelOptionLabel(item)}</span>
+                    {modelSupportsImages(item) && taskType === 'image_generation' ? (
+                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
+                        Recomendado para Image Generator
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))
+            )}
+
+            {showCustomHint ? (
+              <li className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
+                Pulsa Enter para usar{' '}
+                <code className="text-[var(--foreground)]">{query.trim()}</code>
+              </li>
+            ) : null}
+          </ul>
+        ) : null}
       </div>
 
       {modelsQuery.isError ? (
@@ -103,7 +257,12 @@ export function LlmModelSelect({
             Reintentar
           </Button>
         </div>
-      ) : selected && (selected.inputCostPer1M != null || selected.outputCostPer1M != null) ? (
+      ) : selected && selected.source === 'image' ? (
+        <p className="text-xs text-[var(--foreground-muted)]">
+          Modelo Image API · slug: <code>{selected.id}</code>
+        </p>
+      ) : selected &&
+        (selected.inputCostPer1M != null || selected.outputCostPer1M != null) ? (
         <p className="text-xs text-[var(--foreground-muted)]">
           Seleccionado: entrada {formatCostPer1M(selected.inputCostPer1M)}/1M · salida{' '}
           {formatCostPer1M(selected.outputCostPer1M)}/1M
@@ -111,7 +270,15 @@ export function LlmModelSelect({
             ? ` · contexto ${Math.round(selected.contextLength / 1000)}k tokens`
             : ''}
         </p>
+      ) : selected ? (
+        <p className="text-xs text-[var(--foreground-muted)]">
+          Modelo personalizado: <code>{selected.id}</code>
+        </p>
       ) : null}
+
+      <p className="text-xs text-[var(--foreground-muted)]">
+        Catálogo completo de OpenRouter (chat + Image API). Puedes escribir cualquier slug manualmente.
+      </p>
     </div>
   );
 }
