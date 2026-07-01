@@ -13,6 +13,31 @@ import type {
 
 const API_BASE = '/api/v1';
 
+export function getAssetFileUrl(assetId: string): string | null {
+  const token = getAccessToken();
+  if (!token || !assetId) {
+    return null;
+  }
+
+  return `${API_BASE}/assets/${assetId}/file?access_token=${encodeURIComponent(token)}`;
+}
+
+export function resolveAssetPreviewUrl(asset: {
+  id: string;
+  url?: string | null;
+}): string | null {
+  const authenticated = getAssetFileUrl(asset.id);
+  if (authenticated) {
+    return authenticated;
+  }
+
+  if (asset.url?.startsWith('http')) {
+    return asset.url;
+  }
+
+  return null;
+}
+
 function buildQuery(params: ListAssetsParams): string {
   const search = new URLSearchParams();
   if (params.folderId) search.set('folderId', params.folderId);

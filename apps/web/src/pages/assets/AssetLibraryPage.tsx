@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Download, Grid3X3, ImageIcon, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetUploader } from '@/components/assets/AssetUploader';
+import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -31,14 +32,14 @@ function formatSize(bytes: number) {
 }
 
 function AssetThumbnail({ asset }: { asset: Asset }) {
-  if (asset.type === 'image' && asset.url) {
+  if (asset.type === 'image') {
     return (
       <div className="aspect-square overflow-hidden rounded-lg bg-[var(--background-secondary)]">
-        <img
-          src={asset.url}
-          alt={asset.name}
+        <AuthenticatedAssetImage
+          assetId={asset.id}
+          fallbackUrl={asset.url}
+          title={asset.name}
           className="h-full w-full object-cover transition-transform hover:scale-105"
-          loading="lazy"
         />
       </div>
     );

@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -57,6 +58,18 @@ export class AssetController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<AssetDownloadUrlResponseDto> {
     return this.assetService.getDownloadUrl(user.tenantId!, id);
+  }
+
+  @Get(':id/file')
+  async serveFile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StreamableFile> {
+    const file = await this.assetService.readFile(user.tenantId!, id);
+    return new StreamableFile(file.buffer, {
+      type: file.mimeType,
+      disposition: `inline; filename="${file.fileName.replace(/"/g, '')}"`,
+    });
   }
 
   @Post(':id/duplicate')

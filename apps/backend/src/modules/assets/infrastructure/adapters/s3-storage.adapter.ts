@@ -87,6 +87,17 @@ export class S3StorageAdapter implements StorageAdapterPort, OnModuleInit {
     );
   }
 
+  async readObject(key: string): Promise<Buffer> {
+    const response = await this.client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    const body = response.Body;
+    if (!body) {
+      throw new Error('S3 object body is empty');
+    }
+    return Buffer.from(await body.transformToByteArray());
+  }
+
   async getSignedDownloadUrl(key: string, expiresInSeconds: number): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });

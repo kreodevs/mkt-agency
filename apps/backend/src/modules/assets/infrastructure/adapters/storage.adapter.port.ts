@@ -6,6 +6,7 @@ export interface StorageUploadInput {
 
 export interface StorageAdapterPort {
   upload(input: StorageUploadInput): Promise<void>;
+  readObject(key: string): Promise<Buffer>;
   getSignedDownloadUrl(key: string, expiresInSeconds: number): Promise<string>;
   deleteObject(key: string): Promise<void>;
   getPublicUrl(key: string): string;

@@ -11,7 +11,13 @@ import { JwtTokenService } from '../auth/jwt-token.service';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(jwtTokenService: JwtTokenService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (request: { query?: { access_token?: string | string[] } }) => {
+          const token = request?.query?.access_token;
+          return typeof token === 'string' ? token : null;
+        },
+      ]),
       ignoreExpiration: false,
       secretOrKey: jwtTokenService.getPublicKeyPem(),
       algorithms: ['RS256'],

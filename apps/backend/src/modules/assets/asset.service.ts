@@ -129,7 +129,7 @@ export class AssetService {
         mimeType,
         fileKey,
         fileSize: String(file.size),
-        url: this.storage.getPublicUrl(fileKey),
+        url: '',
         metadata: {},
         referenceCount: 0,
         isInUse: false,
@@ -140,6 +140,9 @@ export class AssetService {
     if (tagIds.length) {
       await this.syncTags(tenantId, saved.id, tagIds);
     }
+
+    saved.url = this.buildApiFileUrl(saved.id);
+    await this.assets.save(saved);
 
     return this.toResponse(saved);
   }
@@ -180,6 +183,20 @@ export class AssetService {
     return { url, expiresIn: DOWNLOAD_URL_TTL_SECONDS };
   }
 
+  async readFile(
+    tenantId: string,
+    id: string,
+  ): Promise<{ buffer: Buffer; mimeType: string; fileName: string }> {
+    const asset = await this.findOwnedAsset(tenantId, id);
+    const buffer = await this.storage.readObject(asset.fileKey);
+
+    return {
+      buffer,
+      mimeType: asset.mimeType ?? 'application/octet-stream',
+      fileName: asset.name,
+    };
+  }
+
   async duplicate(tenantId: string, id: string): Promise<AssetResponseDto> {
     const source = await this.findOwnedAsset(tenantId, id);
 
@@ -212,6 +229,10 @@ export class AssetService {
     }
 
     return this.toResponse(copy);
+  }
+
+  private buildApiFileUrl(assetId: string): string {
+    return `/api/v1/assets/${assetId}/file`;
   }
 
   private async findOwnedAsset(tenantId: string, id: string): Promise<AssetEntity> {
@@ -280,7 +301,7 @@ export class AssetService {
       mimeType: asset.mimeType,
       fileKey: asset.fileKey,
       fileSize: Number(asset.fileSize),
-      url: asset.url,
+      url: this.buildApiFileUrl(asset.id),
       metadata: asset.metadata,
       referenceCount: asset.referenceCount,
       isInUse: asset.isInUse,

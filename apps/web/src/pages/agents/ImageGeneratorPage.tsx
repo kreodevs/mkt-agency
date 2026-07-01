@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
+import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { listImageGenerations, generateImage, deleteImageGeneration, retryImageGeneration } from '@/services/agents';
 import { ApiError } from '@/services/api';
 import { InputText } from '@/components/atoms/InputText';
@@ -121,15 +122,23 @@ export default function ImageGeneratorPage() {
                   }}
                 >
                   <div className="flex aspect-square items-center justify-center bg-[var(--background-secondary)]">
-                    {img.imageUrl ? (
+                    {img.status === 'processing' ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
+                    ) : img.assetId ? (
+                      <AuthenticatedAssetImage
+                        assetId={img.assetId}
+                        fallbackUrl={img.imageUrl}
+                        title={img.prompt}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : img.imageUrl?.startsWith('http') ? (
                       <img
                         src={img.imageUrl}
-                        alt={img.prompt}
+                        alt=""
+                        title={img.prompt}
                         className="h-full w-full object-cover"
                         loading="lazy"
                       />
-                    ) : img.status === 'processing' ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
                     ) : (
                       <div className="flex flex-col items-center gap-2 px-3 text-center text-sm text-[var(--foreground-muted)]">
                         <ImageIcon className="h-8 w-8" />

@@ -90,7 +90,7 @@ export class ImageGenerationService {
 
       const asset = await this.assetService.upload(tenantId, fakeFile);
 
-      record.imageUrl = asset.url ?? result.imageUrl ?? null;
+      record.imageUrl = asset.url ?? `/api/v1/assets/${asset.id}/file`;
       record.assetId = asset.id;
       record.status = 'completed';
       await this.generations.save(record);
@@ -255,7 +255,7 @@ export class ImageGenerationService {
 
       const asset = await this.assetService.upload(tenantId, fakeFile);
 
-      record.imageUrl = asset.url ?? result.imageUrl ?? null;
+      record.imageUrl = asset.url ?? `/api/v1/assets/${asset.id}/file`;
       record.assetId = asset.id;
       record.status = 'completed';
       await this.generations.save(record);
