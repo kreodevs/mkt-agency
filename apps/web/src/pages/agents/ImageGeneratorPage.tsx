@@ -49,9 +49,13 @@ export default function ImageGeneratorPage() {
         size,
         productId: resolvedProductId,
       }),
-    onSuccess: () => {
-      toast.success('Imagen generada');
-      setPrompt('');
+    onSuccess: (result) => {
+      if (result.status === 'failed') {
+        toast.error(result.errorMessage ?? 'Error al generar imagen');
+      } else {
+        toast.success('Imagen generada');
+        setPrompt('');
+      }
       historyQuery.refetch();
     },
     onError: (error) => {
@@ -70,8 +74,12 @@ export default function ImageGeneratorPage() {
 
   const retryMutation = useMutation({
     mutationFn: (id: string) => retryImageGeneration(id),
-    onSuccess: () => {
-      toast.success('Reintentando…');
+    onSuccess: (result) => {
+      if (result.status === 'failed') {
+        toast.error(result.errorMessage ?? 'Error al reintentar');
+      } else {
+        toast.success('Imagen generada');
+      }
       historyQuery.refetch();
     },
     onError: () => toast.error('Error al reintentar'),
@@ -123,9 +131,12 @@ export default function ImageGeneratorPage() {
                     ) : img.status === 'processing' ? (
                       <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-sm text-[var(--foreground-muted)]">
+                      <div className="flex flex-col items-center gap-2 px-3 text-center text-sm text-[var(--foreground-muted)]">
                         <ImageIcon className="h-8 w-8" />
                         {img.status === 'failed' ? 'Error' : 'Sin imagen'}
+                        {img.status === 'failed' && img.errorMessage && (
+                          <p className="line-clamp-3 text-[10px] text-destructive">{img.errorMessage}</p>
+                        )}
                       </div>
                     )}
                   </div>

@@ -11,6 +11,7 @@ import { AssetService } from '../assets/asset.service';
 import {
   IMAGE_GENERATION_ADAPTER,
   ImageGenerationAdapterPort,
+  ImageGenerationResult,
 } from './adapters/image-generation.adapter.port';
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
 import { ContentService } from '../content/content.service';
@@ -70,17 +71,7 @@ export class ImageGenerationService {
         style: options.style,
       });
 
-      if (!result.imageUrl) {
-        throw new Error('Adapter returned no image URL');
-      }
-
-      const imageResponse = await fetch(result.imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download generated image: ${imageResponse.status}`);
-      }
-
-      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-      const contentType = imageResponse.headers.get('content-type') || 'image/png';
+      const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
       const extension = contentType.split('/').pop() || 'png';
       const fileName = `${trimmed.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_')}.${extension}`;
 
@@ -99,7 +90,7 @@ export class ImageGenerationService {
 
       const asset = await this.assetService.upload(tenantId, fakeFile);
 
-      record.imageUrl = asset.url ?? result.imageUrl;
+      record.imageUrl = asset.url ?? result.imageUrl ?? null;
       record.assetId = asset.id;
       record.status = 'completed';
       await this.generations.save(record);
@@ -147,6 +138,31 @@ export class ImageGenerationService {
       size: '1024x1024',
       style: 'social media post, professional',
     });
+  }
+
+  private async resolveImagePayload(
+    result: ImageGenerationResult,
+  ): Promise<{ buffer: Buffer; contentType: string }> {
+    if (result.imageBuffer?.length) {
+      return {
+        buffer: result.imageBuffer,
+        contentType: result.mimeType ?? 'image/png',
+      };
+    }
+
+    if (result.imageUrl) {
+      const imageResponse = await fetch(result.imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download generated image: ${imageResponse.status}`);
+      }
+
+      return {
+        buffer: Buffer.from(await imageResponse.arrayBuffer()),
+        contentType: imageResponse.headers.get('content-type') || 'image/png',
+      };
+    }
+
+    throw new Error('Adapter returned no image data');
   }
 
   private async attachAssetToContent(
@@ -220,17 +236,7 @@ export class ImageGenerationService {
         style: undefined,
       });
 
-      if (!result.imageUrl) {
-        throw new Error('Adapter returned no image URL');
-      }
-
-      const imageResponse = await fetch(result.imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download generated image: ${imageResponse.status}`);
-      }
-
-      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-      const contentType = imageResponse.headers.get('content-type') || 'image/png';
+      const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
       const extension = contentType.split('/').pop() || 'png';
       const fileName = `${record.prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_')}.${extension}`;
 
@@ -249,7 +255,7 @@ export class ImageGenerationService {
 
       const asset = await this.assetService.upload(tenantId, fakeFile);
 
-      record.imageUrl = asset.url ?? result.imageUrl;
+      record.imageUrl = asset.url ?? result.imageUrl ?? null;
       record.assetId = asset.id;
       record.status = 'completed';
       await this.generations.save(record);
