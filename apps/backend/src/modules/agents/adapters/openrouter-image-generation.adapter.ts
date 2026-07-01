@@ -25,7 +25,15 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
       size: { width, height },
     };
 
-    const response = await fetch(`${resolved.apiUrl}/image/generations`, {
+    const baseUrl = resolved.apiUrl.replace(/\/$/, '');
+    // OpenRouter image endpoint is at /api/v1/images/generations
+    // The stored apiUrl may be "https://openrouter.ai" without the /api/v1 path,
+    // so we ensure the correct path for image generation.
+    const url = baseUrl.includes('/api/v1')
+      ? `${baseUrl}/images/generations`
+      : `${baseUrl}/api/v1/images/generations`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
