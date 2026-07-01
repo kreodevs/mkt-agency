@@ -22,7 +22,8 @@ Copiar desde `.env.example` y definir en Dokploy → **Environment**:
 |----------|--------|
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Misma contraseña en postgres + api/worker; obligatoria antes del 1er deploy |
 | `JWT_PRIVATE_KEY_PEM`, `JWT_PUBLIC_KEY_PEM` | RSA PEM (una línea con `\n`) |
-| `S3_*` | MinIO interno o DO Spaces en prod |
+| `S3_*` | MinIO interno o DO Spaces en prod. Bucket default: `mkt-agency-assets` |
+| `MINIO_DATA_DIR` | (opcional) Ruta en el **host** para datos MinIO. Default Dokploy: `/var/lib/mkt-agency/minio`; local: `./data/minio` |
 | `AI_*` | Obsoleto — configurar en superadmin → Proveedores LLM |
 | `CORS_ORIGIN` | Origen del frontend (dominio público) |
 | `API_PUBLIC_URL` | URL pública API, ej. `https://app.example.com/api/v1` |
@@ -65,13 +66,22 @@ yarn workspace @mkt-agency/backend migration:run:prod
 
 ## 5. Volúmenes
 
-Persistencia gestionada por Dokploy:
+Persistencia:
 
-- `pgdata` — PostgreSQL
-- `redisdata` — Redis AOF
-- `miniodata` — MinIO (solo si no usas S3 externo)
+- `pgdata` — PostgreSQL (volumen Docker nombrado)
+- `redisdata` — Redis AOF (volumen Docker nombrado)
+- **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
 
-Programar backups de `pgdata` desde Dokploy → Volume Backups.
+Antes del primer deploy con MinIO en el servidor:
+
+```bash
+sudo mkdir -p /var/lib/mkt-agency/minio
+sudo chown 1000:1000 /var/lib/mkt-agency/minio
+```
+
+En Dokploy puedes fijar otra ruta con `MINIO_DATA_DIR` (debe existir y ser escribible por el usuario MinIO, UID 1000).
+
+Programar backups de `pgdata` y de la carpeta MinIO desde el host o Dokploy → Volume Backups (solo aplica a volúmenes nombrados; para MinIO copia el directorio `MINIO_DATA_DIR`).
 
 ## 6. Servicios expuestos
 
@@ -181,3 +191,21 @@ Dokploy clona el repo **sin** carpeta `.git` (shallow export). El Dockerfile ya 
 **Versión PWA (`version.json`):** el build del frontend usa el **commit hash** que Dokploy inyecta (`DOKPLOY_COMMIT_HASH`, `SOURCE_COMMIT`, etc.), igual que otras apps del mismo servidor. No hace falta definir `APP_VERSION` salvo override manual. Si no hay hash, usa `deploy-YYYYMMDDHHMMSS` (UTC).
 
 **Solución:** redeploy con código actual (`Dockerfile.frontend` sin `COPY .git`).
+
+### Image Generator / assets: `The specified bucket does not exist`
+
+MinIO arranca vacío: el bucket de `S3_BUCKET` no se crea solo si faltaba `minio-init` o el código antiguo de la API.
+
+**Verificar en Dokploy Environment:**
+
+```
+S3_ENDPOINT=http://minio:9000
+S3_ACCESS_KEY=<igual que MINIO_ROOT_USER>
+S3_SECRET_KEY=<igual que MINIO_ROOT_PASSWORD>
+S3_BUCKET=mkt-agency-assets
+S3_REGION=us-east-1
+```
+
+**Solución:** redeploy con compose actual (`minio-init` + API que crea bucket al arrancar). Tras el deploy, reinicia el servicio `api` y reintenta la imagen.
+
+Si usas **DigitalOcean Spaces** u otro S3 externo (sin MinIO), crea el bucket manualmente en el panel del proveedor y apunta `S3_ENDPOINT` a la URL pública del space (no uses `http://minio:9000`).

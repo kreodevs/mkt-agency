@@ -4,6 +4,7 @@
 # - Sin container_name (recomendación Dokploy)
 # - Red externa dokploy-network para Traefik
 # - Red internal para postgres/redis/minio/api
+# - MinIO: bind mount host MINIO_DATA_DIR (default /var/lib/mkt-agency/minio)
 # - Dominios: configurar en Dokploy UI → Domains (servicio frontend, puerto 80)
 
 services:
@@ -45,13 +46,32 @@ services:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
     volumes:
-      - miniodata:/data
+      - ${MINIO_DATA_DIR:-/var/lib/mkt-agency/minio}:/data
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-mkt-agency-assets}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set local http://minio:9000 "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY"
+        mc mb "local/$$S3_BUCKET" --ignore-existing
     networks:
       - internal
 
@@ -90,6 +110,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [
@@ -170,4 +192,3 @@ networks:
 volumes:
   pgdata:
   redisdata:
-  miniodata:

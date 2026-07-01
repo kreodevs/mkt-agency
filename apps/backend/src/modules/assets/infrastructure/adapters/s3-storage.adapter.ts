@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  CreateBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
 import type { StorageAdapterPort, StorageUploadInput } from './storage.adapter.port';
 
 @Injectable()
-export class S3StorageAdapter implements StorageAdapterPort {
+export class S3StorageAdapter implements StorageAdapterPort, OnModuleInit {
+  private readonly logger = new Logger(S3StorageAdapter.name);
   private readonly client: S3Client;
   private readonly bucket: string;
 
@@ -28,7 +31,49 @@ export class S3StorageAdapter implements StorageAdapterPort {
       },
     });
 
-    this.bucket = config.get<string>('S3_BUCKET', 'agenteia-assets');
+    this.bucket = config.get<string>('S3_BUCKET', 'mkt-agency-assets');
+  }
+
+  async onModuleInit(): Promise<void> {
+    const hasCredentials =
+      !!this.config.get<string>('S3_ACCESS_KEY') &&
+      !!this.config.get<string>('S3_SECRET_KEY') &&
+      !!this.bucket;
+
+    if (!hasCredentials) {
+      return;
+    }
+
+    await this.ensureBucketExists();
+  }
+
+  private async ensureBucketExists(): Promise<void> {
+    try {
+      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      return;
+    } catch (error) {
+      const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+        ?.httpStatusCode;
+      const name = error instanceof Error ? error.name : '';
+      const missing =
+        status === 404 || name === 'NotFound' || name === 'NoSuchBucket';
+
+      if (!missing) {
+        this.logger.warn(
+          `S3 bucket check failed for "${this.bucket}": ${error instanceof Error ? error.message : error}`,
+        );
+        return;
+      }
+    }
+
+    try {
+      await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+      this.logger.log(`Created S3 bucket "${this.bucket}"`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create S3 bucket "${this.bucket}": ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   async upload(input: StorageUploadInput): Promise<void> {
