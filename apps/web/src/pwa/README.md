@@ -1,10 +1,37 @@
 # PWA y auto-actualización
 
-- **vite-plugin-pwa** con `registerType: 'autoUpdate'` — único mecanismo de actualización (sin polling).
-- **`index.html` no se precachea** — NetworkFirst en navegaciones; evita HTML viejo con poller inline en iOS.
-- **`version.json`** solo informativo (`build`, `builtAt`); el cliente ya no lo consulta.
-- **Migración one-shot** en `index.html`: desregistra SW + borra caches una vez (`localStorage mkt:pwa-reset:v5`).
+## Instalación
 
-Registro en `main.tsx` → `initPwaUpdates()`.
+- **vite-plugin-pwa** genera `manifest.webmanifest`, `sw.js` y precache de assets hashed.
+- Metadatos iOS/Android en `index.html` (`apple-mobile-web-app-*`, `manifest`, iconos).
+- Icono: `public/favicon.svg` (192 + 512 en manifest).
 
-Nginx sirve `sw.js`, `workbox-*.js` y `version.json` con `Cache-Control: no-store`.
+## Actualización tras cada deploy
+
+| Capa | Comportamiento |
+|------|----------------|
+| **Build** | `version.json` + `VITE_APP_VERSION` = commit Dokploy (`Dockerfile.frontend`) |
+| **Nginx** | `sw.js`, `workbox-*.js`, `manifest.webmanifest`, `index.html`, `version.json` → `Cache-Control: no-store` |
+| **Workbox** | `registerType: autoUpdate`, `skipWaiting`, `clientsClaim`; `index.html` **no** precacheado |
+| **Cliente** | `initPwaUpdates()` en `main.tsx` |
+
+### Mecanismos en el cliente (`registerPwa.ts`)
+
+1. **Registro SW** con `immediate: true` — Workbox recarga al detectar versión nueva.
+2. **Comprobación periódica** cada 30 min (`registration.update()`).
+3. **Al volver a la pestaña** (`visibilitychange` → visible).
+4. **Chunks obsoletos** — listener `vite:preloadError` recarga tras deploy con app abierta.
+
+No hay polling a `version.json` (legacy eliminado); el service worker es la fuente de verdad.
+
+## Migración one-shot
+
+`index.html` desregistra SW antiguo una vez (`localStorage mkt:pwa-reset:v5`).
+
+## Desarrollo
+
+PWA desactivada en dev (`devOptions.enabled: false`). Probar en build de producción local:
+
+```bash
+yarn workspace @mkt-agency/web build && yarn workspace @mkt-agency/web preview
+```

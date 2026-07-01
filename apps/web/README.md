@@ -18,9 +18,10 @@ yarn build
 
 ## PWA y actualizaciones
 
-- Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`).
+- Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`, metadatos iOS/Android).
 - Cada build genera `version.json` con el **commit del deploy** (hash inyectado por Dokploy en el build del frontend).
-- Tras un deploy nuevo, Workbox `autoUpdate` recarga la app; `index.html` se obtiene de red (no precache).
+- Tras un deploy: Workbox `autoUpdate` + comprobaciones periódicas/al volver a la pestaña + recarga si falla un chunk lazy.
+- `index.html` y el SW se sirven sin cache (`infra/nginx/frontend.conf`).
 - Detalle: `src/pwa/README.md`
 
 ## Componentes Kreo instalados

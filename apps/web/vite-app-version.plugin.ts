@@ -7,6 +7,15 @@ export function resolveAppVersion(): string {
     return fromEnv;
   }
 
+  const deployHash =
+    process.env.DOKPLOY_COMMIT_HASH?.trim() ||
+    process.env.DOKPLOY_COMMIT_SHA?.trim() ||
+    process.env.SOURCE_COMMIT?.trim() ||
+    process.env.GIT_COMMIT?.trim();
+  if (deployHash) {
+    return deployHash;
+  }
+
   try {
     return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
   } catch {
