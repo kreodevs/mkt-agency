@@ -2,20 +2,39 @@ import { Link } from 'react-router-dom';
 import { CalendarDays, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
+import { CampaignGeneratePosts } from '@/components/campaigns/CampaignGeneratePosts';
 
 interface OrganicPublishingGuideProps {
   strategy: Record<string, unknown>;
   campaignId: string;
+  productId: string | null;
+  platforms: string[];
 }
 
-export function OrganicPublishingGuide({ strategy, campaignId }: OrganicPublishingGuideProps) {
+export function OrganicPublishingGuide({
+  strategy,
+  campaignId,
+  productId,
+  platforms,
+}: OrganicPublishingGuideProps) {
   const publishingGuide =
     typeof strategy.publishingGuide === 'string'
       ? strategy.publishingGuide
       : 'Revisa cada post en el calendario, aprueba el contenido y publícalo manualmente en tus redes.';
 
+  const linkedContentCount =
+    typeof strategy.linkedContentCount === 'number' ? strategy.linkedContentCount : 0;
+
   return (
     <Card title="Publicación manual (Copiar y Llevar)">
+      <div className="mb-4">
+        <CampaignGeneratePosts
+          campaignId={campaignId}
+          productId={productId}
+          platforms={platforms}
+          linkedContentCount={linkedContentCount}
+        />
+      </div>
       <p className="mb-4 text-sm text-[var(--foreground-muted)]">
         Esta campaña es editorial: tú publicas en Instagram, Facebook, LinkedIn, etc. No hace falta
         Ads Manager ni configurar anuncios pagados.

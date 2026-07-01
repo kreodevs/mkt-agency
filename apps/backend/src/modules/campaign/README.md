@@ -35,6 +35,14 @@ Dos modos de ejecución (`campaign.strategy.executionMode`):
 - `PATCH /campaigns/:id/budgets/:budgetId` con `{ "approved": true|false }`
 - Filas `proposed_by_ai` se regeneran en cada estrategia IA
 
+## Actualización de plataformas
+
+- `PATCH /campaigns/:id` con `{ "platforms": [...] }` actualiza también `strategy.channels` (conserva `focus` por plataforma cuando existía).
+
+## Contenidos desde Community Manager
+
+- `POST /community-manager/generate` con `campaignId` crea contenidos programados y actualiza `strategy.linkedContentCount` + `strategy.timeline` de la campaña.
+
 ## Entidades
 
 `campaign_templates`, `campaigns`, `budgets`, `audiences`, `campaign_strategy_assignments`

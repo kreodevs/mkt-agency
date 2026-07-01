@@ -92,40 +92,44 @@ export function CampaignAgentReadinessPanel({
         <Progress value={progress} />
       </div>
 
-      <ul className="mb-4 space-y-2">
+      <ul className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {readiness.items.map((item) => (
           <li
             key={item.key}
-            className="flex items-start gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5"
+            className="flex h-full flex-col gap-2 rounded-lg border border-[var(--border)] px-3 py-2.5"
           >
-            {item.complete ? (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
-            ) : (
-              <AlertCircle
-                className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-600' : 'text-[var(--foreground-subtle)]'}`}
-              />
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {item.label}
-                  {!item.required && (
-                    <span className="ml-1 text-xs font-normal text-[var(--foreground-subtle)]">
-                      (recomendado)
-                    </span>
+            <div className="flex items-start gap-2">
+              {item.complete ? (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+              ) : (
+                <AlertCircle
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-600' : 'text-[var(--foreground-subtle)]'}`}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <p className="text-sm font-medium leading-snug text-[var(--foreground)]">
+                    {item.label}
+                    {!item.required && (
+                      <span className="ml-1 text-xs font-normal text-[var(--foreground-subtle)]">
+                        (recomendado)
+                      </span>
+                    )}
+                  </p>
+                  {!item.complete && (
+                    <Link
+                      to={item.href}
+                      className="text-xs font-medium text-[var(--primary)] hover:underline"
+                    >
+                      Ir
+                    </Link>
                   )}
-                </p>
-                {!item.complete && (
-                  <Link
-                    to={item.href}
-                    className="text-xs font-medium text-[var(--primary)] hover:underline"
-                  >
-                    Ir
-                  </Link>
-                )}
+                </div>
               </div>
-              <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">{item.description}</p>
             </div>
+            <p className="line-clamp-3 text-xs leading-relaxed text-[var(--foreground-muted)]">
+              {item.description}
+            </p>
           </li>
         ))}
       </ul>

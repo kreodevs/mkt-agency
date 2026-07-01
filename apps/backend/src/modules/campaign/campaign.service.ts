@@ -152,16 +152,22 @@ export class CampaignService {
       });
     }
 
-    Object.assign(campaign, {
-      name: dto.name ?? campaign.name,
-      objective: dto.objective ?? campaign.objective,
-      status: (dto.status as CampaignStatus) ?? campaign.status,
-      platforms: dto.platforms ?? campaign.platforms,
-      totalBudget:
-        dto.totalBudget !== undefined
-          ? String(dto.totalBudget)
-          : campaign.totalBudget,
-    });
+    if (dto.name !== undefined) {
+      campaign.name = dto.name;
+    }
+    if (dto.objective !== undefined) {
+      campaign.objective = dto.objective;
+    }
+    if (dto.status !== undefined) {
+      campaign.status = dto.status as CampaignStatus;
+    }
+    if (dto.platforms !== undefined) {
+      campaign.platforms = dto.platforms;
+      this.syncStrategyChannels(campaign);
+    }
+    if (dto.totalBudget !== undefined) {
+      campaign.totalBudget = String(dto.totalBudget);
+    }
 
     const saved = await this.campaigns.save(campaign);
     return this.toResponse(saved);
@@ -286,6 +292,33 @@ export class CampaignService {
     budget.approved = dto.approved;
     const saved = await this.budgets.save(budget);
     return this.toBudgetResponse(saved);
+  }
+
+  private syncStrategyChannels(campaign: CampaignEntity): void {
+    if (!campaign.platforms.length) {
+      return;
+    }
+
+    const strategy = { ...(campaign.strategy ?? {}) };
+    const mode = strategy.executionMode === 'paid' ? 'paid' : 'organic';
+    const existingChannels = Array.isArray(strategy.channels)
+      ? (strategy.channels as Array<{ platform?: string; focus?: string }>)
+      : [];
+    const focusByPlatform = new Map(
+      existingChannels
+        .filter((channel) => typeof channel.platform === 'string')
+        .map((channel) => [channel.platform!, channel.focus]),
+    );
+    const defaultFocus =
+      mode === 'organic'
+        ? 'Publicación orgánica manual (sin Ads Manager)'
+        : 'Canal de campaña';
+
+    strategy.channels = campaign.platforms.map((platform) => ({
+      platform,
+      focus: focusByPlatform.get(platform) ?? defaultFocus,
+    }));
+    campaign.strategy = strategy;
   }
 
   private async findOwnedCampaign(

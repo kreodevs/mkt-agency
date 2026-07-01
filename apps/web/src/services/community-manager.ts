@@ -37,3 +37,28 @@ export async function saveCommunityManagerPreferences(
 export async function getCommunityManagerReadiness(): Promise<CommunityManagerReadiness> {
   return apiFetch<CommunityManagerReadiness>('/community-manager/readiness');
 }
+
+export interface GenerateSocialCopyPayload {
+  platforms: CmPlatform[];
+  count: number;
+  campaignId?: string;
+  productId?: string;
+  tone?: string;
+  topics?: string[];
+}
+
+export interface GenerateSocialCopyResponse {
+  id: string;
+  status: string;
+  postsGenerated?: number;
+  imagesAttached?: number;
+}
+
+export async function generateSocialCopy(
+  payload: GenerateSocialCopyPayload,
+): Promise<GenerateSocialCopyResponse> {
+  return apiFetch<GenerateSocialCopyResponse>('/community-manager/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

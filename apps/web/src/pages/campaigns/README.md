@@ -2,7 +2,7 @@
 
 - `CampaignListPage` — `/campaigns` (tabla + Kanban, filtros, campaña automática desde agentes)
 - `CampaignCreatePage` — `/campaigns/new`
-- `CampaignDetailPage` — `/campaigns/:id` (orgánico: plan editorial + guía manual; pagado: estrategia IA + presupuestos)
+- `CampaignDetailPage` — `/campaigns/:id` (orgánico: plan editorial + edición de plataformas + generar posts; pagado: estrategia IA + presupuestos)
 
 Componentes en `@/components/campaigns/`: `CampaignKanban`, `BudgetApproval`, `StrategyGeneration`.
 

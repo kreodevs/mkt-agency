@@ -5,6 +5,8 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { BudgetApproval } from '@/components/campaigns/BudgetApproval';
+import { CampaignPlatformEditor } from '@/components/campaigns/CampaignPlatformEditor';
+import { CampaignGeneratePosts } from '@/components/campaigns/CampaignGeneratePosts';
 import { OrganicPublishingGuide } from '@/components/campaigns/OrganicPublishingGuide';
 import { StrategyGeneration } from '@/components/campaigns/StrategyGeneration';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -188,12 +190,7 @@ export default function CampaignDetailPage() {
                       : '—'}
                 </dd>
               </div>
-              <div>
-                <dt className="text-[var(--foreground-muted)]">Plataformas</dt>
-                <dd className="mt-1 capitalize text-[var(--foreground)]">
-                  {campaign.platforms.length > 0 ? campaign.platforms.join(', ') : '—'}
-                </dd>
-              </div>
+              <CampaignPlatformEditor campaignId={campaign.id} platforms={campaign.platforms} />
               <div>
                 <dt className="text-[var(--foreground-muted)]">Creada</dt>
                 <dd className="mt-1 text-[var(--foreground)]">{formatDate(campaign.createdAt)}</dd>
@@ -206,8 +203,28 @@ export default function CampaignDetailPage() {
           </Card>
 
           {isOrganic ? (
-            <OrganicPublishingGuide strategy={campaign.strategy} campaignId={campaign.id} />
+            <OrganicPublishingGuide
+              strategy={campaign.strategy}
+              campaignId={campaign.id}
+              productId={campaign.productId}
+              platforms={campaign.platforms}
+            />
           ) : (
+            <Card title="Contenidos del calendario">
+              <CampaignGeneratePosts
+                campaignId={campaign.id}
+                productId={campaign.productId}
+                platforms={campaign.platforms}
+                linkedContentCount={
+                  typeof campaign.strategy.linkedContentCount === 'number'
+                    ? campaign.strategy.linkedContentCount
+                    : 0
+                }
+              />
+            </Card>
+          )}
+
+          {!isOrganic && (
             <Card title="Presupuestos por plataforma">
               {budgetsQuery.isLoading && (
                 <p className="text-sm text-[var(--foreground-muted)]">Cargando presupuestos...</p>

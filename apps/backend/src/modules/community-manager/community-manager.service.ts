@@ -47,6 +47,7 @@ import {
   GenerateSocialCopyDto,
   UpdateCommunityManagerPreferencesDto,
 } from './dto/community-manager.request.dto';
+import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 
 @Injectable()
@@ -66,6 +67,8 @@ export class CommunityManagerService {
     private readonly productEntities: Repository<ProductEntity>,
     @InjectRepository(CampaignEntity)
     private readonly campaigns: Repository<CampaignEntity>,
+    @InjectRepository(ContentEntity)
+    private readonly contents: Repository<ContentEntity>,
     @Inject(SOCIAL_COPY_ADAPTER)
     private readonly adapter: SocialCopyAdapterPort,
     private readonly llmProviders: LlmProviderService,
@@ -340,6 +343,10 @@ export class CommunityManagerService {
       batch.publishedPosts = publishedPosts;
       await this.batches.save(batch);
 
+      if (dto.campaignId && publishedPosts.length > 0) {
+        await this.refreshCampaignLinkedContent(tenantId, dto.campaignId);
+      }
+
       return {
         id: batch.id,
         status: 'completed',
@@ -352,6 +359,24 @@ export class CommunityManagerService {
       await this.batches.save(batch);
       return { id: batch.id, status: 'failed', postsGenerated: 0, imagesAttached: 0 };
     }
+  }
+
+  private async refreshCampaignLinkedContent(tenantId: string, campaignId: string): Promise<void> {
+    const campaign = await this.campaigns.findOne({ where: { id: campaignId, tenantId } });
+    if (!campaign) {
+      return;
+    }
+
+    const linkedContentCount = await this.contents.count({
+      where: { tenantId, campaignId },
+    });
+    const strategy = { ...(campaign.strategy ?? {}) };
+    strategy.linkedContentCount = linkedContentCount;
+    if (linkedContentCount > 0) {
+      strategy.timeline = `${linkedContentCount} post${linkedContentCount === 1 ? '' : 's'} programado${linkedContentCount === 1 ? '' : 's'} — revisa en Calendario → Aprueba → Copia y publica en cada red`;
+    }
+    campaign.strategy = strategy;
+    await this.campaigns.save(campaign);
   }
 
   private formatPostBody(post: SocialCopyPost): string {
