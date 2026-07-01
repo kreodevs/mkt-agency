@@ -96,3 +96,25 @@ export async function completeProductOnboarding(
     method: 'POST',
   });
 }
+
+/** Crea un producto mínimo con una URL, infiere datos por IA, y devuelve el producto creado. */
+export async function createProductFromUrl(payload: {
+  url: string;
+}): Promise<Product> {
+  // Paso 1: crear producto mínimo
+  const product = await apiFetch<Product>('/products', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'Nuevo producto',
+      category: 'service',
+      isPrimary: true,
+      websiteUrl: payload.url.trim(),
+    }),
+  });
+
+  // Paso 2: inferir campos desde la URL
+  await inferProductFromPage(product.id, { url: payload.url.trim() });
+
+  // El frontend del wizard recarga el producto, así no necesitamos return con data.
+  return product;
+}

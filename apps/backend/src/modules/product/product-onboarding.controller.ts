@@ -22,6 +22,9 @@ import {
 } from './dto/product-onboarding.dto';
 import { ProductOnboardingService } from './product-onboarding.service';
 
+import { CreateProductDto } from './dto/product.request.dto';
+import { ProductResponseDto } from './dto/product.response.dto';
+
 @Controller('products')
 @UseGuards(TenantGuard)
 export class ProductOnboardingController {

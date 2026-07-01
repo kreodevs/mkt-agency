@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Megaphone, Package, Plus, Star } from 'lucide-react';
+import { ClipboardList, Megaphone, Package, Plus, Sparkles, Star } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -128,13 +128,22 @@ export default function ProductListPage() {
       {items.length === 0 && !productsQuery.isLoading ? (
         <Card title="Empieza con tu primer producto" subtitle="Un SOHO promociona lo que vende">
           <p className="mb-4 text-sm text-[var(--foreground-muted)]">
-            Registra tu producto o servicio principal. Luego podrás lanzar campañas, generar copy y
-            medir resultados por oferta comercial.
+            Registra tu producto o servicio principal de forma manual o deja que la IA analice tu
+            página web y complete el perfil automáticamente. Luego podrás lanzar campañas, generar
+            copy y medir resultados por oferta comercial.
           </p>
-          <Button onClick={() => navigate('/products/new')} className="gap-2">
-            <Package className="h-4 w-4" />
-            Crear primer producto
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => navigate('/products/new')} className="gap-2">
+              <Package className="h-4 w-4" />
+              Creación manual
+            </Button>
+            <Link to="/products/create-with-ai">
+              <Button variant="outline" className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Crear con IA
+              </Button>
+            </Link>
+          </div>
         </Card>
       ) : (
         <Card title="Catálogo activo" subtitle={`${items.length} producto(s)`}>
