@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -52,5 +53,16 @@ export class ImageGenerationController {
       throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
     }
     return record;
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteGeneration(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    await this.imageGeneration.delete(user.tenantId!, id);
+  }
+
+  @Post(':id/retry')
+  async retryGeneration(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.imageGeneration.retry(user.tenantId!, user.id, id);
   }
 }

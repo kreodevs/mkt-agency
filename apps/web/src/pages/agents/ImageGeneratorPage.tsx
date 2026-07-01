@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ImageIcon, Loader2, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ChevronLeft, ImageIcon, Loader2, Sparkles, Trash2, RotateCcw, Eye } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
-import { listImageGenerations, generateImage } from '@/services/agents';
+import { listImageGenerations, generateImage, deleteImageGeneration, retryImageGeneration } from '@/services/agents';
 import { ApiError } from '@/services/api';
 import { InputText } from '@/components/atoms/InputText';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
@@ -32,6 +32,7 @@ export default function ImageGeneratorPage() {
   const [style, setStyle] = useState('');
   const [size, setSize] = useState('1024x1024');
   const resolvedProductId = useResolvedProductId();
+  const navigate = useNavigate();
 
   const historyQuery = useQuery({
     queryKey: ['image-generations'],

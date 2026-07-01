@@ -16,13 +16,12 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
 
     const model = resolved.model?.trim() || 'black-forest-labs/flux-1.1-pro';
     const size = options?.size || '1024x1024';
-    const [width, height] = size.split('x').map(Number);
 
     const body = {
       model,
       prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}`,
       n: 1,
-      size: { width, height },
+      size,
     };
 
     const baseUrl = resolved.apiUrl.replace(/\/$/, '');

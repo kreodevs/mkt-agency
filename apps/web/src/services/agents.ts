@@ -72,3 +72,11 @@ export async function generateImage(payload: {
 export async function getImageGeneration(id: string): Promise<ImageGeneration> {
   return apiFetch<ImageGeneration>(`/agents/image-generation/${id}`);
 }
+
+export async function deleteImageGeneration(id: string): Promise<void> {
+  return apiFetch<void>(`/agents/image-generation/${id}`, { method: 'DELETE' });
+}
+
+export async function retryImageGeneration(id: string): Promise<ImageGeneration> {
+  return apiFetch<ImageGeneration>(`/agents/image-generation/${id}/retry`, { method: 'POST' });
+}

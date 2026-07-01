@@ -188,4 +188,91 @@ export class ImageGenerationService {
   async findOne(tenantId: string, id: string): Promise<AgentImageGenerationEntity | null> {
     return this.generations.findOne({ where: { id, tenantId } });
   }
+
+  async delete(tenantId: string, id: string): Promise<void> {
+    const record = await this.findOne(tenantId, id);
+    if (!record) {
+      throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
+    }
+    await this.generations.delete(id);
+  }
+
+  async retry(
+    tenantId: string,
+    userId: string,
+    id: string,
+  ): Promise<GenerateImageResult> {
+    const record = await this.findOne(tenantId, id);
+    if (!record) {
+      throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
+    }
+
+    // Reset to processing
+    record.status = 'processing';
+    record.imageUrl = null;
+    record.assetId = null;
+    record.errorMessage = null;
+    await this.generations.save(record);
+
+    try {
+      const result = await this.adapter.generateImage(record.prompt, {
+        size: undefined,
+        style: undefined,
+      });
+
+      if (!result.imageUrl) {
+        throw new Error('Adapter returned no image URL');
+      }
+
+      const imageResponse = await fetch(result.imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download generated image: ${imageResponse.status}`);
+      }
+
+      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+      const contentType = imageResponse.headers.get('content-type') || 'image/png';
+      const extension = contentType.split('/').pop() || 'png';
+      const fileName = `${record.prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_')}.${extension}`;
+
+      const fakeFile: Express.Multer.File = {
+        buffer: imageBuffer,
+        originalname: fileName,
+        mimetype: contentType,
+        size: imageBuffer.length,
+        fieldname: 'file',
+        encoding: '7bit',
+        stream: null as unknown as import('stream').Readable,
+        destination: '',
+        filename: fileName,
+        path: '',
+      };
+
+      const asset = await this.assetService.upload(tenantId, fakeFile);
+
+      record.imageUrl = asset.url ?? result.imageUrl;
+      record.assetId = asset.id;
+      record.status = 'completed';
+      await this.generations.save(record);
+
+      return {
+        id: record.id,
+        assetId: record.assetId,
+        imageUrl: record.imageUrl,
+        status: record.status,
+        contentId: record.contentId,
+      };
+    } catch (error) {
+      this.logger.warn(`Image retry failed: ${error instanceof Error ? error.message : error}`);
+      record.status = 'failed';
+      record.errorMessage = error instanceof Error ? error.message : 'Retry failed';
+      await this.generations.save(record);
+      return {
+        id: record.id,
+        assetId: null,
+        imageUrl: null,
+        status: 'failed',
+        contentId: record.contentId,
+      };
+    }
+  }
 }
