@@ -44,6 +44,9 @@ const PublicationInboxPage = lazy(
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
 const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
+const ImageGeneratorDetailPage = lazy(
+  () => import('@/pages/agents/ImageGeneratorDetailPage'),
+);
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
 
@@ -83,6 +86,7 @@ export function AppRouter() {
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
             <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
+            <Route path="/agents/image-generator/:id" element={<ImageGeneratorDetailPage />} />
             <Route path="/strategy" element={<StrategyAdjustmentPage />} />
             <Route path="/community" element={<CommunityManagerPage />} />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />

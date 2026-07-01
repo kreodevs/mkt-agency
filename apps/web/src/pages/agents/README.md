@@ -7,6 +7,7 @@
 | `/agents/brand-interview/:id` | Chat + Brand Brief (muestra producto si aplica) |
 | `/agents/competitor-intel` | Historial + reporte + nuevo análisis; búsqueda IA de competidores si no hay registros |
 | `/agents/image-generator` | Galería + formulario de generación |
+| `/agents/image-generator/:id` | Detalle: frames (reel/carrusel), prompt, aprobación si hay contenido vinculado |
 
 El catálogo (`AgentListPage`) usa `useAgentHubStats` para mostrar **Ver historial**, **Continuar** o **Iniciar** según ejecuciones previas.
 

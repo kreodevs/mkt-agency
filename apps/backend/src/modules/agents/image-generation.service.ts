@@ -14,6 +14,13 @@ import {
   ImageGenerationResult,
 } from './adapters/image-generation.adapter.port';
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
+import {
+  buildFramePrompt,
+  detectReelFrameCount,
+  isImageGenerationMetadata,
+  type ImageGenerationFrameMeta,
+  type ImageGenerationMetadata,
+} from './domain/image-generation.utils';
 import { ContentService } from '../content/content.service';
 
 export interface GenerateImageOptions {
@@ -29,6 +36,7 @@ export interface GenerateImageResult {
   imageUrl: string | null;
   status: string;
   contentId: string | null;
+  metadata?: ImageGenerationMetadata;
 }
 
 @Injectable()
@@ -62,63 +70,11 @@ export class ImageGenerationService {
         status: 'processing',
         productId: options.productId ?? null,
         contentId: options.contentId ?? null,
+        metadata: {},
       }),
     );
 
-    try {
-      const result = await this.adapter.generateImage(trimmed, {
-        size: options.size,
-        style: options.style,
-      });
-
-      const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
-      const extension = contentType.split('/').pop() || 'png';
-      const fileName = `${trimmed.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_')}.${extension}`;
-
-      const fakeFile: Express.Multer.File = {
-        buffer: imageBuffer,
-        originalname: fileName,
-        mimetype: contentType,
-        size: imageBuffer.length,
-        fieldname: 'file',
-        encoding: '7bit',
-        stream: null as unknown as import('stream').Readable,
-        destination: '',
-        filename: fileName,
-        path: '',
-      };
-
-      const asset = await this.assetService.upload(tenantId, fakeFile);
-
-      record.imageUrl = asset.url ?? `/api/v1/assets/${asset.id}/file`;
-      record.assetId = asset.id;
-      record.status = 'completed';
-      await this.generations.save(record);
-
-      if (options.contentId && asset.id) {
-        await this.attachAssetToContent(tenantId, userId, options.contentId, asset.id);
-      }
-
-      return {
-        id: record.id,
-        assetId: record.assetId,
-        imageUrl: record.imageUrl,
-        status: record.status,
-        contentId: record.contentId,
-      };
-    } catch (error) {
-      this.logger.warn(`Image generation failed: ${error instanceof Error ? error.message : error}`);
-      record.status = 'failed';
-      record.errorMessage = error instanceof Error ? error.message : 'Generation failed';
-      await this.generations.save(record);
-      return {
-        id: record.id,
-        assetId: null,
-        imageUrl: null,
-        status: 'failed',
-        contentId: record.contentId,
-      };
-    }
+    return this.runGeneration(tenantId, userId, record, trimmed, options);
   }
 
   async attachVisualToContent(
@@ -138,6 +94,87 @@ export class ImageGenerationService {
       size: '1024x1024',
       style: 'social media post, professional',
     });
+  }
+
+  private async runGeneration(
+    tenantId: string,
+    userId: string,
+    record: AgentImageGenerationEntity,
+    prompt: string,
+    options: GenerateImageOptions,
+  ): Promise<GenerateImageResult> {
+    try {
+      const frameCount = detectReelFrameCount(prompt);
+      const frames: ImageGenerationFrameMeta[] = [];
+
+      for (let index = 0; index < frameCount; index += 1) {
+        const framePrompt = buildFramePrompt(prompt, index, frameCount);
+        const result = await this.adapter.generateImage(framePrompt, {
+          size: options.size,
+          style: options.style,
+        });
+
+        const asset = await this.uploadGeneratedImage(tenantId, prompt, index, frameCount, result);
+        frames.push({ assetId: asset.id, index });
+      }
+
+      const primary = frames[0];
+      const metadata: ImageGenerationMetadata = { frameCount, frames };
+
+      record.imageUrl = primary ? `/api/v1/assets/${primary.assetId}/file` : null;
+      record.assetId = primary?.assetId ?? null;
+      record.metadata = metadata;
+      record.status = 'completed';
+      record.errorMessage = null;
+      await this.generations.save(record);
+
+      if (options.contentId && frames.length) {
+        await this.attachAssetsToContent(
+          tenantId,
+          userId,
+          options.contentId,
+          frames.map((frame) => frame.assetId),
+        );
+      }
+
+      return this.toResult(record);
+    } catch (error) {
+      this.logger.warn(`Image generation failed: ${error instanceof Error ? error.message : error}`);
+      record.status = 'failed';
+      record.errorMessage = error instanceof Error ? error.message : 'Generation failed';
+      record.metadata = {};
+      await this.generations.save(record);
+      return this.toResult(record);
+    }
+  }
+
+  private async uploadGeneratedImage(
+    tenantId: string,
+    prompt: string,
+    index: number,
+    frameCount: number,
+    result: ImageGenerationResult,
+  ) {
+    const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
+    const extension = contentType.split('/').pop() || 'png';
+    const slug = prompt.slice(0, 32).replace(/[^a-zA-Z0-9]/g, '_');
+    const suffix = frameCount > 1 ? `_frame${index + 1}` : '';
+    const fileName = `${slug}${suffix}.${extension}`;
+
+    const fakeFile: Express.Multer.File = {
+      buffer: imageBuffer,
+      originalname: fileName,
+      mimetype: contentType,
+      size: imageBuffer.length,
+      fieldname: 'file',
+      encoding: '7bit',
+      stream: null as unknown as import('stream').Readable,
+      destination: '',
+      filename: fileName,
+      path: '',
+    };
+
+    return this.assetService.upload(tenantId, fakeFile);
   }
 
   private async resolveImagePayload(
@@ -165,25 +202,36 @@ export class ImageGenerationService {
     throw new Error('Adapter returned no image data');
   }
 
-  private async attachAssetToContent(
+  private async attachAssetsToContent(
     tenantId: string,
     userId: string,
     contentId: string,
-    assetId: string,
+    assetIds: string[],
   ): Promise<void> {
     const content = await this.contentService.findOne(tenantId, contentId);
     const currentAssets = content.currentVersion?.assets ?? [];
-    const assetIds = [
-      ...currentAssets.map((asset) =>
-        typeof asset === 'string' ? asset : (asset as { id: string }).id,
-      ),
-      assetId,
-    ];
+    const existingIds = currentAssets.map((asset) =>
+      typeof asset === 'string' ? asset : (asset as { id: string }).id,
+    );
 
     await this.contentService.update(tenantId, userId, contentId, {
-      assets: [...new Set(assetIds)],
-      changeSummary: 'Imagen generada por Image Generator',
+      assets: [...new Set([...existingIds, ...assetIds])],
+      changeSummary:
+        assetIds.length > 1
+          ? `Secuencia de ${assetIds.length} imágenes generada por Image Generator`
+          : 'Imagen generada por Image Generator',
     });
+  }
+
+  private toResult(record: AgentImageGenerationEntity): GenerateImageResult {
+    return {
+      id: record.id,
+      assetId: record.assetId,
+      imageUrl: record.imageUrl,
+      status: record.status,
+      contentId: record.contentId,
+      metadata: isImageGenerationMetadata(record.metadata) ? record.metadata : undefined,
+    };
   }
 
   async findByContentId(
@@ -223,62 +271,16 @@ export class ImageGenerationService {
       throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
     }
 
-    // Reset to processing
     record.status = 'processing';
     record.imageUrl = null;
     record.assetId = null;
     record.errorMessage = null;
+    record.metadata = {};
     await this.generations.save(record);
 
-    try {
-      const result = await this.adapter.generateImage(record.prompt, {
-        size: undefined,
-        style: undefined,
-      });
-
-      const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
-      const extension = contentType.split('/').pop() || 'png';
-      const fileName = `${record.prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_')}.${extension}`;
-
-      const fakeFile: Express.Multer.File = {
-        buffer: imageBuffer,
-        originalname: fileName,
-        mimetype: contentType,
-        size: imageBuffer.length,
-        fieldname: 'file',
-        encoding: '7bit',
-        stream: null as unknown as import('stream').Readable,
-        destination: '',
-        filename: fileName,
-        path: '',
-      };
-
-      const asset = await this.assetService.upload(tenantId, fakeFile);
-
-      record.imageUrl = asset.url ?? `/api/v1/assets/${asset.id}/file`;
-      record.assetId = asset.id;
-      record.status = 'completed';
-      await this.generations.save(record);
-
-      return {
-        id: record.id,
-        assetId: record.assetId,
-        imageUrl: record.imageUrl,
-        status: record.status,
-        contentId: record.contentId,
-      };
-    } catch (error) {
-      this.logger.warn(`Image retry failed: ${error instanceof Error ? error.message : error}`);
-      record.status = 'failed';
-      record.errorMessage = error instanceof Error ? error.message : 'Retry failed';
-      await this.generations.save(record);
-      return {
-        id: record.id,
-        assetId: null,
-        imageUrl: null,
-        status: 'failed',
-        contentId: record.contentId,
-      };
-    }
+    return this.runGeneration(tenantId, userId, record, record.prompt, {
+      contentId: record.contentId ?? undefined,
+      productId: record.productId ?? undefined,
+    });
   }
 }

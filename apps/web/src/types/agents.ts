@@ -33,6 +33,16 @@ export interface CompetitorAnalysis {
   updatedAt: string;
 }
 
+export interface ImageGenerationFrameMeta {
+  assetId: string;
+  index: number;
+}
+
+export interface ImageGenerationMetadata {
+  frameCount?: number;
+  frames: ImageGenerationFrameMeta[];
+}
+
 export interface ImageGeneration {
   id: string;
   tenantId: string;
@@ -40,6 +50,9 @@ export interface ImageGeneration {
   status: string;
   imageUrl: string | null;
   assetId: string | null;
+  productId?: string | null;
+  contentId?: string | null;
+  metadata?: ImageGenerationMetadata | Record<string, unknown>;
   errorMessage: string | null;
   createdAt: string;
   updatedAt: string;

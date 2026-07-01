@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import type { ImageGenerationMetadata } from './image-generation.utils';
 
 @Entity({ name: 'agent_image_generations' })
 export class AgentImageGenerationEntity {
@@ -34,6 +35,9 @@ export class AgentImageGenerationEntity {
 
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage!: string | null;
+
+  @Column({ type: 'jsonb', default: () => "'{}'" })
+  metadata!: ImageGenerationMetadata | Record<string, unknown>;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

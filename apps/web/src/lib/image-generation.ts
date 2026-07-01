@@ -1,0 +1,34 @@
+import type { ImageGenerationMetadata } from '@/types/agents';
+
+export function parseImageGenerationMetadata(
+  metadata: unknown,
+): ImageGenerationMetadata | null {
+  if (!metadata || typeof metadata !== 'object') {
+    return null;
+  }
+
+  const record = metadata as ImageGenerationMetadata;
+  if (!Array.isArray(record.frames) || record.frames.length === 0) {
+    return null;
+  }
+
+  return {
+    frameCount: record.frameCount ?? record.frames.length,
+    frames: record.frames.filter(
+      (frame): frame is { assetId: string; index: number } =>
+        typeof frame?.assetId === 'string' && typeof frame?.index === 'number',
+    ),
+  };
+}
+
+export function listGenerationAssetIds(generation: {
+  assetId: string | null;
+  metadata?: unknown;
+}): string[] {
+  const parsed = parseImageGenerationMetadata(generation.metadata);
+  if (parsed?.frames.length) {
+    return parsed.frames.map((frame) => frame.assetId);
+  }
+
+  return generation.assetId ? [generation.assetId] : [];
+}

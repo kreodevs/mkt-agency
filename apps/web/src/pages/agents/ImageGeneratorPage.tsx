@@ -10,6 +10,7 @@ import { toast } from '@/components/molecules/Sonner';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { listImageGenerations, generateImage, deleteImageGeneration, retryImageGeneration } from '@/services/agents';
 import { ApiError } from '@/services/api';
+import { parseImageGenerationMetadata } from '@/lib/image-generation';
 import { InputText } from '@/components/atoms/InputText';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
@@ -54,7 +55,12 @@ export default function ImageGeneratorPage() {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al generar imagen');
       } else {
-        toast.success('Imagen generada');
+        const meta = parseImageGenerationMetadata(result.metadata);
+        toast.success(
+          meta && (meta.frameCount ?? meta.frames.length) > 1
+            ? `${meta.frameCount ?? meta.frames.length} frames generados para reel/carrusel`
+            : 'Imagen generada',
+        );
         setPrompt('');
       }
       historyQuery.refetch();
@@ -150,6 +156,15 @@ export default function ImageGeneratorPage() {
                     )}
                   </div>
                   <div className="border-t border-[var(--border)] p-3">
+                    {(() => {
+                      const meta = parseImageGenerationMetadata(img.metadata);
+                      if (!meta || (meta.frameCount ?? meta.frames.length) <= 1) return null;
+                      return (
+                        <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
+                          {meta.frameCount ?? meta.frames.length} frames · reel
+                        </span>
+                      );
+                    })()}
                     <p className="line-clamp-2 text-xs text-[var(--foreground)]">{img.prompt}</p>
                     <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">
                       {new Date(img.createdAt).toLocaleString('es-MX')}
