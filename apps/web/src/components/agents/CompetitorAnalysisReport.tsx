@@ -50,7 +50,7 @@ function ThreatBadge({ level }: { level: string }) {
   );
 }
 
-function renderList(value: string | string[] | undefined, fallback: string): string[] {
+function renderList(value: string | string[] | undefined): string[] {
   if (!value) return [];
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value === 'string') {
@@ -66,10 +66,10 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
 
   const landscape = analysis.competitorLandscape || '';
   const competitors = analysis.competitors || [];
-  const gaps = renderList(analysis.marketGaps as string | string[], '');
+  const gaps = renderList(analysis.marketGaps as string | string[]);
   const threatLevel = analysis.threatLevel || '';
   const recommendation = analysis.recommendation || '';
-  const insights = renderList(analysis.keyInsights as string | string[], '');
+  const insights = renderList(analysis.keyInsights as string | string[]);
 
   return (
     <div className="space-y-6">
@@ -106,7 +106,7 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
                       <div className="rounded-md bg-emerald-50/50 p-2 text-xs text-emerald-800">
                         <span className="font-medium">Fortalezas:</span>
                         <ul className="mt-1 list-disc pl-4 space-y-0.5">
-                          {renderList(typeof c.strengths === 'string' ? c.strengths : Array.isArray(c.strengths) ? c.strengths as string[] : undefined, '').map((s, j) => (
+                          {renderList(typeof c.strengths === 'string' ? c.strengths : Array.isArray(c.strengths) ? c.strengths as string[] : undefined).map((s, j) => (
                             <li key={j}>{s}</li>
                           ))}
                         </ul>
