@@ -72,7 +72,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           className,
         )}
       >
-        <div className="relative flex min-h-header shrink-0 items-center overflow-visible border-b border-[var(--border)] px-[var(--spacing-lg)] py-2.5 md:py-3">
+        <div className="relative flex h-header shrink-0 items-center overflow-visible border-b border-[var(--border)] px-[var(--spacing-lg)]">
           <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
             {collapsed ? (
               <Tooltip content={`Mkt Agency · v${appVersion}`}>
@@ -81,24 +81,20 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                 </div>
               </Tooltip>
             ) : (
-              <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
-                M
-              </div>
-            )}
-            {!collapsed && (
-              <div className="min-w-0">
-                {brand ?? (
-                  <span className="block whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
-                    Mkt <span className="text-[var(--primary)]">Agency</span>
-                  </span>
-                )}
-                <p
-                  className="mt-0.5 truncate font-mono text-[10px] text-[var(--foreground-subtle)]"
-                  title={`Versión en ejecución: ${appVersion}`}
-                >
-                  v{appVersion}
-                </p>
-              </div>
+              <Tooltip content={`Versión en ejecución: v${appVersion}`}>
+                <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
+                  <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                    M
+                  </div>
+                  <div className="min-w-0">
+                    {brand ?? (
+                      <span className="block truncate whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
+                        Mkt <span className="text-[var(--primary)]">Agency</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Tooltip>
             )}
           </div>
 
