@@ -59,6 +59,24 @@ export default function ImageGeneratorPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteImageGeneration(id),
+    onSuccess: () => {
+      toast.success('Eliminada');
+      historyQuery.refetch();
+    },
+    onError: () => toast.error('Error al eliminar'),
+  });
+
+  const retryMutation = useMutation({
+    mutationFn: (id: number) => retryImageGeneration(id),
+    onSuccess: () => {
+      toast.success('Reintentando…');
+      historyQuery.refetch();
+    },
+    onError: () => toast.error('Error al reintentar'),
+  });
+
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
@@ -81,7 +99,19 @@ export default function ImageGeneratorPage() {
           <Card title="Imágenes generadas" subtitle="Historial">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {history.map((img) => (
-                <div key={img.id} className="overflow-hidden rounded-xl border border-[var(--border)]">
+                <div
+                  key={img.id}
+                  className="overflow-hidden rounded-xl border border-[var(--border)] transition-shadow hover:shadow-lg"
+                  onClick={() => navigate(`/agents/image-generator/${img.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/agents/image-generator/${img.id}`);
+                    }
+                  }}
+                >
                   <div className="flex aspect-square items-center justify-center bg-[var(--background-secondary)]">
                     {img.imageUrl ? (
                       <img
@@ -104,6 +134,45 @@ export default function ImageGeneratorPage() {
                     <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">
                       {new Date(img.createdAt).toLocaleString('es-MX')}
                     </p>
+                    <div className="mt-2 flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/agents/image-generator/${img.id}`);
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      {img.status === 'failed' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            retryMutation.mutate(img.id);
+                          }}
+                          loading={retryMutation.isPending}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMutation.mutate(img.id);
+                        }}
+                        loading={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
