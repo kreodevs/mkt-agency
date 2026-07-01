@@ -60,7 +60,7 @@ export default function ImageGeneratorPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteImageGeneration(id),
+    mutationFn: (id: string) => deleteImageGeneration(id),
     onSuccess: () => {
       toast.success('Eliminada');
       historyQuery.refetch();
@@ -69,7 +69,7 @@ export default function ImageGeneratorPage() {
   });
 
   const retryMutation = useMutation({
-    mutationFn: (id: number) => retryImageGeneration(id),
+    mutationFn: (id: string) => retryImageGeneration(id),
     onSuccess: () => {
       toast.success('Reintentando…');
       historyQuery.refetch();

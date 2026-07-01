@@ -66,10 +66,10 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
 
   const landscape = analysis.competitorLandscape || '';
   const competitors = analysis.competitors || [];
-  const gaps = renderList(analysis.marketGaps as string | string[]);
+  const gaps = renderList(analysis.marketGaps as string | string[], '');
   const threatLevel = analysis.threatLevel || '';
   const recommendation = analysis.recommendation || '';
-  const insights = renderList(analysis.keyInsights as string | string[]);
+  const insights = renderList(analysis.keyInsights as string | string[], '');
 
   return (
     <div className="space-y-6">
