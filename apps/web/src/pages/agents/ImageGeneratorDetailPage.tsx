@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, RotateCcw, Trash2, ZoomIn } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
@@ -7,6 +8,7 @@ import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
+import { Dialog } from '@/components/molecules/Dialog';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { toast } from '@/components/molecules/Sonner';
 import { listGenerationAssetIds, parseImageGenerationMetadata, isVideoGeneration } from '@/lib/image-generation';
@@ -22,6 +24,9 @@ export default function ImageGeneratorDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [previewFrame, setPreviewFrame] = useState<{ assetId: string; index: number } | null>(
+    null,
+  );
 
   const generationQuery = useQuery({
     queryKey: ['image-generation', id],
@@ -175,9 +180,21 @@ export default function ImageGeneratorDetailPage() {
               {frames.map((assetId, index) => (
                 <div key={assetId} className="overflow-hidden rounded-xl border border-[var(--border)]">
                   {frames.length > 1 && !isVideo && (
-                    <p className="border-b border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground-muted)]">
-                      Frame {index + 1}
-                    </p>
+                    <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-1.5">
+                      <p className="text-xs font-medium text-[var(--foreground-muted)]">
+                        Frame {index + 1}
+                      </p>
+                      {!isVideo && (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline"
+                          onClick={() => setPreviewFrame({ assetId, index })}
+                        >
+                          <ZoomIn className="h-3.5 w-3.5" />
+                          Ampliar
+                        </button>
+                      )}
+                    </div>
                   )}
                   <div className={isVideo ? 'bg-[var(--background-secondary)]' : 'aspect-square bg-[var(--background-secondary)]'}>
                     {isVideo ? (
@@ -188,11 +205,18 @@ export default function ImageGeneratorDetailPage() {
                         controls
                       />
                     ) : (
-                      <AuthenticatedAssetImage
-                        assetId={assetId}
-                        title={`Frame ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
+                      <button
+                        type="button"
+                        className="block h-full w-full cursor-zoom-in"
+                        onClick={() => setPreviewFrame({ assetId, index })}
+                        aria-label={`Ampliar frame ${index + 1}`}
+                      >
+                        <AuthenticatedAssetImage
+                          assetId={assetId}
+                          title={`Frame ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -200,6 +224,24 @@ export default function ImageGeneratorDetailPage() {
             </div>
           </Card>
         ) : null}
+
+        <Dialog
+          visible={previewFrame !== null}
+          onHide={() => setPreviewFrame(null)}
+          size="full"
+          title={previewFrame ? `Frame ${previewFrame.index + 1}` : undefined}
+          description="Vista ampliada del frame del carrusel"
+        >
+          {previewFrame ? (
+            <div className="flex min-h-[50vh] items-center justify-center bg-[var(--background-secondary)] p-4">
+              <AuthenticatedAssetImage
+                assetId={previewFrame.assetId}
+                title={`Frame ${previewFrame.index + 1}`}
+                className="max-h-[80vh] w-full object-contain"
+              />
+            </div>
+          ) : null}
+        </Dialog>
 
         {generation.contentId && currentVersion && !currentVersion.signatureHash ? (
           <ApprovalActions contentId={generation.contentId} version={currentVersion} />

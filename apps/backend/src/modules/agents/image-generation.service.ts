@@ -256,6 +256,11 @@ export class ImageGenerationService {
   ): Promise<GenerateImageResult> {
     const productId = await this.resolveEffectiveProductId(tenantId, options, record);
 
+    if (productId && record.productId !== productId) {
+      record.productId = productId;
+      await this.generations.save(record);
+    }
+
     try {
       const frameCount = detectReelFrameCount(prompt);
       const frames: ImageGenerationFrameMeta[] = [];
@@ -335,17 +340,11 @@ export class ImageGenerationService {
     if (productId) {
       const branding = await this.resolveProductBranding(tenantId, productId);
       if (branding.logoAssetId) {
-        try {
-          finalBuffer = await this.imageBranding.applyProductLogo(
-            tenantId,
-            imageBuffer,
-            branding.logoAssetId,
-          );
-        } catch (error) {
-          this.logger.error(
-            `Logo overlay failed for product ${productId}: ${error instanceof Error ? error.message : error}`,
-          );
-        }
+        finalBuffer = await this.imageBranding.applyProductLogo(
+          tenantId,
+          imageBuffer,
+          branding.logoAssetId,
+        );
       }
     }
 

@@ -14,19 +14,20 @@ export class ImageBrandingService {
     logoAssetId: string,
   ): Promise<Buffer> {
     const logoFile = await this.assets.readFile(tenantId, logoAssetId);
-    const base = sharp(imageBuffer);
+    const normalizedBase = await sharp(imageBuffer).ensureAlpha().png().toBuffer();
+    const base = sharp(normalizedBase);
     const metadata = await base.metadata();
     const width = metadata.width ?? 1024;
     const height = metadata.height ?? 1024;
 
-    const logoWidth = Math.max(96, Math.round(width * 0.16));
+    const logoWidth = Math.max(96, Math.round(width * 0.18));
     const logoBuffer = await this.rasterizeLogo(logoFile.buffer, logoFile.mimeType, logoWidth);
     const logoMeta = await sharp(logoBuffer).metadata();
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
     const padding = Math.round(width * 0.04);
-    const platePad = Math.max(8, Math.round(Math.min(logoW, logoH) * 0.1));
+    const platePad = Math.max(8, Math.round(Math.min(logoW, logoH) * 0.12));
     const plateW = logoW + platePad * 2;
     const plateH = logoH + platePad * 2;
 
@@ -35,7 +36,7 @@ export class ImageBrandingService {
         width: plateW,
         height: plateH,
         channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 0.82 },
+        background: { r: 255, g: 255, b: 255, alpha: 0.88 },
       },
     })
       .png()
@@ -45,19 +46,24 @@ export class ImageBrandingService {
     const left = Math.max(padding, width - plateW - padding);
 
     if (top + plateH > height || left + plateW > width) {
-      this.logger.warn(
-        `Logo plate exceeds image bounds (${width}x${height}); skipping overlay for asset ${logoAssetId}`,
+      throw new Error(
+        `Logo plate exceeds image bounds (${width}x${height}) for asset ${logoAssetId}`,
       );
-      return imageBuffer;
     }
 
-    return base
+    const composited = await base
       .composite([
         { input: plate, top, left },
         { input: logoBuffer, top: top + platePad, left: left + platePad },
       ])
       .png()
       .toBuffer();
+
+    if (composited.length <= normalizedBase.length * 0.98) {
+      this.logger.warn(`Logo composite may not have applied for asset ${logoAssetId}`);
+    }
+
+    return composited;
   }
 
   private async rasterizeLogo(
@@ -70,12 +76,10 @@ export class ImageBrandingService {
       buffer.slice(0, 256).toString('utf8').trimStart().startsWith('<');
 
     try {
-      const pipeline = isSvg
-        ? sharp(buffer, { density: 300 })
-        : sharp(buffer);
+      const pipeline = isSvg ? sharp(buffer, { density: 300 }) : sharp(buffer);
 
       return pipeline
-        .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: true })
+        .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: false })
         .ensureAlpha()
         .png()
         .toBuffer();

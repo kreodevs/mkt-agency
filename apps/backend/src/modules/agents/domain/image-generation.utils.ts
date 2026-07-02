@@ -62,7 +62,7 @@ export function buildFramePrompt(basePrompt: string, index: number, total: numbe
     return basePrompt;
   }
 
-  return `${basePrompt}\n\nCarousel frame ${index + 1} of ${total} for a social media reel. Keep visual continuity with the other frames.`;
+  return `${basePrompt}\n\nFrame ${index + 1} de ${total} para carrusel en redes. Mantén continuidad visual con los demás frames. Sin logos, monogramas ni iconos en esquinas (el logo real se añade después en software).`;
 }
 
 export interface ImageGenerationFrameMeta {

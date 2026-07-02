@@ -23,13 +23,15 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     parts.push(`Contexto: ${input.body.replace(/\s+/g, ' ').trim().slice(0, 400)}`);
   }
 
-  parts.push(
-    `La imagen debe estar claramente asociada al producto/marca "${productName}" — incluye el nombre de forma legible en el diseño.`,
-  );
-
   if (input.hasLogo) {
     parts.push(
-      'No dibujes logos ni marcas inventadas. No uses recuadros blancos, cajas vacías ni placeholders: la esquina superior derecha debe quedar despejada de forma natural. El logo oficial de la marca se superpone después por software.',
+      `Incluye el nombre "${productName}" solo como texto legible (preferiblemente en la parte inferior), nunca como monograma o símbolo gráfico.`,
+      'PROHIBIDO: logos, monogramas, iniciales estilizadas (ej. una "A" en círculo), iconos de marca, marcas de agua o símbolos en cualquier esquina.',
+      'PROHIBIDO: recuadros blancos, cajas vacías o placeholders. La esquina superior derecha debe quedar totalmente libre de gráficos; el logo oficial se superpone después por software.',
+    );
+  } else {
+    parts.push(
+      `La imagen debe estar claramente asociada al producto/marca "${productName}" — incluye el nombre de forma legible en el diseño.`,
     );
   }
 
