@@ -14,6 +14,7 @@ import { CompetitorIntelService } from '../agents/competitor-intel.service';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { DEFAULT_CM_PLATFORMS, ONBOARDING_CM_POST_COUNT } from '../community-manager/domain/cm-platforms.constants';
 import { CompetitorService } from '../competitors/competitor.service';
+import { inferDiscoveryScope } from '../competitors/domain/competitor-discovery-context.util';
 import {
   calculateProductOnboardingCompletion,
   getProductOnboardingFieldStatuses,
@@ -422,8 +423,13 @@ export class ProductOnboardingService {
     }
 
     try {
+      const product = await this.productService.findOwnedEntity(tenantId, productId);
+      const scopeHint = inferDiscoveryScope(product.targetAudience);
+
       const discovery = await this.competitorService.discover(tenantId, {
-        scope: 'global',
+        scope: scopeHint.scope,
+        country: scopeHint.country,
+        city: scopeHint.city,
         productId,
       });
       if (discovery.items.length > 0) {

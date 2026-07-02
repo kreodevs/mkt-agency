@@ -11,6 +11,7 @@ export interface ProductContext {
   keywords: string[];
   category: string | null;
   priceRange: string | null;
+  websiteUrl: string | null;
 }
 
 export function toProductContext(product: ProductEntity): ProductContext {
@@ -23,6 +24,7 @@ export function toProductContext(product: ProductEntity): ProductContext {
     keywords: Array.isArray(product.keywords) ? product.keywords.map(String) : [],
     category: product.category,
     priceRange: product.priceRange,
+    websiteUrl: product.websiteUrl,
   };
 }
 
@@ -31,17 +33,32 @@ export function productSummaryForDiscovery(
   brand: ResolvedProfileValues,
   brandBrief?: Record<string, unknown> | null,
 ): string | null {
-  if (product?.valueProposition?.trim()) {
-    return `${product.name}: ${product.valueProposition.trim()}`;
-  }
-  if (product?.description?.trim()) {
-    return `${product.name}: ${product.description.trim()}`;
-  }
-  if (product?.name) {
-    return product.name;
+  if (!product) {
+    return extractProductSummary(brand, brandBrief);
   }
 
-  return extractProductSummary(brand, brandBrief);
+  const parts: string[] = [`Producto: ${product.name}`];
+
+  if (product.valueProposition?.trim()) {
+    parts.push(`Propuesta: ${product.valueProposition.trim()}`);
+  } else if (product.description?.trim()) {
+    parts.push(`Descripción: ${product.description.trim()}`);
+  }
+
+  if (product.category?.trim()) {
+    parts.push(`Categoría: ${product.category.trim()}`);
+  }
+  if (product.priceRange?.trim()) {
+    parts.push(`Precio: ${product.priceRange.trim()}`);
+  }
+  if (product.targetAudience?.trim()) {
+    parts.push(`Audiencia: ${product.targetAudience.trim()}`);
+  }
+  if (product.keywords.length > 0) {
+    parts.push(`Tags SEO: ${product.keywords.slice(0, 12).join(', ')}`);
+  }
+
+  return parts.length > 1 ? parts.join('. ') : product.name;
 }
 
 export function mergeBrandAndProductBrief(

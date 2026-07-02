@@ -146,6 +146,41 @@ export async function getLlmUsageDashboard(
   return apiFetch<LlmUsageDashboardResponse>(`/superadmin/llm-usage${qs ? `?${qs}` : ''}`);
 }
 
+export interface PlatformIntegration {
+  slug: string;
+  name: string;
+  apiKeyConfigured: boolean;
+  apiKeyHint: string | null;
+  isActive: boolean;
+  settings: Record<string, unknown>;
+  updatedAt: string;
+}
+
+export async function getTavilyIntegration(): Promise<PlatformIntegration> {
+  return apiFetch<PlatformIntegration>('/superadmin/integrations/tavily');
+}
+
+export async function updateTavilyIntegration(payload: {
+  apiKey?: string;
+  isActive?: boolean;
+}): Promise<PlatformIntegration> {
+  return apiFetch<PlatformIntegration>('/superadmin/integrations/tavily', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function testTavilyIntegration(): Promise<{
+  ok: true;
+  resultCount: number;
+  query: string;
+}> {
+  return apiFetch<{ ok: true; resultCount: number; query: string }>(
+    '/superadmin/integrations/tavily/test',
+    { method: 'POST' },
+  );
+}
+
 export async function impersonateTenant(tenantId: string): Promise<ImpersonateResponse> {
   const fetcher = isImpersonating() ? apiFetchAsPlatform : apiFetch;
 

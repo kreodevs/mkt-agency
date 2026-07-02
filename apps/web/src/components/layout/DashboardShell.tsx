@@ -27,6 +27,7 @@ export const superadminNavigation = [
       { label: 'Proveedores LLM', href: '/admin/llm-providers', icon: Bot },
       { label: 'Modelos por tarea', href: '/admin/llm-settings', icon: Sparkles },
       { label: 'Consumo IA', href: '/admin/llm-usage', icon: Coins },
+      { label: 'Integraciones', href: '/admin/integrations', icon: Globe },
     ],
   },
 ];

@@ -8,6 +8,7 @@ import { ImpersonateRequestDto } from './dto/impersonate.request.dto';
 import { ListUsersResponseDto } from './dto/list-users.response.dto';
 import { UpdateUserBySuperadminDto } from './dto/update-user.request.dto';
 import { UpdateLlmTaskConfigDto, CreateLlmProviderDto, UpdateLlmProviderDto } from './dto/llm-task-config.dto';
+import { UpdateTavilyIntegrationDto } from './dto/tavily-integration.dto';
 import { SuperadminService } from './superadmin.service';
 import { LLM_TASK_TYPES, type LlmTaskType } from '../../shared/ai/llm-task-types';
 
@@ -127,5 +128,26 @@ export class SuperadminController {
   @AuditLog({ action: 'superadmin.delete_llm_provider', resourceType: 'llm_provider' })
   async deleteLlmProvider(@Param('id') id: string) {
     await this.superadminService.deleteLlmProvider(id);
+  }
+
+  @Get('integrations/tavily')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.get_tavily_integration', resourceType: 'platform_integration' })
+  getTavilyIntegration() {
+    return this.superadminService.getTavilyIntegration();
+  }
+
+  @Patch('integrations/tavily')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.update_tavily_integration', resourceType: 'platform_integration' })
+  updateTavilyIntegration(@Body() body: UpdateTavilyIntegrationDto) {
+    return this.superadminService.updateTavilyIntegration(body);
+  }
+
+  @Post('integrations/tavily/test')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.test_tavily_integration', resourceType: 'platform_integration' })
+  testTavilyIntegration() {
+    return this.superadminService.testTavilyIntegration();
   }
 }

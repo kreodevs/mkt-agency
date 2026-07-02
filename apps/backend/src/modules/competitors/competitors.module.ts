@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { SearchModule } from '../../shared/search/search.module';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { ProductModule } from '../product/product.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
@@ -20,6 +21,7 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
   imports: [
     AuthSharedModule,
     LlmModule,
+    SearchModule,
     ProductModule,
     CompanyProfileModule,
     TypeOrmModule.forFeature([

@@ -18,9 +18,12 @@ import {
 } from './adapters/competitor-discovery.adapter.port';
 import type { MentionSentiment } from './domain/competitor.constants';
 import {
+  buildDiscoverySearchQueries,
+  extractStructuredBriefExcerpt,
   filterIrrelevantCompetitors,
   formatIndustryLabel,
   hasMinimalDiscoveryContext,
+  parseKnownCompetitorsFromProfile,
 } from './domain/competitor-discovery-context.util';
 import {
   productSummaryForDiscovery,
@@ -251,18 +254,10 @@ export class CompetitorService {
     });
 
     const brandBriefExcerpt =
-      interview?.brandBriefMarkdown?.trim().slice(0, 1200) ??
-      null;
-
-    if (!hasMinimalDiscoveryContext(values, brandBriefExcerpt)) {
-      throw new BadRequestException({
-        error:
-          'Completa el perfil de empresa (onboarding) o el Brand Brief antes de buscar competidores con IA.',
-        code: 'PROFILE_INCOMPLETE',
-      });
-    }
-
-    const existing = await this.competitors.find({ where: { tenantId } });
+      extractStructuredBriefExcerpt(
+        interview?.brandBriefMarkdown,
+        interview?.brandBrief ?? null,
+      ) ?? null;
 
     let productContext = null;
     if (dto.productId) {
@@ -270,7 +265,18 @@ export class CompetitorService {
       productContext = toProductContext(product);
     }
 
-    return {
+    if (!hasMinimalDiscoveryContext(values, brandBriefExcerpt, productContext?.keywords ?? [])) {
+      throw new BadRequestException({
+        error:
+          'Completa el perfil de empresa (onboarding), el Brand Brief o al menos 3 tags SEO del producto antes de buscar competidores con IA.',
+        code: 'PROFILE_INCOMPLETE',
+      });
+    }
+
+    const existing = await this.competitors.find({ where: { tenantId } });
+    const knownFromProfile = parseKnownCompetitorsFromProfile(values.competitors);
+
+    const discoveryContext = {
       scope: dto.scope,
       country,
       city,
@@ -278,7 +284,7 @@ export class CompetitorService {
       industry: values.industry,
       industryLabel: formatIndustryLabel(values.industry),
       targetAudience: productContext?.targetAudience ?? values.targetAudienceDesc,
-      website: values.website,
+      website: productContext?.websiteUrl ?? values.website,
       brandVoice: values.brandVoice,
       objectives: values.objectives,
       productSummary: productSummaryForDiscovery(
@@ -287,7 +293,17 @@ export class CompetitorService {
         interview?.brandBrief ?? null,
       ),
       brandBriefExcerpt,
+      productKeywords: productContext?.keywords ?? [],
+      productCategory: productContext?.category ?? null,
+      productPriceRange: productContext?.priceRange ?? null,
+      productWebsiteUrl: productContext?.websiteUrl ?? null,
+      knownCompetitorNames: knownFromProfile,
       existingCompetitorNames: existing.map((item) => item.name),
+    };
+
+    return {
+      ...discoveryContext,
+      searchQueries: buildDiscoverySearchQueries(discoveryContext),
     };
   }
 

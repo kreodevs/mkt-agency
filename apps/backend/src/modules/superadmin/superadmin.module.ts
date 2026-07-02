@@ -12,6 +12,7 @@ import { ImpersonateHandler } from './commands/impersonate.handler';
 import { ImpersonationLogEntity } from './infrastructure/typeorm/impersonation-log.entity';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 import { LlmModule } from '../../shared/ai/llm.module';
+import { SearchModule } from '../../shared/search/search.module';
 import { SuperadminController } from './superadmin.controller';
 import { SuperadminService } from './superadmin.service';
 
@@ -20,6 +21,7 @@ import { SuperadminService } from './superadmin.service';
     CqrsModule,
     AuthSharedModule,
     LlmModule,
+    SearchModule,
     TypeOrmModule.forFeature([
       ImpersonationLogEntity,
       TenantEntity,

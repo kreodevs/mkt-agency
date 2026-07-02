@@ -11,6 +11,7 @@ const PackageListPage = lazy(() => import('@/pages/admin/PackageListPage'));
 const LlmProvidersPage = lazy(() => import('@/pages/admin/LlmProvidersPage'));
 const LlmSettingsPage = lazy(() => import('@/pages/admin/LlmSettingsPage'));
 const LlmUsageDashboardPage = lazy(() => import('@/pages/admin/LlmUsageDashboardPage'));
+const IntegrationsPage = lazy(() => import('@/pages/admin/IntegrationsPage'));
 const SecurityEventsPage = lazy(() => import('@/pages/admin/SecurityEventsPage'));
 const ProductListPage = lazy(() => import('@/pages/products/ProductListPage'));
 const ProductCreatePage = lazy(() => import('@/pages/products/ProductCreatePage'));
@@ -77,6 +78,7 @@ export function AppRouter() {
             <Route path="/admin/llm-providers" element={<LlmProvidersPage />} />
             <Route path="/admin/llm-settings" element={<LlmSettingsPage />} />
             <Route path="/admin/llm-usage" element={<LlmUsageDashboardPage />} />
+            <Route path="/admin/integrations" element={<IntegrationsPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
             <Route path="/admin/security-events" element={<SecurityEventsPage />} />

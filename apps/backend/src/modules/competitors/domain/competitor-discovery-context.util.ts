@@ -1,6 +1,7 @@
 import { ResolvedProfileValues } from '../../company-profile/services/profile-section-sync.service';
 import {
   CompetitorDiscoveryContext,
+  CompetitorDiscoveryScope,
   DiscoveredCompetitorResult,
 } from '../adapters/competitor-discovery.adapter.port';
 
@@ -72,11 +73,143 @@ export function extractProductSummary(
   return hints.length > 0 ? hints.join('. ') : null;
 }
 
+export function extractStructuredBriefExcerpt(
+  brandBriefMarkdown?: string | null,
+  brandBrief?: Record<string, unknown> | null,
+): string | null {
+  if (brandBrief) {
+    const parts: string[] = [];
+    for (const key of [
+      'valueProposition',
+      'targetAudience',
+      'differentiators',
+      'positioning',
+      'productDescription',
+      'whatWeDo',
+      'summary',
+    ]) {
+      const value = brandBrief[key];
+      if (typeof value === 'string' && value.trim()) {
+        parts.push(`${key}: ${value.trim()}`);
+      }
+    }
+    if (parts.length > 0) {
+      return parts.join('\n').slice(0, 2000);
+    }
+  }
+
+  if (brandBriefMarkdown?.trim()) {
+    const lines = brandBriefMarkdown
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 20 && !/^#{1,6}\s/.test(line));
+    if (lines.length > 0) {
+      return lines.slice(0, 8).join('\n').slice(0, 2000);
+    }
+  }
+
+  return null;
+}
+
+export function parseKnownCompetitorsFromProfile(text?: string | null): string[] {
+  if (!text?.trim()) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      text
+        .split(/[\n,;|]+/)
+        .map((entry) => entry.replace(/\s*[—–-]\s*.*$/, '').trim())
+        .filter((entry) => entry.length >= 2),
+    ),
+  ].slice(0, 20);
+}
+
+export function inferDiscoveryScope(
+  targetAudience?: string | null,
+): { scope: CompetitorDiscoveryScope; country?: string; city?: string } {
+  const text = (targetAudience ?? '').toLowerCase();
+
+  const cityPatterns: Array<{ pattern: RegExp; city: string }> = [
+    { pattern: /\b(cdmx|ciudad de méxico|ciudad de mexico)\b/i, city: 'Ciudad de México' },
+    { pattern: /\bguadalajara\b/i, city: 'Guadalajara' },
+    { pattern: /\bmonterrey\b/i, city: 'Monterrey' },
+    { pattern: /\bpuebla\b/i, city: 'Puebla' },
+    { pattern: /\bquer[eé]taro\b/i, city: 'Querétaro' },
+    { pattern: /\btijuana\b/i, city: 'Tijuana' },
+    { pattern: /\ble[oó]n\b/i, city: 'León' },
+    { pattern: /\bcanc[uú]n\b/i, city: 'Cancún' },
+  ];
+
+  for (const { pattern, city } of cityPatterns) {
+    if (pattern.test(text)) {
+      return { scope: 'city', country: 'México', city };
+    }
+  }
+
+  if (/\b(m[eé]xico|mexico|mx\b|latam|latinoam[eé]rica)\b/i.test(text)) {
+    return { scope: 'country', country: 'México' };
+  }
+
+  return { scope: 'global' };
+}
+
+export function buildDiscoverySearchQueries(context: CompetitorDiscoveryContext): string[] {
+  const queries: string[] = [];
+  const keywords = (context.productKeywords ?? []).filter(Boolean).slice(0, 8);
+  const geo =
+    context.scope === 'global'
+      ? ''
+      : context.scope === 'country'
+        ? (context.country ?? '')
+        : `${context.city ?? ''} ${context.country ?? ''}`.trim();
+
+  for (const keyword of keywords.slice(0, 5)) {
+    queries.push(geo ? `empresas ${keyword} ${geo}` : `alternativas a ${keyword}`);
+    queries.push(geo ? `${keyword} competidores ${geo}` : `competidores ${keyword}`);
+  }
+
+  if (keywords.length >= 2) {
+    queries.push(
+      geo
+        ? `${keywords[0]} ${keywords[1]} ${geo}`
+        : `empresas como ${keywords[0]} ${keywords[1]}`,
+    );
+  }
+
+  if (context.productCategory?.trim()) {
+    queries.push(
+      geo
+        ? `${context.productCategory.trim()} ${geo}`
+        : `mejores ${context.productCategory.trim()}`,
+    );
+  }
+
+  if (context.productSummary?.trim()) {
+    const summaryWords = context.productSummary
+      .split(/\s+/)
+      .filter((word) => word.length > 4)
+      .slice(0, 4)
+      .join(' ');
+    if (summaryWords) {
+      queries.push(geo ? `${summaryWords} ${geo}` : summaryWords);
+    }
+  }
+
+  return [...new Set(queries.map((query) => query.trim()).filter(Boolean))].slice(0, 10);
+}
+
 export function hasMinimalDiscoveryContext(
   values: ResolvedProfileValues,
   brandBriefExcerpt: string | null,
+  productKeywords: string[] = [],
 ): boolean {
   if (brandBriefExcerpt?.trim()) {
+    return true;
+  }
+
+  if (productKeywords.length >= 3) {
     return true;
   }
 
@@ -113,16 +246,28 @@ export function filterIrrelevantCompetitors(
   items: DiscoveredCompetitorResult[],
 ): DiscoveredCompetitorResult[] {
   if (isRetailBusiness(context)) {
-    return items;
+    return dedupeCompetitorResults(items, context);
   }
 
-  const existing = new Set(
-    (context.existingCompetitorNames ?? []).map((name) => name.trim().toLowerCase()),
+  const blockedNames = new Set(
+    [
+      ...(context.existingCompetitorNames ?? []),
+      ...(context.knownCompetitorNames ?? []),
+      context.companyName,
+    ]
+      .filter(Boolean)
+      .map((name) => name!.trim().toLowerCase()),
   );
+
+  const seenDomains = new Set<string>();
 
   return items.filter((item) => {
     const nameKey = item.name.trim().toLowerCase();
-    if (existing.has(nameKey)) {
+    if (blockedNames.has(nameKey)) {
+      return false;
+    }
+
+    if (context.companyName && nameKey.includes(context.companyName.trim().toLowerCase())) {
       return false;
     }
 
@@ -135,6 +280,55 @@ export function filterIrrelevantCompetitors(
       return false;
     }
 
+    const domain = normalizeWebsiteDomain(item.website);
+    if (domain) {
+      if (seenDomains.has(domain)) {
+        return false;
+      }
+      seenDomains.add(domain);
+    }
+
+    if (!item.rationale?.trim() || item.rationale.trim().length < 15) {
+      return false;
+    }
+
     return true;
   });
+}
+
+function dedupeCompetitorResults(
+  items: DiscoveredCompetitorResult[],
+  context: CompetitorDiscoveryContext,
+): DiscoveredCompetitorResult[] {
+  const blockedNames = new Set(
+    (context.existingCompetitorNames ?? []).map((name) => name.trim().toLowerCase()),
+  );
+  const seenDomains = new Set<string>();
+
+  return items.filter((item) => {
+    const nameKey = item.name.trim().toLowerCase();
+    if (blockedNames.has(nameKey)) {
+      return false;
+    }
+    const domain = normalizeWebsiteDomain(item.website);
+    if (domain) {
+      if (seenDomains.has(domain)) {
+        return false;
+      }
+      seenDomains.add(domain);
+    }
+    return true;
+  });
+}
+
+function normalizeWebsiteDomain(website?: string | null): string | null {
+  if (!website?.trim()) {
+    return null;
+  }
+  return website
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0];
 }

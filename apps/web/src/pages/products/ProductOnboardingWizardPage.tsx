@@ -297,7 +297,7 @@ export default function ProductOnboardingWizardPage() {
             )}
             {(agents.competitorsDiscovered ?? 0) > 0 && (
               <li className="text-[var(--foreground-muted)]">
-                {agents.competitorsDiscovered} competidor(es) descubiertos con tus tags SEO.
+                {agents.competitorsDiscovered} competidor(es) descubiertos a partir de tu producto, tags SEO y perfil de marca.
               </li>
             )}
           </ul>

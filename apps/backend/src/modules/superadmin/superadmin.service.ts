@@ -24,6 +24,8 @@ import { LlmModelsCatalogService } from '../../shared/ai/llm-models-catalog.serv
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { LlmTaskType } from '../../shared/ai/llm-task-types';
 import { LlmUsageService } from '../../shared/ai/llm-usage.service';
+import { PlatformIntegrationService } from '../platform/services/platform-integration.service';
+import { TavilySearchService } from '../../shared/search/tavily.client';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 
 @Injectable()
@@ -38,6 +40,8 @@ export class SuperadminService {
     private readonly llmProviderService: LlmProviderService,
     private readonly llmModelsCatalogService: LlmModelsCatalogService,
     private readonly llmUsageService: LlmUsageService,
+    private readonly platformIntegrations: PlatformIntegrationService,
+    private readonly tavilySearch: TavilySearchService,
   ) {}
 
   impersonate(
@@ -177,5 +181,24 @@ export class SuperadminService {
       from ? new Date(from) : undefined,
       to ? new Date(to) : undefined,
     );
+  }
+
+  getTavilyIntegration() {
+    return this.platformIntegrations.getBySlug('tavily');
+  }
+
+  updateTavilyIntegration(body: { apiKey?: string; isActive?: boolean }) {
+    const patch: Partial<{ apiKey: string | null; isActive: boolean }> = {};
+    if (body.apiKey !== undefined) {
+      patch.apiKey = body.apiKey.trim() || null;
+    }
+    if (body.isActive !== undefined) {
+      patch.isActive = body.isActive;
+    }
+    return this.platformIntegrations.update('tavily', patch);
+  }
+
+  testTavilyIntegration() {
+    return this.tavilySearch.testConnection();
   }
 }

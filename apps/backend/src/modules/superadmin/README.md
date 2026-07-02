@@ -4,7 +4,7 @@ Impersonación auditada de tenants (`/api/v1/superadmin/impersonate`).
 
 ## Alcance
 
-- **Plataforma:** usuarios globales, proveedores LLM, modelos por tarea (`llm-tasks`), listado de usuarios por tenant.
+- **Plataforma:** usuarios globales, proveedores LLM, modelos por tarea (`llm-tasks`), integraciones externas (Tavily), listado de usuarios por tenant.
 - **No incluye operación de agentes ni campañas:** esos endpoints usan `TenantGuard` y exigen impersonación si el JWT es superadmin.
 
 ## Impersonación
@@ -16,6 +16,12 @@ Impersonación auditada de tenants (`/api/v1/superadmin/impersonate`).
 ## Política
 
 `ImpersonationPolicy.assertDestructiveAllowed()` bloquea acciones destructivas durante impersonación.
+
+## Integraciones
+
+- `GET /superadmin/integrations/tavily` — estado de Tavily (key enmascarada)
+- `PATCH /superadmin/integrations/tavily` — actualizar API key y activo
+- `POST /superadmin/integrations/tavily/test` — prueba de conexión
 
 ## Frontend
 
