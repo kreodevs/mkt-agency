@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, ChevronLeft, History, Send, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BrandInterviewHistory } from '@/components/agents/BrandInterviewHistory';
+import { BrandProductOnboardingPanel } from '@/components/agents/BrandProductOnboardingPanel';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -87,7 +88,12 @@ export default function BrandInterviewPage() {
     () => products.find((p) => p.id === selectedProductId),
     [products, selectedProductId],
   );
-  const selectedProductOnboardingDone = Boolean(selectedProduct?.onboardingCompleted);
+  const selectedProductCanGenerateBrief = Boolean(
+    selectedProduct?.onboardingCompleted || selectedProduct?.onboardingReady,
+  );
+  const selectedProductNeedsOnboarding = Boolean(
+    selectedProductId && selectedProduct && !selectedProductCanGenerateBrief,
+  );
 
   const activeInterview = id ? interviewQuery.data : undefined;
 
@@ -96,6 +102,7 @@ export default function BrandInterviewPage() {
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
       void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
       navigate(`/agents/brand-interview/${result.id}`, { replace: true });
     },
     onError: (error) => {
@@ -107,10 +114,25 @@ export default function BrandInterviewPage() {
             return;
           }
         });
+        return;
       }
-      toast.error(error instanceof ApiError ? error.message : 'Error al iniciar entrevista');
+      if (
+        error instanceof ApiError &&
+        error.code === 'PRODUCT_ONBOARDING_REQUIRED' &&
+        selectedProductId
+      ) {
+        toast.message('Completa el análisis de la página web del producto abajo.');
+        return;
+      }
+      toast.error(error instanceof ApiError ? error.message : 'Error al iniciar Brand Analyst');
     },
   });
+
+  const pageDescription = selectedProductId
+    ? selectedProductNeedsOnboarding
+      ? 'Configura tu producto analizando su página web; eso reemplaza la entrevista manual.'
+      : 'Genera el Brand Brief a partir del onboarding del producto (datos inferidos de la web).'
+    : 'Entrevista guiada para marcas sin producto concreto, o elige un producto para usar su onboarding.';
 
   const answerMutation = useMutation({
     mutationFn: (answerText: string) => submitAnswer(activeInterview!.id, answerText),
@@ -159,9 +181,9 @@ export default function BrandInterviewPage() {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
         <div className="py-20 text-center text-[var(--foreground-muted)]">
-          {selectedProductOnboardingDone
+          {selectedProductCanGenerateBrief
             ? 'Generando Brand Brief desde onboarding...'
-            : 'Preparando entrevista...'}
+            : 'Preparando...'}
         </div>
       </DashboardShell>
     );
@@ -173,7 +195,7 @@ export default function BrandInterviewPage() {
       <DashboardShell navigationOverride={tenantNavigation}>
         <PageHeader
           title="Brand Analyst"
-          description="Entrevista guiada para entender tu marca y generar un Brand Brief profesional."
+          description={pageDescription}
           actions={backButton}
         />
 
@@ -189,49 +211,63 @@ export default function BrandInterviewPage() {
             <BrandInterviewHistory interviews={brandInterviews} />
           )}
 
-          <Card title={brandInterviews.length > 0 ? 'Nueva entrevista' : 'Brand Analyst'}>
+          <Card title={brandInterviews.length > 0 ? 'Brand Brief' : 'Brand Analyst'}>
             <div className="flex flex-col items-center gap-4 py-4 text-center sm:py-6">
-              {brandInterviews.length === 0 && (
+              {brandInterviews.length === 0 && !selectedProductNeedsOnboarding && (
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
               )}
-              <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
-                {brandInterviews.length > 0
-                  ? selectedProductOnboardingDone
-                    ? 'Regenera el Brand Brief usando los datos actuales del onboarding del producto seleccionado.'
-                    : 'Inicia otra ronda de preguntas para actualizar tu Brand Brief.'
-                  : selectedProductOnboardingDone
-                    ? 'Usaremos los datos del onboarding del producto (descripción, propuesta, audiencia y tags). No repetiremos esas preguntas: generaremos el Brand Brief directamente.'
-                    : 'Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos. Al finalizar, generaré un Brand Brief en markdown.'}
-              </p>
+              {!selectedProductNeedsOnboarding ? (
+                <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
+                  {selectedProductId
+                    ? selectedProductCanGenerateBrief
+                      ? brandInterviews.length > 0
+                        ? 'Regenera el Brand Brief con los datos actuales del producto.'
+                        : 'Usaremos los datos del onboarding (inferidos de la web).'
+                      : 'Cargando estado del producto…'
+                    : brandInterviews.length > 0
+                      ? 'Inicia otra ronda para actualizar el Brand Brief de marca general.'
+                      : 'Selecciona un producto para inferir desde su web, o usa marca general para entrevista manual.'}
+                </p>
+              ) : null}
               {!inProgressInterview && products.length > 0 && (
                 <div className="w-full max-w-sm text-left">
                   <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
-                    Enfocar en producto (opcional)
+                    Producto
                   </label>
                   <select
                     className={selectClass}
                     value={selectedProductId}
                     onChange={(e) => setSelectedProductId(e.target.value)}
                   >
-                    <option value="">Marca general</option>
+                    <option value="">Marca general (entrevista manual)</option>
                     {products.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
+                        {p.onboardingCompleted
+                          ? ' · onboarding listo'
+                          : p.onboardingReady
+                            ? ' · datos completos'
+                            : ''}
                       </option>
                     ))}
                   </select>
+                  {selectedProduct && selectedProduct.onboardingCompletionPercentage != null ? (
+                    <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">
+                      Onboarding: {selectedProduct.onboardingCompletionPercentage}%
+                    </p>
+                  ) : null}
                 </div>
               )}
               {inProgressInterview ? (
                 <Link to={`/agents/brand-interview/${inProgressInterview.id}`}>
                   <Button className="gap-2">
                     <Sparkles className="h-4 w-4" />
-                    Continuar entrevista en progreso
+                    Continuar en progreso
                   </Button>
                 </Link>
-              ) : (
+              ) : selectedProductCanGenerateBrief && selectedProductId ? (
                 <Button
                   size="lg"
                   loading={createMutation.isPending}
@@ -239,13 +275,29 @@ export default function BrandInterviewPage() {
                   className="gap-2"
                 >
                   <Sparkles className="h-5 w-5" />
-                  {selectedProductOnboardingDone
-                    ? 'Generar Brand Brief desde onboarding'
-                    : 'Iniciar entrevista'}
+                  Generar Brand Brief
                 </Button>
-              )}
+              ) : !selectedProductId ? (
+                <Button
+                  size="lg"
+                  loading={createMutation.isPending}
+                  onClick={() => createMutation.mutate()}
+                  className="gap-2"
+                >
+                  <Sparkles className="h-5 w-5" />
+                  Iniciar entrevista de marca
+                </Button>
+              ) : null}
             </div>
           </Card>
+
+          {selectedProductNeedsOnboarding && selectedProductId && !inProgressInterview ? (
+            <BrandProductOnboardingPanel
+              productId={selectedProductId}
+              generatingBrief={createMutation.isPending}
+              onGenerateBrief={() => createMutation.mutate()}
+            />
+          ) : null}
         </div>
       </DashboardShell>
     );

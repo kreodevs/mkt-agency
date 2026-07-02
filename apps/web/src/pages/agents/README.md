@@ -3,8 +3,8 @@
 | Ruta | Hub |
 |------|-----|
 | `/agents` | Catálogo con estado e historial por agente |
-| `/agents/brand-interview` | Historial + nueva entrevista (selector de producto opcional) |
-| `/agents/brand-interview/:id` | Chat + Brand Brief (muestra producto si aplica) |
+| `/agents/brand-interview` | Historial + onboarding inline (URL → inferencia) o Brand Brief si el producto ya está listo |
+| `/agents/brand-interview/:id` | Resultado / generación del Brand Brief (onboarding o entrevista legacy) |
 | `/agents/competitor-intel` | Historial + reporte + nuevo análisis; búsqueda IA de competidores si no hay registros |
 | `/agents/image-generator` | Galería + formulario; enruta automáticamente a Video API si el prompt pide video/GIF/reel |
 | `/agents/image-generator/:id` | Detalle: video MP4, frames carrusel (imagen) con zoom, prompt, regenerar |

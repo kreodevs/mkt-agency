@@ -15,6 +15,7 @@ import { brandBriefToMarkdown } from './brand-brief-markdown.util';
 import { buildBrandInterviewAnswersFromOnboarding } from './domain/brand-interview-prefill.util';
 import {
   isProductOnboardingCompleted,
+  isProductOnboardingReady,
 } from '../product/domain/product-onboarding.util';
 import { AgentInterviewMessageEntity } from './domain/agent-interview-message.entity';
 import { AgentInterviewEntity, AgentType } from './domain/agent-interview.entity';
@@ -80,8 +81,17 @@ export class AgentInterviewService {
       const product = await this.productService.findOwnedEntity(tenantId, productId);
       productName = product.name;
 
-      if (agentType === 'brand_interview' && isProductOnboardingCompleted(product)) {
-        return this.createBrandBriefFromOnboarding(tenantId, product, productName);
+      if (agentType === 'brand_interview') {
+        if (isProductOnboardingCompleted(product) || isProductOnboardingReady(product)) {
+          return this.createBrandBriefFromOnboarding(tenantId, product, productName);
+        }
+
+        throw new BadRequestException({
+          error:
+            'Configura el producto con el onboarding (analiza su página web) antes de generar el Brand Brief.',
+          code: 'PRODUCT_ONBOARDING_REQUIRED',
+          productId: product.id,
+        });
       }
     }
 

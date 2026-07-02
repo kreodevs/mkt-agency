@@ -76,7 +76,7 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     id: 'brand_interview',
     name: 'Brand Analyst',
     description:
-      'Entrevista guiada que analiza tu marca, audiencia, competencia y objetivos de marketing para generar un Brand Brief profesional.',
+      'Brand Brief desde el onboarding del producto (inferencia desde la web) o entrevista de marca general.',
     icon: 'Bot',
     href: '/agents/brand-interview',
     status: 'ready',
