@@ -69,6 +69,11 @@ export class AgentInterviewService {
       where: { tenantId, agentType, status: 'in_progress' },
     });
     if (active) {
+      const upgraded = await this.tryUpgradeLegacyInterview(tenantId, active, productId);
+      if (upgraded) {
+        return upgraded;
+      }
+
       throw new ConflictException({
         error: `Ya tienes una entrevista de tipo "${agentType}" en progreso`,
         code: 'CONFLICT',
@@ -85,13 +90,6 @@ export class AgentInterviewService {
         if (isProductOnboardingCompleted(product) || isProductOnboardingReady(product)) {
           return this.createBrandBriefFromOnboarding(tenantId, product, productName);
         }
-
-        throw new BadRequestException({
-          error:
-            'Configura el producto con el onboarding (analiza su página web) antes de generar el Brand Brief.',
-          code: 'PRODUCT_ONBOARDING_REQUIRED',
-          productId: product.id,
-        });
       }
     }
 
@@ -179,12 +177,14 @@ export class AgentInterviewService {
   }
 
   async getInterview(tenantId: string, interviewId: string): Promise<InterviewResponseDto> {
-    const interview = await this.interviews.findOne({
+    let interview = await this.interviews.findOne({
       where: { id: interviewId, tenantId },
     });
     if (!interview) {
       throw new NotFoundException({ error: 'Entrevista no encontrada', code: 'NOT_FOUND' });
     }
+
+    interview = await this.reconcileLegacyManualInterview(tenantId, interview);
     return this.toResponse(interview);
   }
 
@@ -296,6 +296,103 @@ export class AgentInterviewService {
     this.interviewWorker.enqueue(interviewId);
 
     return this.toResponse(interview);
+  }
+
+  private isLegacyManualInterview(interview: AgentInterviewEntity): boolean {
+    return (
+      interview.agentType === 'brand_interview' &&
+      interview.status === 'in_progress' &&
+      interview.currentStep < interview.totalSteps
+    );
+  }
+
+  private async tryUpgradeLegacyInterview(
+    tenantId: string,
+    interview: AgentInterviewEntity,
+    requestedProductId?: string,
+  ): Promise<InterviewResponseDto | null> {
+    if (!this.isLegacyManualInterview(interview) || !interview.productId) {
+      return null;
+    }
+    if (requestedProductId && interview.productId !== requestedProductId) {
+      return null;
+    }
+
+    const product = await this.productService.findOwnedEntity(tenantId, interview.productId);
+    if (!isProductOnboardingCompleted(product) && !isProductOnboardingReady(product)) {
+      return null;
+    }
+
+    const reconciled = await this.reconcileLegacyManualInterview(tenantId, interview);
+    return this.toResponse(reconciled);
+  }
+
+  private async reconcileLegacyManualInterview(
+    tenantId: string,
+    interview: AgentInterviewEntity,
+  ): Promise<AgentInterviewEntity> {
+    if (!this.isLegacyManualInterview(interview) || !interview.productId) {
+      return interview;
+    }
+
+    const product = await this.productService.findOwnedEntity(tenantId, interview.productId);
+    if (!isProductOnboardingCompleted(product) && !isProductOnboardingReady(product)) {
+      return interview;
+    }
+
+    const existing = await this.findCompletedBrandInterview(tenantId, product.id);
+    if (existing) {
+      await this.interviews.delete(interview.id);
+      this.logger.log(
+        `Removed stale manual interview ${interview.id}; product ${product.id} already has brief`,
+      );
+      return existing;
+    }
+
+    return this.upgradeManualInterviewToOnboardingBrief(tenantId, interview, product);
+  }
+
+  private async upgradeManualInterviewToOnboardingBrief(
+    tenantId: string,
+    interview: AgentInterviewEntity,
+    product: ProductEntity,
+  ): Promise<AgentInterviewEntity> {
+    const profile =
+      (await this.companyProfiles.findOne({ where: { tenantId } })) ??
+      (await this.companyProfiles.save(this.companyProfiles.create({ tenantId, status: 'pending' })));
+    const answers = buildBrandInterviewAnswersFromOnboarding(product, profile);
+    const questions = getInterviewQuestions('brand_interview');
+
+    interview.answers = answers;
+    interview.currentStep = questions.length;
+    interview.totalSteps = questions.length;
+    interview.errorMessage = null;
+    await this.interviews.save(interview);
+
+    await this.messages.delete({ interviewId: interview.id });
+
+    await this.messages.save(
+      this.messages.create({
+        interviewId: interview.id,
+        role: 'agent',
+        content: `Ya tengo el contexto de **${product.name}** desde el onboarding del producto. Cancelé la entrevista manual y estoy generando tu Brand Brief con esos datos.`,
+        metadata: { type: 'onboarding_skip', step: questions.length, productId: product.id },
+      }),
+    );
+
+    await this.messages.save(
+      this.messages.create({
+        interviewId: interview.id,
+        role: 'agent',
+        content:
+          'Analizando los datos del onboarding para redactar tu Brand Brief. Esto tomará solo unos segundos...',
+        metadata: { step: questions.length, type: 'processing' },
+      }),
+    );
+
+    this.interviewWorker.enqueue(interview.id);
+    this.logger.log(`Upgraded legacy manual interview ${interview.id} to onboarding brief`);
+    return interview;
   }
 
   private async reconcileStaleFailure(interview: AgentInterviewEntity): Promise<void> {

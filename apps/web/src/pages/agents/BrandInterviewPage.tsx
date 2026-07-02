@@ -13,12 +13,12 @@ import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
-import { listProducts } from '@/services/products';
+import { listProducts, getProduct } from '@/services/products';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useActiveProductStore } from '@/store/active-product';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
-import { getEffectiveInterviewStatus, hasBrandBriefResult, isOnboardingSourcedInterview } from '@/utils/brandInterview';
+import { getEffectiveInterviewStatus, hasBrandBriefResult, isLegacyManualInterview, isOnboardingSourcedInterview } from '@/utils/brandInterview';
 
 const selectClass =
   'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
@@ -80,10 +80,19 @@ export default function BrandInterviewPage() {
   });
 
   const brandInterviews = interviewsQuery.data ?? [];
-  const inProgressInterview = useMemo(
-    () => brandInterviews.find((item) => item.status === 'in_progress'),
-    [brandInterviews],
-  );
+  const inProgressInterview = useMemo(() => {
+    const candidate = brandInterviews.find((item) => item.status === 'in_progress');
+    if (!candidate) return undefined;
+
+    if (isLegacyManualInterview(candidate) && candidate.productId) {
+      const product = products.find((p) => p.id === candidate.productId);
+      if (product?.onboardingCompleted || product?.onboardingReady) {
+        return undefined;
+      }
+    }
+
+    return candidate;
+  }, [brandInterviews, products]);
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId),
     [products, selectedProductId],
@@ -96,6 +105,12 @@ export default function BrandInterviewPage() {
   );
 
   const activeInterview = id ? interviewQuery.data : undefined;
+
+  const interviewProductQuery = useQuery({
+    queryKey: ['product', activeInterview?.productId],
+    queryFn: () => getProduct(activeInterview!.productId!),
+    enabled: Boolean(id && activeInterview?.productId),
+  });
 
   const createMutation = useMutation({
     mutationFn: () => createInterview('brand_interview', selectedProductId || undefined),
@@ -116,15 +131,19 @@ export default function BrandInterviewPage() {
         });
         return;
       }
-      if (
-        error instanceof ApiError &&
-        error.code === 'PRODUCT_ONBOARDING_REQUIRED' &&
-        selectedProductId
-      ) {
-        toast.message('Completa el análisis de la página web del producto abajo.');
-        return;
-      }
       toast.error(error instanceof ApiError ? error.message : 'Error al iniciar Brand Analyst');
+    },
+  });
+
+  const manualInterviewMutation = useMutation({
+    mutationFn: () => createInterview('brand_interview', selectedProductId || undefined),
+    onSuccess: (result) => {
+      queryClient.setQueryData(['agent-interview', result.id], result);
+      void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
+      navigate(`/agents/brand-interview/${result.id}`, { replace: true });
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo iniciar la entrevista');
     },
   });
 
@@ -161,6 +180,12 @@ export default function BrandInterviewPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeInterview?.messages]);
+
+  useEffect(() => {
+    if (activeInterview && id && activeInterview.id !== id) {
+      navigate(`/agents/brand-interview/${activeInterview.id}`, { replace: true });
+    }
+  }, [activeInterview?.id, id, navigate]);
 
   const handleSend = () => {
     const trimmed = answer.trim();
@@ -292,11 +317,28 @@ export default function BrandInterviewPage() {
           </Card>
 
           {selectedProductNeedsOnboarding && selectedProductId && !inProgressInterview ? (
-            <BrandProductOnboardingPanel
-              productId={selectedProductId}
-              generatingBrief={createMutation.isPending}
-              onGenerateBrief={() => createMutation.mutate()}
-            />
+            <div className="space-y-4">
+              <BrandProductOnboardingPanel
+                productId={selectedProductId}
+                generatingBrief={createMutation.isPending}
+                onGenerateBrief={() => createMutation.mutate()}
+              />
+              <Card title="Alternativa" subtitle="Si prefieres no usar la web del producto">
+                <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+                  Puedes responder 6 preguntas manualmente. Recomendamos inferir desde la URL arriba
+                  para no repetir lo que ya captura el onboarding.
+                </p>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  loading={manualInterviewMutation.isPending}
+                  onClick={() => manualInterviewMutation.mutate()}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Entrevista manual (6 preguntas)
+                </Button>
+              </Card>
+            </div>
           ) : null}
         </div>
       </DashboardShell>
@@ -333,13 +375,18 @@ export default function BrandInterviewPage() {
   const isCompleted = effectiveStatus === 'completed';
   const isFailed = effectiveStatus === 'failed';
   const fromOnboarding = isOnboardingSourcedInterview(activeInterview);
+  const interviewProductReady = Boolean(
+    interviewProductQuery.data?.onboardingCompleted || interviewProductQuery.data?.onboardingReady,
+  );
   const briefMarkdown = activeInterview.brandBriefMarkdown;
   const showBrief = hasBrandBriefResult(activeInterview) && isCompleted;
   const isSending = answerMutation.isPending;
   const canAnswer =
     activeInterview.status === 'in_progress' &&
     !isProcessing &&
-    !isSending;
+    !isSending &&
+    !fromOnboarding &&
+    !(isLegacyManualInterview(activeInterview) && interviewProductReady);
   const stepProgress = Math.min(
     100,
     Math.round((activeInterview.currentStep / activeInterview.totalSteps) * 100),
