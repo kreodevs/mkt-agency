@@ -9,7 +9,7 @@ import { toast } from '@/components/molecules/Sonner';
 import { ProductKeywordSuggestion } from '@/components/products/ProductKeywordSuggestion';
 import { ProductKeywordTagsInput } from '@/components/products/ProductKeywordTagsInput';
 import { ProductPageInference } from '@/components/products/ProductPageInference';
-import { ApiError, getApiErrorMessage } from '@/services/api';
+import { getApiErrorMessage } from '@/services/api';
 import {
   getProduct,
   getProductOnboardingStatus,
