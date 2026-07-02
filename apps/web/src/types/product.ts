@@ -127,6 +127,7 @@ export interface ProductOnboardingAgentsResult {
   competitorsDiscovered?: number;
   skippedAgents?: string[];
   warnings?: string[];
+  processing?: boolean;
 }
 
 export interface CompleteProductOnboardingResponse {

@@ -339,19 +339,7 @@ export class ProductOnboardingService {
     };
     await this.products.save(product);
 
-    const agents = await this.triggerAgents(tenantId, productId, userId);
-
-    await this.inboxService.createNotification({
-      tenantId,
-      productId,
-      type: AGENCY_NOTIFICATION_TYPES.ONBOARDING_COMPLETE,
-      title: 'Tu semana está lista',
-      body: `Onboarding de ${product.name} completado. Revisa y aprueba las publicaciones sugeridas en la bandeja.`,
-      metadata: {
-        productId,
-        communityManagerBatchId: agents.communityManagerBatchId ?? null,
-      },
-    });
+    void this.runAgentsInBackground(tenantId, productId, userId, product.name);
 
     return {
       product: {
@@ -360,8 +348,42 @@ export class ProductOnboardingService {
         onboardingCompleted: true,
         completionPercentage: calculateProductOnboardingCompletion(product),
       },
-      agents,
+      agents: {
+        skippedAgents: [],
+        warnings: [
+          'Estamos activando Brand Analyst, Competitor Intel y Community Manager en segundo plano. Revisa la bandeja en unos minutos.',
+        ],
+        processing: true,
+      },
     };
+  }
+
+  private runAgentsInBackground(
+    tenantId: string,
+    productId: string,
+    userId: string,
+    productName: string,
+  ): void {
+    void this.triggerAgents(tenantId, productId, userId)
+      .then(async (agents) => {
+        await this.inboxService.createNotification({
+          tenantId,
+          productId,
+          type: AGENCY_NOTIFICATION_TYPES.ONBOARDING_COMPLETE,
+          title: 'Tu semana está lista',
+          body: `Onboarding de ${productName} completado. Revisa y aprueba las publicaciones sugeridas en la bandeja.`,
+          metadata: {
+            productId,
+            communityManagerBatchId: agents.communityManagerBatchId ?? null,
+          },
+        });
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Background agent trigger failed for product ${productId}`,
+          error instanceof Error ? error.stack : error,
+        );
+      });
   }
 
   private async triggerAgents(
@@ -439,7 +461,7 @@ export class ProductOnboardingService {
         platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
         count: ONBOARDING_CM_POST_COUNT,
         productId,
-        attachImages: true,
+        attachImages: false,
       });
       result.communityManagerBatchId = generated.id;
     } catch (error) {

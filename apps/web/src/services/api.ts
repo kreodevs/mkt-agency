@@ -127,8 +127,16 @@ export async function apiFetch<T>(
     const body = (await response.json().catch(() => ({}))) as Record<string, unknown> & {
       code?: string;
     };
+
+    const statusMessage =
+      response.status === 504
+        ? 'La operación tardó demasiado. Si activaste agentes, revisa la bandeja en unos minutos.'
+        : response.status === 502
+          ? 'El servidor no respondió a tiempo. Intenta de nuevo en unos segundos.'
+          : response.statusText;
+
     throw new ApiError(
-      parseErrorBody(body, response.statusText),
+      parseErrorBody(body, statusMessage),
       response.status,
       typeof body.code === 'string' ? body.code : undefined,
     );

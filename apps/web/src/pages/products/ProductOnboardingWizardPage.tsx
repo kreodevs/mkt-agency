@@ -94,7 +94,11 @@ export default function ProductOnboardingWizardPage() {
       void queryClient.invalidateQueries({ queryKey: ['product', id] });
       void queryClient.invalidateQueries({ queryKey: ['product-onboarding', id] });
       void queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('Onboarding completado — agentes iniciados');
+      toast.success(
+        result.agents.processing
+          ? 'Onboarding completado — agentes activándose en segundo plano'
+          : 'Onboarding completado — agentes iniciados',
+      );
     },
     onError: (error) => {
       const message =
@@ -250,7 +254,9 @@ export default function ProductOnboardingWizardPage() {
             <div>
               <p className="font-semibold text-[var(--foreground)]">Agentes detonados</p>
               <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-                Brand Analyst, Competitor Intel y Community Manager trabajan sobre este producto.
+                {agents.processing
+                  ? 'Brand Analyst, Competitor Intel y Community Manager se están activando en segundo plano.'
+                  : 'Brand Analyst, Competitor Intel y Community Manager trabajan sobre este producto.'}
               </p>
             </div>
           </div>

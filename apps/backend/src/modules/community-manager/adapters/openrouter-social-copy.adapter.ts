@@ -5,6 +5,7 @@ import {
   SocialCopyBatch,
   SocialCopyContext,
 } from './social-copy.adapter.port';
+import { normalizeSocialCopyBatch } from './social-copy-normalizer.util';
 
 const PLATFORM_GUIDES: Record<string, string> = {
   instagram: 'Instagram: contenido visual, tono aspiracional, stories + feed, máx 2200 caracteres',
@@ -78,19 +79,26 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       .filter(Boolean)
       .join('\n\n');
 
-    const result = await this.llm.chatJson<SocialCopyBatch>(
+    const result = await this.llm.chatJson<Record<string, unknown>>(
       systemPrompt,
       userPrompt,
-      { taskType: 'social_copy' },
+      { taskType: 'social_copy', maxTokens: 8192 },
     );
 
-    if (!result?.posts?.length) {
+    const normalized = normalizeSocialCopyBatch(result, {
+      count: context.count,
+      platforms: context.platforms,
+    });
+
+    if (!normalized.posts.length) {
       throw new Error('Invalid social copy response from LLM');
     }
 
     return {
-      ...result,
-      generatedAt: result.generatedAt ?? new Date().toISOString(),
+      summary: normalized.summary,
+      posts: normalized.posts,
+      publishingGuide: normalized.publishingGuide,
+      generatedAt: normalized.generatedAt ?? new Date().toISOString(),
     };
   }
 }

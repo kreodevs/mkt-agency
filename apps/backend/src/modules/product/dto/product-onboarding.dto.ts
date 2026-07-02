@@ -54,6 +54,7 @@ export class ProductOnboardingAgentsDto {
   competitorsDiscovered?: number;
   skippedAgents?: string[];
   warnings?: string[];
+  processing?: boolean;
 }
 
 export class CompleteProductOnboardingResponseDto {

@@ -16,18 +16,18 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `GET /api/v1/products/:id/onboarding` — estado del onboarding (% campos, missing, ready)
 - `POST /api/v1/products/:id/infer-from-page` — scrapea URL e infiere nombre, tipo, descripción, propuesta de valor, audiencia, precio y tags
 - `POST /api/v1/products/:id/suggest-keywords` — scrapea URL del producto, analiza contenido/concepto con IA y devuelve tags semánticos (no copia meta keywords del HTML)
-- `POST /api/v1/products/:id/onboarding/complete` — marcar completado y detonar agentes
+- `POST /api/v1/products/:id/onboarding/complete` — marca completado y activa agentes **en segundo plano** (respuesta inmediata; notificación en bandeja al terminar)
 
 ## Onboarding de producto
 
 Campos obligatorios: nombre, tipo, descripción, propuesta de valor, audiencia, ≥3 tags SEO.
 
-Al completar (si `ready=true`):
+Al completar (si `ready=true`), en background:
 
 1. **Brand Analyst** — entrevista `brand_interview` con `productId`
-2. **Competitors** — `discover` global + `bulkCreate` (hasta 8) usando keywords del producto
+2. **Competitors** — `discover` global + `bulkCreate` (hasta 8) usando keywords del producto (omite si falta perfil de empresa)
 3. **Competitor Intel** — `triggerAnalysis`
-4. **Community Manager** — `generate` con `productId`
+4. **Community Manager** — `generate` con `productId` (sin imágenes en onboarding; más rápido)
 
 Lógica en `product-onboarding.service.ts`, `product-onboarding.module.ts` y `domain/product-onboarding.util.ts`.
 

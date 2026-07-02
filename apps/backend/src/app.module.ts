@@ -67,6 +67,7 @@ import { PackageModule } from './modules/packages/package.module';
 import { PackageEntity } from './modules/packages/infrastructure/typeorm/package.entity';
 import { LlmTaskConfigEntity } from './modules/platform/infrastructure/typeorm/llm-task-config.entity';
 import { LlmProviderEntity } from './modules/platform/infrastructure/typeorm/llm-provider.entity';
+import { LlmUsageEventEntity } from './modules/platform/infrastructure/typeorm/llm-usage-event.entity';
 import { ProductModule } from './modules/product/product.module';
 import { ProductOnboardingModule } from './modules/product/product-onboarding.module';
 import { PublicationInboxModule } from './modules/publication-inbox/publication-inbox.module';
@@ -113,6 +114,7 @@ import {
           PackageEntity,
           LlmTaskConfigEntity,
           LlmProviderEntity,
+          LlmUsageEventEntity,
           SessionEntity,
           SecurityEventEntity,
           ImpersonationLogEntity,
