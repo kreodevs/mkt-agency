@@ -47,7 +47,19 @@ export class ProductLogoService {
       });
     }
 
-    const page = await fetchPageContent(targetUrl);
+    let page: Awaited<ReturnType<typeof fetchPageContent>>;
+    try {
+      page = await fetchPageContent(targetUrl);
+    } catch (error) {
+      throw new BadRequestException({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo acceder a la URL del producto',
+        code: 'PAGE_FETCH_FAILED',
+      });
+    }
+
     const candidates = extractLogoCandidates(page.html, page.url);
 
     if (candidates.length === 0) {

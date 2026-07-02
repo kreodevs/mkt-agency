@@ -36,6 +36,7 @@ export default function ProductDetailPage() {
   const [priceRange, setPriceRange] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [valueProposition, setValueProposition] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
 
   const productQuery = useQuery({
     queryKey: ['product', id],
@@ -52,6 +53,7 @@ export default function ProductDetailPage() {
     setPriceRange(product.priceRange ?? '');
     setTargetAudience(product.targetAudience ?? '');
     setValueProposition(product.valueProposition ?? '');
+    setWebsiteUrl(product.websiteUrl ?? '');
   }, [productQuery.data]);
 
   const saveMutation = useMutation({
@@ -87,6 +89,7 @@ export default function ProductDetailPage() {
       priceRange: priceRange.trim() || undefined,
       targetAudience: targetAudience.trim() || undefined,
       valueProposition: valueProposition.trim() || undefined,
+      websiteUrl: websiteUrl.trim() || undefined,
     });
   };
 
@@ -139,7 +142,7 @@ export default function ProductDetailPage() {
         <ProductLogoPanel
           productId={id}
           productName={productQuery.data.name}
-          websiteUrl={productQuery.data.websiteUrl}
+          websiteUrl={websiteUrl || productQuery.data.websiteUrl}
           logoAssetId={productQuery.data.logoAssetId}
           logoSourceUrl={productQuery.data.logoSourceUrl}
           onUpdated={() => {
@@ -151,6 +154,14 @@ export default function ProductDetailPage() {
       <Card title="Detalle del producto">
         <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-4">
           <InputText label="Nombre" value={name} onChange={(e) => setName(e.target.value)} required />
+
+          <InputText
+            label="Sitio web del producto"
+            type="url"
+            placeholder="https://..."
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+          />
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-[var(--foreground)]">Tipo</span>

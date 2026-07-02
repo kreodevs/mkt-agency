@@ -98,6 +98,11 @@ export function ProductLogoPanel({
               Origen: {logoSourceUrl}
             </p>
           )}
+          {!websiteUrl?.trim() && (
+            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              Guarda la URL del producto abajo para poder extraer el logo automáticamente.
+            </p>
+          )}
         </div>
 
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)]">
