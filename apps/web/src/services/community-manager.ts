@@ -49,9 +49,10 @@ export interface GenerateSocialCopyPayload {
 
 export interface GenerateSocialCopyResponse {
   id: string;
-  status: string;
-  postsGenerated?: number;
+  status: 'completed' | 'failed';
+  postsGenerated: number;
   imagesAttached?: number;
+  error?: string;
 }
 
 export async function generateSocialCopy(

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Bookmark,
   CheckCircle2,
@@ -30,8 +30,10 @@ import { apiFetch } from '@/services/api';
 import {
   getCommunityManagerPreferences,
   getCommunityManagerReadiness,
+  generateSocialCopy,
   saveCommunityManagerPreferences,
   type CmPlatform,
+  type GenerateSocialCopyResponse,
 } from '@/services/community-manager';
 import { listProducts } from '@/services/products';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
@@ -57,6 +59,9 @@ interface Batch {
   publishingGuide: string;
   generatedAt: string;
   createdAt: string;
+  status: 'completed' | 'failed';
+  errorMessage: string | null;
+  publishedCount: number;
 }
 
 interface TonePreset {
@@ -166,30 +171,48 @@ export default function CommunityManagerPage() {
   });
 
   const generateMutation = useMutation({
-    mutationFn: () =>
-      apiFetch<{ id: string; status: string }>('/community-manager/generate', {
-        method: 'POST',
-        body: JSON.stringify({
-          platforms,
-          count,
-          productId: productId || undefined,
-          tone: tone.trim() || undefined,
-          topics: topics
+    mutationFn: (): Promise<GenerateSocialCopyResponse> =>
+      generateSocialCopy({
+        platforms,
+        count,
+        productId: productId || undefined,
+        tone: tone.trim() || undefined,
+        topics:
+          topics
             .split(',')
             .map((t) => t.trim())
             .filter(Boolean) || undefined,
-        }),
       }),
-    onSuccess: () => {
-      toast.success('Copy generado — revisa los resultados');
-      setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ['cm-batches'] });
-      }, 2000);
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['cm-batches'] });
+      void queryClient.invalidateQueries({ queryKey: ['contents'] });
+      void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      void queryClient.invalidateQueries({ queryKey: ['calendar-day'] });
+
+      const count = result.postsGenerated ?? 0;
+      if (count > 0) {
+        toast.success(
+          `${count} post${count === 1 ? '' : 's'} creado${count === 1 ? '' : 's'} — revisa Contenidos y Calendario`,
+        );
+      }
     },
     onError: (error) => {
+      void queryClient.invalidateQueries({ queryKey: ['cm-batches'] });
       toast.error(error instanceof ApiError ? error.message : 'Error al generar copy');
     },
   });
+
+  const handleGenerate = () => {
+    if (!productId) {
+      toast.message('Selecciona un producto antes de generar');
+      return;
+    }
+    if (platforms.length === 0) {
+      toast.message('Activa al menos una plataforma');
+      return;
+    }
+    generateMutation.mutate();
+  };
 
   const togglePlatform = (platform: CmPlatform) => {
     setPlatforms((prev) => {
@@ -394,9 +417,9 @@ export default function CommunityManagerPage() {
           </div>
 
           <Button
-            onClick={() => generateMutation.mutate()}
+            onClick={handleGenerate}
             loading={generateMutation.isPending}
-            disabled={platforms.length === 0}
+            disabled={platforms.length === 0 || !productId}
             className="w-full gap-2"
           >
             <Sparkles className="h-4 w-4" />
@@ -420,6 +443,25 @@ export default function CommunityManagerPage() {
             </p>
           </div>
         </Card>
+      ) : latestBatch.status === 'failed' || latestBatch.posts.length === 0 ? (
+        <Card title="Última generación fallida">
+          <div className="space-y-3 py-4">
+            <p className="text-sm text-[var(--foreground)]">
+              {latestBatch.errorMessage ??
+                'No se generaron publicaciones. Suele deberse a la configuración del proveedor LLM.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/admin/llm-settings">
+                <Button type="button" variant="outline" size="sm">
+                  Revisar Ajustes LLM
+                </Button>
+              </Link>
+              <Button type="button" size="sm" onClick={handleGenerate} loading={generateMutation.isPending}>
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        </Card>
       ) : (
         <div className="space-y-6">
           {/* Publishing guide */}
@@ -430,7 +472,7 @@ export default function CommunityManagerPage() {
           </Card>
 
           {/* Posts */}
-          <Card title="Posts generados" subtitle={`${latestBatch.posts.length} publicaciones`}>
+          <Card title="Posts generados" subtitle={`${latestBatch.publishedCount} en Contenidos · ${latestBatch.posts.length} en batch`}>
             <div className="space-y-3">
               {latestBatch.posts.map((post) => {
                 const Icon = PLATFORM_ICONS[post.platform] ?? Globe;

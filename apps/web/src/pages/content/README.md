@@ -2,7 +2,7 @@
 
 - `ContentListPage` — `/contents` (filtros, `?campaignId=`)
 - `ContentCreatePage` — `/contents/new`
-- `ContentEditPage` — `/contents/:id` (editor, imagen IA, historial, aprobación)
+- `ContentEditPage` — `/contents/:id` (editor, imagen IA, historial, aprobación, eliminar borradores)
 
 Componentes: `@/components/content/` — `VersionHistory`, `SignatureBadge`, `ApprovalActions`.
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { CalendarView } from '@/components/calendar/CalendarView';
@@ -55,6 +56,26 @@ export default function CalendarPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-5">
+        {!monthQuery.isLoading && (monthQuery.data?.days.length ?? 0) === 0 && (
+          <Card className="border-dashed lg:col-span-5">
+            <p className="text-sm text-[var(--foreground)]">
+              No hay piezas en{' '}
+              {new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(
+                new Date(year, month - 1, 1),
+              )}
+              .
+            </p>
+            <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+              Los borradores aparecen en el calendario sin necesidad de aprobación. Cada pieza se
+              ubica en su fecha programada (o en la fecha de creación si no tiene). Community Manager
+              programa desde el día siguiente: usa «today» o revisa el mes anterior o posterior.
+            </p>
+            <Link to="/contents" className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline">
+              Ver listado de contenidos →
+            </Link>
+          </Card>
+        )}
+
         <Card className="lg:col-span-3">
           <CalendarView
             data={monthQuery.data}
@@ -81,7 +102,8 @@ export default function CalendarPage() {
           ) : (
             <Card title="Detalle del día" subtitle="Selecciona un día en el calendario">
               <p className="text-sm text-[var(--foreground-muted)]">
-                Haz clic en un día con piezas para revisar, aprobar o rechazar contenido.
+                Haz clic en un día con piezas para revisar, aprobar o rechazar. Los borradores también
+                se muestran aquí.
               </p>
             </Card>
           )}

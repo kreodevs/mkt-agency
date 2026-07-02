@@ -347,6 +347,20 @@ export class CommunityManagerService {
         await this.refreshCampaignLinkedContent(tenantId, dto.campaignId);
       }
 
+      if (result.posts.length === 0) {
+        throw new BadRequestException({
+          error: 'La IA no devolvió publicaciones. Revisa la configuración LLM.',
+          code: 'CM_EMPTY_RESULT',
+        });
+      }
+
+      if (publishedPosts.length === 0) {
+        throw new BadRequestException({
+          error: 'Se generó copy pero no se pudo guardar en Contenidos. Revisa los logs del servidor.',
+          code: 'CM_CONTENT_SAVE_FAILED',
+        });
+      }
+
       return {
         id: batch.id,
         status: 'completed',
@@ -354,10 +368,25 @@ export class CommunityManagerService {
         imagesAttached,
       };
     } catch (error) {
-      this.logger.error(`Social copy generation failed: ${error instanceof Error ? error.message : error}`);
-      batch.errorMessage = error instanceof Error ? error.message : 'Generation failed';
+      const message =
+        error instanceof BadRequestException
+          ? ((error.getResponse() as { error?: string })?.error ?? error.message)
+          : error instanceof Error
+            ? error.message
+            : 'Generation failed';
+
+      this.logger.error(`Social copy generation failed: ${message}`);
+      batch.errorMessage = message;
       await this.batches.save(batch);
-      return { id: batch.id, status: 'failed', postsGenerated: 0, imagesAttached: 0 };
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new BadRequestException({
+        error: `No se pudo generar copy: ${message}. Revisa Ajustes → Proveedores LLM.`,
+        code: 'CM_GENERATION_FAILED',
+      });
     }
   }
 
@@ -389,25 +418,31 @@ export class CommunityManagerService {
 
   private toResponse(entity: CommunityManagerBatchEntity): SocialCopyBatchResponse {
     const data = entity.data as Record<string, unknown>;
+    const posts = (entity.posts as unknown as SocialCopyPost[]).map((p) => ({
+      id: p.id,
+      platform: p.platform,
+      title: p.title,
+      body: p.body,
+      hashtags: p.hashtags,
+      visualDescription: p.visualDescription,
+      bestTime: p.bestTime,
+      targetAudience: p.targetAudience,
+      callToAction: p.callToAction,
+      tone: p.tone,
+      contentId: (p as unknown as Record<string, unknown>).contentId as string | undefined,
+    }));
+    const failed = !!entity.errorMessage;
+
     return {
       id: entity.id,
       summary: (data.summary as string) ?? '',
-      posts: (entity.posts as unknown as SocialCopyPost[]).map((p) => ({
-        id: p.id,
-        platform: p.platform,
-        title: p.title,
-        body: p.body,
-        hashtags: p.hashtags,
-        visualDescription: p.visualDescription,
-        bestTime: p.bestTime,
-        targetAudience: p.targetAudience,
-        callToAction: p.callToAction,
-        tone: p.tone,
-        contentId: (p as unknown as Record<string, unknown>).contentId as string | undefined,
-      })),
+      posts,
       publishingGuide: (data.publishingGuide as string) ?? '',
       generatedAt: (data.generatedAt as string) ?? entity.createdAt.toISOString(),
       createdAt: entity.createdAt.toISOString(),
+      status: failed ? 'failed' : 'completed',
+      errorMessage: entity.errorMessage,
+      publishedCount: entity.publishedPosts?.length ?? 0,
     };
   }
 }

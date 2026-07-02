@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
@@ -15,10 +15,11 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
-import { getContent, listContentVersions, updateContent } from '@/services/content';
+import { getContent, listContentVersions, updateContent, deleteContent } from '@/services/content';
 
 export default function ContentEditPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -61,6 +62,20 @@ export default function ContentEditPage() {
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar la fecha');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteContent(id!),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['contents'] });
+      void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      toast.success('Contenido eliminado');
+      const campaignId = contentQuery.data?.campaignId;
+      navigate(campaignId ? `/contents?campaignId=${campaignId}` : '/contents');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo eliminar');
     },
   });
 
@@ -116,18 +131,41 @@ export default function ContentEditPage() {
     ? `/contents?campaignId=${content.campaignId}`
     : '/contents';
 
+  const canDelete = content.status === 'draft' && !isFrozen;
+
+  const handleDelete = () => {
+    if (!window.confirm('¿Eliminar este contenido? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    deleteMutation.mutate();
+  };
+
   return (
     <DashboardShell>
       <PageHeader
         title={content.title}
         description={`Tipo: ${content.type} · v${currentVersion.versionNumber}`}
         actions={
-          <Link to={backHref}>
-            <Button variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {canDelete && (
+              <Button
+                type="button"
+                variant="outline"
+                className="text-[var(--destructive)]"
+                loading={deleteMutation.isPending}
+                onClick={handleDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </Button>
+            )}
+            <Link to={backHref}>
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Button>
+            </Link>
+          </div>
         }
       />
 

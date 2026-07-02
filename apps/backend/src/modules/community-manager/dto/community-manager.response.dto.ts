@@ -19,13 +19,17 @@ export interface SocialCopyBatchResponse {
   publishingGuide: string;
   generatedAt: string;
   createdAt: string;
+  status: 'completed' | 'failed';
+  errorMessage: string | null;
+  publishedCount: number;
 }
 
 export interface GenerateResponse {
   id: string;
-  status: string;
-  postsGenerated?: number;
+  status: 'completed' | 'failed';
+  postsGenerated: number;
   imagesAttached?: number;
+  error?: string;
 }
 
 export interface CommunityManagerPreferencesResponse {
