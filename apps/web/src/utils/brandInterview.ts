@@ -18,3 +18,7 @@ export function getEffectiveInterviewStatus(
   }
   return interview.status;
 }
+
+export function isOnboardingSourcedInterview(interview: AgentInterview): boolean {
+  return interview.messages.some((message) => message.metadata?.type === 'onboarding_skip');
+}

@@ -17,6 +17,7 @@ import {
   getImageGenerationByContentId,
   regenerateImageForContent,
 } from '@/services/agents';
+import { getApiErrorMessage } from '@/services/api';
 import type { ImageGeneration } from '@/types/agents';
 
 type ContentVisualPanelProps = {
@@ -30,6 +31,10 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
   const generationQuery = useQuery({
     queryKey: ['image-generation-by-content', contentId],
     queryFn: () => getImageGenerationByContentId(contentId),
+    refetchInterval: (query) => {
+      const generation = query.state.data?.generation;
+      return generation?.status === 'processing' ? 3000 : false;
+    },
   });
 
   const generation = generationQuery.data?.generation ?? null;
@@ -51,13 +56,13 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
   const generateMutation = useMutation({
     mutationFn: () => generateImageForContent(contentId),
     onSuccess: (result) => handleGenerationResult(result, invalidate),
-    onError: () => toast.error('No se pudo generar la imagen'),
+    onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo generar la imagen')),
   });
 
   const regenerateMutation = useMutation({
     mutationFn: () => regenerateImageForContent(contentId),
     onSuccess: (result) => handleGenerationResult(result, invalidate, true),
-    onError: () => toast.error('No se pudo regenerar la imagen'),
+    onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo regenerar la imagen')),
   });
 
   return (
@@ -215,13 +220,13 @@ export function ContentVisualActions({
   const generateMutation = useMutation({
     mutationFn: () => generateImageForContent(contentId),
     onSuccess: (result) => handleGenerationResult(result, invalidate),
-    onError: () => toast.error('No se pudo generar la imagen'),
+    onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo generar la imagen')),
   });
 
   const regenerateMutation = useMutation({
     mutationFn: () => regenerateImageForContent(contentId),
     onSuccess: (result) => handleGenerationResult(result, invalidate, true),
-    onError: () => toast.error('No se pudo regenerar la imagen'),
+    onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo regenerar la imagen')),
   });
 
   const loading = generateMutation.isPending || regenerateMutation.isPending;

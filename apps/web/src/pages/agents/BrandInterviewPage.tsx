@@ -17,7 +17,7 @@ import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useActiveProductStore } from '@/store/active-product';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
-import { getEffectiveInterviewStatus, hasBrandBriefResult } from '@/utils/brandInterview';
+import { getEffectiveInterviewStatus, hasBrandBriefResult, isOnboardingSourcedInterview } from '@/utils/brandInterview';
 
 const selectClass =
   'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
@@ -83,6 +83,11 @@ export default function BrandInterviewPage() {
     () => brandInterviews.find((item) => item.status === 'in_progress'),
     [brandInterviews],
   );
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductId),
+    [products, selectedProductId],
+  );
+  const selectedProductOnboardingDone = Boolean(selectedProduct?.onboardingCompleted);
 
   const activeInterview = id ? interviewQuery.data : undefined;
 
@@ -154,7 +159,9 @@ export default function BrandInterviewPage() {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
         <div className="py-20 text-center text-[var(--foreground-muted)]">
-          Preparando entrevista...
+          {selectedProductOnboardingDone
+            ? 'Generando Brand Brief desde onboarding...'
+            : 'Preparando entrevista...'}
         </div>
       </DashboardShell>
     );
@@ -191,8 +198,12 @@ export default function BrandInterviewPage() {
               )}
               <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
                 {brandInterviews.length > 0
-                  ? 'Inicia otra ronda de preguntas para actualizar tu Brand Brief.'
-                  : 'Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos. Al finalizar, generaré un Brand Brief en markdown.'}
+                  ? selectedProductOnboardingDone
+                    ? 'Regenera el Brand Brief usando los datos actuales del onboarding del producto seleccionado.'
+                    : 'Inicia otra ronda de preguntas para actualizar tu Brand Brief.'
+                  : selectedProductOnboardingDone
+                    ? 'Usaremos los datos del onboarding del producto (descripción, propuesta, audiencia y tags). No repetiremos esas preguntas: generaremos el Brand Brief directamente.'
+                    : 'Te haré 6 preguntas sobre tu empresa, audiencia, competencia y objetivos. Al finalizar, generaré un Brand Brief en markdown.'}
               </p>
               {!inProgressInterview && products.length > 0 && (
                 <div className="w-full max-w-sm text-left">
@@ -228,7 +239,9 @@ export default function BrandInterviewPage() {
                   className="gap-2"
                 >
                   <Sparkles className="h-5 w-5" />
-                  Iniciar entrevista
+                  {selectedProductOnboardingDone
+                    ? 'Generar Brand Brief desde onboarding'
+                    : 'Iniciar entrevista'}
                 </Button>
               )}
             </div>
@@ -267,6 +280,7 @@ export default function BrandInterviewPage() {
   const isProcessing = isInterviewProcessing(activeInterview);
   const isCompleted = effectiveStatus === 'completed';
   const isFailed = effectiveStatus === 'failed';
+  const fromOnboarding = isOnboardingSourcedInterview(activeInterview);
   const briefMarkdown = activeInterview.brandBriefMarkdown;
   const showBrief = hasBrandBriefResult(activeInterview) && isCompleted;
   const isSending = answerMutation.isPending;
@@ -285,7 +299,13 @@ export default function BrandInterviewPage() {
         title="Brand Analyst"
         description={
           activeInterview.productName
-            ? `Entrevista enfocada en ${activeInterview.productName}${
+            ? fromOnboarding
+              ? isProcessing
+                ? `Generando Brand Brief de ${activeInterview.productName} desde onboarding...`
+                : isCompleted
+                  ? `Brand Brief de ${activeInterview.productName} generado desde onboarding`
+                  : `Brand Brief de ${activeInterview.productName} desde onboarding`
+              : `Entrevista enfocada en ${activeInterview.productName}${
                 isProcessing
                   ? ' — generando Brand Brief...'
                   : isSending
@@ -319,14 +339,20 @@ export default function BrandInterviewPage() {
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
           <div className="mb-2 flex items-center justify-between text-xs text-[var(--foreground-muted)]">
             <span>
-              {isProcessing
-                ? 'Analizando respuestas y redactando el brief'
-                : isCompleted
-                  ? 'Entrevista completada'
-                  : `${activeInterview.currentStep} de ${activeInterview.totalSteps} preguntas respondidas`}
+              {fromOnboarding
+                ? isProcessing
+                  ? 'Generando Brand Brief desde onboarding'
+                  : isCompleted
+                    ? 'Brand Brief generado desde onboarding'
+                    : 'Contexto tomado del onboarding del producto'
+                : isProcessing
+                  ? 'Analizando respuestas y redactando el brief'
+                  : isCompleted
+                    ? 'Entrevista completada'
+                    : `${activeInterview.currentStep} de ${activeInterview.totalSteps} preguntas respondidas`}
             </span>
             <span className="font-medium tabular-nums text-[var(--foreground)]">
-              {isProcessing ? '…' : `${stepProgress}%`}
+              {fromOnboarding && isProcessing ? '…' : isProcessing ? '…' : `${stepProgress}%`}
             </span>
           </div>
           <Progress

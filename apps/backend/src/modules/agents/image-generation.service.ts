@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -41,21 +42,32 @@ import {
   VideoGenerationAdapterPort,
   VideoGenerationResult,
 } from './adapters/video-generation.adapter.port';
+import {
+  ImageGenerationJobData,
+  ImageGenerationWorkerService,
+} from './workers/image-generation.worker';
 
 export interface GenerateImageOptions {
   style?: string;
   size?: string;
   productId?: string;
   contentId?: string;
+  background?: boolean;
 }
 
 export interface GenerateImageResult {
   id: string;
+  tenantId: string;
+  prompt: string;
   assetId: string | null;
   imageUrl: string | null;
   status: string;
   contentId: string | null;
+  productId: string | null;
+  errorMessage: string | null;
   metadata?: ImageGenerationMetadata;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Injectable()
@@ -75,6 +87,8 @@ export class ImageGenerationService {
     private readonly imageBranding: ImageBrandingService,
     private readonly llmConfig: LlmConfigService,
     private readonly llmUsage: LlmUsageService,
+    @Inject(forwardRef(() => ImageGenerationWorkerService))
+    private readonly imageWorker: ImageGenerationWorkerService,
   ) {}
 
   async generate(
@@ -99,8 +113,35 @@ export class ImageGenerationService {
       }),
     );
 
+    if (options.background) {
+      this.imageWorker.enqueue({
+        generationId: record.id,
+        tenantId,
+        userId,
+        size: options.size,
+        style: options.style,
+      });
+      return this.toResult(record);
+    }
+
     return runWithLlmUsageContext({ tenantId, userId }, () =>
       this.runGeneration(tenantId, userId, record, trimmed, options),
+    );
+  }
+
+  async processQueuedGeneration(data: ImageGenerationJobData): Promise<void> {
+    const record = await this.findOne(data.tenantId, data.generationId);
+    if (!record || record.status !== 'processing') {
+      return;
+    }
+
+    await runWithLlmUsageContext({ tenantId: data.tenantId, userId: data.userId }, () =>
+      this.runGeneration(data.tenantId, data.userId, record, record.prompt, {
+        contentId: record.contentId ?? undefined,
+        productId: record.productId ?? undefined,
+        size: data.size,
+        style: data.style,
+      }),
     );
   }
 
@@ -340,11 +381,19 @@ export class ImageGenerationService {
     if (productId) {
       const branding = await this.resolveProductBranding(tenantId, productId);
       if (branding.logoAssetId) {
-        finalBuffer = await this.imageBranding.applyProductLogo(
-          tenantId,
-          imageBuffer,
-          branding.logoAssetId,
-        );
+        try {
+          finalBuffer = await this.imageBranding.applyProductLogo(
+            tenantId,
+            imageBuffer,
+            branding.logoAssetId,
+          );
+        } catch (error) {
+          this.logger.warn(
+            `Logo overlay skipped for product ${productId}: ${
+              error instanceof Error ? error.message : error
+            }`,
+          );
+        }
       }
     }
 
@@ -499,12 +548,25 @@ export class ImageGenerationService {
   private toResult(record: AgentImageGenerationEntity): GenerateImageResult {
     return {
       id: record.id,
+      tenantId: record.tenantId,
+      prompt: record.prompt,
       assetId: record.assetId,
       imageUrl: record.imageUrl,
       status: record.status,
       contentId: record.contentId,
+      productId: record.productId,
+      errorMessage: record.errorMessage,
       metadata: isImageGenerationMetadata(record.metadata) ? record.metadata : undefined,
+      createdAt: record.createdAt.toISOString(),
+      updatedAt: record.updatedAt.toISOString(),
     };
+  }
+
+  private generationHasVisual(record: AgentImageGenerationEntity): boolean {
+    if (record.assetId) {
+      return true;
+    }
+    return isImageGenerationMetadata(record.metadata) && record.metadata.frames.length > 0;
   }
 
   async findByContentId(
@@ -532,11 +594,11 @@ export class ImageGenerationService {
     if (existing?.status === 'processing') {
       return this.toResult(existing);
     }
-    if (existing?.status === 'completed') {
+    if (existing?.status === 'completed' && this.generationHasVisual(existing)) {
       return this.toResult(existing);
     }
-    if (existing?.status === 'failed') {
-      return this.retry(tenantId, userId, existing.id);
+    if (existing?.status === 'failed' || (existing?.status === 'completed' && !this.generationHasVisual(existing))) {
+      return this.retry(tenantId, userId, existing.id, { background: true });
     }
 
     const prompt = await this.buildContentBrandedPrompt(
@@ -550,6 +612,7 @@ export class ImageGenerationService {
       productId: content.productId ?? undefined,
       size: '1024x1024',
       style: 'social media post, professional',
+      background: true,
     });
   }
 
@@ -561,7 +624,7 @@ export class ImageGenerationService {
     const existing = await this.findByContentId(tenantId, contentId);
     if (existing) {
       await this.refreshBrandedPrompt(tenantId, existing);
-      return this.retry(tenantId, userId, existing.id);
+      return this.retry(tenantId, userId, existing.id, { background: true });
     }
 
     return this.generateForContent(tenantId, userId, contentId);
@@ -637,6 +700,7 @@ export class ImageGenerationService {
     tenantId: string,
     userId: string,
     id: string,
+    options: { background?: boolean; size?: string; style?: string } = {},
   ): Promise<GenerateImageResult> {
     const record = await this.findOne(tenantId, id);
     if (!record) {
@@ -650,10 +714,23 @@ export class ImageGenerationService {
     record.metadata = {};
     await this.generations.save(record);
 
+    if (options.background) {
+      this.imageWorker.enqueue({
+        generationId: record.id,
+        tenantId,
+        userId,
+        size: options.size,
+        style: options.style,
+      });
+      return this.toResult(record);
+    }
+
     return runWithLlmUsageContext({ tenantId, userId }, () =>
       this.runGeneration(tenantId, userId, record, record.prompt, {
         contentId: record.contentId ?? undefined,
         productId: record.productId ?? undefined,
+        size: options.size,
+        style: options.style,
       }),
     );
   }

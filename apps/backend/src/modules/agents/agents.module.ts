@@ -34,6 +34,8 @@ import { AgentCompetitorAnalysisEntity } from './domain/agent-competitor-analysi
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
 import { BrandInterviewWorkerService } from './workers/brand-interview.worker';
 import { BrandInterviewProcessor } from './workers/brand-interview.processor';
+import { ImageGenerationWorkerService } from './workers/image-generation.worker';
+import { ImageGenerationProcessor } from './workers/image-generation.processor';
 import { CompetitorIntelWorkerService } from './workers/competitor-intel.worker';
 import { CompetitorIntelProcessor } from './workers/competitor-intel.processor';
 import { CompetitorIntelService } from './competitor-intel.service';
@@ -72,6 +74,8 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     OpenRouterInterviewAdapter,
     BrandInterviewWorkerService,
     BrandInterviewProcessor,
+    ImageGenerationWorkerService,
+    ImageGenerationProcessor,
     CompetitorIntelService,
     StubCompetitorIntelAdapter,
     OpenRouterCompetitorIntelAdapter,

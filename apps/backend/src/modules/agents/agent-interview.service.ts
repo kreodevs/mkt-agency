@@ -7,10 +7,15 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CompanyProfileService } from '../company-profile/company-profile.service';
+import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
 import { getInterviewQuestion, getInterviewQuestions } from './adapters/interview.questions';
 import { brandBriefToMarkdown } from './brand-brief-markdown.util';
+import { buildBrandInterviewAnswersFromOnboarding } from './domain/brand-interview-prefill.util';
+import {
+  isProductOnboardingCompleted,
+} from '../product/domain/product-onboarding.util';
 import { AgentInterviewMessageEntity } from './domain/agent-interview-message.entity';
 import { AgentInterviewEntity, AgentType } from './domain/agent-interview.entity';
 import { InterviewResponseDto } from './dto/interview-response.dto';
@@ -25,7 +30,8 @@ export class AgentInterviewService {
     private readonly interviews: Repository<AgentInterviewEntity>,
     @InjectRepository(AgentInterviewMessageEntity)
     private readonly messages: Repository<AgentInterviewMessageEntity>,
-    private readonly companyProfile: CompanyProfileService,
+    @InjectRepository(CompanyProfileEntity)
+    private readonly companyProfiles: Repository<CompanyProfileEntity>,
     private readonly productService: ProductService,
     private readonly interviewWorker: BrandInterviewWorkerService,
   ) {}
@@ -73,6 +79,10 @@ export class AgentInterviewService {
     if (productId) {
       const product = await this.productService.findOwnedEntity(tenantId, productId);
       productName = product.name;
+
+      if (agentType === 'brand_interview' && isProductOnboardingCompleted(product)) {
+        return this.createBrandBriefFromOnboarding(tenantId, product, productName);
+      }
     }
 
     const questions = getInterviewQuestions(agentType);
@@ -103,6 +113,58 @@ export class AgentInterviewService {
       }),
     );
 
+    return this.toResponse(interview, productName);
+  }
+
+  private async createBrandBriefFromOnboarding(
+    tenantId: string,
+    product: ProductEntity,
+    productName: string,
+  ): Promise<InterviewResponseDto> {
+    const existing = await this.findCompletedBrandInterview(tenantId, product.id);
+    if (existing) {
+      return this.toResponse(existing, productName);
+    }
+
+    const profile =
+      (await this.companyProfiles.findOne({ where: { tenantId } })) ??
+      (await this.companyProfiles.save(this.companyProfiles.create({ tenantId, status: 'pending' })));
+    const answers = buildBrandInterviewAnswersFromOnboarding(product, profile);
+    const questions = getInterviewQuestions('brand_interview');
+
+    const interview = await this.interviews.save(
+      this.interviews.create({
+        tenantId,
+        agentType: 'brand_interview',
+        productId: product.id,
+        status: 'in_progress',
+        currentStep: questions.length,
+        totalSteps: questions.length,
+        answers,
+        brandBrief: null,
+      }),
+    );
+
+    await this.messages.save(
+      this.messages.create({
+        interviewId: interview.id,
+        role: 'agent',
+        content: `Ya tengo el contexto de **${productName}** desde el onboarding del producto (descripción, propuesta de valor, audiencia y tags). No hace falta repetir esas preguntas: estoy generando tu Brand Brief con esa información.`,
+        metadata: { type: 'onboarding_skip', step: questions.length, productId: product.id },
+      }),
+    );
+
+    await this.messages.save(
+      this.messages.create({
+        interviewId: interview.id,
+        role: 'agent',
+        content:
+          'Analizando los datos del onboarding para redactar tu Brand Brief. Esto tomará solo unos segundos...',
+        metadata: { step: questions.length, type: 'processing' },
+      }),
+    );
+
+    this.interviewWorker.enqueue(interview.id);
     return this.toResponse(interview, productName);
   }
 

@@ -69,6 +69,10 @@ export class OpenRouterInterviewAdapter implements InterviewAdapterPort {
       answers: `{\n${answersText}\n}`,
       profile: context.profile,
       focusProduct: context.product,
+      instructions:
+        context.product
+          ? 'Usa las respuestas (muchas pueden venir del onboarding del producto) y el contexto del producto para un Brand Brief accionable. Completa huecos con inferencia razonable cuando falte detalle explícito.'
+          : 'Genera un Brand Brief accionable a partir de las respuestas. Completa huecos con inferencia razonable cuando falte detalle explícito.',
       outputFormat: {
         companyName: 'Nombre de la empresa',
         industry: 'Industria o sector',
