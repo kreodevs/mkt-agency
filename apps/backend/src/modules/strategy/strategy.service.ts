@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
 import { DashboardMetricsService } from '../dashboard/dashboard-metrics.service';
 import {
   STRATEGY_ADAPTER,
@@ -93,18 +94,20 @@ export class StrategyService {
         objective: c.objective ?? null,
       }));
 
-      const analysis = await this.adapter.analyze({
-        tenantId,
-        source: 'auto',
-        brandBrief: null,
-        metrics: {
-          leads: metrics.leads,
-          content: metrics.content,
-          campaigns: metrics.campaigns,
-          trends: metrics.trends,
-        },
-        campaigns,
-      });
+      const analysis = await runWithLlmUsageContext({ tenantId }, () =>
+        this.adapter.analyze({
+          tenantId,
+          source: 'auto',
+          brandBrief: null,
+          metrics: {
+            leads: metrics.leads,
+            content: metrics.content,
+            campaigns: metrics.campaigns,
+            trends: metrics.trends,
+          },
+          campaigns,
+        }),
+      );
 
       record.data = {
         productId: options.productId ?? null,

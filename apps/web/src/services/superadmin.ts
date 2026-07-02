@@ -5,9 +5,8 @@ import {
   exitImpersonation,
   isImpersonating,
 } from '@/lib/impersonation';
+import type { LlmUsageDashboardResponse } from '@/types/llm-usage';
 import type { ImpersonateResponse } from '@/types/impersonation';
-
-export type { ImpersonateResponse };
 
 export interface SuperadminUser {
   id: string;
@@ -134,6 +133,17 @@ export async function updateLlmTask(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function getLlmUsageDashboard(
+  from?: string,
+  to?: string,
+): Promise<LlmUsageDashboardResponse> {
+  const search = new URLSearchParams();
+  if (from) search.set('from', from);
+  if (to) search.set('to', to);
+  const qs = search.toString();
+  return apiFetch<LlmUsageDashboardResponse>(`/superadmin/llm-usage${qs ? `?${qs}` : ''}`);
 }
 
 export async function impersonateTenant(tenantId: string): Promise<ImpersonateResponse> {

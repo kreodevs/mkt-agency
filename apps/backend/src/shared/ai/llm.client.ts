@@ -1,12 +1,20 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { LlmConfigService } from './llm-config.service';
 import { LlmProviderService } from './llm-provider.service';
+import { LlmUsageService } from './llm-usage.service';
 import { isLlmRetryableWithFallback } from './llm-fallback.util';
 import type { ResolvedLlmExecutionConfig } from './llm-task-types';
 import type { LlmTaskType } from './llm-task-types';
 
+interface ChatCompletionUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+}
+
 interface ChatCompletionResponse {
   choices?: Array<{ message?: { content?: string } }>;
+  usage?: ChatCompletionUsage;
 }
 
 export interface LlmChatOptions {
@@ -14,6 +22,8 @@ export interface LlmChatOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  tenantId?: string | null;
+  userId?: string | null;
 }
 
 @Injectable()
@@ -23,6 +33,7 @@ export class LlmClient {
   constructor(
     private readonly llmConfig: LlmConfigService,
     private readonly llmProviders: LlmProviderService,
+    private readonly llmUsage: LlmUsageService,
   ) {}
 
   async isConfigured(): Promise<boolean> {
@@ -71,6 +82,9 @@ export class LlmClient {
           model,
           temperature: options.temperature ?? resolved.temperature ?? 0.7,
           maxTokens: options.maxTokens ?? resolved.maxTokens,
+          taskType: options.taskType,
+          tenantId: options.tenantId,
+          userId: options.userId,
         });
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -114,8 +128,21 @@ export class LlmClient {
     model: string;
     temperature: number;
     maxTokens?: number;
+    taskType: LlmTaskType;
+    tenantId?: string | null;
+    userId?: string | null;
   }): Promise<T> {
-    const { resolved, systemPrompt, userPrompt, model, temperature, maxTokens } = params;
+    const {
+      resolved,
+      systemPrompt,
+      userPrompt,
+      model,
+      temperature,
+      maxTokens,
+      taskType,
+      tenantId,
+      userId,
+    } = params;
     const effectiveSystemPrompt =
       resolved.systemPromptTemplate?.trim() || systemPrompt;
 
@@ -152,6 +179,19 @@ export class LlmClient {
     if (!content) {
       throw new Error('LLM returned an empty response');
     }
+
+    this.llmUsage.record({
+      tenantId,
+      userId,
+      taskType,
+      providerId: resolved.providerId,
+      model,
+      modality: 'chat',
+      promptTokens: payload.usage?.prompt_tokens ?? 0,
+      completionTokens: payload.usage?.completion_tokens ?? 0,
+      totalTokens: payload.usage?.total_tokens ?? 0,
+      status: 'success',
+    });
 
     return JSON.parse(content) as T;
   }

@@ -106,6 +106,16 @@ export class SuperadminController {
     return this.superadminService.listLlmProviderModels(id);
   }
 
+  @Get('llm-usage')
+  @UseGuards(SuperadminGuard)
+  @AuditLog({ action: 'superadmin.list_llm_usage', resourceType: 'llm_usage' })
+  getLlmUsageDashboard(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.superadminService.getLlmUsageDashboard(from, to);
+  }
+
   @Get('tenants/:id/users')
   @UseGuards(SuperadminGuard)
   listTenantUsers(@Param('id') tenantId: string) {

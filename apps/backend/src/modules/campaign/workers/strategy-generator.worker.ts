@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { toProductContext } from '../../product/domain/product-context.util';
 import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_CAMPAIGN_STRATEGY } from '../../../shared/queue/queue.constants';
 import {
   STRATEGY_ADAPTER,
@@ -66,7 +67,8 @@ export class StrategyGeneratorWorkerService {
     assignment.status = 'processing';
     await this.assignments.save(assignment);
 
-    try {
+    return runWithLlmUsageContext({ tenantId: assignment.tenantId }, async () => {
+      try {
       const campaign = await this.campaigns.findOne({
         where: { id: assignment.campaignId, tenantId: assignment.tenantId },
       });
@@ -150,5 +152,6 @@ export class StrategyGeneratorWorkerService {
     }
 
     await this.assignments.save(assignment);
+    });
   }
 }

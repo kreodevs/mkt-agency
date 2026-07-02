@@ -29,6 +29,15 @@ export interface DataTableInputProps {
   rowsPerPageOptions?: number[];
 }
 
+const paginatorControlClass =
+  'rounded-[var(--radius-sm)] p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--muted)] disabled:opacity-50';
+
+const paginatorPageClass =
+  'min-w-[32px] rounded-[var(--radius-sm)] px-[var(--spacing-sm)] text-sm font-medium text-[var(--foreground-muted)] hover:bg-[var(--muted)] [&[data-p-highlight=true]]:bg-[var(--accent)] [&[data-p-highlight=true]]:text-[var(--accent-foreground)]';
+
+const paginatorDropdownPanelClass =
+  'overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-lg';
+
 const ptStyles = {
   root: {
     className:
@@ -71,20 +80,30 @@ const ptStyles = {
       className:
         'flex items-center justify-between border-t border-[var(--border)] bg-[var(--secondary)] px-[var(--spacing-md)] py-[var(--spacing-md)]',
     },
-    first: { className: 'rounded-[var(--radius-sm)] p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--muted)] disabled:opacity-50' },
-    prev: { className: 'rounded-[var(--radius-sm)] p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--muted)] disabled:opacity-50' },
-    next: { className: 'rounded-[var(--radius-sm)] p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--muted)] disabled:opacity-50' },
-    last: { className: 'rounded-[var(--radius-sm)] p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--muted)] disabled:opacity-50' },
+    firstPageIcon: { className: paginatorControlClass },
+    prevPageIcon: { className: paginatorControlClass },
+    nextPageIcon: { className: paginatorControlClass },
+    lastPageIcon: { className: paginatorControlClass },
     pages: { className: 'flex items-center gap-[var(--spacing-xs)]' },
-    page: {
-      className:
-        'min-w-[32px] rounded-[var(--radius-sm)] px-[var(--spacing-sm)] text-sm font-medium text-[var(--foreground-muted)] hover:bg-[var(--muted)] [&[data-p-highlight=true]]:bg-[var(--accent)] [&[data-p-highlight=true]]:text-[var(--accent-foreground)]',
-    },
+    pageButton: { className: paginatorPageClass },
     current: { className: 'text-sm text-[var(--foreground-muted)]' },
-    rowPerPageDropdown: {
+    RPPDropdown: {
       root: {
         className:
-          'h-control-sm min-h-control-sm rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-[var(--spacing-sm)] text-sm text-[var(--foreground)]',
+          'h-control-sm min-h-control-sm rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] text-sm text-[var(--foreground)]',
+      },
+      panel: {
+        className: paginatorDropdownPanelClass,
+      },
+      wrapper: {
+        className: 'max-h-56 overflow-auto bg-[var(--card)]',
+      },
+      list: {
+        className: 'bg-[var(--card)] py-1',
+      },
+      item: {
+        className:
+          'cursor-pointer px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--secondary)] [&[data-p-highlight=true]]:bg-[var(--accent)]/10 [&[data-p-highlight=true]]:font-medium',
       },
     },
   },
@@ -178,6 +197,7 @@ export const DataTable = forwardRef<HTMLDivElement, DataTableInputProps>(
           paginator={paginator}
           rows={rows}
           rowsPerPageOptions={rowsPerPageOptions}
+          paginatorDropdownAppendTo={typeof document !== 'undefined' ? document.body : undefined}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
           sortMode="multiple"
@@ -186,14 +206,7 @@ export const DataTable = forwardRef<HTMLDivElement, DataTableInputProps>(
             ...ptStyles,
             headerCell,
             bodyCell,
-            paginator: {
-              ...ptStyles.paginator,
-              firstPageIcon: { className: ptStyles.paginator.first.className },
-              prevPageIcon: { className: ptStyles.paginator.prev.className },
-              nextPageIcon: { className: ptStyles.paginator.next.className },
-              lastPageIcon: { className: ptStyles.paginator.last.className },
-              pageButton: { className: ptStyles.paginator.page.className },
-            },
+            paginator: ptStyles.paginator,
           } as any}
         >
           {columns.map((col) => {

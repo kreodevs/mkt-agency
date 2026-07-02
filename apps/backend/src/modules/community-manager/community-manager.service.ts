@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
@@ -275,18 +276,22 @@ export class CommunityManagerService {
       const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
 
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
-      const result = await this.adapter.generate({
-        tenantId,
-        platforms: dto.platforms,
-        count: dto.count,
-        campaignId: dto.campaignId,
-        productId: productContext?.id ?? dto.productId,
-        tone: dto.tone,
-        topics: dto.topics,
-        brandBrief,
-        productContext: productContext as unknown as Record<string, unknown>,
-        focusProductName: productContext?.name ?? null,
-      });
+      const result = await runWithLlmUsageContext(
+        { tenantId, userId },
+        () =>
+          this.adapter.generate({
+            tenantId,
+            platforms: dto.platforms,
+            count: dto.count,
+            campaignId: dto.campaignId,
+            productId: productContext?.id ?? dto.productId,
+            tone: dto.tone,
+            topics: dto.topics,
+            brandBrief,
+            productContext: productContext as unknown as Record<string, unknown>,
+            focusProductName: productContext?.name ?? null,
+          }),
+      );
 
       // Save each post as a Content item, spread across next days
       const publishedPosts: string[] = [];

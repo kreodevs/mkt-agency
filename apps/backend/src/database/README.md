@@ -42,6 +42,7 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000024-ResetTenantOperationalData.ts` | **One-shot:** trunca datos operativos; conserva `users`, `tenants`, LLM y paquetes. Omitir: `SKIP_OPERATIONAL_DATA_RESET=true` |
 | `1730000000025-AddImageGenerationMetadata.ts` | Columna `metadata` JSONB en `agent_image_generations` (frames de reel/carrusel) |
 | `1730000000026-AddVideoGenerationLlmTask.ts` | Tarea LLM `video_generation` (OpenRouter Video API, default `bytedance/seedance-2.0-fast`) |
+| `1730000000027-CreateLlmUsageEvents.ts` | Tabla `llm_usage_events` (tracking tokens/costo por tenant) |
 
 Si existe una tabla legacy `products` sin `tenant_id`, la migración 0018 la renombra a `products_legacy` antes de crear el catálogo tenant-scoped.
 

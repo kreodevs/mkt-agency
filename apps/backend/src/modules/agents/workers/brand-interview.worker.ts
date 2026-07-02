@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_BRAND_INTERVIEW } from '../../../shared/queue/queue.constants';
 import { formatWorkerErrorMessage } from '../../../shared/worker-error.util';
 import { CompanyProfileService } from '../../company-profile/company-profile.service';
@@ -63,6 +64,12 @@ export class BrandInterviewWorkerService {
       return;
     }
 
+    return runWithLlmUsageContext({ tenantId: interview.tenantId }, async () => {
+      await this.processInterviewWithContext(interview);
+    });
+  }
+
+  private async processInterviewWithContext(interview: AgentInterviewEntity): Promise<void> {
     try {
       const profile = await this.profiles.findOne({
         where: { tenantId: interview.tenantId },
@@ -117,14 +124,14 @@ export class BrandInterviewWorkerService {
 
       await this.messages.save(
         this.messages.create({
-          interviewId,
+          interviewId: interview.id,
           role: 'system',
           content: `Error al generar el Brand Brief: ${interview.errorMessage}. Intenta de nuevo en unos segundos.`,
           metadata: { type: 'error' },
         }),
       );
 
-      this.logger.error(`Brand interview ${interviewId} failed`, error);
+      this.logger.error(`Brand interview ${interview.id} failed`, error);
     }
   }
 

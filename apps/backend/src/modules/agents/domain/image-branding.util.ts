@@ -29,7 +29,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
   if (input.hasLogo) {
     parts.push(
-      'Deja espacio limpio en la esquina superior derecha para superponer el logo oficial (no dibujes un logo inventado ni de otra marca).',
+      'No dibujes logos ni marcas inventadas. No uses recuadros blancos, cajas vacías ni placeholders: la esquina superior derecha debe quedar despejada de forma natural. El logo oficial de la marca se superpone después por software.',
     );
   }
 

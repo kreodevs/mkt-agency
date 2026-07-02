@@ -13,36 +13,75 @@ export class ImageBrandingService {
     imageBuffer: Buffer,
     logoAssetId: string,
   ): Promise<Buffer> {
+    const logoFile = await this.assets.readFile(tenantId, logoAssetId);
+    const base = sharp(imageBuffer);
+    const metadata = await base.metadata();
+    const width = metadata.width ?? 1024;
+    const height = metadata.height ?? 1024;
+
+    const logoWidth = Math.max(96, Math.round(width * 0.16));
+    const logoBuffer = await this.rasterizeLogo(logoFile.buffer, logoFile.mimeType, logoWidth);
+    const logoMeta = await sharp(logoBuffer).metadata();
+    const logoW = logoMeta.width ?? logoWidth;
+    const logoH = logoMeta.height ?? logoWidth;
+
+    const padding = Math.round(width * 0.04);
+    const platePad = Math.max(8, Math.round(Math.min(logoW, logoH) * 0.1));
+    const plateW = logoW + platePad * 2;
+    const plateH = logoH + platePad * 2;
+
+    const plate = await sharp({
+      create: {
+        width: plateW,
+        height: plateH,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 0.82 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const top = padding;
+    const left = Math.max(padding, width - plateW - padding);
+
+    if (top + plateH > height || left + plateW > width) {
+      this.logger.warn(
+        `Logo plate exceeds image bounds (${width}x${height}); skipping overlay for asset ${logoAssetId}`,
+      );
+      return imageBuffer;
+    }
+
+    return base
+      .composite([
+        { input: plate, top, left },
+        { input: logoBuffer, top: top + platePad, left: left + platePad },
+      ])
+      .png()
+      .toBuffer();
+  }
+
+  private async rasterizeLogo(
+    buffer: Buffer,
+    mimeType: string,
+    targetWidth: number,
+  ): Promise<Buffer> {
+    const isSvg =
+      mimeType.includes('svg') ||
+      buffer.slice(0, 256).toString('utf8').trimStart().startsWith('<');
+
     try {
-      const base = sharp(imageBuffer);
-      const metadata = await base.metadata();
-      const width = metadata.width ?? 1024;
-      const height = metadata.height ?? 1024;
+      const pipeline = isSvg
+        ? sharp(buffer, { density: 300 })
+        : sharp(buffer);
 
-      const logoFile = await this.assets.readFile(tenantId, logoAssetId);
-      const logoWidth = Math.max(96, Math.round(width * 0.16));
-      const logoBuffer = await sharp(logoFile.buffer)
-        .resize({ width: logoWidth, withoutEnlargement: true })
-        .png()
-        .toBuffer();
-
-      const padding = Math.round(width * 0.04);
-
-      return base
-        .composite([
-          {
-            input: logoBuffer,
-            top: padding,
-            left: Math.max(padding, width - logoWidth - padding),
-          },
-        ])
+      return pipeline
+        .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: true })
+        .ensureAlpha()
         .png()
         .toBuffer();
     } catch (error) {
-      this.logger.warn(
-        `Logo overlay failed for asset ${logoAssetId}: ${error instanceof Error ? error.message : error}`,
-      );
-      return imageBuffer;
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Logo rasterization failed (${mimeType}): ${message}`);
     }
   }
 }

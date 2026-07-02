@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { CampaignEntity } from '../../campaign/infrastructure/typeorm/campaign.entity';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_PROPOSAL_GENERATION } from '../../../shared/queue/queue.constants';
 import {
   PROPOSAL_ADAPTER,
@@ -56,7 +57,8 @@ export class ProposalGeneratorWorkerService {
       return;
     }
 
-    try {
+    return runWithLlmUsageContext({ tenantId: proposal.tenantId }, async () => {
+      try {
       const campaign = proposal.campaignId
         ? await this.campaigns.findOne({
             where: { id: proposal.campaignId, tenantId: proposal.tenantId },
@@ -105,5 +107,6 @@ export class ProposalGeneratorWorkerService {
       this.logger.error(`Proposal generation failed for ${proposalId}: ${message}`);
       throw error;
     }
+    });
   }
 }

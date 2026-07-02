@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmClient } from '../../shared/ai/llm.client';
+import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
 import { fetchPageContent, type PageMetadata } from '../../shared/web/page-content.util';
 import { AgentInterviewService } from '../agents/agent-interview.service';
 import { CompetitorIntelService } from '../agents/competitor-intel.service';
@@ -159,15 +160,17 @@ export class ProductOnboardingService {
     });
 
     try {
-      const result = await this.llmClient.chatJson<{
-        name?: string;
-        category?: string;
-        description?: string;
-        valueProposition?: string;
-        targetAudience?: string;
-        priceRange?: string | null;
-        keywords?: string[];
-      }>(systemPrompt, userPrompt, { taskType: 'brand_interview', temperature: 0.45 });
+      const result = await runWithLlmUsageContext({ tenantId: product.tenantId }, () =>
+        this.llmClient.chatJson<{
+          name?: string;
+          category?: string;
+          description?: string;
+          valueProposition?: string;
+          targetAudience?: string;
+          priceRange?: string | null;
+          keywords?: string[];
+        }>(systemPrompt, userPrompt, { taskType: 'brand_interview', temperature: 0.45 }),
+      );
 
       return {
         name: result.name?.trim() || product.name,
@@ -250,10 +253,11 @@ export class ProductOnboardingService {
     });
 
     try {
-      const result = await this.llmClient.chatJson<{ keywords: string[] }>(
-        systemPrompt,
-        userPrompt,
-        { taskType: 'competitor_discovery', temperature: 0.45 },
+      const result = await runWithLlmUsageContext({ tenantId: product.tenantId }, () =>
+        this.llmClient.chatJson<{ keywords: string[] }>(systemPrompt, userPrompt, {
+          taskType: 'competitor_discovery',
+          temperature: 0.45,
+        }),
       );
 
       const keywords = this.normalizeKeywords(result.keywords ?? []);

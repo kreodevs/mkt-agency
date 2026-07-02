@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_SECTION_SUGGESTION } from '../../../shared/queue/queue.constants';
 import {
   SUGGESTION_ADAPTER,
@@ -61,7 +62,8 @@ export class SuggestionWorkerService {
     assignment.status = 'processing';
     await this.assignments.save(assignment);
 
-    try {
+    return runWithLlmUsageContext({ tenantId: assignment.tenantId }, async () => {
+      try {
       const profile = await this.profiles.findOne({ where: { id: assignment.profileId } });
       if (!profile) {
         throw new Error('Company profile not found');
@@ -108,5 +110,6 @@ export class SuggestionWorkerService {
     }
 
     await this.assignments.save(assignment);
+    });
   }
 }

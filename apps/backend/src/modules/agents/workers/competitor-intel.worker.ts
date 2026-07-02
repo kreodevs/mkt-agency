@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_COMPETITOR_INTEL } from '../../../shared/queue/queue.constants';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompetitorService } from '../../competitors/competitor.service';
@@ -49,7 +50,8 @@ export class CompetitorIntelWorkerService {
     analysis.status = 'processing';
     await this.analyses.save(analysis);
 
-    try {
+    return runWithLlmUsageContext({ tenantId: analysis.tenantId }, async () => {
+      try {
       const profile = await this.profiles.findOne({
         where: { tenantId: analysis.tenantId },
       });
@@ -79,5 +81,6 @@ export class CompetitorIntelWorkerService {
     }
 
     await this.analyses.save(analysis);
+      });
   }
 }

@@ -8,6 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AssetService } from '../assets/asset.service';
+import { LlmConfigService } from '../../shared/ai/llm-config.service';
+import { estimateVideoCostUsd } from '../../shared/ai/llm-usage-cost.util';
+import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
+import { LlmUsageService } from '../../shared/ai/llm-usage.service';
 import {
   IMAGE_GENERATION_ADAPTER,
   ImageGenerationAdapterPort,
@@ -69,6 +73,8 @@ export class ImageGenerationService {
     private readonly contentService: ContentService,
     private readonly productService: ProductService,
     private readonly imageBranding: ImageBrandingService,
+    private readonly llmConfig: LlmConfigService,
+    private readonly llmUsage: LlmUsageService,
   ) {}
 
   async generate(
@@ -93,7 +99,9 @@ export class ImageGenerationService {
       }),
     );
 
-    return this.runGeneration(tenantId, userId, record, trimmed, options);
+    return runWithLlmUsageContext({ tenantId, userId }, () =>
+      this.runGeneration(tenantId, userId, record, trimmed, options),
+    );
   }
 
   async attachVisualToContent(
@@ -219,6 +227,15 @@ export class ImageGenerationService {
         await this.attachAssetsToContent(tenantId, userId, options.contentId, [asset.id], 'video');
       }
 
+      await this.recordMediaUsage({
+        tenantId,
+        userId,
+        taskType: 'video_generation',
+        modality: 'video',
+        metadata: { duration, generationId: record.id },
+        estimatedCostUsd: estimateVideoCostUsd(duration),
+      });
+
       return this.toResult(record);
     } catch (error) {
       this.logger.warn(`Video generation failed: ${error instanceof Error ? error.message : error}`);
@@ -237,6 +254,8 @@ export class ImageGenerationService {
     prompt: string,
     options: GenerateImageOptions,
   ): Promise<GenerateImageResult> {
+    const productId = await this.resolveEffectiveProductId(tenantId, options, record);
+
     try {
       const frameCount = detectReelFrameCount(prompt);
       const frames: ImageGenerationFrameMeta[] = [];
@@ -254,7 +273,7 @@ export class ImageGenerationService {
           index,
           frameCount,
           result,
-          options.productId,
+          productId,
         );
         frames.push({ assetId: asset.id, index });
       }
@@ -283,6 +302,14 @@ export class ImageGenerationService {
         );
       }
 
+      await this.recordMediaUsage({
+        tenantId,
+        userId,
+        taskType: 'image_generation',
+        modality: 'image',
+        metadata: { frameCount, generationId: record.id },
+      });
+
       return this.toResult(record);
     } catch (error) {
       this.logger.warn(`Image generation failed: ${error instanceof Error ? error.message : error}`);
@@ -308,11 +335,17 @@ export class ImageGenerationService {
     if (productId) {
       const branding = await this.resolveProductBranding(tenantId, productId);
       if (branding.logoAssetId) {
-        finalBuffer = await this.imageBranding.applyProductLogo(
-          tenantId,
-          imageBuffer,
-          branding.logoAssetId,
-        );
+        try {
+          finalBuffer = await this.imageBranding.applyProductLogo(
+            tenantId,
+            imageBuffer,
+            branding.logoAssetId,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Logo overlay failed for product ${productId}: ${error instanceof Error ? error.message : error}`,
+          );
+        }
       }
     }
 
@@ -335,6 +368,32 @@ export class ImageGenerationService {
     };
 
     return this.assetService.upload(tenantId, fakeFile);
+  }
+
+  private async resolveEffectiveProductId(
+    tenantId: string,
+    options: GenerateImageOptions,
+    record: AgentImageGenerationEntity,
+  ): Promise<string | undefined> {
+    if (options.productId) {
+      return options.productId;
+    }
+
+    if (record.productId) {
+      return record.productId;
+    }
+
+    const contentId = options.contentId ?? record.contentId;
+    if (!contentId) {
+      return undefined;
+    }
+
+    try {
+      const content = await this.contentService.findOne(tenantId, contentId);
+      return content.productId ?? undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private async uploadGeneratedVideo(
@@ -592,9 +651,38 @@ export class ImageGenerationService {
     record.metadata = {};
     await this.generations.save(record);
 
-    return this.runGeneration(tenantId, userId, record, record.prompt, {
-      contentId: record.contentId ?? undefined,
-      productId: record.productId ?? undefined,
-    });
+    return runWithLlmUsageContext({ tenantId, userId }, () =>
+      this.runGeneration(tenantId, userId, record, record.prompt, {
+        contentId: record.contentId ?? undefined,
+        productId: record.productId ?? undefined,
+      }),
+    );
+  }
+
+  private async recordMediaUsage(params: {
+    tenantId: string;
+    userId: string;
+    taskType: 'image_generation' | 'video_generation';
+    modality: 'image' | 'video';
+    metadata?: Record<string, unknown>;
+    estimatedCostUsd?: number;
+  }): Promise<void> {
+    try {
+      const resolved = await this.llmConfig.resolve(params.taskType);
+      this.llmUsage.record({
+        tenantId: params.tenantId,
+        userId: params.userId,
+        taskType: params.taskType,
+        providerId: resolved.providerId,
+        model: resolved.model,
+        modality: params.modality,
+        estimatedCostUsd: params.estimatedCostUsd,
+        metadata: params.metadata,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to record ${params.modality} usage: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 }

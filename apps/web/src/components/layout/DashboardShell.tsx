@@ -1,4 +1,4 @@
-import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, FileInput, FileSignature, FileText, FolderOpen, Globe, Inbox, Lightbulb, Megaphone, MessageSquare, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, Coins, FileInput, FileSignature, FileText, FolderOpen, Globe, Inbox, Lightbulb, Megaphone, MessageSquare, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
@@ -26,6 +26,7 @@ export const superadminNavigation = [
     items: [
       { label: 'Proveedores LLM', href: '/admin/llm-providers', icon: Bot },
       { label: 'Modelos por tarea', href: '/admin/llm-settings', icon: Sparkles },
+      { label: 'Consumo IA', href: '/admin/llm-usage', icon: Coins },
     ],
   },
 ];

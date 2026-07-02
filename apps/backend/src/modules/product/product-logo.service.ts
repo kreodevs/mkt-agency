@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import sharp from 'sharp';
 import { Repository } from 'typeorm';
 import { AssetService } from '../assets/asset.service';
 import { extractLogoCandidates } from '../../shared/web/logo-extraction.util';
@@ -147,6 +148,11 @@ export class ProductLogoService {
         return null;
       }
 
+      if (!(await this.isUsableLogoBuffer(buffer, contentType))) {
+        this.logger.debug(`Skipping tiny or invalid logo candidate: ${sourceUrl}`);
+        return null;
+      }
+
       const extension = contentType.includes('svg')
         ? 'svg'
         : contentType.includes('jpeg') || contentType.includes('jpg')
@@ -215,6 +221,21 @@ export class ProductLogoService {
       if (stored?.synced) {
         return;
       }
+    }
+  }
+
+  private async isUsableLogoBuffer(buffer: Buffer, mimeType: string): Promise<boolean> {
+    if (mimeType.includes('svg')) {
+      return buffer.length >= 200;
+    }
+
+    try {
+      const metadata = await sharp(buffer).metadata();
+      const width = metadata.width ?? 0;
+      const height = metadata.height ?? 0;
+      return width >= 32 && height >= 32;
+    } catch {
+      return false;
     }
   }
 }

@@ -23,6 +23,7 @@ import { LlmConfigService } from '../../shared/ai/llm-config.service';
 import { LlmModelsCatalogService } from '../../shared/ai/llm-models-catalog.service';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { LlmTaskType } from '../../shared/ai/llm-task-types';
+import { LlmUsageService } from '../../shared/ai/llm-usage.service';
 import { ImpersonationLoggerService } from './services/impersonation-logger.service';
 
 @Injectable()
@@ -36,6 +37,7 @@ export class SuperadminService {
     private readonly llmConfigService: LlmConfigService,
     private readonly llmProviderService: LlmProviderService,
     private readonly llmModelsCatalogService: LlmModelsCatalogService,
+    private readonly llmUsageService: LlmUsageService,
   ) {}
 
   impersonate(
@@ -168,5 +170,12 @@ export class SuperadminService {
 
   listTenantUsers(tenantId: string): Promise<PublicUserRecord[]> {
     return this.users.findByTenantId(tenantId);
+  }
+
+  getLlmUsageDashboard(from?: string, to?: string) {
+    return this.llmUsageService.getDashboard(
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 }

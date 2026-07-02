@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { CampaignEntity } from '../../campaign/infrastructure/typeorm/campaign.entity';
+import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_REPORT_GENERATION } from '../../../shared/queue/queue.constants';
 import {
   REPORT_ADAPTER,
@@ -55,7 +56,8 @@ export class ReportGeneratorWorkerService {
       return;
     }
 
-    try {
+    return runWithLlmUsageContext({ tenantId: report.tenantId }, async () => {
+      try {
       const campaignId =
         typeof report.config.campaignId === 'string'
           ? report.config.campaignId
@@ -102,5 +104,6 @@ export class ReportGeneratorWorkerService {
       this.logger.error(`Report generation failed for ${reportId}: ${message}`);
       throw error;
     }
+    });
   }
 }
