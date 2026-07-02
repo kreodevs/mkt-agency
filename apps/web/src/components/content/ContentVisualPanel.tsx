@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
+import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { Button } from '@/components/atoms/Button';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { Card } from '@/components/molecules/Card';
@@ -9,6 +10,7 @@ import { toast } from '@/components/molecules/Sonner';
 import {
   parseImageGenerationMetadata,
   resolveContentVisualAssetIds,
+  isVideoGeneration,
 } from '@/lib/image-generation';
 import {
   generateImageForContent,
@@ -33,6 +35,7 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
   const generation = generationQuery.data?.generation ?? null;
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const frameMeta = parseImageGenerationMetadata(generation?.metadata);
+  const isVideo = isVideoGeneration(generation?.metadata);
   const frameCount = frameMeta ? frameMeta.frameCount ?? frameMeta.frames.length : 0;
   const hasVisual = assetIds.length > 0;
   const isProcessing = generation?.status === 'processing';
@@ -61,9 +64,11 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
     <Card
       title="Imagen del contenido"
       subtitle={
-        frameCount > 1
-          ? `${frameCount} frames · reel/carrusel`
-          : 'Generada con Image Generator desde el copy'
+        isVideo
+          ? `Video · ${frameMeta?.duration ?? '?'}s`
+          : frameCount > 1
+            ? `${frameCount} frames · reel/carrusel`
+            : 'Generada con Image Generator desde el copy'
       }
     >
       {generationQuery.isLoading ? (
@@ -102,12 +107,21 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
                   Frame {index + 1}
                 </p>
               ) : null}
-              <div className="aspect-square">
-                <AuthenticatedAssetImage
-                  assetId={assetId}
-                  title={`Imagen ${index + 1}`}
-                  className="h-full w-full object-cover"
-                />
+              <div className={isVideo ? '' : 'aspect-square'}>
+                {isVideo ? (
+                  <AuthenticatedAssetVideo
+                    assetId={assetId}
+                    title={`Video ${index + 1}`}
+                    className="w-full rounded-none"
+                    controls
+                  />
+                ) : (
+                  <AuthenticatedAssetImage
+                    assetId={assetId}
+                    title={`Imagen ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                )}
               </div>
             </div>
           ))}

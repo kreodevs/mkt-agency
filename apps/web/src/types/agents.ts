@@ -39,6 +39,9 @@ export interface ImageGenerationFrameMeta {
 }
 
 export interface ImageGenerationMetadata {
+  mediaType?: 'image' | 'video';
+  mimeType?: string;
+  duration?: number;
   frameCount?: number;
   frames: ImageGenerationFrameMeta[];
 }

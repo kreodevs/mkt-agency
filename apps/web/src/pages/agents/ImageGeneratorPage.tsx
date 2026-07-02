@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ImageIcon, Loader2, Sparkles, Trash2, RotateCcw, Eye } from 'lucide-react';
+import { ChevronLeft, ImageIcon, Loader2, Sparkles, Trash2, RotateCcw, RefreshCw, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -8,9 +8,16 @@ import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
-import { listImageGenerations, generateImage, deleteImageGeneration, retryImageGeneration } from '@/services/agents';
+import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
+import {
+  listImageGenerations,
+  generateImage,
+  deleteImageGeneration,
+  retryImageGeneration,
+  regenerateImageGeneration,
+} from '@/services/agents';
 import { ApiError } from '@/services/api';
-import { parseImageGenerationMetadata } from '@/lib/image-generation';
+import { parseImageGenerationMetadata, isVideoGeneration } from '@/lib/image-generation';
 import { InputText } from '@/components/atoms/InputText';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
@@ -59,7 +66,9 @@ export default function ImageGeneratorPage() {
         toast.success(
           meta && (meta.frameCount ?? meta.frames.length) > 1
             ? `${meta.frameCount ?? meta.frames.length} frames generados para reel/carrusel`
-            : 'Imagen generada',
+            : meta?.mediaType === 'video'
+              ? 'Video generado'
+              : 'Imagen generada',
         );
         setPrompt('');
       }
@@ -90,6 +99,26 @@ export default function ImageGeneratorPage() {
       historyQuery.refetch();
     },
     onError: () => toast.error('Error al reintentar'),
+  });
+
+  const regenerateMutation = useMutation({
+    mutationFn: (id: string) => regenerateImageGeneration(id),
+    onSuccess: (result) => {
+      if (result.status === 'failed') {
+        toast.error(result.errorMessage ?? 'Error al regenerar');
+      } else {
+        const meta = parseImageGenerationMetadata(result.metadata);
+        toast.success(
+          meta && (meta.frameCount ?? meta.frames.length) > 1
+            ? `${meta.frameCount ?? meta.frames.length} frames regenerados`
+            : meta?.mediaType === 'video'
+              ? 'Video regenerado con branding actual'
+              : 'Imagen regenerada con branding actual',
+        );
+      }
+      historyQuery.refetch();
+    },
+    onError: () => toast.error('Error al regenerar'),
   });
 
   return (
@@ -131,12 +160,21 @@ export default function ImageGeneratorPage() {
                     {img.status === 'processing' ? (
                       <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
                     ) : img.assetId ? (
-                      <AuthenticatedAssetImage
-                        assetId={img.assetId}
-                        fallbackUrl={img.imageUrl}
-                        title={img.prompt}
-                        className="h-full w-full object-cover"
-                      />
+                      isVideoGeneration(img.metadata) ? (
+                        <AuthenticatedAssetVideo
+                          assetId={img.assetId}
+                          fallbackUrl={img.imageUrl}
+                          title={img.prompt}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <AuthenticatedAssetImage
+                          assetId={img.assetId}
+                          fallbackUrl={img.imageUrl}
+                          title={img.prompt}
+                          className="h-full w-full object-cover"
+                        />
+                      )
                     ) : img.imageUrl?.startsWith('http') ? (
                       <img
                         src={img.imageUrl}
@@ -158,6 +196,13 @@ export default function ImageGeneratorPage() {
                   <div className="border-t border-[var(--border)] p-3">
                     {(() => {
                       const meta = parseImageGenerationMetadata(img.metadata);
+                      if (meta?.mediaType === 'video') {
+                        return (
+                          <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
+                            Video · {meta.duration ?? '?'}s
+                          </span>
+                        );
+                      }
                       if (!meta || (meta.frameCount ?? meta.frames.length) <= 1) return null;
                       return (
                         <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
@@ -186,13 +231,29 @@ export default function ImageGeneratorPage() {
                           size="sm"
                           variant="ghost"
                           className="h-7 w-7 p-0"
+                          title="Reintentar"
                           onClick={(e) => {
                             e.stopPropagation();
                             retryMutation.mutate(img.id);
                           }}
-                          loading={retryMutation.isPending}
+                          loading={retryMutation.isPending && retryMutation.variables === img.id}
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {img.status === 'completed' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0"
+                          title="Regenerar con logo y branding actual"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            regenerateMutation.mutate(img.id);
+                          }}
+                          loading={regenerateMutation.isPending && regenerateMutation.variables === img.id}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
                         </Button>
                       )}
                       <Button

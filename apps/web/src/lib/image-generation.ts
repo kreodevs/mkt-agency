@@ -13,12 +13,23 @@ export function parseImageGenerationMetadata(
   }
 
   return {
+    mediaType: record.mediaType,
+    mimeType: record.mimeType,
+    duration: record.duration,
     frameCount: record.frameCount ?? record.frames.length,
     frames: record.frames.filter(
       (frame): frame is { assetId: string; index: number } =>
         typeof frame?.assetId === 'string' && typeof frame?.index === 'number',
     ),
   };
+}
+
+export function isVideoGeneration(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object') {
+    return false;
+  }
+
+  return (metadata as ImageGenerationMetadata).mediaType === 'video';
 }
 
 export function listGenerationAssetIds(generation: {

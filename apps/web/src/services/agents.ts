@@ -81,6 +81,12 @@ export async function retryImageGeneration(id: string): Promise<ImageGeneration>
   return apiFetch<ImageGeneration>(`/agents/image-generation/${id}/retry`, { method: 'POST' });
 }
 
+export async function regenerateImageGeneration(id: string): Promise<ImageGeneration> {
+  return apiFetch<ImageGeneration>(`/agents/image-generation/${id}/regenerate`, {
+    method: 'POST',
+  });
+}
+
 export async function getImageGenerationByContentId(
   contentId: string,
 ): Promise<{ generation: ImageGeneration | null }> {

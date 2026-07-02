@@ -6,8 +6,8 @@ export interface LlmModelOption {
   /** USD per 1M output tokens */
   outputCostPer1M: number | null;
   contextLength: number | null;
-  /** Catálogo chat (`/models`) o Image API (`/images/models`). */
-  source?: 'chat' | 'image';
+  /** Catálogo chat (`/models`), Image API (`/images/models`) o Video API (`/videos/models`). */
+  source?: 'chat' | 'image' | 'video';
   outputModalities?: string[];
 }
 

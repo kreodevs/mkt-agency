@@ -1,17 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
+import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { toast } from '@/components/molecules/Sonner';
-import { listGenerationAssetIds, parseImageGenerationMetadata } from '@/lib/image-generation';
+import { listGenerationAssetIds, parseImageGenerationMetadata, isVideoGeneration } from '@/lib/image-generation';
 import {
   deleteImageGeneration,
   getImageGeneration,
+  regenerateImageGeneration,
   retryImageGeneration,
 } from '@/services/agents';
 import { getContent } from '@/services/content';
@@ -31,6 +33,7 @@ export default function ImageGeneratorDetailPage() {
   const frames = generation ? listGenerationAssetIds(generation) : [];
   const metadata = parseImageGenerationMetadata(generation?.metadata);
   const frameCount = metadata ? metadata.frameCount ?? metadata.frames.length : 0;
+  const isVideo = isVideoGeneration(generation?.metadata);
 
   const contentQuery = useQuery({
     queryKey: ['content', generation?.contentId],
@@ -45,13 +48,45 @@ export default function ImageGeneratorDetailPage() {
         toast.error(result.errorMessage ?? 'Error al reintentar');
       } else {
         toast.success(
-          frameCount > 1 ? `${frameCount} frames generados` : 'Imagen generada',
+          frameCount > 1
+            ? `${frameCount} frames generados`
+            : isVideoGeneration(result.metadata)
+              ? 'Video generado'
+              : 'Imagen generada',
         );
       }
       void queryClient.invalidateQueries({ queryKey: ['image-generation', id] });
       void queryClient.invalidateQueries({ queryKey: ['image-generations'] });
     },
     onError: () => toast.error('Error al reintentar'),
+  });
+
+  const regenerateMutation = useMutation({
+    mutationFn: () => regenerateImageGeneration(id!),
+    onSuccess: (result) => {
+      if (result.status === 'failed') {
+        toast.error(result.errorMessage ?? 'Error al regenerar');
+      } else {
+        const meta = parseImageGenerationMetadata(result.metadata);
+        const count = meta ? meta.frameCount ?? meta.frames.length : 0;
+        toast.success(
+          count > 1
+            ? `${count} frames regenerados`
+            : meta?.mediaType === 'video'
+              ? 'Video regenerado con branding actual'
+              : 'Imagen regenerada con branding actual',
+        );
+      }
+      void queryClient.invalidateQueries({ queryKey: ['image-generation', id] });
+      void queryClient.invalidateQueries({ queryKey: ['image-generations'] });
+      if (generation?.contentId) {
+        void queryClient.invalidateQueries({
+          queryKey: ['image-generation-by-content', generation.contentId],
+        });
+        void queryClient.invalidateQueries({ queryKey: ['content', generation.contentId] });
+      }
+    },
+    onError: () => toast.error('Error al regenerar'),
   });
 
   const deleteMutation = useMutation({
@@ -95,9 +130,11 @@ export default function ImageGeneratorDetailPage() {
       <PageHeader
         title="Detalle de generación"
         description={
-          frameCount > 1
-            ? `Secuencia tipo reel · ${frameCount} frames`
-            : 'Imagen generada con IA'
+          isVideo
+            ? `Video generado · ${metadata?.duration ?? '?'}s`
+            : frameCount > 1
+              ? `Secuencia tipo carrusel · ${frameCount} frames`
+              : 'Imagen generada con IA'
         }
         actions={
           <Link to="/agents/image-generator">
@@ -119,33 +156,44 @@ export default function ImageGeneratorDetailPage() {
 
         {generation.status === 'completed' && frames.length > 0 ? (
           <Card
-            title={frames.length > 1 ? 'Frames del carrusel' : 'Imagen'}
+            title={isVideo ? 'Video' : frames.length > 1 ? 'Frames del carrusel' : 'Imagen'}
             subtitle={
-              frames.length > 1
-                ? 'Cada frame es una imagen independiente para tu reel o carrusel'
-                : undefined
+              isVideo
+                ? 'Clip MP4 generado con OpenRouter Video API'
+                : frames.length > 1
+                  ? 'Cada frame es una imagen independiente para tu carrusel'
+                  : undefined
             }
           >
             <div
               className={
-                frames.length > 1
+                frames.length > 1 && !isVideo
                   ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
                   : 'mx-auto max-w-xl'
               }
             >
               {frames.map((assetId, index) => (
                 <div key={assetId} className="overflow-hidden rounded-xl border border-[var(--border)]">
-                  {frames.length > 1 && (
+                  {frames.length > 1 && !isVideo && (
                     <p className="border-b border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground-muted)]">
                       Frame {index + 1}
                     </p>
                   )}
-                  <div className="aspect-square bg-[var(--background-secondary)]">
-                    <AuthenticatedAssetImage
-                      assetId={assetId}
-                      title={`Frame ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
+                  <div className={isVideo ? 'bg-[var(--background-secondary)]' : 'aspect-square bg-[var(--background-secondary)]'}>
+                    {isVideo ? (
+                      <AuthenticatedAssetVideo
+                        assetId={assetId}
+                        title="Video generado"
+                        className="w-full"
+                        controls
+                      />
+                    ) : (
+                      <AuthenticatedAssetImage
+                        assetId={assetId}
+                        title={`Frame ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -181,6 +229,17 @@ export default function ImageGeneratorDetailPage() {
         )}
 
         <div className="flex flex-wrap gap-2">
+          {generation.status === 'completed' && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              loading={regenerateMutation.isPending}
+              onClick={() => regenerateMutation.mutate()}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Regenerar
+            </Button>
+          )}
           {generation.status === 'failed' && (
             <Button
               variant="outline"

@@ -94,9 +94,10 @@ export class LlmModelsCatalogService {
       Accept: 'application/json',
     };
 
-    const [chatModels, imageModels] = await Promise.all([
+    const [chatModels, imageModels, videoModels] = await Promise.all([
       this.fetchChatModels(baseUrl, headers),
       this.fetchImageModels(baseUrl, headers),
+      this.fetchVideoModels(baseUrl, headers),
     ]);
 
     const byId = new Map<string, LlmModelOption>();
@@ -110,6 +111,22 @@ export class LlmModelsCatalogService {
         byId.set(model.id, {
           ...existing,
           source: 'image',
+          outputModalities: this.mergeModalities(
+            existing.outputModalities,
+            model.outputModalities,
+          ),
+        });
+      } else {
+        byId.set(model.id, model);
+      }
+    }
+
+    for (const model of videoModels) {
+      const existing = byId.get(model.id);
+      if (existing) {
+        byId.set(model.id, {
+          ...existing,
+          source: existing.source === 'chat' ? existing.source : 'video',
           outputModalities: this.mergeModalities(
             existing.outputModalities,
             model.outputModalities,
@@ -206,6 +223,49 @@ export class LlmModelsCatalogService {
       contextLength: openRouter.context_length ?? null,
       source: 'chat',
       outputModalities: openRouter.architecture?.output_modalities ?? undefined,
+    };
+  }
+
+  private async fetchVideoModels(
+    baseUrl: string,
+    headers: Record<string, string>,
+  ): Promise<LlmModelOption[]> {
+    const videoModelsUrl = baseUrl.includes('/api/v1')
+      ? `${baseUrl}/videos/models`
+      : `${baseUrl}/api/v1/videos/models`;
+
+    try {
+      const response = await fetch(videoModelsUrl, { headers });
+      if (!response.ok) {
+        return [];
+      }
+
+      const payload = (await response.json()) as {
+        data?: OpenRouterImageModelRow[];
+      };
+
+      return (payload.data ?? [])
+        .map((row) => this.normalizeVideoRow(row))
+        .filter((row): row is LlmModelOption => Boolean(row?.id));
+    } catch {
+      return [];
+    }
+  }
+
+  private normalizeVideoRow(row: OpenRouterImageModelRow): LlmModelOption | null {
+    const id = row.id?.trim();
+    if (!id) {
+      return null;
+    }
+
+    return {
+      id,
+      name: row.name?.trim() || id,
+      inputCostPer1M: null,
+      outputCostPer1M: null,
+      contextLength: null,
+      source: 'video',
+      outputModalities: row.architecture?.output_modalities ?? ['video'],
     };
   }
 

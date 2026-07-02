@@ -4,7 +4,7 @@ export interface LlmModelOption {
   inputCostPer1M: number | null;
   outputCostPer1M: number | null;
   contextLength: number | null;
-  source?: 'chat' | 'image';
+  source?: 'chat' | 'image' | 'video';
   outputModalities?: string[];
 }
 
@@ -22,7 +22,18 @@ export function formatCostPer1M(usd: number | null | undefined): string {
   return `$${usd.toFixed(2)}`;
 }
 
+export function modelSupportsVideo(model: LlmModelOption): boolean {
+  return (
+    model.source === 'video' ||
+    model.outputModalities?.includes('video') === true
+  );
+}
+
 export function formatModelOptionLabel(model: LlmModelOption): string {
+  if (model.source === 'video') {
+    return `${model.name} — Video API · ${model.id}`;
+  }
+
   if (model.source === 'image') {
     return `${model.name} — Image API · ${model.id}`;
   }
@@ -65,6 +76,17 @@ export function sortModelsForTask(
   models: LlmModelOption[],
   taskType?: string,
 ): LlmModelOption[] {
+  if (taskType === 'video_generation') {
+    return [...models].sort((a, b) => {
+      const aVideo = modelSupportsVideo(a) ? 0 : 1;
+      const bVideo = modelSupportsVideo(b) ? 0 : 1;
+      if (aVideo !== bVideo) {
+        return aVideo - bVideo;
+      }
+      return a.name.localeCompare(b.name, 'es');
+    });
+  }
+
   if (taskType !== 'image_generation') {
     return models;
   }

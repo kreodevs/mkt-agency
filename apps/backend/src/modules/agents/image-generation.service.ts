@@ -17,8 +17,12 @@ import { AgentImageGenerationEntity } from './domain/agent-image-generation.enti
 import { buildBrandedImagePrompt } from './domain/image-branding.util';
 import {
   buildFramePrompt,
+  detectGenerationMediaType,
   detectReelFrameCount,
   isImageGenerationMetadata,
+  resolveVideoAspectRatio,
+  resolveVideoDuration,
+  shouldGenerateVideoAudio,
   type ImageGenerationFrameMeta,
   type ImageGenerationMetadata,
 } from './domain/image-generation.utils';
@@ -28,6 +32,11 @@ import {
   getProductLogoAssetId,
 } from '../product/domain/product-logo.metadata.util';
 import { ImageBrandingService } from './image-branding.service';
+import {
+  VIDEO_GENERATION_ADAPTER,
+  VideoGenerationAdapterPort,
+  VideoGenerationResult,
+} from './adapters/video-generation.adapter.port';
 
 export interface GenerateImageOptions {
   style?: string;
@@ -54,6 +63,8 @@ export class ImageGenerationService {
     private readonly generations: Repository<AgentImageGenerationEntity>,
     @Inject(IMAGE_GENERATION_ADAPTER)
     private readonly adapter: ImageGenerationAdapterPort,
+    @Inject(VIDEO_GENERATION_ADAPTER)
+    private readonly videoAdapter: VideoGenerationAdapterPort,
     private readonly assetService: AssetService,
     private readonly contentService: ContentService,
     private readonly productService: ProductService,
@@ -163,6 +174,69 @@ export class ImageGenerationService {
     prompt: string,
     options: GenerateImageOptions,
   ): Promise<GenerateImageResult> {
+    if (detectGenerationMediaType(prompt) === 'video') {
+      return this.runVideoGeneration(tenantId, userId, record, prompt, options);
+    }
+
+    return this.runImageGeneration(tenantId, userId, record, prompt, options);
+  }
+
+  private async runVideoGeneration(
+    tenantId: string,
+    userId: string,
+    record: AgentImageGenerationEntity,
+    prompt: string,
+    options: GenerateImageOptions,
+  ): Promise<GenerateImageResult> {
+    try {
+      const duration = resolveVideoDuration(prompt);
+      const result = await this.videoAdapter.generateVideo(prompt, {
+        duration,
+        aspectRatio: resolveVideoAspectRatio(prompt),
+        resolution: '720p',
+        style: options.style,
+        generateAudio: shouldGenerateVideoAudio(prompt),
+      });
+
+      const asset = await this.uploadGeneratedVideo(tenantId, prompt, result);
+
+      const metadata: ImageGenerationMetadata = {
+        mediaType: 'video',
+        mimeType: result.mimeType ?? 'video/mp4',
+        duration,
+        frameCount: 1,
+        frames: [{ assetId: asset.id, index: 0 }],
+      };
+
+      record.imageUrl = `/api/v1/assets/${asset.id}/file`;
+      record.assetId = asset.id;
+      record.metadata = metadata;
+      record.status = 'completed';
+      record.errorMessage = null;
+      await this.generations.save(record);
+
+      if (options.contentId) {
+        await this.attachAssetsToContent(tenantId, userId, options.contentId, [asset.id], 'video');
+      }
+
+      return this.toResult(record);
+    } catch (error) {
+      this.logger.warn(`Video generation failed: ${error instanceof Error ? error.message : error}`);
+      record.status = 'failed';
+      record.errorMessage = error instanceof Error ? error.message : 'Video generation failed';
+      record.metadata = {};
+      await this.generations.save(record);
+      return this.toResult(record);
+    }
+  }
+
+  private async runImageGeneration(
+    tenantId: string,
+    userId: string,
+    record: AgentImageGenerationEntity,
+    prompt: string,
+    options: GenerateImageOptions,
+  ): Promise<GenerateImageResult> {
     try {
       const frameCount = detectReelFrameCount(prompt);
       const frames: ImageGenerationFrameMeta[] = [];
@@ -186,7 +260,11 @@ export class ImageGenerationService {
       }
 
       const primary = frames[0];
-      const metadata: ImageGenerationMetadata = { frameCount, frames };
+      const metadata: ImageGenerationMetadata = {
+        mediaType: 'image',
+        frameCount,
+        frames,
+      };
 
       record.imageUrl = primary ? `/api/v1/assets/${primary.assetId}/file` : null;
       record.assetId = primary?.assetId ?? null;
@@ -201,6 +279,7 @@ export class ImageGenerationService {
           userId,
           options.contentId,
           frames.map((frame) => frame.assetId),
+          'image',
         );
       }
 
@@ -258,6 +337,56 @@ export class ImageGenerationService {
     return this.assetService.upload(tenantId, fakeFile);
   }
 
+  private async uploadGeneratedVideo(
+    tenantId: string,
+    prompt: string,
+    result: VideoGenerationResult,
+  ) {
+    const { buffer, contentType } = await this.resolveVideoPayload(result);
+    const slug = prompt.slice(0, 32).replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `${slug || 'video'}.mp4`;
+
+    const fakeFile: Express.Multer.File = {
+      buffer,
+      originalname: fileName,
+      mimetype: contentType,
+      size: buffer.length,
+      fieldname: 'file',
+      encoding: '7bit',
+      stream: null as unknown as import('stream').Readable,
+      destination: '',
+      filename: fileName,
+      path: '',
+    };
+
+    return this.assetService.upload(tenantId, fakeFile);
+  }
+
+  private async resolveVideoPayload(
+    result: VideoGenerationResult,
+  ): Promise<{ buffer: Buffer; contentType: string }> {
+    if (result.videoBuffer?.length) {
+      return {
+        buffer: result.videoBuffer,
+        contentType: result.mimeType ?? 'video/mp4',
+      };
+    }
+
+    if (result.videoUrl) {
+      const videoResponse = await fetch(result.videoUrl);
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to download generated video: ${videoResponse.status}`);
+      }
+
+      return {
+        buffer: Buffer.from(await videoResponse.arrayBuffer()),
+        contentType: videoResponse.headers.get('content-type') || 'video/mp4',
+      };
+    }
+
+    throw new Error('Video adapter returned no video data');
+  }
+
   private async resolveImagePayload(
     result: ImageGenerationResult,
   ): Promise<{ buffer: Buffer; contentType: string }> {
@@ -288,6 +417,7 @@ export class ImageGenerationService {
     userId: string,
     contentId: string,
     assetIds: string[],
+    mediaType: 'image' | 'video' = 'image',
   ): Promise<void> {
     const content = await this.contentService.findOne(tenantId, contentId);
     const currentAssets = content.currentVersion?.assets ?? [];
@@ -295,12 +425,16 @@ export class ImageGenerationService {
       typeof asset === 'string' ? asset : (asset as { id: string }).id,
     );
 
+    const changeSummary =
+      mediaType === 'video'
+        ? 'Video generado por Image Generator'
+        : assetIds.length > 1
+          ? `Secuencia de ${assetIds.length} imágenes generada por Image Generator`
+          : 'Imagen generada por Image Generator';
+
     await this.contentService.update(tenantId, userId, contentId, {
       assets: [...new Set([...existingIds, ...assetIds])],
-      changeSummary:
-        assetIds.length > 1
-          ? `Secuencia de ${assetIds.length} imágenes generada por Image Generator`
-          : 'Imagen generada por Image Generator',
+      changeSummary,
     });
   }
 
@@ -368,10 +502,57 @@ export class ImageGenerationService {
   ): Promise<GenerateImageResult> {
     const existing = await this.findByContentId(tenantId, contentId);
     if (existing) {
+      await this.refreshBrandedPrompt(tenantId, existing);
       return this.retry(tenantId, userId, existing.id);
     }
 
     return this.generateForContent(tenantId, userId, contentId);
+  }
+
+  async regenerate(
+    tenantId: string,
+    userId: string,
+    id: string,
+  ): Promise<GenerateImageResult> {
+    const record = await this.findOne(tenantId, id);
+    if (!record) {
+      throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
+    }
+
+    if (record.status === 'processing') {
+      return this.toResult(record);
+    }
+
+    await this.refreshBrandedPrompt(tenantId, record);
+    return this.retry(tenantId, userId, id);
+  }
+
+  private async refreshBrandedPrompt(
+    tenantId: string,
+    record: AgentImageGenerationEntity,
+  ): Promise<void> {
+    if (!record.contentId) {
+      return;
+    }
+
+    const content = await this.contentService.findOne(tenantId, record.contentId);
+    const version = content.currentVersion;
+    if (!version) {
+      return;
+    }
+
+    record.prompt = await this.buildContentBrandedPrompt(
+      tenantId,
+      version.title,
+      version.body,
+      content.productId ?? record.productId ?? undefined,
+    );
+
+    if (content.productId && !record.productId) {
+      record.productId = content.productId;
+    }
+
+    await this.generations.save(record);
   }
 
   async list(tenantId: string, limit = 50): Promise<AgentImageGenerationEntity[]> {

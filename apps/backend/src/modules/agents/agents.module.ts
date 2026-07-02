@@ -23,6 +23,9 @@ import { COMPETITOR_INTEL_ADAPTER, CompetitorIntelAdapterPort } from './adapters
 import { OpenRouterImageGenerationAdapter } from './adapters/openrouter-image-generation.adapter';
 import { StubImageGenerationAdapter } from './adapters/stub-image-generation.adapter';
 import { IMAGE_GENERATION_ADAPTER, ImageGenerationAdapterPort } from './adapters/image-generation.adapter.port';
+import { OpenRouterVideoGenerationAdapter } from './adapters/openrouter-video-generation.adapter';
+import { StubVideoGenerationAdapter } from './adapters/stub-video-generation.adapter';
+import { VIDEO_GENERATION_ADAPTER, VideoGenerationAdapterPort } from './adapters/video-generation.adapter.port';
 import { AgentInterviewController } from './agent-interview.controller';
 import { AgentInterviewService } from './agent-interview.service';
 import { AgentInterviewEntity } from './domain/agent-interview.entity';
@@ -76,6 +79,8 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     CompetitorIntelProcessor,
     StubImageGenerationAdapter,
     OpenRouterImageGenerationAdapter,
+    StubVideoGenerationAdapter,
+    OpenRouterVideoGenerationAdapter,
     StubWebsiteAnalyzerAdapter,
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
@@ -150,6 +155,22 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
         },
       }),
       inject: [StubImageGenerationAdapter, OpenRouterImageGenerationAdapter, LlmProviderService],
+    },
+    {
+      provide: VIDEO_GENERATION_ADAPTER,
+      useFactory: (
+        stub: StubVideoGenerationAdapter,
+        llm: OpenRouterVideoGenerationAdapter,
+        providers: LlmProviderService,
+      ): VideoGenerationAdapterPort => ({
+        generateVideo: async (prompt, options) => {
+          if (await providers.hasActiveConfigured()) {
+            return llm.generateVideo(prompt, options);
+          }
+          return stub.generateVideo(prompt, options);
+        },
+      }),
+      inject: [StubVideoGenerationAdapter, OpenRouterVideoGenerationAdapter, LlmProviderService],
     },
   ],
   exports: [AgentInterviewService, CompetitorIntelService, ImageGenerationService],

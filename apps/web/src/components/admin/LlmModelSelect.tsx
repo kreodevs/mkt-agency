@@ -15,6 +15,7 @@ import {
   formatCostPer1M,
   formatModelOptionLabel,
   modelSupportsImages,
+  modelSupportsVideo,
   sortModelsForTask,
   type LlmModelOption,
 } from '@/lib/llm-models';
@@ -241,6 +242,11 @@ export function LlmModelSelect({
                     {modelSupportsImages(item) && taskType === 'image_generation' ? (
                       <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
                         Recomendado para Image Generator
+                      </span>
+                    ) : null}
+                    {modelSupportsVideo(item) && taskType === 'video_generation' ? (
+                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
+                        Recomendado para video / reel / GIF
                       </span>
                     ) : null}
                   </button>

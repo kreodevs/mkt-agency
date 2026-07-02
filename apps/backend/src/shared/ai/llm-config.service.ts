@@ -39,8 +39,8 @@ export class LlmConfigService {
         missing.map((taskType) => ({
           taskType,
           label: taskType,
-          model: 'deepseek/deepseek-v4-flash',
-          temperature: '0.7',
+          model: this.defaultModelForTask(taskType),
+          temperature: taskType === 'video_generation' ? '0' : '0.7',
           enabled: true,
         })),
       );
@@ -156,6 +156,16 @@ export class LlmConfigService {
     });
 
     return this.toResponse(reloaded!);
+  }
+
+  private defaultModelForTask(taskType: LlmTaskType): string {
+    if (taskType === 'video_generation') {
+      return 'bytedance/seedance-2.0-fast';
+    }
+    if (taskType === 'image_generation') {
+      return 'black-forest-labs/flux-2-pro';
+    }
+    return 'deepseek/deepseek-v4-flash';
   }
 
   private toResponse(row: LlmTaskConfigEntity): LlmTaskConfigResponse {
