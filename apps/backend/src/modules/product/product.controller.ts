@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -9,8 +10,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
@@ -25,12 +29,17 @@ import {
   PaginatedProductsResponseDto,
   ProductResponseDto,
 } from './dto/product.response.dto';
+import { ProductLogoResponseDto, SyncProductLogoFromWebsiteDto } from './dto/product-logo.dto';
+import { ProductLogoService } from './product-logo.service';
 import { ProductService } from './product.service';
 
 @Controller('products')
 @UseGuards(TenantGuard)
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly productLogoService: ProductLogoService,
+  ) {}
 
   @Get()
   list(
@@ -81,5 +90,34 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ProductResponseDto> {
     return this.productService.archive(user.tenantId!, id);
+  }
+
+  @Post(':id/logo/from-website')
+  @HttpCode(HttpStatus.OK)
+  syncLogoFromWebsite(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SyncProductLogoFromWebsiteDto,
+  ): Promise<ProductLogoResponseDto> {
+    return this.productLogoService.syncFromWebsite(user.tenantId!, id, dto.url);
+  }
+
+  @Post(':id/logo')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadLogo(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ProductLogoResponseDto> {
+    return this.productLogoService.uploadLogo(user.tenantId!, id, file);
+  }
+
+  @Delete(':id/logo')
+  removeLogo(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ProductLogoResponseDto> {
+    return this.productLogoService.removeLogo(user.tenantId!, id);
   }
 }

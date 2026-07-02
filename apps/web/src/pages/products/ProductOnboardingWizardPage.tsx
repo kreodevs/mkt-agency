@@ -17,6 +17,7 @@ import { Stepper } from '@/components/molecules/Stepper';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductPageInference } from '@/components/products/ProductPageInference';
+import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
 import { BrandProductGuide } from '@/components/onboarding/BrandProductGuide';
 import { ProductKeywordSuggestion } from '@/components/products/ProductKeywordSuggestion';
 import { ProductKeywordTagsInput } from '@/components/products/ProductKeywordTagsInput';
@@ -416,12 +417,25 @@ export default function ProductOnboardingWizardPage() {
                   error={fieldError}
                 />
                 {currentSection.key === 'name' && (
-                  <ProductPageInference
-                    productId={id}
-                    websiteUrl={productWebsiteUrl}
-                    disabled={saveMutation.isPending}
-                    onInferred={applyInferredFields}
-                  />
+                  <>
+                    <ProductPageInference
+                      productId={id}
+                      websiteUrl={productWebsiteUrl}
+                      disabled={saveMutation.isPending}
+                      onInferred={applyInferredFields}
+                    />
+                    <ProductLogoPanel
+                      productId={id}
+                      productName={productQuery.data.name}
+                      websiteUrl={productWebsiteUrl || productQuery.data.websiteUrl}
+                      logoAssetId={productQuery.data.logoAssetId}
+                      logoSourceUrl={productQuery.data.logoSourceUrl}
+                      disabled={saveMutation.isPending}
+                      onUpdated={() => {
+                        void queryClient.invalidateQueries({ queryKey: ['product', id] });
+                      }}
+                    />
+                  </>
                 )}
               </>
             )}

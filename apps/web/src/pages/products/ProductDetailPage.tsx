@@ -9,6 +9,7 @@ import { Textarea } from '@/components/atoms/Textarea';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
+import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import type { ProductCategory, UpdateProductPayload } from '@/types/product';
@@ -133,6 +134,19 @@ export default function ProductDetailPage() {
           </div>
         }
       />
+
+      <div className="mb-6">
+        <ProductLogoPanel
+          productId={id}
+          productName={productQuery.data.name}
+          websiteUrl={productQuery.data.websiteUrl}
+          logoAssetId={productQuery.data.logoAssetId}
+          logoSourceUrl={productQuery.data.logoSourceUrl}
+          onUpdated={() => {
+            void queryClient.invalidateQueries({ queryKey: ['product', id] });
+          }}
+        />
+      </div>
 
       <Card title="Detalle del producto">
         <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-4">

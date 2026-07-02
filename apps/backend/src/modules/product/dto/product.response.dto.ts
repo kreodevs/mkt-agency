@@ -17,6 +17,9 @@ export class ProductResponseDto {
   onboardingCompletionPercentage!: number;
   onboardingReady!: boolean;
   onboardingCompleted!: boolean;
+  logoAssetId!: string | null;
+  logoUrl!: string | null;
+  logoSourceUrl!: string | null;
   createdAt!: string;
   updatedAt!: string;
 }

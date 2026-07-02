@@ -29,6 +29,7 @@ import {
 } from './dto/product-onboarding.dto';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductService } from './product.service';
+import { ProductLogoService } from './product-logo.service';
 import { AGENCY_NOTIFICATION_TYPES } from '../publication-inbox/domain/publication-inbox.constants';
 import { PublicationInboxService } from '../publication-inbox/publication-inbox.service';
 
@@ -46,6 +47,7 @@ export class ProductOnboardingService {
     private readonly competitorService: CompetitorService,
     private readonly communityManager: CommunityManagerService,
     private readonly inboxService: PublicationInboxService,
+    private readonly productLogoService: ProductLogoService,
   ) {}
 
   async getStatus(tenantId: string, productId: string): Promise<ProductOnboardingStatusDto> {
@@ -60,6 +62,7 @@ export class ProductOnboardingService {
   ): Promise<SuggestProductKeywordsResponseDto> {
     const product = await this.productService.findOwnedEntity(tenantId, productId);
     const pageContent = await this.fetchProductPage(product, url);
+    await this.productLogoService.syncFromPageHtml(tenantId, product, pageContent.html, pageContent.url);
     const keywords = await this.generateSemanticKeywords(product, pageContent);
 
     return {
@@ -87,6 +90,7 @@ export class ProductOnboardingService {
     product.keywords = inferred.keywords?.length ? inferred.keywords : product.keywords;
     product.websiteUrl = page.url;
     await this.products.save(product);
+    await this.productLogoService.syncFromPageHtml(tenantId, product, page.html, page.url);
 
     return {
       ...inferred,

@@ -19,6 +19,10 @@ import {
   isProductOnboardingCompleted,
   isProductOnboardingReady,
 } from './domain/product-onboarding.util';
+import {
+  getProductLogoAssetId,
+  getProductLogoSourceUrl,
+} from './domain/product-logo.metadata.util';
 
 @Injectable()
 export class ProductService {
@@ -302,6 +306,11 @@ export class ProductService {
       onboardingCompletionPercentage: calculateProductOnboardingCompletion(product),
       onboardingReady: isProductOnboardingReady(product),
       onboardingCompleted: isProductOnboardingCompleted(product),
+      logoAssetId: getProductLogoAssetId(product.metadata),
+      logoUrl: getProductLogoAssetId(product.metadata)
+        ? `/api/v1/assets/${getProductLogoAssetId(product.metadata)}/file`
+        : null,
+      logoSourceUrl: getProductLogoSourceUrl(product.metadata),
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     };

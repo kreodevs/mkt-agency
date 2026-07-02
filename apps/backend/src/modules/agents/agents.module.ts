@@ -37,6 +37,7 @@ import { CompetitorIntelService } from './competitor-intel.service';
 import { CompetitorIntelController } from './competitor-intel.controller';
 import { ImageGenerationController } from './image-generation.controller';
 import { ImageGenerationService } from './image-generation.service';
+import { ImageBrandingService } from './image-branding.service';
 import { WebsiteAnalyzerService } from './website-analyzer.service';
 
 @Module({
@@ -79,6 +80,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
     ImageGenerationService,
+    ImageBrandingService,
     {
       provide: WEBSITE_ANALYZER_ADAPTER,
       useFactory: (

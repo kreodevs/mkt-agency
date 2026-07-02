@@ -21,6 +21,9 @@ export interface Product {
   onboardingCompletionPercentage?: number;
   onboardingReady?: boolean;
   onboardingCompleted?: boolean;
+  logoAssetId?: string | null;
+  logoUrl?: string | null;
+  logoSourceUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +111,13 @@ export interface SuggestProductKeywordsResponse {
   keywords: string[];
   sourceUrl?: string | null;
   generatedFromPage: boolean;
+}
+
+export interface ProductLogoResponse {
+  logoAssetId: string | null;
+  logoUrl: string | null;
+  logoSourceUrl: string | null;
+  synced: boolean;
 }
 
 export interface ProductOnboardingAgentsResult {

@@ -1,4 +1,5 @@
-import { apiFetch } from '@/services/api';
+import { apiFetch, API_BASE } from '@/services/api';
+import { getAccessToken } from '@/store/auth';
 import type {
   BulkCreateProductsPayload,
   BulkCreateProductsResponse,
@@ -7,6 +8,7 @@ import type {
   ListProductsParams,
   PaginatedProductsResponse,
   Product,
+  ProductLogoResponse,
   ProductOnboardingStatus,
   InferProductFromPageResponse,
   SuggestProductKeywordsResponse,
@@ -117,4 +119,51 @@ export async function createProductFromUrl(payload: {
 
   // El frontend del wizard recarga el producto, así no necesitamos return con data.
   return product;
+}
+
+export async function syncProductLogoFromWebsite(
+  id: string,
+  payload: { url?: string } = {},
+): Promise<ProductLogoResponse> {
+  return apiFetch<ProductLogoResponse>(`/products/${id}/logo/from-website`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function uploadProductLogo(productId: string, file: File): Promise<ProductLogoResponse> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText) as ProductLogoResponse);
+        return;
+      }
+
+      try {
+        const body = JSON.parse(xhr.responseText) as { error?: string };
+        reject(new Error(body.error ?? 'Upload failed'));
+      } catch {
+        reject(new Error('Upload failed'));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+
+    xhr.open('POST', `${API_BASE}/products/${productId}/logo`);
+    const token = getAccessToken();
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    xhr.send(formData);
+  });
+}
+
+export async function removeProductLogo(id: string): Promise<ProductLogoResponse> {
+  return apiFetch<ProductLogoResponse>(`/products/${id}/logo`, {
+    method: 'DELETE',
+  });
 }
