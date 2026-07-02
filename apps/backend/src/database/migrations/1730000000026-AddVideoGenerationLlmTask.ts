@@ -13,7 +13,11 @@ export class AddVideoGenerationLlmTask1730000000026 implements MigrationInterfac
         'bytedance/seedance-2.0-fast',
         0
       )
-      ON CONFLICT (task_type) DO NOTHING
+      ON CONFLICT (task_type) DO UPDATE SET
+        label = EXCLUDED.label,
+        description = EXCLUDED.description,
+        model = EXCLUDED.model,
+        temperature = EXCLUDED.temperature
     `);
   }
 

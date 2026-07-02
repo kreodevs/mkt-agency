@@ -312,9 +312,9 @@ export default function LlmSettingsPage() {
             Tarea habilitada
           </label>
           <p className="text-xs text-[var(--foreground-muted)]">
-            Busca en el catálogo de OpenRouter o escribe el slug del modelo (p. ej.{' '}
-            <code>bytedance-seed/seedream-4.5</code>). Para Image Generator usa modelos Image API.
-            Configura proveedores en{' '}
+            Busca en el catálogo de OpenRouter o escribe el slug del modelo. Para imágenes usa la
+            tarea <strong>Generación de imágenes</strong>; para reels/GIF/video usa{' '}
+            <strong>Generación de video</strong> (Video API). Configura proveedores en{' '}
             <a href="/admin/llm-providers" className="text-[var(--primary)] underline">
               Proveedores LLM
             </a>

@@ -14,6 +14,7 @@ import {
   type LlmTaskType,
   type ResolvedLlmExecutionConfig,
 } from './llm-task-types';
+import { LLM_TASK_METADATA } from './llm-task-metadata';
 
 @Injectable()
 export class LlmConfigService {
@@ -35,21 +36,75 @@ export class LlmConfigService {
     const existingTypes = new Set(rows.map((r) => r.taskType));
     const missing = LLM_TASK_TYPES.filter((t) => !existingTypes.has(t));
     if (missing.length > 0) {
+      const defaultProviderId = await this.resolveDefaultProviderId();
       const newRows = this.configs.create(
-        missing.map((taskType) => ({
-          taskType,
-          label: taskType,
-          model: this.defaultModelForTask(taskType),
-          temperature: taskType === 'video_generation' ? '0' : '0.7',
-          enabled: true,
-        })),
+        missing.map((taskType) => {
+          const meta = LLM_TASK_METADATA[taskType];
+          return {
+            taskType,
+            label: meta.label,
+            description: meta.description,
+            providerId: defaultProviderId,
+            model: meta.defaultModel,
+            temperature: meta.temperature,
+            enabled: true,
+          };
+        }),
       );
       await this.configs.save(newRows);
       this.logger.log(`Auto-created LLM task configs: ${missing.join(', ')}`);
-      rows.push(...newRows.map((r) => ({ ...r, providerEntity: null })));
+      const saved = await this.configs.find({
+        where: missing.map((taskType) => ({ taskType })),
+        relations: { providerEntity: true },
+      });
+      rows.push(...saved);
     }
 
+    await this.syncTaskMetadata(rows);
+
     return rows.map((row) => this.toResponse(row));
+  }
+
+  private async resolveDefaultProviderId(): Promise<string | null> {
+    const providers = await this.providerService.list(true);
+    const configured = providers.find((provider) => provider.apiKeyConfigured);
+    return configured?.id ?? providers[0]?.id ?? null;
+  }
+
+  /** Corrige filas creadas antes con label = slug crudo (p. ej. video_generation). */
+  private async syncTaskMetadata(rows: LlmTaskConfigEntity[]): Promise<void> {
+    const updates: LlmTaskConfigEntity[] = [];
+
+    for (const row of rows) {
+      const taskType = row.taskType as LlmTaskType;
+      const meta = LLM_TASK_METADATA[taskType];
+      if (!meta) {
+        continue;
+      }
+
+      const needsLabel = row.label === row.taskType || !row.description;
+      const needsModel =
+        taskType === 'video_generation' &&
+        row.model === 'deepseek/deepseek-v4-flash';
+
+      if (!needsLabel && !needsModel) {
+        continue;
+      }
+
+      if (needsLabel) {
+        row.label = meta.label;
+        row.description = meta.description;
+      }
+      if (needsModel) {
+        row.model = meta.defaultModel;
+        row.temperature = meta.temperature;
+      }
+      updates.push(row);
+    }
+
+    if (updates.length) {
+      await this.configs.save(updates);
+    }
   }
 
   async resolve(taskType: LlmTaskType): Promise<ResolvedLlmExecutionConfig> {
@@ -117,9 +172,10 @@ export class LlmConfigService {
 
       row = this.configs.create({
         taskType,
-        label: taskType,
+        label: LLM_TASK_METADATA[taskType]?.label ?? taskType,
+        description: LLM_TASK_METADATA[taskType]?.description ?? null,
         providerId,
-        model: data.model ?? 'deepseek/deepseek-v4-flash',
+        model: data.model ?? LLM_TASK_METADATA[taskType]?.defaultModel ?? 'deepseek/deepseek-v4-flash',
       });
     }
 
@@ -156,16 +212,6 @@ export class LlmConfigService {
     });
 
     return this.toResponse(reloaded!);
-  }
-
-  private defaultModelForTask(taskType: LlmTaskType): string {
-    if (taskType === 'video_generation') {
-      return 'bytedance/seedance-2.0-fast';
-    }
-    if (taskType === 'image_generation') {
-      return 'black-forest-labs/flux-2-pro';
-    }
-    return 'deepseek/deepseek-v4-flash';
   }
 
   private toResponse(row: LlmTaskConfigEntity): LlmTaskConfigResponse {
