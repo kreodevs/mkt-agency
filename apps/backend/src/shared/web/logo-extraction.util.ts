@@ -142,17 +142,76 @@ function collectImagesFromHtml(
   context: { inHeader: boolean; inLogoAnchor: boolean },
   minScore: number,
 ): void {
-  const imgPattern = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+  const imgPattern = /<img\b[^>]*>/gi;
   let match: RegExpExecArray | null;
 
   while ((match = imgPattern.exec(html)) !== null) {
     const tag = match[0];
-    const src = match[1];
+    const src = readImgSrc(tag);
+    if (!src) {
+      continue;
+    }
+
     const score = scoreLogoImage(tag, src, context);
     if (score >= minScore) {
       pushCandidate(scores, resolveAbsoluteUrl(src, baseUrl), score);
     }
   }
+}
+
+function readImgSrc(tag: string): string | null {
+  const dataSrc =
+    tag.match(/\bdata-src=["']([^"']+)["']/i)?.[1] ??
+    tag.match(/\bdata-lazy-src=["']([^"']+)["']/i)?.[1];
+  const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1];
+  const srcset = readBestSrcsetUrl(tag);
+
+  const candidates = [dataSrc, srcset, src].filter(Boolean) as string[];
+  for (const candidate of candidates) {
+    if (!candidate.startsWith('data:') && !/placeholder|1x1|spacer|blank/i.test(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function readBestSrcsetUrl(tag: string): string | null {
+  const srcset = tag.match(/\bsrcset=["']([^"']+)["']/i)?.[1];
+  if (!srcset) {
+    return null;
+  }
+
+  let bestUrl: string | null = null;
+  let bestScore = -1;
+
+  for (const part of srcset.split(',')) {
+    const trimmed = part.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    const [url, descriptor = '1x'] = trimmed.split(/\s+/, 2);
+    if (!url || url.startsWith('data:')) {
+      continue;
+    }
+
+    let score = 1;
+    const widthMatch = descriptor.match(/^(\d+)w$/i);
+    const densityMatch = descriptor.match(/^([\d.]+)x$/i);
+    if (widthMatch) {
+      score = Number(widthMatch[1]);
+    } else if (densityMatch) {
+      score = Number(densityMatch[1]) * 1000;
+    }
+
+    if (score >= bestScore) {
+      bestScore = score;
+      bestUrl = url;
+    }
+  }
+
+  return bestUrl;
 }
 
 function collectLogoAnchors(html: string, baseUrl: string, scores: Map<string, number>): void {
@@ -164,9 +223,12 @@ function collectLogoAnchors(html: string, baseUrl: string, scores: Map<string, n
     const anchorHtml = match[0];
     collectImagesFromHtml(anchorHtml, baseUrl, scores, { inHeader: false, inLogoAnchor: true }, 1);
 
-    const imgMatch = /<img[^>]+src=["']([^"']+)["']/i.exec(anchorHtml);
+    const imgMatch = /<img\b[^>]*>/i.exec(anchorHtml);
     if (imgMatch) {
-      pushCandidate(scores, resolveAbsoluteUrl(imgMatch[1], baseUrl), 120);
+      const src = readImgSrc(imgMatch[0]);
+      if (src) {
+        pushCandidate(scores, resolveAbsoluteUrl(src, baseUrl), 120);
+      }
     }
   }
 }

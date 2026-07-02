@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import sharp from 'sharp';
 import { Repository } from 'typeorm';
 import { AssetService } from '../assets/asset.service';
+import { fetchImageBuffer, isLikelyImageBuffer } from '../../shared/web/fetch-image.util';
 import { extractLogoCandidates } from '../../shared/web/logo-extraction.util';
 import { fetchPageContent, normalizePageUrl } from '../../shared/web/page-content.util';
 import {
@@ -64,23 +65,29 @@ export class ProductLogoService {
     const candidates = extractLogoCandidates(page.html, page.url);
 
     if (candidates.length === 0) {
-      return {
-        logoAssetId: getProductLogoAssetId(product.metadata),
-        logoUrl: this.buildLogoUrl(getProductLogoAssetId(product.metadata)),
-        logoSourceUrl: null,
-        synced: false,
-      };
+      throw new BadRequestException({
+        error:
+          'No se encontró ningún logo en la página. Verifica la URL o sube el logo manualmente.',
+        code: 'LOGO_NOT_FOUND',
+      });
     }
 
+    const failures: string[] = [];
     for (const candidate of candidates) {
-      const stored = await this.tryDownloadLogo(tenantId, product, candidate);
+      const stored = await this.tryDownloadLogo(tenantId, product, candidate, page.url);
       if (stored) {
         return stored;
       }
+      failures.push(candidate);
     }
 
+    this.logger.warn(
+      `Logo sync failed for product ${productId}: ${failures.length} candidates rejected (${failures.slice(0, 3).join(', ')})`,
+    );
+
     throw new BadRequestException({
-      error: 'No se pudo descargar un logo válido desde la página del producto',
+      error:
+        'No se pudo descargar un logo válido desde la página del producto. Prueba con otra URL o súbelo manualmente.',
       code: 'LOGO_FETCH_FAILED',
     });
   }
@@ -127,24 +134,17 @@ export class ProductLogoService {
     tenantId: string,
     product: ProductEntity,
     sourceUrl: string,
+    referer?: string,
   ): Promise<ProductLogoSyncResult | null> {
     try {
-      const response = await fetch(sourceUrl, {
-        headers: { Accept: 'image/*' },
-        signal: AbortSignal.timeout(12000),
-      });
-
-      if (!response.ok) {
+      const fetched = await fetchImageBuffer(sourceUrl, { referer });
+      if (!fetched) {
+        this.logger.debug(`Logo candidate fetch failed: ${sourceUrl}`);
         return null;
       }
 
-      const contentType = response.headers.get('content-type') ?? 'image/png';
-      if (!contentType.startsWith('image/')) {
-        return null;
-      }
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.length === 0 || buffer.length > MAX_LOGO_BYTES) {
+      const { buffer, contentType } = fetched;
+      if (buffer.length > MAX_LOGO_BYTES) {
         return null;
       }
 
@@ -217,7 +217,7 @@ export class ProductLogoService {
 
     const candidates = extractLogoCandidates(html, normalizePageUrl(pageUrl));
     for (const candidate of candidates) {
-      const stored = await this.tryDownloadLogo(tenantId, product, candidate);
+      const stored = await this.tryDownloadLogo(tenantId, product, candidate, pageUrl);
       if (stored?.synced) {
         return;
       }
@@ -225,17 +225,25 @@ export class ProductLogoService {
   }
 
   private async isUsableLogoBuffer(buffer: Buffer, mimeType: string): Promise<boolean> {
+    if (!isLikelyImageBuffer(buffer, mimeType)) {
+      return false;
+    }
+
     if (mimeType.includes('svg')) {
-      return buffer.length >= 200;
+      return true;
     }
 
     try {
       const metadata = await sharp(buffer).metadata();
       const width = metadata.width ?? 0;
       const height = metadata.height ?? 0;
-      return width >= 32 && height >= 32;
+      if (width >= 24 && height >= 24) {
+        return true;
+      }
     } catch {
-      return false;
+      // Sharp can fail on some PNG profiles; fall back to signature sniffing above.
     }
+
+    return buffer.length >= 400;
   }
 }
