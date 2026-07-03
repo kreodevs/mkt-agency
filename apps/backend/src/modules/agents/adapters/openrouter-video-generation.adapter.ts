@@ -49,11 +49,8 @@ export class OpenRouterVideoGenerationAdapter implements VideoGenerationAdapterP
       duration,
       aspect_ratio: aspectRatio,
       resolution,
+      generate_audio: !!options?.generateAudio, // Explicit false to disable default audio generation
     };
-
-    if (options?.generateAudio) {
-      body.generate_audio = true;
-    }
 
     const submitResponse = await fetch(submitUrl, {
       method: 'POST',
