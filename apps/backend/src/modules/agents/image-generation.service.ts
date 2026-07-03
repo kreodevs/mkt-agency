@@ -21,8 +21,8 @@ import {
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
 import { buildBrandedImagePrompt } from './domain/image-branding.util';
 import {
-  buildContentImagePrompt,
   buildFramePrompt,
+  buildVideoGenerationPrompt,
   detectGenerationMediaType,
   detectReelFrameCount,
   isImageGenerationMetadata,
@@ -253,17 +253,20 @@ export class ImageGenerationService {
         ? await this.contentService.findOne(tenantId, options.contentId)
         : null;
       
-      const videoPrompt = content?.currentVersion
-        ? buildContentImagePrompt(content.title, content.currentVersion.body)
-        : prompt;
-      
+      const narrationBody = content?.currentVersion?.body;
+      const videoPrompt = buildVideoGenerationPrompt({
+        basePrompt: prompt,
+        title: content?.title,
+        narrationBody,
+      });
+
       const duration = resolveVideoDuration(prompt);
       const result = await this.videoAdapter.generateVideo(videoPrompt, {
         duration,
         aspectRatio: resolveVideoAspectRatio(prompt),
         resolution: '720p',
         style: options.style,
-        generateAudio: shouldGenerateVideoAudio(prompt),
+        generateAudio: shouldGenerateVideoAudio(prompt, narrationBody),
       });
 
       const asset = await this.uploadGeneratedVideo(tenantId, prompt, result);

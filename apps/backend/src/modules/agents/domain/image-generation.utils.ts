@@ -53,8 +53,57 @@ export function resolveVideoAspectRatio(prompt: string): string {
   return '9:16';
 }
 
-export function shouldGenerateVideoAudio(prompt: string): boolean {
-  return /\b(m[uú]sica|audio|sonido|trend|soundtrack|banda\s+sonora)\b/i.test(prompt);
+export function shouldGenerateVideoAudio(prompt: string, narrationBody?: string): boolean {
+  if (narrationBody?.trim()) {
+    return true;
+  }
+
+  return /\b(m[uú]sica|audio|sonido|voz|narraci[oó]n|hablado|voiceover|trend|soundtrack|banda\s+sonora)\b/i.test(
+    prompt,
+  );
+}
+
+export function normalizeCopyForNarration(body: string): string {
+  return body
+    .replace(/[#*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 700);
+}
+
+export interface VideoGenerationPromptInput {
+  basePrompt: string;
+  title?: string;
+  narrationBody?: string;
+}
+
+/**
+ * Prompt enviado a la Video API: mismo base que el registro (UI) + guion de voz explícito.
+ */
+export function buildVideoGenerationPrompt(input: VideoGenerationPromptInput): string {
+  const parts = [
+    'Video corto para redes sociales con narración hablada en español (México).',
+    input.basePrompt.trim(),
+  ];
+
+  if (input.narrationBody?.trim()) {
+    const script = normalizeCopyForNarration(input.narrationBody);
+    parts.push(
+      `GUION DE VOZ — el audio hablado debe decir exactamente este texto, sin omitir frases ni inventar palabras en inglés:\n"""${script}"""`,
+    );
+  }
+
+  if (input.title?.trim()) {
+    parts.push(
+      `Texto en pantalla (si aparece): "${input.title.trim()}". Usa ortografía española (ej. "tecnología" con c, nunca "technology" ni "technología").`,
+    );
+  }
+
+  parts.push(
+    'La narración sigue el guion de voz; el visual sigue la escena del prompt. No sustituyas el copy del post por un mensaje distinto.',
+  );
+
+  return parts.join('\n\n');
 }
 
 export function buildFramePrompt(basePrompt: string, index: number, total: number): string {
