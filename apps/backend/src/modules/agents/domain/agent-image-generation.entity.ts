@@ -15,7 +15,7 @@ export class AgentImageGenerationEntity {
   @Column({ name: 'tenant_id', type: 'uuid' })
   tenantId!: string;
 
-  @Column({ type: 'varchar', length: 1000 })
+  @Column({ type: 'text' })
   prompt!: string;
 
   @Column({ type: 'varchar', length: 50, default: 'pending' })

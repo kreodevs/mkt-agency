@@ -36,6 +36,10 @@ export class ContentEntity {
   @Column({ name: 'scheduled_date', type: 'date', nullable: true })
   scheduledDate!: string | null;
 
+  /** Red destino (instagram, facebook, …) cuando el contenido viene del Community Manager. */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  platform!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

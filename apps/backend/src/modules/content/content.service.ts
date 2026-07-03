@@ -106,6 +106,7 @@ export class ContentService {
           status: 'draft',
           currentVersionId: null,
           scheduledDate: dto.scheduledDate ?? null,
+          platform: dto.platform ?? null,
         }),
       );
 
@@ -629,6 +630,7 @@ export class ContentService {
       status: content.status,
       currentVersionId: content.currentVersionId,
       scheduledDate: content.scheduledDate,
+      platform: content.platform ?? null,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

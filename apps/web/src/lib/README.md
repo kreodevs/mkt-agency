@@ -4,7 +4,7 @@ Utilidades compartidas del frontend.
 
 ## Formatos de imagen por red (`image-destination-formats.ts`)
 
-Catálogo de destinos del Image Generator alineado a las redes del Community Manager (`instagram`, `facebook`, `linkedin`, `tiktok`, `twitter`). Cada opción mapea a un tamaño API (`1024x1024`, `1024x1792`, `1792x1024`) sin mostrar píxeles al usuario.
+Catálogo de destinos del Image Generator alineado a las redes del Community Manager (`instagram`, `facebook`, `linkedin`, `tiktok`, `twitter`). Cada opción mapea a un tamaño API (`1024x1024`, `1024x1792`, `1792x1024`) sin mostrar píxeles al usuario. `getDefaultFormatForPlatform()` usa el mismo criterio que el backend al generar imágenes desde contenido.
 
 ## Impersonación (`impersonation.ts`)
 

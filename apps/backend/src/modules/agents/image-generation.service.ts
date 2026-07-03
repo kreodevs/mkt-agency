@@ -43,6 +43,10 @@ import {
   VideoGenerationResult,
 } from './adapters/video-generation.adapter.port';
 import {
+  resolveImageSizeForPlatform,
+  resolveImageStyleForPlatform,
+} from '../../shared/social/image-destination-formats.util';
+import {
   ImageGenerationJobData,
   ImageGenerationWorkerService,
 } from './workers/image-generation.worker';
@@ -156,15 +160,21 @@ export class ImageGenerationService {
       return null;
     }
 
+    const content = await this.contentService.findOne(tenantId, contentId);
+    const effectiveProductId = productId ?? content.productId ?? undefined;
+    const size = resolveImageSizeForPlatform(content.platform);
+    const style = resolveImageStyleForPlatform(content.platform);
+
     return this.generate(
       tenantId,
       userId,
-      await this.buildPromptForProduct(tenantId, visualDescription, productId),
+      await this.buildPromptForProduct(tenantId, visualDescription, effectiveProductId),
       {
         contentId,
-        productId,
-        size: '1024x1024',
-        style: 'social media post, professional',
+        productId: effectiveProductId,
+        size,
+        style,
+        background: true,
       },
     );
   }
@@ -388,12 +398,14 @@ export class ImageGenerationService {
             branding.logoAssetId,
           );
         } catch (error) {
-          this.logger.warn(
-            `Logo overlay skipped for product ${productId}: ${
+          this.logger.error(
+            `Logo overlay failed for product ${productId} (asset ${branding.logoAssetId}): ${
               error instanceof Error ? error.message : error
             }`,
           );
         }
+      } else {
+        this.logger.warn(`Product ${productId} has no logoAssetId; skipping overlay`);
       }
     }
 
@@ -607,11 +619,13 @@ export class ImageGenerationService {
       version.body,
       content.productId ?? undefined,
     );
+    const size = resolveImageSizeForPlatform(content.platform);
+    const style = resolveImageStyleForPlatform(content.platform);
     return this.generate(tenantId, userId, prompt, {
       contentId,
       productId: content.productId ?? undefined,
-      size: '1024x1024',
-      style: 'social media post, professional',
+      size,
+      style,
       background: true,
     });
   }

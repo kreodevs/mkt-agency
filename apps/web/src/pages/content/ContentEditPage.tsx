@@ -230,6 +230,7 @@ export default function ContentEditPage() {
           <ContentVisualPanel
             contentId={content.id}
             versionAssets={currentVersion.assets}
+            platform={content.platform}
           />
 
           <SignatureBadge

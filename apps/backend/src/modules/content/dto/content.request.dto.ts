@@ -11,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { CONTENT_STATUSES, CONTENT_TYPES } from '../domain/content.constants';
+import { CM_PLATFORMS } from '../../community-manager/domain/cm-platforms.constants';
 
 export class CreateContentDto {
   @IsString()
@@ -39,6 +40,11 @@ export class CreateContentDto {
   @IsOptional()
   @IsDateString()
   scheduledDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CM_PLATFORMS])
+  platform?: string;
 }
 
 export class UpdateContentDto {

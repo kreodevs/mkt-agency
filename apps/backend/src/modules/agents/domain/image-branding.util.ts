@@ -27,7 +27,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     parts.push(
       `Incluye el nombre "${productName}" solo como texto legible (preferiblemente en la parte inferior), nunca como monograma o símbolo gráfico.`,
       'PROHIBIDO: logos, monogramas, iniciales estilizadas (ej. una "A" en círculo), iconos de marca, marcas de agua o símbolos en cualquier esquina.',
-      'PROHIBIDO: recuadros blancos, cajas vacías o placeholders. La esquina superior derecha debe quedar totalmente libre de gráficos; el logo oficial se superpone después por software.',
+      'PROHIBIDO: recuadros blancos, cajas vacías o placeholders. La esquina inferior derecha debe quedar totalmente libre de gráficos; el logo oficial se superpone después por software.',
     );
   } else {
     parts.push(

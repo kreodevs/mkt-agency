@@ -182,6 +182,23 @@ export function getImageDestinationFormat(id: string): ImageDestinationFormat {
   return formatById.get(id) ?? formatById.get(DEFAULT_IMAGE_DESTINATION_ID)!;
 }
 
+const DEFAULT_FORMAT_ID_BY_PLATFORM: Record<CmPlatform, string> = {
+  instagram: 'instagram-feed',
+  facebook: 'facebook-feed',
+  linkedin: 'linkedin-post',
+  tiktok: 'tiktok-vertical',
+  twitter: 'twitter-post',
+};
+
+export function getDefaultFormatForPlatform(
+  platform: CmPlatform | string | null | undefined,
+): ImageDestinationFormat {
+  if (platform && platform in DEFAULT_FORMAT_ID_BY_PLATFORM) {
+    return getImageDestinationFormat(DEFAULT_FORMAT_ID_BY_PLATFORM[platform as CmPlatform]);
+  }
+  return getImageDestinationFormat(DEFAULT_IMAGE_DESTINATION_ID);
+}
+
 export function formatDestinationOptionLabel(item: ImageDestinationFormat): string {
   return `${item.label} · ${item.aspectLabel}`;
 }

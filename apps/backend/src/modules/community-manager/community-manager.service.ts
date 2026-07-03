@@ -310,6 +310,7 @@ export class CommunityManagerService {
           const scheduleDate = new Date(today);
           scheduleDate.setDate(scheduleDate.getDate() + i + 1);
           contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
+          contentDto.platform = post.platform;
 
           const content = await this.contentService.create(tenantId, userId, contentDto);
 

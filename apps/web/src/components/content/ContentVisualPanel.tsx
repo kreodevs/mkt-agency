@@ -18,14 +18,27 @@ import {
   regenerateImageForContent,
 } from '@/services/agents';
 import { getApiErrorMessage } from '@/services/api';
+import {
+  getDefaultFormatForPlatform,
+  destinationPlatformLabel,
+} from '@/lib/image-destination-formats';
+import type { CmPlatform } from '@/services/community-manager';
+
 import type { ImageGeneration } from '@/types/agents';
 
 type ContentVisualPanelProps = {
   contentId: string;
   versionAssets?: unknown[];
+  platform?: string | null;
 };
 
-export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPanelProps) {
+export function ContentVisualPanel({
+  contentId,
+  versionAssets,
+  platform = null,
+}: ContentVisualPanelProps) {
+  const destinationFormat = getDefaultFormatForPlatform(platform as CmPlatform | null);
+  const platformLabel = platform ? destinationPlatformLabel(platform as CmPlatform) : null;
   const queryClient = useQueryClient();
 
   const generationQuery = useQuery({
@@ -69,11 +82,13 @@ export function ContentVisualPanel({ contentId, versionAssets }: ContentVisualPa
     <Card
       title="Imagen del contenido"
       subtitle={
-        isVideo
-          ? `Video · ${frameMeta?.duration ?? '?'}s`
-          : frameCount > 1
-            ? `${frameCount} frames · reel/carrusel`
-            : 'Generada con Image Generator desde el copy'
+        platformLabel
+          ? `Formato ${destinationFormat.label} · ${destinationFormat.aspectLabel} (${platformLabel})`
+          : isVideo
+            ? `Video · ${frameMeta?.duration ?? '?'}s`
+            : frameCount > 1
+              ? `${frameCount} frames · reel/carrusel`
+              : 'Generada con Image Generator desde el copy'
       }
     >
       {generationQuery.isLoading ? (

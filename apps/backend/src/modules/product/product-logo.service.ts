@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import sharp from 'sharp';
+import sharp from '@/shared/media/sharp.util';
 import { Repository } from 'typeorm';
 import { AssetService } from '../assets/asset.service';
 import { fetchImageBuffer, isLikelyImageBuffer } from '../../shared/web/fetch-image.util';

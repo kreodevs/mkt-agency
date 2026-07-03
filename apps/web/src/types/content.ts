@@ -27,6 +27,7 @@ export interface Content {
   currentVersionId: string | null;
   currentVersion?: ContentVersion;
   scheduledDate: string | null;
+  platform: string | null;
   createdAt: string;
   updatedAt: string;
 }

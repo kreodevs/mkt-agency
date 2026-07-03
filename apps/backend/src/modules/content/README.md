@@ -16,6 +16,8 @@ Versionado inmutable de piezas de campaña (US-010 + US-011).
 
 Cada `PATCH` crea una versión append-only. Si el contenido estaba `approved`, pasa a `in_changes`.
 
+Campo opcional `platform` (`instagram`, `facebook`, `linkedin`, `twitter`, `tiktok`) al crear desde Community Manager; el Image Generator usa `shared/social/image-destination-formats.util.ts` para el tamaño de imagen.
+
 Firma: `SHA-256(body|versionId|assetIds ordenados)`.
 
 Eventos en tabla `events` + outbox `ContentApproved` al aprobar.
