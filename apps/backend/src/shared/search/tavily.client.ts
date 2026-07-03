@@ -68,6 +68,7 @@ export class TavilySearchService {
       },
       body: JSON.stringify({
         query,
+        topic: 'general',
         search_depth: options?.searchDepth ?? 'basic',
         max_results: options?.maxResults ?? MAX_RESULTS_PER_QUERY,
         include_answer: false,
@@ -79,10 +80,10 @@ export class TavilySearchService {
     if (!response.ok) {
       const body = await response.text().catch(() => '');
       this.logger.warn(`Tavily search failed (${response.status}): ${body.slice(0, 200)}`);
-      throw new BadRequestException({
-        error: 'Tavily search request failed',
-        code: 'TAVILY_SEARCH_FAILED',
-      });
+      return {
+        query,
+        results: [],
+      };
     }
 
     const parsed = (await response.json()) as TavilyApiResponse;
@@ -157,23 +158,20 @@ function resolveTavilyCountry(context: CompetitorDiscoveryContext): string | nul
     return null;
   }
 
-  if (country.includes('méxico') || country.includes('mexico') || country === 'mx') {
-    return 'mx';
-  }
-  if (country.includes('españa') || country.includes('spain') || country === 'es') {
-    return 'es';
-  }
-  if (country.includes('colombia') || country === 'co') {
-    return 'co';
-  }
-  if (country.includes('argentina') || country === 'ar') {
-    return 'ar';
-  }
-  if (country.includes('chile') || country === 'cl') {
-    return 'cl';
-  }
-  if (country.includes('estados unidos') || country.includes('usa') || country === 'us') {
-    return 'us';
+  // Tavily expects lowercase English country names (e.g. "mexico"), not ISO codes.
+  const aliases: Array<{ pattern: RegExp; value: string }> = [
+    { pattern: /\b(m[eé]xico|mexico|mx\b)/i, value: 'mexico' },
+    { pattern: /\b(espa[nñ]a|spain|es\b)/i, value: 'spain' },
+    { pattern: /\bcolombia|co\b/i, value: 'colombia' },
+    { pattern: /\bargentina|ar\b/i, value: 'argentina' },
+    { pattern: /\bchile|cl\b/i, value: 'chile' },
+    { pattern: /\b(estados unidos|united states|usa|us\b)/i, value: 'united states' },
+  ];
+
+  for (const { pattern, value } of aliases) {
+    if (pattern.test(country)) {
+      return value;
+    }
   }
 
   return null;
