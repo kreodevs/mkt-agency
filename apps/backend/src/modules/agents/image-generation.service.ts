@@ -248,8 +248,16 @@ export class ImageGenerationService {
     options: GenerateImageOptions,
   ): Promise<GenerateImageResult> {
     try {
+      const content = options.contentId
+        ? await this.contentService.findOne(tenantId, options.contentId)
+        : null;
+      
+      const videoPrompt = content
+        ? buildContentImagePrompt(content.title, content.body)
+        : prompt;
+      
       const duration = resolveVideoDuration(prompt);
-      const result = await this.videoAdapter.generateVideo(prompt, {
+      const result = await this.videoAdapter.generateVideo(videoPrompt, {
         duration,
         aspectRatio: resolveVideoAspectRatio(prompt),
         resolution: '720p',
