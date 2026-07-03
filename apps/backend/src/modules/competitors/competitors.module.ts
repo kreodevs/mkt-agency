@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
+import { QUEUE_COMPETITOR_DISCOVERY } from '../../shared/queue/queue.constants';
 import { SearchModule } from '../../shared/search/search.module';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { ProductModule } from '../product/product.module';
@@ -14,6 +16,8 @@ import { OpenRouterCompetitorDiscoveryAdapter } from './adapters/openrouter-comp
 import { StubCompetitorDiscoveryAdapter } from './adapters/stub-competitor-discovery.adapter';
 import { CompetitorController } from './competitor.controller';
 import { CompetitorService } from './competitor.service';
+import { CompetitorDiscoveryProcessor } from './workers/competitor-discovery.processor';
+import { CompetitorDiscoveryWorkerService } from './workers/competitor-discovery.worker';
 import { CompetitorMentionEntity } from './infrastructure/typeorm/competitor-mention.entity';
 import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
 
@@ -22,6 +26,7 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
     AuthSharedModule,
     LlmModule,
     SearchModule,
+    BullModule.registerQueue({ name: QUEUE_COMPETITOR_DISCOVERY }),
     ProductModule,
     CompanyProfileModule,
     TypeOrmModule.forFeature([
@@ -35,6 +40,8 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
   controllers: [CompetitorController],
   providers: [
     CompetitorService,
+    CompetitorDiscoveryWorkerService,
+    CompetitorDiscoveryProcessor,
     StubCompetitorDiscoveryAdapter,
     OpenRouterCompetitorDiscoveryAdapter,
     {
@@ -58,6 +65,6 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
       ],
     },
   ],
-  exports: [CompetitorService],
+  exports: [CompetitorService, CompetitorDiscoveryWorkerService],
 })
 export class CompetitorsModule {}

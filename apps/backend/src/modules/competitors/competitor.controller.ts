@@ -20,14 +20,19 @@ import {
   BulkCreateCompetitorsResponseDto,
   CompetitorListResponseDto,
   CompetitorResponseDto,
-  DiscoverCompetitorsResponseDto,
+  DiscoverCompetitorsJobStartedDto,
+  DiscoverCompetitorsJobStatusDto,
   PaginatedMentionsResponseDto,
 } from './dto/competitor.response.dto';
+import { CompetitorDiscoveryWorkerService } from './workers/competitor-discovery.worker';
 
 @Controller('competitors')
 @UseGuards(TenantGuard)
 export class CompetitorController {
-  constructor(private readonly competitorService: CompetitorService) {}
+  constructor(
+    private readonly competitorService: CompetitorService,
+    private readonly discoveryWorker: CompetitorDiscoveryWorkerService,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: AuthenticatedUser): Promise<CompetitorListResponseDto> {
@@ -44,11 +49,23 @@ export class CompetitorController {
   }
 
   @Post('discover')
+  @HttpCode(HttpStatus.ACCEPTED)
   discover(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: DiscoverCompetitorsDto,
-  ): Promise<DiscoverCompetitorsResponseDto> {
-    return this.competitorService.discover(user.tenantId!, dto);
+  ): Promise<DiscoverCompetitorsJobStartedDto> {
+    return this.discoveryWorker.enqueue(user.tenantId!, dto).then((jobId) => ({
+      jobId,
+      status: 'processing' as const,
+    }));
+  }
+
+  @Get('discover/jobs/:jobId')
+  getDiscoverJob(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('jobId') jobId: string,
+  ): Promise<DiscoverCompetitorsJobStatusDto> {
+    return this.discoveryWorker.getStatus(jobId, user.tenantId!);
   }
 
   @Post('bulk')

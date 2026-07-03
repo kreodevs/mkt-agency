@@ -16,6 +16,18 @@ export interface DiscoverCompetitorsResponse {
   items: DiscoveredCompetitor[];
 }
 
+export interface DiscoverCompetitorsJobStarted {
+  jobId: string;
+  status: 'processing';
+}
+
+export interface DiscoverCompetitorsJobStatus {
+  jobId: string;
+  status: 'processing' | 'completed' | 'failed';
+  result?: DiscoverCompetitorsResponse;
+  error?: string;
+}
+
 export interface BulkCreateCompetitorsResponse {
   created: Competitor[];
   skipped: number;

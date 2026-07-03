@@ -9,5 +9,5 @@ Componentes para monitoreo de competencia.
 
 ## API relacionada
 
-- `POST /competitors/discover` — `{ scope, country?, city? }`; contexto desde onboarding + Brand Brief
+- `POST /competitors/discover` — encola job async; el frontend hace polling a `GET /competitors/discover/jobs/:jobId`
 - `POST /competitors/bulk` — `{ items: [{ name, website?, industry? }] }`

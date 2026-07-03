@@ -44,6 +44,18 @@ export class DiscoverCompetitorsResponseDto {
   items!: DiscoveredCompetitorDto[];
 }
 
+export class DiscoverCompetitorsJobStartedDto {
+  jobId!: string;
+  status!: 'processing';
+}
+
+export class DiscoverCompetitorsJobStatusDto {
+  jobId!: string;
+  status!: 'processing' | 'completed' | 'failed';
+  result?: DiscoverCompetitorsResponseDto;
+  error?: string;
+}
+
 export class BulkCreateCompetitorsResponseDto {
   created!: CompetitorResponseDto[];
   skipped!: number;

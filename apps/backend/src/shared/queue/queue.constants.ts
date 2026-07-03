@@ -7,6 +7,7 @@ export const QUEUE_AUDIT_RETENTION = 'audit-retention';
 export const QUEUE_SECURITY_ALERT = 'security-alert';
 export const QUEUE_BRAND_INTERVIEW = 'brand-interview';
 export const QUEUE_COMPETITOR_INTEL = 'competitor-intel';
+export const QUEUE_COMPETITOR_DISCOVERY = 'competitor-discovery';
 export const QUEUE_IMAGE_GENERATION = 'image-generation';
 export const QUEUE_AGENCY_WEEKLY_RUN = 'agency-weekly-run';
 export const QUEUE_APPROVAL_REMINDER = 'approval-reminder';
