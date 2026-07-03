@@ -292,6 +292,7 @@ export class CompetitorService {
         values,
         interview?.brandBrief ?? null,
       ),
+      productName: productContext?.name ?? null,
       brandBriefExcerpt,
       productKeywords: productContext?.keywords ?? [],
       productCategory: productContext?.category ?? null,

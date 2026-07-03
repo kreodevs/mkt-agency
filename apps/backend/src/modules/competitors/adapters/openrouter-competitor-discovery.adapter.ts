@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LlmClient } from '../../../shared/ai/llm.client';
 import { TavilySearchService } from '../../../shared/search/tavily.client';
-import { isRetailBusiness } from '../domain/competitor-discovery-context.util';
+import { isRetailBusiness, extractWebSearchCandidates } from '../domain/competitor-discovery-context.util';
 import {
   CompetitorDiscoveryAdapterPort,
   CompetitorDiscoveryContext,
@@ -43,49 +43,55 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
 
     let webSearchEvidence: Array<{
       query: string;
+      answer?: string | null;
       hits: Array<{ title: string; url: string; snippet: string }>;
     }> = [];
+    let tavilySynthesis: string | null = null;
 
     if (await this.tavily.isConfigured()) {
       try {
         const evidence = await this.tavily.gatherCompetitorEvidence(context);
         webSearchEvidence = evidence.map((entry) => ({
           query: entry.query,
-          hits: entry.results.slice(0, 4).map((hit) => ({
+          answer: entry.answer ?? null,
+          hits: entry.results.slice(0, 6).map((hit) => ({
             title: hit.title,
             url: hit.url,
-            snippet: hit.content.slice(0, 200),
+            snippet: hit.content.slice(0, 280),
           })),
         }));
+        tavilySynthesis =
+          evidence.find((entry) => entry.answer?.trim())?.answer?.trim() ?? null;
       } catch (error) {
         this.logger.warn('Tavily enrichment failed, continuing with LLM-only discovery', error);
       }
     }
 
     const usingWebSearch = webSearchEvidence.length > 0;
+    const candidateNamesFromWeb = extractWebSearchCandidates(webSearchEvidence);
 
     const systemPrompt =
       'Eres un analista senior de inteligencia competitiva para PYMEs en Latinoamérica. ' +
       'Tu trabajo es identificar empresas REALES que compiten DIRECTAMENTE con el producto descrito. ' +
       (usingWebSearch
-        ? 'Usa webSearchEvidence como fuente principal: extrae competidores de empresas mencionadas en los resultados. '
+        ? 'Combina webSearchEvidence, candidateNamesFromWeb y tavilySynthesis con tu conocimiento del sector para maximizar recall sin inventar placeholders. '
         : 'Usa productKeywords y searchQueries como consultas de búsqueda reales. ') +
       'No confundas alcance geográfico con sector: un país no implica supermercados ni retail masivo salvo que la empresa sea retail. ' +
       'No inventes marcas genéricas ni placeholders. Si no conoces el dominio con certeza, usa null en website. ' +
       'Responde SOLO con JSON válido en español, sin markdown.';
 
     const userPrompt = JSON.stringify({
-      task: `Identifica entre 6 y 8 competidores directos reales para el alcance: ${scopeLabel}.`,
+      task: `Identifica entre 8 y 12 competidores directos reales para el alcance: ${scopeLabel}.`,
       methodology: [
         usingWebSearch
-          ? '1. Analiza webSearchEvidence y extrae empresas que venden productos/servicios comparables.'
+          ? '1. Extrae empresas de webSearchEvidence, candidateNamesFromWeb y tavilySynthesis.'
           : '1. Interpreta productKeywords y searchQueries como consultas de búsqueda reales.',
         '2. Determina la categoría exacta del producto (qué vende, a quién, en qué rango de precio).',
-        '3. Lista solo empresas que un cliente evaluaría como alternativa directa en una comparativa de compra.',
+        '3. Lista empresas que un cliente evaluaría como alternativa directa en una comparativa de compra.',
         '4. Prioriza players activos en el alcance geográfico sin cambiar de vertical.',
         '5. Excluye marketplaces genéricos, retailers masivos y la propia empresa.',
         usingWebSearch
-          ? '6. Basa los nombres en webSearchEvidence; no inventes empresas ausentes de la evidencia.'
+          ? '6. Si la evidencia web es escasa, complementa con players reales del rubro en la geografía indicada (confidence=medium).'
           : '6. Marca confidence=low si el nombre es incierto; preferible omitir empresas dudosas.',
       ],
       companyProfile: {
@@ -97,6 +103,7 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
         brandVoice: context.brandVoice,
         objectives: context.objectives ?? [],
         productOrServiceSummary: context.productSummary,
+        productName: context.productName,
         brandBriefExcerpt: context.brandBriefExcerpt,
       },
       productSignals: {
@@ -107,6 +114,8 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
         searchQueries: context.searchQueries ?? [],
       },
       webSearchEvidence,
+      candidateNamesFromWeb,
+      tavilySynthesis,
       strictRules: [
         'Competidor = alternativa real que un cliente consideraría en lugar de este producto.',
         'Misma categoría de producto/servicio, problema resuelto y audiencia similar.',
@@ -117,6 +126,7 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
         'website: dominio verificable sin https, o null si no estás seguro.',
         'rationale: explica el solapamiento concreto de producto/servicio en 1-2 frases.',
         'Incluye mix de líderes del sector y alternativas nicho/regional cuando aplique.',
+        'Prioriza recall útil: es mejor listar un competidor regional con confidence=medium que omitirlo.',
       ],
       excludeNames,
       outputFormat: {
@@ -134,8 +144,8 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
 
     const parsed = await this.llm.chatJson<DiscoveryJsonResponse>(systemPrompt, userPrompt, {
       taskType: 'competitor_discovery',
-      temperature: usingWebSearch ? 0.2 : 0.25,
-      maxTokens: 2500,
+      temperature: usingWebSearch ? 0.25 : 0.3,
+      maxTokens: 4000,
     });
 
     return (parsed.competitors ?? [])

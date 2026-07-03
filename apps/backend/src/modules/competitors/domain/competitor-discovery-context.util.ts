@@ -156,14 +156,85 @@ export function inferDiscoveryScope(
 }
 
 export function buildDiscoverySearchQueries(context: CompetitorDiscoveryContext): string[] {
+  const intentQueries = buildCompetitorIntentQueries(context);
+  const keywordQueries = buildKeywordDiscoveryQueries(context);
+  return [...new Set([...intentQueries, ...keywordQueries].map((query) => query.trim()).filter(Boolean))].slice(
+    0,
+    12,
+  );
+}
+
+function discoveryGeoLabel(context: CompetitorDiscoveryContext): string {
+  if (context.scope === 'global') {
+    return '';
+  }
+  if (context.scope === 'country') {
+    return (context.country ?? '').trim();
+  }
+  return `${context.city ?? ''} ${context.country ?? ''}`.trim();
+}
+
+function discoveryCorpus(context: CompetitorDiscoveryContext): string {
+  return [
+    context.productName,
+    context.productSummary,
+    context.brandBriefExcerpt,
+    context.productCategory,
+    context.targetAudience,
+    context.brandVoice,
+    ...(context.productKeywords ?? []),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+export function buildCompetitorIntentQueries(context: CompetitorDiscoveryContext): string[] {
+  const queries: string[] = [];
+  const geo = discoveryGeoLabel(context);
+  const keywords = (context.productKeywords ?? []).filter(Boolean).slice(0, 6);
+  const corpus = discoveryCorpus(context);
+  const primaryPhrase = keywords.slice(0, 2).join(' ').trim();
+
+  const isEventsVertical =
+    /bodas?|wedding|xv a[nñ]os|eventos?|invitaci[oó]n|fiesta|planner|wedding planner|mesas|rsvp|galer[ií]a|álbum|album|fotos invitados|\bqr\b|proyecci[oó]n en vivo|live photo/i.test(
+      corpus,
+    );
+
+  if (isEventsVertical) {
+    if (geo) {
+      queries.push(`plataformas invitación digital bodas ${geo}`);
+      queries.push(`álbum colaborativo fotos invitados evento ${geo}`);
+      queries.push(`software eventos digitales planners ${geo} competidores`);
+      queries.push(`apps invitación digital RSVP bodas ${geo}`);
+    } else {
+      queries.push('plataformas invitación digital bodas competidores');
+      queries.push('álbum colaborativo fotos invitados evento software');
+    }
+  }
+
+  const isSaaSVertical = /saas|software|plataforma|app\b|digital|suscripci[oó]n/i.test(corpus);
+  if (isSaaSVertical && primaryPhrase) {
+    queries.push(geo ? `alternativas ${primaryPhrase} ${geo}` : `alternativas ${primaryPhrase}`);
+    queries.push(geo ? `mejores ${primaryPhrase} ${geo} comparativa` : `mejores ${primaryPhrase}`);
+  }
+
+  if (context.productCategory?.trim()) {
+    const category = context.productCategory.trim();
+    queries.push(geo ? `${category} empresas ${geo}` : `empresas ${category} competidores`);
+  }
+
+  if (context.productName?.trim() && geo) {
+    queries.push(`competidores ${context.productName.trim()} ${geo}`);
+  }
+
+  return queries;
+}
+
+function buildKeywordDiscoveryQueries(context: CompetitorDiscoveryContext): string[] {
   const queries: string[] = [];
   const keywords = (context.productKeywords ?? []).filter(Boolean).slice(0, 8);
-  const geo =
-    context.scope === 'global'
-      ? ''
-      : context.scope === 'country'
-        ? (context.country ?? '')
-        : `${context.city ?? ''} ${context.country ?? ''}`.trim();
+  const geo = discoveryGeoLabel(context);
 
   for (const keyword of keywords.slice(0, 5)) {
     queries.push(geo ? `empresas ${keyword} ${geo}` : `alternativas a ${keyword}`);
@@ -178,14 +249,6 @@ export function buildDiscoverySearchQueries(context: CompetitorDiscoveryContext)
     );
   }
 
-  if (context.productCategory?.trim()) {
-    queries.push(
-      geo
-        ? `${context.productCategory.trim()} ${geo}`
-        : `mejores ${context.productCategory.trim()}`,
-    );
-  }
-
   if (context.productSummary?.trim()) {
     const summaryWords = context.productSummary
       .split(/\s+/)
@@ -197,7 +260,49 @@ export function buildDiscoverySearchQueries(context: CompetitorDiscoveryContext)
     }
   }
 
-  return [...new Set(queries.map((query) => query.trim()).filter(Boolean))].slice(0, 10);
+  return queries;
+}
+
+export function extractWebSearchCandidates(
+  evidence: Array<{
+    query: string;
+    hits: Array<{ title: string; url: string; snippet: string }>;
+  }>,
+): string[] {
+  const candidates = new Set<string>();
+  const skipHosts = new Set([
+    'facebook',
+    'instagram',
+    'linkedin',
+    'twitter',
+    'youtube',
+    'tiktok',
+    'google',
+    'wikipedia',
+    'mercadolibre',
+    'amazon',
+  ]);
+
+  for (const entry of evidence) {
+    for (const hit of entry.hits) {
+      const titleLead = hit.title.split(/\s*[|\-–—:·]\s*/)[0]?.trim();
+      if (titleLead && titleLead.length >= 3 && titleLead.length <= 80) {
+        candidates.add(titleLead);
+      }
+
+      try {
+        const host = new URL(hit.url).hostname.replace(/^www\./, '').toLowerCase();
+        const brand = host.split('.')[0];
+        if (brand && brand.length >= 4 && !skipHosts.has(brand)) {
+          candidates.add(brand);
+        }
+      } catch {
+        // ignore malformed URLs
+      }
+    }
+  }
+
+  return [...candidates].slice(0, 40);
 }
 
 export function hasMinimalDiscoveryContext(
@@ -288,7 +393,7 @@ export function filterIrrelevantCompetitors(
       seenDomains.add(domain);
     }
 
-    if (!item.rationale?.trim() || item.rationale.trim().length < 15) {
+    if (!item.rationale?.trim() || item.rationale.trim().length < 8) {
       return false;
     }
 

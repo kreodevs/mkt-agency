@@ -14,6 +14,7 @@ export interface CompetitorDiscoveryContext {
   brandVoice?: string | null;
   objectives?: string[];
   productSummary?: string | null;
+  productName?: string | null;
   brandBriefExcerpt?: string | null;
   productKeywords?: string[];
   productCategory?: string | null;

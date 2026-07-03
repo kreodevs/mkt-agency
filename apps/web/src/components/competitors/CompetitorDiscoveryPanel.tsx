@@ -47,7 +47,7 @@ interface CompetitorDiscoveryPanelProps {
 export function CompetitorDiscoveryPanel({
   onRegistered,
   title = 'Buscar competidores con IA',
-  subtitle = 'Usa tags SEO, propuesta de valor y Brand Brief para sugerir competidores directos del mismo rubro.',
+  subtitle = 'Selecciona el producto y país (ej. México). Usa tags SEO del onboarding, Tavily y IA para sugerir competidores del mismo rubro.',
   defaultProductId,
 }: CompetitorDiscoveryPanelProps) {
   const [scope, setScope] = useState<CompetitorDiscoveryScope>('country');

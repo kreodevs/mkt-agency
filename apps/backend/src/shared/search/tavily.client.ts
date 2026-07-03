@@ -12,6 +12,7 @@ export interface TavilySearchHit {
 export interface TavilyQueryEvidence {
   query: string;
   results: TavilySearchHit[];
+  answer?: string | null;
 }
 
 interface TavilyApiResult {
@@ -27,10 +28,10 @@ interface TavilyApiResponse {
   answer?: string;
 }
 
-const DEFAULT_QUERY_TIMEOUT_MS = 12_000;
-const DEFAULT_GATHER_BUDGET_MS = 22_000;
-const MAX_DISCOVERY_QUERIES = 2;
-const MAX_RESULTS_PER_QUERY = 4;
+const DEFAULT_QUERY_TIMEOUT_MS = 15_000;
+const DEFAULT_GATHER_BUDGET_MS = 45_000;
+const MAX_DISCOVERY_QUERIES = 5;
+const MAX_RESULTS_PER_QUERY = 6;
 
 @Injectable()
 export class TavilySearchService {
@@ -50,6 +51,7 @@ export class TavilySearchService {
       country?: string | null;
       timeoutMs?: number;
       searchDepth?: 'basic' | 'advanced' | 'fast';
+      includeAnswer?: boolean;
     },
   ): Promise<TavilyQueryEvidence> {
     const apiKey = await this.integrations.getActiveApiKey('tavily');
@@ -71,7 +73,7 @@ export class TavilySearchService {
         topic: 'general',
         search_depth: options?.searchDepth ?? 'basic',
         max_results: options?.maxResults ?? MAX_RESULTS_PER_QUERY,
-        include_answer: false,
+        include_answer: options?.includeAnswer ?? false,
         ...(options?.country ? { country: options.country } : {}),
       }),
       signal: AbortSignal.timeout(options?.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS),
@@ -89,6 +91,7 @@ export class TavilySearchService {
     const parsed = (await response.json()) as TavilyApiResponse;
     return {
       query,
+      answer: parsed.answer?.trim() || null,
       results: (parsed.results ?? [])
         .filter((item) => item.title?.trim() && item.url?.trim())
         .map((item) => ({
@@ -112,7 +115,7 @@ export class TavilySearchService {
     const deadline = Date.now() + DEFAULT_GATHER_BUDGET_MS;
 
     const settled = await Promise.allSettled(
-      queries.map(async (query) => {
+      queries.map(async (query, index) => {
         const remaining = deadline - Date.now();
         if (remaining <= 500) {
           return null;
@@ -122,7 +125,8 @@ export class TavilySearchService {
           maxResults: MAX_RESULTS_PER_QUERY,
           country,
           timeoutMs: Math.min(DEFAULT_QUERY_TIMEOUT_MS, remaining),
-          searchDepth: 'basic',
+          searchDepth: index < 2 ? 'advanced' : 'basic',
+          includeAnswer: index === 0,
         });
       }),
     );
