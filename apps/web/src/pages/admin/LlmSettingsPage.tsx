@@ -83,17 +83,25 @@ export default function LlmSettingsPage() {
             return current;
           }
 
+          if (current.trim()) {
+            return current;
+          }
+
           const preferred =
             editing.model && editing.providerId === providerId ? editing.model : null;
           if (preferred) {
             return preferred;
           }
 
-          return current || models[0]?.id || '';
+          return models[0]?.id || '';
         });
 
         setFallbackModel((current) => {
           if (current && models.some((item) => item.id === current)) {
+            return current;
+          }
+
+          if (current.trim()) {
             return current;
           }
 

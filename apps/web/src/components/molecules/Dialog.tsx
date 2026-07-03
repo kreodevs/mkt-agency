@@ -36,6 +36,8 @@ export const Dialog = forwardRef<HTMLDivElement, DialogInputProps>(
       visible,
       onHide,
       className = '',
+      onPointerDownOutside,
+      onFocusOutside,
       ...props
     },
     ref,
@@ -51,6 +53,26 @@ export const Dialog = forwardRef<HTMLDivElement, DialogInputProps>(
         <DialogPrimitive.Content
           ref={ref}
           className={`fixed left-1/2 top-1/2 z-[var(--z-modal)] max-h-[90vh] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto ${sizeStyles[size]} rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--card)] shadow-xl ${className}`}
+          onPointerDownOutside={(event) => {
+            onPointerDownOutside?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
+            const target = event.target as HTMLElement;
+            if (target.closest('[data-llm-model-listbox]')) {
+              event.preventDefault();
+            }
+          }}
+          onFocusOutside={(event) => {
+            onFocusOutside?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
+            const target = event.target as HTMLElement;
+            if (target.closest('[data-llm-model-listbox]')) {
+              event.preventDefault();
+            }
+          }}
           {...props}
         >
           {header ? (

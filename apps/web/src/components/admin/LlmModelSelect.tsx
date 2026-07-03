@@ -204,6 +204,7 @@ export function LlmModelSelect({
           <ul
             id={listboxId}
             role="listbox"
+            data-llm-model-listbox
             style={menuStyle}
             className="overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 text-[var(--foreground)]"
           >
@@ -212,8 +213,11 @@ export function LlmModelSelect({
                 <button
                   type="button"
                   className={optionButtonClass}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => handleSelect('')}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleSelect('');
+                  }}
                 >
                   {emptyLabel}
                 </button>
@@ -235,8 +239,11 @@ export function LlmModelSelect({
                       optionButtonClass,
                       item.id === value && 'bg-[var(--secondary)] font-medium',
                     )}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => handleSelect(item.id)}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleSelect(item.id);
+                    }}
                   >
                     <span className="block truncate">{formatModelOptionLabel(item)}</span>
                     {modelSupportsImages(item) && taskType === 'image_generation' ? (
@@ -326,6 +333,10 @@ export function LlmModelSelect({
             Reintentar
           </Button>
         </div>
+      ) : selected && selected.source === 'video' ? (
+        <p className="text-xs text-[var(--foreground-muted)]">
+          Modelo Video API · slug: <code>{selected.id}</code>
+        </p>
       ) : selected && selected.source === 'image' ? (
         <p className="text-xs text-[var(--foreground-muted)]">
           Modelo Image API · slug: <code>{selected.id}</code>
@@ -346,7 +357,8 @@ export function LlmModelSelect({
       ) : null}
 
       <p className="text-xs text-[var(--foreground-muted)]">
-        Catálogo completo de OpenRouter (chat + Image API). Puedes escribir cualquier slug manualmente.
+        Catálogo OpenRouter (chat + Image API + Video API). Busca en la lista o escribe el slug y
+        pulsa Enter.
       </p>
     </div>
   );
