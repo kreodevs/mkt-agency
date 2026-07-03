@@ -5,6 +5,6 @@ import { TavilySearchService } from './tavily.client';
 @Module({
   imports: [PlatformModule],
   providers: [TavilySearchService],
-  exports: [TavilySearchService],
+  exports: [TavilySearchService, PlatformModule],
 })
 export class SearchModule {}
