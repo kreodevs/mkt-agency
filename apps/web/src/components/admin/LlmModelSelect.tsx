@@ -56,6 +56,7 @@ export function LlmModelSelect({
 }: LlmModelSelectProps) {
   const listboxId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
@@ -156,17 +157,16 @@ export function LlmModelSelect({
       if (inputRef.current?.contains(target)) {
         return;
       }
-      const menu = document.getElementById(listboxId);
-      if (menu?.contains(target)) {
+      if (menuRef.current?.contains(target)) {
         return;
       }
       setOpen(false);
       setQuery('');
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [listboxId, open]);
+    document.addEventListener('mousedown', handlePointerDown, true);
+    return () => document.removeEventListener('mousedown', handlePointerDown, true);
+  }, [open]);
 
   const commitCustomValue = () => {
     const next = query.trim();
@@ -188,6 +188,7 @@ export function LlmModelSelect({
     onChange(modelId);
     setOpen(false);
     setQuery('');
+    requestAnimationFrame(() => inputRef.current?.blur());
   };
 
   const showCustomHint =
@@ -202,11 +203,12 @@ export function LlmModelSelect({
     open && !disabled && typeof document !== 'undefined'
       ? createPortal(
           <ul
+            ref={menuRef}
             id={listboxId}
             role="listbox"
             data-llm-model-listbox
             style={menuStyle}
-            className="overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 text-[var(--foreground)]"
+            className="overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 text-[var(--foreground)] shadow-lg"
           >
             {allowEmpty ? (
               <li>

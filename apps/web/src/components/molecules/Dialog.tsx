@@ -38,6 +38,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogInputProps>(
       className = '',
       onPointerDownOutside,
       onFocusOutside,
+      onInteractOutside,
       ...props
     },
     ref,
@@ -65,6 +66,16 @@ export const Dialog = forwardRef<HTMLDivElement, DialogInputProps>(
           }}
           onFocusOutside={(event) => {
             onFocusOutside?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
+            const target = event.target as HTMLElement;
+            if (target.closest('[data-llm-model-listbox]')) {
+              event.preventDefault();
+            }
+          }}
+          onInteractOutside={(event) => {
+            onInteractOutside?.(event);
             if (event.defaultPrevented) {
               return;
             }

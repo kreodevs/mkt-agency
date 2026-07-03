@@ -14,7 +14,6 @@ import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
 import { suggestPaidFallbackModelId } from '@/lib/llm-models';
 import {
-  listLlmProviderModels,
   listLlmProviders,
   listLlmTasks,
   updateLlmTask,
@@ -53,77 +52,22 @@ export default function LlmSettingsPage() {
       return;
     }
 
-    setProviderId(editing.providerId ?? configuredProviders[0]?.id ?? '');
+    setProviderId(editing.providerId ?? '');
     setModel(editing.model);
     setFallbackModel(editing.fallbackModel ?? '');
     setTemperature(String(editing.temperature));
     setEnabled(editing.enabled);
-  }, [editing, configuredProviders]);
+  }, [editing]);
 
   useEffect(() => {
-    if (!editing || !providerId) {
+    if (!editing || editing.providerId) {
       return;
     }
-
-    let cancelled = false;
-
-    void listLlmProviderModels(providerId)
-      .then((response) => {
-        if (cancelled) {
-          return;
-        }
-
-        const models = response.models;
-        if (!models.length) {
-          return;
-        }
-
-        setModel((current) => {
-          if (current && models.some((item) => item.id === current)) {
-            return current;
-          }
-
-          if (current.trim()) {
-            return current;
-          }
-
-          const preferred =
-            editing.model && editing.providerId === providerId ? editing.model : null;
-          if (preferred) {
-            return preferred;
-          }
-
-          return models[0]?.id || '';
-        });
-
-        setFallbackModel((current) => {
-          if (current && models.some((item) => item.id === current)) {
-            return current;
-          }
-
-          if (current.trim()) {
-            return current;
-          }
-
-          const preferred =
-            editing.fallbackModel && editing.providerId === providerId
-              ? editing.fallbackModel
-              : null;
-          if (preferred) {
-            return preferred;
-          }
-
-          return current;
-        });
-      })
-      .catch(() => {
-        /* LlmModelSelect muestra error y reintento */
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [editing, providerId]);
+    if (!configuredProviders.length) {
+      return;
+    }
+    setProviderId((current) => current || configuredProviders[0]?.id || '');
+  }, [editing, configuredProviders]);
 
   const suggestedFallback = useMemo(() => suggestPaidFallbackModelId(model), [model]);
 
