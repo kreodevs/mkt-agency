@@ -21,6 +21,13 @@ import { parseImageGenerationMetadata, isVideoGeneration } from '@/lib/image-gen
 import { InputText } from '@/components/atoms/InputText';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import {
+  DEFAULT_IMAGE_DESTINATION_ID,
+  formatDestinationOptionLabel,
+  getImageDestinationFormat,
+  destinationPlatformLabel,
+  IMAGE_DESTINATION_GROUPS,
+} from '@/lib/image-destination-formats';
 
 const STYLE_OPTIONS = [
   { label: 'Sin estilo', value: '' },
@@ -30,16 +37,11 @@ const STYLE_OPTIONS = [
   { label: 'Ilustración', value: 'flat illustration vector' },
 ];
 
-const SIZE_OPTIONS = [
-  { label: 'Cuadrado (1024×1024)', value: '1024x1024' },
-  { label: 'Horizontal (1792×1024)', value: '1792x1024' },
-  { label: 'Vertical (1024×1792)', value: '1024x1792' },
-];
-
 export default function ImageGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('');
-  const [size, setSize] = useState('1024x1024');
+  const [destinationId, setDestinationId] = useState(DEFAULT_IMAGE_DESTINATION_ID);
+  const destination = getImageDestinationFormat(destinationId);
   const resolvedProductId = useResolvedProductId();
   const navigate = useNavigate();
 
@@ -57,7 +59,7 @@ export default function ImageGeneratorPage() {
       generateImage({
         prompt: prompt.trim(),
         style: style || undefined,
-        size,
+        size: destination.size,
         productId: resolvedProductId,
       }),
     onSuccess: (result) => {
@@ -307,16 +309,29 @@ export default function ImageGeneratorPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Tamaño</label>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+                  Destino
+                </label>
                 <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
+                  value={destinationId}
+                  onChange={(e) => setDestinationId(e.target.value)}
                   className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
                 >
-                  {SIZE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {IMAGE_DESTINATION_GROUPS.map((group) => (
+                    <optgroup key={group.platform} label={group.label}>
+                      {group.formats.map((format) => (
+                        <option key={format.id} value={format.id}>
+                          {formatDestinationOptionLabel(format)}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+                  {destination.platform === 'general'
+                    ? 'Formato compatible con varias redes del Community Manager.'
+                    : `Optimizado para publicar en ${destinationPlatformLabel(destination.platform)}.`}
+                </p>
               </div>
             </div>
             <Button
