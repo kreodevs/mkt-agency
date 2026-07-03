@@ -89,7 +89,7 @@ export class ImageGenerationController {
 
   @Post(':id/retry')
   async retryGeneration(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.imageGeneration.retry(user.tenantId!, user.id, id);
+    return this.imageGeneration.retry(user.tenantId!, user.id, id, { background: true });
   }
 
   @Post(':id/regenerate')

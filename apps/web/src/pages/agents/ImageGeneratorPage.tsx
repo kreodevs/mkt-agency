@@ -46,6 +46,8 @@ export default function ImageGeneratorPage() {
   const historyQuery = useQuery({
     queryKey: ['image-generations'],
     queryFn: listImageGenerations,
+    refetchInterval: (query) =>
+      (query.state.data ?? []).some((item) => item.status === 'processing') ? 3000 : false,
   });
 
   const history = historyQuery.data ?? [];
@@ -93,6 +95,8 @@ export default function ImageGeneratorPage() {
     onSuccess: (result) => {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al reintentar');
+      } else if (result.status === 'processing') {
+        toast.info('Generando en segundo plano…');
       } else {
         toast.success('Imagen generada');
       }
@@ -106,6 +110,10 @@ export default function ImageGeneratorPage() {
     onSuccess: (result) => {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al regenerar');
+      } else if (result.status === 'processing') {
+        const meta = parseImageGenerationMetadata(result.metadata);
+        const count = meta ? meta.frameCount ?? meta.frames.length : 0;
+        toast.info(count > 1 ? `Regenerando ${count} frames en segundo plano…` : 'Regenerando…');
       } else {
         const meta = parseImageGenerationMetadata(result.metadata);
         toast.success(

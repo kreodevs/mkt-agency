@@ -645,7 +645,7 @@ export class ImageGenerationService {
     }
 
     await this.refreshBrandedPrompt(tenantId, record);
-    return this.retry(tenantId, userId, id);
+    return this.retry(tenantId, userId, id, { background: true });
   }
 
   private async refreshBrandedPrompt(

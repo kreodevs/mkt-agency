@@ -32,6 +32,8 @@ export default function ImageGeneratorDetailPage() {
     queryKey: ['image-generation', id],
     queryFn: () => getImageGeneration(id!),
     enabled: Boolean(id),
+    refetchInterval: (query) =>
+      query.state.data?.status === 'processing' ? 3000 : false,
   });
 
   const generation = generationQuery.data;
@@ -51,6 +53,8 @@ export default function ImageGeneratorDetailPage() {
     onSuccess: (result) => {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al reintentar');
+      } else if (result.status === 'processing') {
+        toast.info('Generando en segundo plano…');
       } else {
         toast.success(
           frameCount > 1
@@ -71,6 +75,12 @@ export default function ImageGeneratorDetailPage() {
     onSuccess: (result) => {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al regenerar');
+      } else if (result.status === 'processing') {
+        toast.info(
+          frameCount > 1
+            ? `Regenerando ${frameCount} frames en segundo plano…`
+            : 'Regenerando en segundo plano…',
+        );
       } else {
         const meta = parseImageGenerationMetadata(result.metadata);
         const count = meta ? meta.frameCount ?? meta.frames.length : 0;
@@ -158,6 +168,17 @@ export default function ImageGeneratorDetailPage() {
             <p className="mt-3 text-sm text-destructive">{generation.errorMessage}</p>
           )}
         </Card>
+
+        {generation.status === 'processing' ? (
+          <Card title="Generando">
+            <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {frameCount > 1
+                ? `Generando ${frameCount} frames… puede tardar unos minutos.`
+                : 'Generando imagen con IA…'}
+            </div>
+          </Card>
+        ) : null}
 
         {generation.status === 'completed' && frames.length > 0 ? (
           <Card
