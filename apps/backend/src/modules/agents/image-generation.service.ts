@@ -21,6 +21,7 @@ import {
 import { AgentImageGenerationEntity } from './domain/agent-image-generation.entity';
 import { buildBrandedImagePrompt } from './domain/image-branding.util';
 import {
+  buildContentImagePrompt,
   buildFramePrompt,
   detectGenerationMediaType,
   detectReelFrameCount,
@@ -252,8 +253,8 @@ export class ImageGenerationService {
         ? await this.contentService.findOne(tenantId, options.contentId)
         : null;
       
-      const videoPrompt = content
-        ? buildContentImagePrompt(content.title, content.body)
+      const videoPrompt = content?.currentVersion
+        ? buildContentImagePrompt(content.title, content.currentVersion.body)
         : prompt;
       
       const duration = resolveVideoDuration(prompt);
