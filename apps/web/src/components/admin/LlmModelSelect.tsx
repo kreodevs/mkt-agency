@@ -8,7 +8,6 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { Button } from '@/components/atoms/Button';
 import {
   filterLlmModels,
@@ -55,6 +54,7 @@ export function LlmModelSelect({
   taskType,
 }: LlmModelSelectProps) {
   const listboxId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
@@ -129,6 +129,7 @@ export function LlmModelSelect({
       width,
       maxHeight: Math.max(maxHeight, 120),
       zIndex: DROPDOWN_Z_INDEX,
+      pointerEvents: 'auto',
     });
   };
 
@@ -154,18 +155,15 @@ export function LlmModelSelect({
 
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (inputRef.current?.contains(target)) {
-        return;
-      }
-      if (menuRef.current?.contains(target)) {
+      if (rootRef.current?.contains(target)) {
         return;
       }
       setOpen(false);
       setQuery('');
     };
 
-    document.addEventListener('mousedown', handlePointerDown, true);
-    return () => document.removeEventListener('mousedown', handlePointerDown, true);
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [open]);
 
   const commitCustomValue = () => {
@@ -199,83 +197,8 @@ export function LlmModelSelect({
   const disabled =
     !providerId || modelsQuery.isLoading || (!allowEmpty && options.length === 0);
 
-  const dropdownMenu =
-    open && !disabled && typeof document !== 'undefined'
-      ? createPortal(
-          <ul
-            ref={menuRef}
-            id={listboxId}
-            role="listbox"
-            data-llm-model-listbox
-            style={menuStyle}
-            className="overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 text-[var(--foreground)] shadow-lg"
-          >
-            {allowEmpty ? (
-              <li>
-                <button
-                  type="button"
-                  className={optionButtonClass}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleSelect('');
-                  }}
-                >
-                  {emptyLabel}
-                </button>
-              </li>
-            ) : null}
-
-            {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-[var(--foreground-muted)]">
-                Sin coincidencias en el catálogo
-              </li>
-            ) : (
-              filtered.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={item.id === value}
-                    className={cn(
-                      optionButtonClass,
-                      item.id === value && 'bg-[var(--secondary)] font-medium',
-                    )}
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      handleSelect(item.id);
-                    }}
-                  >
-                    <span className="block truncate">{formatModelOptionLabel(item)}</span>
-                    {modelSupportsImages(item) && taskType === 'image_generation' ? (
-                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
-                        Recomendado para Image Generator
-                      </span>
-                    ) : null}
-                    {modelSupportsVideo(item) && taskType === 'video_generation' ? (
-                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
-                        Recomendado para video / reel / GIF
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))
-            )}
-
-            {showCustomHint ? (
-              <li className="border-t border-[var(--border)] bg-[var(--card)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
-                Pulsa Enter para usar{' '}
-                <code className="text-[var(--foreground)]">{query.trim()}</code>
-              </li>
-            ) : null}
-          </ul>,
-          document.body,
-        )
-      : null;
-
   return (
-    <div className="flex flex-col gap-[var(--spacing-xs)]">
+    <div ref={rootRef} className="flex flex-col gap-[var(--spacing-xs)]">
       <label htmlFor={selectId} className="text-sm font-medium">
         {label}
       </label>
@@ -323,7 +246,71 @@ export function LlmModelSelect({
           aria-hidden
           className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
         />
-        {dropdownMenu}
+
+        {open && !disabled ? (
+          <ul
+            ref={menuRef}
+            id={listboxId}
+            role="listbox"
+            data-llm-model-listbox
+            style={menuStyle}
+            className="pointer-events-auto overflow-y-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] py-1 text-[var(--foreground)] shadow-lg"
+          >
+            {allowEmpty ? (
+              <li>
+                <button
+                  type="button"
+                  className={optionButtonClass}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSelect('')}
+                >
+                  {emptyLabel}
+                </button>
+              </li>
+            ) : null}
+
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-[var(--foreground-muted)]">
+                Sin coincidencias en el catálogo
+              </li>
+            ) : (
+              filtered.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={item.id === value}
+                    className={cn(
+                      optionButtonClass,
+                      item.id === value && 'bg-[var(--secondary)] font-medium',
+                    )}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handleSelect(item.id)}
+                  >
+                    <span className="block truncate">{formatModelOptionLabel(item)}</span>
+                    {modelSupportsImages(item) && taskType === 'image_generation' ? (
+                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
+                        Recomendado para Image Generator
+                      </span>
+                    ) : null}
+                    {modelSupportsVideo(item) && taskType === 'video_generation' ? (
+                      <span className="mt-0.5 block text-[10px] text-[var(--primary)]">
+                        Recomendado para video / reel / GIF
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))
+            )}
+
+            {showCustomHint ? (
+              <li className="border-t border-[var(--border)] bg-[var(--card)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
+                Pulsa Enter para usar{' '}
+                <code className="text-[var(--foreground)]">{query.trim()}</code>
+              </li>
+            ) : null}
+          </ul>
+        ) : null}
       </div>
 
       {modelsQuery.isError ? (
