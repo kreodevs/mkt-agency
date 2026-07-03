@@ -3,11 +3,13 @@ import { ChevronDown, Search } from 'lucide-react';
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/atoms/Button';
 import {
   filterLlmModels,
@@ -20,8 +22,6 @@ import {
 } from '@/lib/llm-models';
 import { cn } from '@/lib/utils';
 import { listLlmProviderModels } from '@/services/superadmin';
-
-const DROPDOWN_Z_INDEX = 1060;
 
 const inputClass =
   'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 pr-10 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60';
@@ -59,7 +59,7 @@ export function LlmModelSelect({
   const menuRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({ visibility: 'hidden' });
 
   const modelsQuery = useQuery({
     queryKey: ['llm-provider-models', providerId],
@@ -113,32 +113,55 @@ export function LlmModelSelect({
 
   const displayValue = open ? query : (selected ? formatModelOptionLabel(selected) : '');
 
+  const resolvePortalTarget = () => {
+    const input = inputRef.current;
+    if (!input) {
+      return null;
+    }
+    return (
+      (input.closest('[data-dialog-content]') as HTMLElement | null) ??
+      (input.closest('[role="dialog"]') as HTMLElement | null)
+    );
+  };
+
   const updateMenuPosition = () => {
-    if (!inputRef.current) {
+    const input = inputRef.current;
+    const dialog = resolvePortalTarget();
+    if (!input || !dialog) {
       return;
     }
 
-    const rect = inputRef.current.getBoundingClientRect();
-    const width = rect.width;
-    const maxHeight = Math.min(256, window.innerHeight - rect.bottom - 16);
+    const inputRect = input.getBoundingClientRect();
+    const dialogRect = dialog.getBoundingClientRect();
+    const width = inputRect.width;
+    const spaceBelow = dialogRect.bottom - inputRect.bottom - 12;
+    const maxHeight = Math.max(Math.min(256, spaceBelow), 120);
 
     setMenuStyle({
-      position: 'fixed',
-      top: rect.bottom + 4,
-      left: Math.min(Math.max(8, rect.left), window.innerWidth - width - 8),
+      position: 'absolute',
+      top: inputRect.bottom - dialogRect.top + 4,
+      left: inputRect.left - dialogRect.left,
       width,
-      maxHeight: Math.max(maxHeight, 120),
-      zIndex: DROPDOWN_Z_INDEX,
-      pointerEvents: 'auto',
+      maxHeight,
+      zIndex: 10,
+      visibility: 'visible',
     });
   };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuStyle({ visibility: 'hidden' });
+      return;
+    }
+
+    updateMenuPosition();
+  }, [open, query, filtered.length]);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    updateMenuPosition();
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
 
@@ -158,12 +181,18 @@ export function LlmModelSelect({
       if (rootRef.current?.contains(target)) {
         return;
       }
+      if (menuRef.current?.contains(target)) {
+        return;
+      }
       setOpen(false);
       setQuery('');
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
   }, [open]);
 
   const commitCustomValue = () => {
@@ -197,57 +226,11 @@ export function LlmModelSelect({
   const disabled =
     !providerId || modelsQuery.isLoading || (!allowEmpty && options.length === 0);
 
-  return (
-    <div ref={rootRef} className="flex flex-col gap-[var(--spacing-xs)]">
-      <label htmlFor={selectId} className="text-sm font-medium">
-        {label}
-      </label>
+  const portalTarget = open ? resolvePortalTarget() : null;
 
-      <div className="relative">
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
-        />
-        <input
-          ref={inputRef}
-          id={selectId}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listboxId}
-          aria-autocomplete="list"
-          className={`${inputClass} pl-9`}
-          value={displayValue}
-          placeholder={
-            modelsQuery.isLoading
-              ? 'Cargando catálogo…'
-              : 'Buscar o escribir slug del modelo…'
-          }
-          disabled={disabled}
-          onFocus={() => {
-            setOpen(true);
-            setQuery(value);
-          }}
-          onChange={(event) => {
-            setOpen(true);
-            setQuery(event.target.value);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              commitCustomValue();
-            }
-            if (event.key === 'Escape') {
-              setOpen(false);
-              setQuery('');
-            }
-          }}
-        />
-        <ChevronDown
-          aria-hidden
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
-        />
-
-        {open && !disabled ? (
+  const dropdownMenu =
+    open && !disabled && portalTarget
+      ? createPortal(
           <ul
             ref={menuRef}
             id={listboxId}
@@ -309,9 +292,62 @@ export function LlmModelSelect({
                 <code className="text-[var(--foreground)]">{query.trim()}</code>
               </li>
             ) : null}
-          </ul>
-        ) : null}
+          </ul>,
+          portalTarget,
+        )
+      : null;
+
+  return (
+    <div ref={rootRef} className="flex flex-col gap-[var(--spacing-xs)]">
+      <label htmlFor={selectId} className="text-sm font-medium">
+        {label}
+      </label>
+
+      <div className="relative">
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
+        />
+        <input
+          ref={inputRef}
+          id={selectId}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          className={`${inputClass} pl-9`}
+          value={displayValue}
+          placeholder={
+            modelsQuery.isLoading
+              ? 'Cargando catálogo…'
+              : 'Buscar o escribir slug del modelo…'
+          }
+          disabled={disabled}
+          onFocus={() => {
+            setOpen(true);
+            setQuery(value);
+          }}
+          onChange={(event) => {
+            setOpen(true);
+            setQuery(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              commitCustomValue();
+            }
+            if (event.key === 'Escape') {
+              setOpen(false);
+              setQuery('');
+            }
+          }}
+        />
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)]"
+        />
       </div>
+      {dropdownMenu}
 
       {modelsQuery.isError ? (
         <div className="flex flex-wrap items-center gap-2">

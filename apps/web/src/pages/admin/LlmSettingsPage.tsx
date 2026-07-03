@@ -150,6 +150,7 @@ export default function LlmSettingsPage() {
       <Dialog
         visible={!!editing}
         onHide={() => setEditing(null)}
+        size="lg"
         title={editing ? `Tarea: ${editing.label}` : 'Tarea LLM'}
         footer={
           <>
