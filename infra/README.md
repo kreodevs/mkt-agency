@@ -6,7 +6,7 @@
 | `docker-compose.dokploy.yml` | Producción en Dokploy (ver `infra/dokploy/README.md`) |
 | `Dockerfile.api` | Imagen NestJS (build multietapa) |
 | `Dockerfile.frontend` | Imagen nginx + assets Vite |
-| `infra/nginx/frontend.conf` | Proxy `/api` → servicio `api` |
+| `infra/nginx/frontend.conf` | Proxy `/api` → servicio `api`; timeouts extendidos (180s) en onboarding complete y descubrimiento de competidores |
 
 ## Arranque local
 

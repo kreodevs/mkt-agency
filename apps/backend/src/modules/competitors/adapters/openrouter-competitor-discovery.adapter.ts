@@ -51,10 +51,10 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
         const evidence = await this.tavily.gatherCompetitorEvidence(context);
         webSearchEvidence = evidence.map((entry) => ({
           query: entry.query,
-          hits: entry.results.map((hit) => ({
+          hits: entry.results.slice(0, 4).map((hit) => ({
             title: hit.title,
             url: hit.url,
-            snippet: hit.content.slice(0, 320),
+            snippet: hit.content.slice(0, 200),
           })),
         }));
       } catch (error) {
@@ -75,7 +75,7 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
       'Responde SOLO con JSON válido en español, sin markdown.';
 
     const userPrompt = JSON.stringify({
-      task: `Identifica entre 8 y 12 competidores directos reales para el alcance: ${scopeLabel}.`,
+      task: `Identifica entre 6 y 8 competidores directos reales para el alcance: ${scopeLabel}.`,
       methodology: [
         usingWebSearch
           ? '1. Analiza webSearchEvidence y extrae empresas que venden productos/servicios comparables.'
@@ -135,6 +135,7 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
     const parsed = await this.llm.chatJson<DiscoveryJsonResponse>(systemPrompt, userPrompt, {
       taskType: 'competitor_discovery',
       temperature: usingWebSearch ? 0.2 : 0.25,
+      maxTokens: 2500,
     });
 
     return (parsed.competitors ?? [])

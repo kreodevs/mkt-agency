@@ -27,6 +27,11 @@ interface TavilyApiResponse {
   answer?: string;
 }
 
+const DEFAULT_QUERY_TIMEOUT_MS = 12_000;
+const DEFAULT_GATHER_BUDGET_MS = 22_000;
+const MAX_DISCOVERY_QUERIES = 2;
+const MAX_RESULTS_PER_QUERY = 4;
+
 @Injectable()
 export class TavilySearchService {
   private readonly logger = new Logger(TavilySearchService.name);
@@ -40,7 +45,12 @@ export class TavilySearchService {
 
   async search(
     query: string,
-    options?: { maxResults?: number; country?: string | null },
+    options?: {
+      maxResults?: number;
+      country?: string | null;
+      timeoutMs?: number;
+      searchDepth?: 'basic' | 'advanced' | 'fast';
+    },
   ): Promise<TavilyQueryEvidence> {
     const apiKey = await this.integrations.getActiveApiKey('tavily');
     if (!apiKey) {
@@ -58,12 +68,12 @@ export class TavilySearchService {
       },
       body: JSON.stringify({
         query,
-        search_depth: 'advanced',
-        max_results: options?.maxResults ?? 5,
+        search_depth: options?.searchDepth ?? 'basic',
+        max_results: options?.maxResults ?? MAX_RESULTS_PER_QUERY,
         include_answer: false,
         ...(options?.country ? { country: options.country } : {}),
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(options?.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -92,21 +102,35 @@ export class TavilySearchService {
   async gatherCompetitorEvidence(
     context: CompetitorDiscoveryContext,
   ): Promise<TavilyQueryEvidence[]> {
-    const queries = (context.searchQueries ?? []).filter(Boolean).slice(0, 4);
+    const queries = (context.searchQueries ?? []).filter(Boolean).slice(0, MAX_DISCOVERY_QUERIES);
     if (queries.length === 0) {
       return [];
     }
 
     const country = resolveTavilyCountry(context);
+    const deadline = Date.now() + DEFAULT_GATHER_BUDGET_MS;
+
     const settled = await Promise.allSettled(
-      queries.map((query) => this.search(query, { maxResults: 5, country })),
+      queries.map(async (query) => {
+        const remaining = deadline - Date.now();
+        if (remaining <= 500) {
+          return null;
+        }
+
+        return this.search(query, {
+          maxResults: MAX_RESULTS_PER_QUERY,
+          country,
+          timeoutMs: Math.min(DEFAULT_QUERY_TIMEOUT_MS, remaining),
+          searchDepth: 'basic',
+        });
+      }),
     );
 
     const evidence: TavilyQueryEvidence[] = [];
     for (const result of settled) {
-      if (result.status === 'fulfilled') {
+      if (result.status === 'fulfilled' && result.value) {
         evidence.push(result.value);
-      } else {
+      } else if (result.status === 'rejected') {
         this.logger.warn('Tavily query failed', result.reason);
       }
     }
@@ -117,6 +141,7 @@ export class TavilySearchService {
   async testConnection(): Promise<{ ok: true; resultCount: number; query: string }> {
     const evidence = await this.search('software marketing automation SaaS', {
       maxResults: 3,
+      searchDepth: 'basic',
     });
     return {
       ok: true,

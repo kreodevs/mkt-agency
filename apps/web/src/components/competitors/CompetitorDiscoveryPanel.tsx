@@ -84,6 +84,12 @@ export function CompetitorDiscoveryPanel({
       }
     },
     onError: (error) => {
+      if (error instanceof ApiError && error.status === 504) {
+        toast.error(
+          'La búsqueda tardó demasiado. Intenta de nuevo; si persiste, contacta al administrador.',
+        );
+        return;
+      }
       toast.error(error instanceof ApiError ? error.message : 'No se pudo buscar competidores');
     },
   });
@@ -200,8 +206,14 @@ export function CompetitorDiscoveryPanel({
           onClick={() => discoverMutation.mutate()}
         >
           <Sparkles className="h-4 w-4" />
-          Buscar competidores
+          {discoverMutation.isPending ? 'Buscando en web e IA…' : 'Buscar competidores'}
         </Button>
+
+        {discoverMutation.isPending && (
+          <p className="text-xs text-[var(--foreground-muted)]">
+            Puede tardar hasta 2 minutos mientras consultamos la web y analizamos resultados.
+          </p>
+        )}
 
         {results.length > 0 && (
           <div className="space-y-3 rounded-xl border border-[var(--border)] p-3">
