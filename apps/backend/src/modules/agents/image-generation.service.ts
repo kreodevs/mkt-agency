@@ -254,13 +254,14 @@ export class ImageGenerationService {
         : null;
       
       const narrationBody = content?.currentVersion?.body;
+      const duration = resolveVideoDuration(prompt, narrationBody);
       const videoPrompt = buildVideoGenerationPrompt({
         basePrompt: prompt,
         title: content?.title,
         narrationBody,
+        durationSeconds: duration,
       });
 
-      const duration = resolveVideoDuration(prompt);
       const result = await this.videoAdapter.generateVideo(videoPrompt, {
         duration,
         aspectRatio: resolveVideoAspectRatio(prompt),
