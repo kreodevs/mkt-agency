@@ -20,6 +20,7 @@ const ProductOnboardingWizardPage = lazy(
   () => import('@/pages/products/ProductOnboardingWizardPage'),
 );
 const ProductDetailPage = lazy(() => import('@/pages/products/ProductDetailPage'));
+const ProductMediaKitPage = lazy(() => import('@/pages/products/ProductMediaKitPage'));
 const ProductCreateWithAiPage = lazy(() => import('@/pages/products/ProductCreateWithAiPage'));
 const CampaignListPage = lazy(() => import('@/pages/campaigns/CampaignListPage'));
 const CampaignCreatePage = lazy(() => import('@/pages/campaigns/CampaignCreatePage'));
@@ -131,6 +132,7 @@ export function AppRouter() {
             <Route path="/products/new" element={<ProductCreatePage />} />
             <Route path="/products/create-with-ai" element={<ProductCreateWithAiPage />} />
             <Route path="/products/:id/onboarding" element={<ProductOnboardingWizardPage />} />
+            <Route path="/products/:id/media-kit" element={<ProductMediaKitPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />

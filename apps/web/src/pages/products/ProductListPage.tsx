@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Megaphone, Package, Plus, Sparkles, Star } from 'lucide-react';
+import { ClipboardList, Images, Megaphone, Package, Plus, Sparkles, Star } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -95,6 +95,12 @@ export default function ProductListPage() {
         const product = row as Product;
         return (
           <div className="flex justify-end gap-2">
+            <Link to={`/products/${product.id}/media-kit`}>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Images className="h-3.5 w-3.5" />
+                Kit
+              </Button>
+            </Link>
             <Link to={`/products/${product.id}`}>
               <Button variant="outline" size="sm">
                 Editar

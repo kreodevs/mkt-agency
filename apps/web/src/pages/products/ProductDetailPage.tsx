@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ClipboardList, Megaphone } from 'lucide-react';
+import { ClipboardList, Images, Megaphone } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
-import { ProductMediaKitPanel } from '@/components/products/ProductMediaKitPanel';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import type { ProductCategory, UpdateProductPayload } from '@/types/product';
@@ -129,6 +128,12 @@ export default function ProductDetailPage() {
                 </Button>
               </Link>
             )}
+            <Link to={`/products/${id}/media-kit`}>
+              <Button variant="outline" className="gap-2">
+                <Images className="h-4 w-4" />
+                Kit de medios
+              </Button>
+            </Link>
             <Link to={`/campaigns/new?productId=${id}`}>
               <Button className="gap-2">
                 <Megaphone className="h-4 w-4" />
@@ -139,7 +144,7 @@ export default function ProductDetailPage() {
         }
       />
 
-      <div className="mb-6 space-y-4">
+      <div className="mb-6">
         <ProductLogoPanel
           productId={id}
           productName={productQuery.data.name}
@@ -150,7 +155,6 @@ export default function ProductDetailPage() {
             void queryClient.invalidateQueries({ queryKey: ['product', id] });
           }}
         />
-        <ProductMediaKitPanel productId={id} productName={productQuery.data.name} />
       </div>
 
       <Card title="Detalle del producto">

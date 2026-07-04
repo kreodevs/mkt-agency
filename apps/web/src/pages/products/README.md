@@ -8,6 +8,7 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 - `/products/new` — alta de producto (redirige al onboarding)
 - `/products/:id/onboarding` — wizard de onboarding de producto (tags SEO + activación de agentes)
 - `/products/:id` — edición
+- `/products/:id/media-kit` — kit de medios (capturas, demos, eventos) con drag & drop
 
 ## Onboarding de producto
 

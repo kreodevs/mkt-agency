@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Film, ImageIcon, Trash2, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { toast } from '@/components/molecules/Sonner';
@@ -20,6 +20,8 @@ import {
 const selectClass =
   'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
+const ACCEPTED_MIME_PREFIXES = ['image/', 'video/'];
+
 interface ProductMediaKitPanelProps {
   productId: string;
   productName: string;
@@ -30,14 +32,20 @@ function isVideoMime(mimeType: string | null): boolean {
   return Boolean(mimeType?.startsWith('video/'));
 }
 
+function isAcceptedFile(file: File): boolean {
+  return ACCEPTED_MIME_PREFIXES.some((prefix) => file.type.startsWith(prefix));
+}
+
 export function ProductMediaKitPanel({
   productId,
   productName,
   disabled,
 }: ProductMediaKitPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
   const [role, setRole] = useState<ProductMediaRole>('product-screenshot');
   const [label, setLabel] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const kitQuery = useQuery({
     queryKey: ['product-media-kit', productId],
@@ -47,11 +55,6 @@ export function ProductMediaKitPanel({
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadProductMediaKit(productId, file, role, label),
-    onSuccess: () => {
-      toast.success('Archivo añadido al kit de medios');
-      setLabel('');
-      void kitQuery.refetch();
-    },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo subir el archivo');
     },
@@ -68,27 +71,79 @@ export function ProductMediaKitPanel({
     },
   });
 
+  const uploadFiles = useCallback(
+    async (files: File[]) => {
+      const accepted = files.filter(isAcceptedFile);
+      if (!accepted.length) {
+        toast.error('Solo se aceptan imágenes o videos');
+        return;
+      }
+
+      let uploaded = 0;
+      for (const file of accepted) {
+        try {
+          await uploadMutation.mutateAsync(file);
+          uploaded += 1;
+        } catch {
+          break;
+        }
+      }
+
+      if (uploaded > 0) {
+        toast.success(
+          uploaded === 1 ? 'Archivo añadido al kit' : `${uploaded} archivos añadidos al kit`,
+        );
+        setLabel('');
+        void kitQuery.refetch();
+      }
+    },
+    [kitQuery, uploadMutation],
+  );
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    uploadMutation.mutate(file);
+    const fileList = event.target.files;
+    if (!fileList?.length) return;
+    void uploadFiles(Array.from(fileList));
     event.target.value = '';
+  };
+
+  const handleDragEnter = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current += 1;
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+    if (disabled || uploadMutation.isPending) return;
+    void uploadFiles(Array.from(event.dataTransfer.files));
   };
 
   const isBusy = disabled || uploadMutation.isPending || removeMutation.isPending;
   const items = kitQuery.data?.items ?? [];
 
   return (
-    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background-secondary)] p-4">
-      <div className="mb-4">
-        <p className="text-sm font-medium text-[var(--foreground)]">Kit de medios — {productName}</p>
-        <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
-          Fotos y videos reales del producto. El Community Manager los prioriza al componer posts y reels
-          antes de generar stock con IA.
-        </p>
-      </div>
-
-      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-[var(--foreground)]">Tipo de asset</span>
           <select
@@ -131,87 +186,145 @@ export function ProductMediaKitPanel({
         ref={fileInputRef}
         type="file"
         accept="image/*,video/*"
+        multiple
         className="hidden"
         onChange={handleFileChange}
       />
 
-      {kitQuery.isLoading ? (
-        <p className="text-xs text-[var(--foreground-muted)]">Cargando kit...</p>
-      ) : items.length === 0 ? (
-        <p className="rounded-[var(--radius)] border border-dashed border-[var(--border)] px-4 py-6 text-center text-xs text-[var(--foreground-muted)]">
-          Aún no hay assets. Sube capturas de la app, fotos de eventos o un video demo.
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Zona para arrastrar archivos al kit de medios"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        className={[
+          'rounded-[var(--radius)] border-2 border-dashed px-6 py-10 text-center transition-colors',
+          isDragOver
+            ? 'border-[var(--primary)] bg-[var(--primary)]/5'
+            : 'border-[var(--border)] bg-[var(--background-secondary)]',
+          isBusy ? 'pointer-events-none opacity-60' : 'cursor-pointer',
+        ].join(' ')}
+        onClick={() => {
+          if (!isBusy) fileInputRef.current?.click();
+        }}
+      >
+        <Upload
+          className={[
+            'mx-auto mb-3 h-8 w-8',
+            isDragOver ? 'text-[var(--primary)]' : 'text-[var(--foreground-muted)]',
+          ].join(' ')}
+        />
+        <p className="text-sm font-medium text-[var(--foreground)]">
+          {isDragOver ? 'Suelta los archivos aquí' : 'Arrastra imágenes o videos aquí'}
         </p>
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => {
-            const previewUrl = getAssetFileUrl(item.assetId);
-            const isVideo = isVideoMime(item.mimeType);
+        <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+          O haz clic para elegir archivos — {productName}
+        </p>
+        {uploadMutation.isPending && (
+          <p className="mt-2 text-xs text-[var(--primary)]">Subiendo...</p>
+        )}
+      </div>
 
-            return (
-              <li
-                key={item.id}
-                className="overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)]"
-              >
-                <div className="relative flex aspect-video items-center justify-center bg-[var(--background-secondary)]">
-                  {isVideo && previewUrl ? (
-                    <video
-                      src={previewUrl}
-                      className="h-full w-full object-cover"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
-                  ) : previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt={item.label ?? item.assetName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <ImageIcon className="h-8 w-8 text-[var(--foreground-muted)]" />
-                  )}
-                  <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                    {isVideo ? (
-                      <span className="inline-flex items-center gap-1">
-                        <Film className="h-3 w-3" />
-                        Video
-                      </span>
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            Assets subidos
+            {!kitQuery.isLoading && (
+              <span className="ml-2 text-[var(--foreground-muted)]">({items.length})</span>
+            )}
+          </p>
+        </div>
+
+        {kitQuery.isLoading ? (
+          <p className="text-xs text-[var(--foreground-muted)]">Cargando kit...</p>
+        ) : items.length === 0 ? (
+          <p className="rounded-[var(--radius)] border border-[var(--border)] px-4 py-6 text-center text-xs text-[var(--foreground-muted)]">
+            Aún no hay assets. Sube capturas de la app, fotos de eventos o un video demo.
+          </p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => {
+              const previewUrl = getAssetFileUrl(item.assetId);
+              const isVideo = isVideoMime(item.mimeType);
+
+              return (
+                <li
+                  key={item.id}
+                  className="overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)]"
+                >
+                  <div className="relative flex aspect-video items-center justify-center bg-[var(--background-secondary)]">
+                    {isVideo && previewUrl ? (
+                      <video
+                        src={previewUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                        controls
+                      />
+                    ) : previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt={item.label ?? item.assetName}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
-                      'Imagen'
+                      <ImageIcon className="h-8 w-8 text-[var(--foreground-muted)]" />
                     )}
-                  </span>
-                </div>
+                    <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                      {isVideo ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Film className="h-3 w-3" />
+                          Video
+                        </span>
+                      ) : (
+                        'Imagen'
+                      )}
+                    </span>
+                  </div>
 
-                <div className="space-y-1 p-3">
-                  <p className="text-xs font-medium text-[var(--foreground)]">
-                    {PRODUCT_MEDIA_ROLE_LABELS[item.role] ?? item.role}
-                  </p>
-                  {item.label && (
-                    <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.label}>
-                      {item.label}
+                  <div className="space-y-1 p-3">
+                    <p className="text-xs font-medium text-[var(--foreground)]">
+                      {PRODUCT_MEDIA_ROLE_LABELS[item.role] ?? item.role}
                     </p>
-                  )}
-                  <p className="truncate text-[10px] text-[var(--foreground-muted)]" title={item.assetName}>
-                    {item.assetName}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 w-full gap-2"
-                    disabled={isBusy}
-                    loading={removeMutation.isPending && removeMutation.variables === item.id}
-                    onClick={() => removeMutation.mutate(item.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Quitar
-                  </Button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    {item.label && (
+                      <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.label}>
+                        {item.label}
+                      </p>
+                    )}
+                    <p className="truncate text-[10px] text-[var(--foreground-muted)]" title={item.assetName}>
+                      {item.assetName}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full gap-2"
+                      disabled={isBusy}
+                      loading={removeMutation.isPending && removeMutation.variables === item.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removeMutation.mutate(item.id);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Eliminar
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
