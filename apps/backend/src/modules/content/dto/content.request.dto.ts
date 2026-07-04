@@ -83,6 +83,11 @@ export class UpdateContentDto {
   @IsString()
   @IsIn([...CONTENT_VISUAL_FORMATS])
   visualFormat?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CM_PLATFORMS])
+  platform?: string | null;
 }
 
 export class ListContentsQueryDto {

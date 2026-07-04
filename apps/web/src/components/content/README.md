@@ -8,3 +8,5 @@
 | `DownloadKit.tsx` | Kit diario "Copiar y Llevar" (solo aprobado+firmado) |
 | `VersionHistory.tsx` | Historial y revertir |
 | `ContentVisualPanel.tsx` | Preview visual IA + generar / ver detalle / regenerar; recupera generaciones atascadas en `processing` (>20 min) y permite reintento |
+| `ContentPlatformBadge.tsx` | Badge con icono y color por red social (Instagram, Facebook, LinkedIn, TikTok, X) |
+| `ContentPublishPanel.tsx` | Copiar copy, descargar texto (.txt) y descargar visuales; selector de red destino |

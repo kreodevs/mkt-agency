@@ -158,7 +158,10 @@ export class ContentService {
       dto.reason !== undefined ||
       dto.changeSummary !== undefined;
     const hasMetadataOnly =
-      (dto.scheduledDate !== undefined || dto.visualFormat !== undefined) && !hasVersionFields;
+      (dto.scheduledDate !== undefined ||
+        dto.visualFormat !== undefined ||
+        dto.platform !== undefined) &&
+      !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
       throw new BadRequestException({
@@ -174,6 +177,9 @@ export class ContentService {
       }
       if (dto.visualFormat !== undefined) {
         content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
+      }
+      if (dto.platform !== undefined) {
+        content.platform = dto.platform ?? null;
       }
       const saved = await this.contents.save(content);
       return this.toContentResponse(saved);
@@ -220,6 +226,10 @@ export class ContentService {
 
       if (dto.visualFormat !== undefined) {
         content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
+      }
+
+      if (dto.platform !== undefined) {
+        content.platform = dto.platform ?? null;
       }
 
       await contentRepo.save(content);

@@ -65,6 +65,7 @@ export interface UpdateContentPayload {
   body?: string;
   scheduledDate?: string | null;
   visualFormat?: ContentVisualFormat;
+  platform?: string | null;
   assets?: unknown[];
   reason?: string;
   changeSummary?: string;

@@ -43,6 +43,11 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000025-AddImageGenerationMetadata.ts` | Columna `metadata` JSONB en `agent_image_generations` (frames de reel/carrusel) |
 | `1730000000026-AddVideoGenerationLlmTask.ts` | Tarea LLM `video_generation` (OpenRouter Video API, default `bytedance/seedance-2.0-fast`) |
 | `1730000000027-CreateLlmUsageEvents.ts` | Tabla `llm_usage_events` (tracking tokens/costo por tenant) |
+| `1730000000028-CreatePlatformIntegrations.ts` | Tabla `platform_integrations` |
+| `1730000000029-AddPlatformToContents.ts` | Columna `platform` en `contents` |
+| `1730000000030-ExpandImageGenerationPrompt.ts` | Amplía `prompt` en `agent_image_generations` |
+| `1730000000031-AddVisualFormatToContents.ts` | Columna `visual_format` en `contents` |
+| `1730000000032-ClearGeneratedContentsAndCompetitorAnalyses.ts` | **One-shot:** borra contenidos generados, análisis y competidores descubiertos; conserva tenants, productos y keywords SEO. Omitir: `SKIP_GENERATED_CONTENT_RESET=true` |
 
 Si existe una tabla legacy `products` sin `tenant_id`, la migración 0018 la renombra a `products_legacy` antes de crear el catálogo tenant-scoped.
 
@@ -56,6 +61,17 @@ Migración **`1730000000024-ResetTenantOperationalData`**: al desplegar con `RUN
 
 # Omitir en un deploy concreto
 SKIP_OPERATIONAL_DATA_RESET=true
+```
+
+## Limpieza de contenidos generados
+
+Migración **`1730000000032-ClearGeneratedContentsAndCompetitorAnalyses`**: elimina piezas de contenido, batches del Community Manager, generaciones de imagen/video, análisis de Competitor Intel y competidores descubiertos (`competitors`, `competitor_mentions`). **Conserva** tenants, productos y tags SEO (`products.keywords`).
+
+```bash
+./scripts/clear-generated-contents.sh
+
+# Omitir en un deploy concreto
+SKIP_GENERATED_CONTENT_RESET=true
 ```
 
 DataSource: `src/database/data-source.ts`.

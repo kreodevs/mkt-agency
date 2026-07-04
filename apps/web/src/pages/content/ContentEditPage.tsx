@@ -9,6 +9,8 @@ import { Textarea } from '@/components/atoms/Textarea';
 import { StatusBadge } from '@/components/content/StatusBadge';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentVisualPanel } from '@/components/content/ContentVisualPanel';
+import { ContentPublishPanel } from '@/components/content/ContentPublishPanel';
+import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { SignatureBadge } from '@/components/content/SignatureBadge';
 import { VersionHistory } from '@/components/content/VersionHistory';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -23,6 +25,8 @@ import {
   CONTENT_VISUAL_FORMATS,
   normalizeContentVisualFormat,
 } from '@/lib/visual-format';
+import { getContentPlatformLabel } from '@/lib/content-platform';
+import type { CmPlatform } from '@/services/community-manager';
 
 export default function ContentEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +37,7 @@ export default function ContentEditPage() {
   const [changeSummary, setChangeSummary] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [visualFormat, setVisualFormat] = useState<ContentVisualFormat>('image');
+  const [platform, setPlatform] = useState<CmPlatform | ''>('');
 
   const contentQuery = useQuery({
     queryKey: ['content', id],
@@ -55,8 +60,14 @@ export default function ContentEditPage() {
     if (contentQuery.data) {
       setScheduledDate(contentQuery.data.scheduledDate ?? '');
       setVisualFormat(normalizeContentVisualFormat(contentQuery.data.visualFormat));
+      setPlatform((contentQuery.data.platform as CmPlatform) ?? '');
     }
-  }, [contentQuery.data?.currentVersion?.id, contentQuery.data?.scheduledDate, contentQuery.data?.visualFormat]);
+  }, [
+    contentQuery.data?.currentVersion?.id,
+    contentQuery.data?.scheduledDate,
+    contentQuery.data?.visualFormat,
+    contentQuery.data?.platform,
+  ]);
 
   const scheduleMutation = useMutation({
     mutationFn: () =>
@@ -82,6 +93,18 @@ export default function ContentEditPage() {
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar el formato');
+    },
+  });
+
+  const platformMutation = useMutation({
+    mutationFn: () => updateContent(id!, { platform: platform || null }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['content', id] });
+      void queryClient.invalidateQueries({ queryKey: ['contents'] });
+      toast.success('Red social actualizada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar la red');
     },
   });
 
@@ -160,11 +183,15 @@ export default function ContentEditPage() {
     deleteMutation.mutate();
   };
 
+  const platformLabel = getContentPlatformLabel(content.platform);
+
   return (
     <DashboardShell>
       <PageHeader
         title={content.title}
-        description={`Tipo: ${content.type} · Formato: ${CONTENT_VISUAL_FORMAT_LABELS[visualFormat]} · v${currentVersion.versionNumber}`}
+        description={`Tipo: ${content.type} · Formato: ${CONTENT_VISUAL_FORMAT_LABELS[visualFormat]} · v${currentVersion.versionNumber}${
+          platformLabel ? ` · ${platformLabel}` : ''
+        }`}
         actions={
           <div className="flex flex-wrap gap-2">
             {canDelete && (
@@ -189,8 +216,9 @@ export default function ContentEditPage() {
         }
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <StatusBadge status={content.status} />
+        <ContentPlatformBadge platform={content.platform} showUnset />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -277,6 +305,18 @@ export default function ContentEditPage() {
               </Button>
             </form>
           </Card>
+
+          <ContentPublishPanel
+            contentId={content.id}
+            title={title}
+            body={body}
+            platform={platform || content.platform}
+            versionAssets={currentVersion.assets}
+            visualFormat={visualFormat}
+            onPlatformChange={setPlatform}
+            onSavePlatform={() => platformMutation.mutate()}
+            savingPlatform={platformMutation.isPending}
+          />
 
           <ContentVisualPanel
             contentId={content.id}

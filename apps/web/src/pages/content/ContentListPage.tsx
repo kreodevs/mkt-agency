@@ -9,6 +9,7 @@ import {
   ContentVisualActions,
   buildContentGenerationMap,
 } from '@/components/content/ContentVisualPanel';
+import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -112,6 +113,12 @@ export default function ContentListPage() {
         header: 'Tipo',
         sortable: true,
         width: '100px',
+      },
+      {
+        field: 'platform',
+        header: 'Red social',
+        width: '140px',
+        body: (row: Content) => <ContentPlatformBadge platform={row.platform} size="sm" showUnset />,
       },
       {
         field: 'productId',

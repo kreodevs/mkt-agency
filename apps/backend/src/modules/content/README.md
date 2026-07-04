@@ -20,6 +20,8 @@ Campo opcional `platform` (`instagram`, `facebook`, `linkedin`, `twitter`, `tikt
 
 Campo `visualFormat` (`image`, `video`, `carousel`) indica qué debe generar Image/Video Generator. El agente de Community Manager lo asigna por post; es editable en el editor de contenido sin crear nueva versión.
 
+Campo `platform` (red social destino) también es metadata-only: editable vía `PATCH` sin nueva versión (`scheduledDate`, `visualFormat`, `platform`).
+
 Firma: `SHA-256(body|versionId|assetIds ordenados)`.
 
 Eventos en tabla `events` + outbox `ContentApproved` al aprobar.
