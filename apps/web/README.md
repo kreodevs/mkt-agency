@@ -5,7 +5,7 @@ Frontend React (Vite) con componentes **Kreo UI** (workflow DEV MCP).
 ## Stack
 
 - React 18 + Vite 6 + TypeScript
-- Tailwind CSS 3.4 + tokens Kreo (`src/theme/vars.css`)
+- Tailwind CSS 3.4 + tema **Anthropic Ivory & Slate** (`src/theme/vars.css`, `src/theme/design.md`)
 - React Router v6 (lazy routes)
 - TanStack Query + Zustand (JWT solo en memoria)
 

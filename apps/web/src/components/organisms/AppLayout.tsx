@@ -77,7 +77,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
             </div>
             <button
               type="button"
-              className="min-w-0 flex-1 cursor-default bg-black/60 backdrop-blur-sm"
+              className="min-w-0 flex-1 cursor-default bg-[var(--foreground)]/40 backdrop-blur-sm"
               aria-label="Cerrar menú"
               onClick={() => setMobileMenuOpen(false)}
             />

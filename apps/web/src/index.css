@@ -4,6 +4,89 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .type-display-xl {
+    font-family: var(--font-sans);
+    font-size: var(--text-display-xl);
+    font-weight: var(--weight-display-xl);
+    line-height: var(--leading-display-xl);
+  }
+
+  .type-display-serif {
+    font-family: var(--font-serif);
+    font-size: var(--text-display-serif);
+    font-weight: var(--weight-display-serif);
+    line-height: var(--leading-display-serif);
+    letter-spacing: var(--tracking-display-serif);
+  }
+
+  .type-body-serif-m {
+    font-family: var(--font-serif);
+    font-size: var(--text-body-serif-m);
+    line-height: var(--leading-body-serif-m);
+  }
+
+  .type-body-serif-s {
+    font-family: var(--font-serif);
+    font-size: var(--text-body-serif-s);
+    line-height: var(--leading-body-serif-s);
+  }
+
+  .type-ui-sans-m {
+    font-family: var(--font-sans);
+    font-size: var(--text-ui-sans-m);
+    font-weight: var(--weight-ui-sans-m);
+    line-height: var(--leading-ui-sans-m);
+    letter-spacing: var(--tracking-ui-sans-m);
+  }
+
+  .type-ui-sans-medium {
+    font-family: var(--font-sans);
+    font-size: var(--text-ui-sans-medium);
+    font-weight: var(--weight-ui-sans-medium);
+    line-height: var(--leading-ui-sans-medium);
+  }
+
+  .type-ui-sans-semibold {
+    font-family: var(--font-sans);
+    font-size: var(--text-ui-sans-semibold);
+    font-weight: var(--weight-ui-sans-semibold);
+    line-height: var(--leading-ui-sans-semibold);
+  }
+
+  .type-detail-xs {
+    font-family: var(--font-sans);
+    font-size: var(--text-detail-xs);
+    line-height: var(--leading-detail-xs);
+    letter-spacing: var(--tracking-detail-xs);
+  }
+
+  .type-serif-accent {
+    font-family: var(--font-serif);
+    font-size: var(--text-serif-accent);
+    line-height: var(--leading-serif-accent);
+  }
+
+  .type-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    line-height: var(--leading-mono);
+  }
+
+  .site-container {
+    margin-inline: var(--site-margin);
+    padding-inline: var(--site-gutter);
+  }
+
+  .section-space-sm {
+    padding-block: var(--section-space-sm);
+  }
+
+  .section-space-main {
+    padding-block: var(--section-space-main);
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

@@ -14,16 +14,16 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={`overflow-hidden rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--card)] shadow-sm ${className}`.trim()}
+        className={`overflow-hidden rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card)] ${className}`.trim()}
         {...props}
       >
         {hasHeader && (
           <div className="border-b border-[var(--border)] px-[var(--spacing-md)] py-[var(--spacing-md)]">
             {title && (
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">{title}</h3>
+              <h3 className="type-ui-sans-medium text-[var(--foreground)]">{title}</h3>
             )}
             {subtitle && (
-              <p className="mt-[var(--spacing-xxs)] text-sm text-[var(--foreground-muted)]">
+              <p className="type-detail-xs mt-[var(--spacing-xxs)] text-[var(--foreground-muted)]">
                 {subtitle}
               </p>
             )}
