@@ -15,6 +15,7 @@ import {
   isContentPlatform,
   slugifyForFilename,
 } from '@/lib/content-platform';
+import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import {
   isVideoGeneration,
   resolveContentVisualAssetIds,
@@ -58,7 +59,7 @@ export function ContentPublishPanel({
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
 
-  const copyText = buildPostCopyText(title, body);
+  const copyText = buildPostCopyText(title, sanitizePublishableCopy(body));
   const platformLabel = getContentPlatformLabel(platform);
   const visualLabel = isVideo ? 'video' : assetIds.length > 1 ? 'carrusel' : 'imagen';
   const platformValue = isContentPlatform(platform) ? platform : '';

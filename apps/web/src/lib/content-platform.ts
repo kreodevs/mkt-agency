@@ -51,6 +51,28 @@ export function buildPostCopyText(title: string, body: string): string {
   return trimmedTitle || trimmedBody;
 }
 
+/** Abre la red en web (el SOHO pega el copy manualmente). */
+export function getPlatformPublishUrl(platform: string | null | undefined): string | null {
+  if (!isContentPlatform(platform)) {
+    return null;
+  }
+
+  const urls: Record<CmPlatform, string> = {
+    instagram: 'https://www.instagram.com/',
+    facebook: 'https://www.facebook.com/',
+    linkedin: 'https://www.linkedin.com/feed/',
+    tiktok: 'https://www.tiktok.com/upload',
+    twitter: 'https://twitter.com/compose/tweet',
+  };
+
+  return urls[platform];
+}
+
+/** Compartir copy por WhatsApp (útil para SOHO local). */
+export function buildWhatsAppShareUrl(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
 export function slugifyForFilename(value: string): string {
   return (
     value

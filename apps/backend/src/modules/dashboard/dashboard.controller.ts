@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
@@ -219,6 +219,67 @@ export class DashboardController {
         clients: clientLeads,
         conversionRate: totalLeads > 0 ? Math.round((clientLeads / totalLeads) * 100) : 0,
       },
+    };
+  }
+
+  @Get('soho-summary')
+  async getSohoSummary(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+  ) {
+    const tenantId = user.tenantId!;
+    const today = new Date().toISOString().split('T')[0];
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 7);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const [leadsThisWeek, attributedLeadsThisWeek, latestStrategy, todayContent] = await Promise.all([
+      this.leads
+        .createQueryBuilder('l')
+        .where('l.tenant_id = :tenantId', { tenantId })
+        .andWhere('l.created_at >= :weekStart', { weekStart })
+        .getCount(),
+      this.leads
+        .createQueryBuilder('l')
+        .where('l.tenant_id = :tenantId', { tenantId })
+        .andWhere('l.created_at >= :weekStart', { weekStart })
+        .andWhere("l.metadata->>'contentId' IS NOT NULL")
+        .andWhere("l.metadata->>'contentId' != ''")
+        .getCount(),
+      this.strategies.findOne({
+        where: { tenantId },
+        order: { createdAt: 'DESC' },
+      }),
+      (async () => {
+        const qb = this.contents
+          .createQueryBuilder('c')
+          .where('c.tenant_id = :tenantId', { tenantId })
+          .andWhere('DATE(COALESCE(c.scheduled_date, c.created_at)) = :today', { today });
+        if (productId) {
+          qb.andWhere('c.product_id = :productId', { productId });
+        }
+        return qb.getCount();
+      })(),
+    ]);
+
+    const strategyData = latestStrategy?.data as Record<string, unknown> | undefined;
+    const focus =
+      (strategyData?.summary as string | undefined)?.split('.')[0]?.trim() ??
+      (strategyData?.overallHealth as string | undefined) ??
+      null;
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const leadsToday = await this.leads.count({
+      where: { tenantId, createdAt: todayStart } as unknown as Record<string, unknown>,
+    });
+
+    return {
+      leadsToday,
+      leadsThisWeek,
+      attributedLeadsThisWeek,
+      strategyFocus: focus,
+      todayScheduledCount: todayContent,
     };
   }
 }

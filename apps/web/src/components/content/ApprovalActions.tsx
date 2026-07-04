@@ -17,9 +17,10 @@ interface ApprovalActionsProps {
   contentId: string;
   version: ContentVersion;
   disabled?: boolean;
+  sohoMode?: boolean;
 }
 
-export function ApprovalActions({ contentId, version, disabled }: ApprovalActionsProps) {
+export function ApprovalActions({ contentId, version, disabled, sohoMode }: ApprovalActionsProps) {
   const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState('');
 
@@ -72,7 +73,14 @@ export function ApprovalActions({ contentId, version, disabled }: ApprovalAction
     approveMutation.isPending || rejectMutation.isPending || changesMutation.isPending;
 
   return (
-    <Card title="Aprobación" subtitle="Kill Switch — firma SHA-256 al aprobar">
+    <Card
+      title={sohoMode ? '¿Te gusta?' : 'Aprobación'}
+      subtitle={
+        sohoMode
+          ? 'Aprueba para copiar y publicar'
+          : 'Kill Switch — firma SHA-256 al aprobar'
+      }
+    >
       <div className="space-y-3">
         <div className="flex flex-col gap-[var(--spacing-xs)]">
           <label className="text-sm font-medium text-[var(--foreground)]">

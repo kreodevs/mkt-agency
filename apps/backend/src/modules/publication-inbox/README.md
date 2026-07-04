@@ -9,6 +9,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas + notificaciones (incl. `assets`, `platform`, `visualFormat`) |
 | GET | `/publication-inbox/copilot-status?productId=` | Estado del copiloto (producto, competidores, análisis, bandeja) |
 | POST | `/publication-inbox/prepare-week` | Orquestación manual: competidores → intel → estrategia → CM |
+| POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual de un contenido |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |
 | PATCH | `/publication-inbox/notifications/read-all` | Marca todas leídas |
@@ -18,7 +19,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | Cola | Cron | Acción |
 |------|------|--------|
 | `agency-weekly-run` | Lunes 06:00 | **Orquestación inteligente** por producto onboarded |
-| `approval-reminder` | Diario 09:00 | Aviso si hay borradores programados en 48 h |
+| `approval-reminder` | 09:00 + 23:00 UTC | Aprobación pendiente + **Hoy toca publicar** (`publish_reminder`) |
 
 ### Pipeline semanal (`AgencyOrchestrationService`)
 
@@ -41,7 +42,7 @@ Por cada producto activo:
 
 ## Notificaciones
 
-Tabla `agency_notifications`. Tipos: `week_ready`, `approval_reminder`, `onboarding_complete`.
+Tabla `agency_notifications`. Tipos: `week_ready`, `approval_reminder`, `publish_reminder`, `onboarding_complete`.
 
 ## Integración
 

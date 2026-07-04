@@ -71,3 +71,11 @@ export interface PrepareWeekResult {
   topicsUsed?: string[];
   warnings: string[];
 }
+
+export interface SohoSummary {
+  leadsToday: number;
+  leadsThisWeek: number;
+  attributedLeadsThisWeek: number;
+  strategyFocus: string | null;
+  todayScheduledCount: number;
+}

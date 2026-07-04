@@ -17,12 +17,17 @@ import {
   FormSubmissionResponseDto,
   PaginatedFormSubmissionsResponseDto,
   PaginatedFormsResponseDto,
+  PublicFormResponseDto,
   SubmitFormResponseDto,
 } from './dto/form.response.dto';
 import { FormEntity } from './infrastructure/typeorm/form.entity';
 import { FormSubmissionEntity } from './infrastructure/typeorm/form-submission.entity';
 import { SubmitFormCommand } from '../crm/commands/submit-form.command';
 import { SubmitFormHandler } from '../crm/commands/submit-form.handler';
+import {
+  DEFAULT_CAPTURE_FORM_FIELDS,
+  DEFAULT_CAPTURE_FORM_NAME,
+} from './domain/default-capture-form.constants';
 
 @Injectable()
 export class FormService {
@@ -80,6 +85,60 @@ export class FormService {
   async findOne(tenantId: string, id: string): Promise<FormResponseDto> {
     const form = await this.findOwnedForm(tenantId, id);
     return this.toResponse(form);
+  }
+
+  async ensureCaptureForm(
+    tenantId: string,
+    productId?: string,
+  ): Promise<FormResponseDto> {
+    const resolvedProductId = productId
+      ? await this.resolveProductId(tenantId, productId)
+      : null;
+
+    const existingItems = await this.forms.find({
+      where: {
+        tenantId,
+        isActive: true,
+        ...(resolvedProductId ? { productId: resolvedProductId } : {}),
+      },
+      order: { createdAt: 'ASC' },
+      take: 1,
+    });
+    const existing = existingItems[0];
+
+    if (existing) {
+      return this.toResponse(existing);
+    }
+
+    const created = await this.create(tenantId, {
+      name: DEFAULT_CAPTURE_FORM_NAME,
+      fields: DEFAULT_CAPTURE_FORM_FIELDS,
+      productId: resolvedProductId,
+      isActive: true,
+    });
+
+    return created;
+  }
+
+  async findPublicForm(id: string): Promise<PublicFormResponseDto> {
+    const form = await this.forms.findOne({
+      where: { id, isActive: true },
+    });
+
+    if (!form) {
+      throw new NotFoundException({
+        error: 'Form not found or inactive',
+        code: 'NOT_FOUND',
+      });
+    }
+
+    return {
+      id: form.id,
+      name: form.name,
+      fields: form.fields,
+      style: form.style,
+      productId: form.productId,
+    };
   }
 
   async update(
@@ -202,6 +261,19 @@ export class FormService {
   var FIELDS = ${fieldConfig};
   var PRODUCT_ID = ${productIdLiteral};
 
+  function readAttribution() {
+    var params = new URLSearchParams(window.location.search);
+    var attr = {};
+    if (PRODUCT_ID) attr.productId = PRODUCT_ID;
+    var contentId = params.get("utm_content") || params.get("contentId");
+    if (contentId) attr.contentId = contentId;
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function(key) {
+      var value = params.get(key);
+      if (value) attr[key] = value;
+    });
+    return attr;
+  }
+
   function renderForm(container) {
     if (!container) return;
     container.innerHTML = "";
@@ -235,7 +307,7 @@ export class FormService {
         var el = form.querySelector("[name='" + field.name + "']");
         data[field.name] = el ? el.value : "";
       });
-      if (PRODUCT_ID) data.productId = PRODUCT_ID;
+      Object.assign(data, readAttribution());
       fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

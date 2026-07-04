@@ -62,6 +62,21 @@ export interface UpdateFormPayload {
   productId?: string | null;
 }
 
+export interface PublicForm {
+  id: string;
+  name: string;
+  fields: FormFieldDefinition[];
+  style: Record<string, unknown>;
+  productId: string | null;
+}
+
+export interface SubmitFormResult {
+  submissionId: string;
+  leadId: string;
+  message: string;
+  isDuplicate: boolean;
+}
+
 export const DEFAULT_FORM_FIELDS: FormFieldDefinition[] = [
   { name: 'email', label: 'Email', type: 'email', required: true },
   { name: 'name', label: 'Nombre', type: 'text' },

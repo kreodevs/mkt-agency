@@ -11,6 +11,7 @@ import {
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
 } from './dto/publication-inbox.dto';
+import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { CopilotOrchestrationService } from './copilot-orchestration.service';
 import { CopilotService } from './copilot.service';
 import { PublicationInboxService } from './publication-inbox.service';
@@ -22,6 +23,7 @@ export class PublicationInboxController {
     private readonly inboxService: PublicationInboxService,
     private readonly copilotService: CopilotService,
     private readonly copilotOrchestration: CopilotOrchestrationService,
+    private readonly communityManager: CommunityManagerService,
   ) {}
 
   @Get()
@@ -74,6 +76,18 @@ export class PublicationInboxController {
       user.tenantId!,
       user.id,
       body.productId,
+    );
+  }
+
+  @Post('regenerate/:contentId')
+  regenerateContent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ) {
+    return this.communityManager.regeneratePostForContent(
+      user.tenantId!,
+      user.id,
+      contentId,
     );
   }
 }

@@ -19,6 +19,7 @@ import {
   PublicationInboxItemDto,
   PublicationInboxResponseDto,
 } from './dto/publication-inbox.dto';
+import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { AgencyNotificationEntity } from './infrastructure/typeorm/agency-notification.entity';
 
 interface InboxRow {
@@ -215,6 +216,21 @@ export class PublicationInboxService {
     });
   }
 
+  async findReadyToPublishToday(tenantId: string, productId?: string): Promise<InboxRow[]> {
+    const today = this.todayKey();
+    const rows = await this.fetchInboxRows(tenantId, productId);
+    return rows.filter((row) => {
+      const isApproved = row.status === 'approved' && Boolean(row.signatureHash);
+      return isApproved && this.effectiveDate(row) === today;
+    });
+  }
+
+  async findDueTodayForReminder(tenantId: string, productId?: string): Promise<InboxRow[]> {
+    const today = this.todayKey();
+    const rows = await this.fetchInboxRows(tenantId, productId);
+    return rows.filter((row) => this.effectiveDate(row) === today);
+  }
+
   private async fetchInboxRows(tenantId: string, productId?: string): Promise<InboxRow[]> {
     const startDate = this.addDays(this.todayKey(), -INBOX_LOOKBACK_DAYS);
     const endDate = this.addDays(this.todayKey(), INBOX_LOOKAHEAD_DAYS);
@@ -258,7 +274,8 @@ export class PublicationInboxService {
   }
 
   private toInboxItem(row: InboxRow): PublicationInboxItemDto {
-    const body = row.body ?? '';
+    const rawBody = row.body ?? '';
+    const body = sanitizePublishableCopy(rawBody);
     const assets = this.parseAssets(row.assets);
     return {
       contentId: row.id,

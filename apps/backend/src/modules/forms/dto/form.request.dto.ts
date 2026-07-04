@@ -108,4 +108,32 @@ export class SubmitFormDto {
   @IsString()
   @MaxLength(5000)
   message?: string;
+
+  @IsOptional()
+  @IsUUID()
+  contentId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_source?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_medium?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_campaign?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_content?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
 }

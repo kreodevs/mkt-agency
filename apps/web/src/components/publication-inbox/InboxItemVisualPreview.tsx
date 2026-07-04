@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ImageIcon, Loader2, Video } from 'lucide-react';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
+import { SocialPostMockup } from '@/components/publication-inbox/SocialPostMockup';
 import { getImageGenerationByContentId } from '@/services/agents';
 import {
   isVideoGeneration,
@@ -49,45 +50,47 @@ export function InboxItemVisualPreview({ item }: InboxItemVisualPreviewProps) {
 
     return (
       <div className="mt-3">
-        <div
-          className={
-            previewIds.length > 1
-              ? 'grid grid-cols-3 gap-2'
-              : 'overflow-hidden rounded-lg border border-[var(--border)]'
-          }
-        >
-          {previewIds.map((assetId, index) => (
-            <div
-              key={assetId}
-              className={
-                previewIds.length > 1
-                  ? 'aspect-square overflow-hidden rounded-md border border-[var(--border)]'
-                  : isVideo
-                    ? ''
-                    : 'aspect-video max-h-56 bg-[var(--background-secondary)]'
-              }
-            >
-              {isVideo ? (
-                <AuthenticatedAssetVideo
-                  assetId={assetId}
-                  title={item.title}
-                  className="max-h-56 w-full rounded-lg"
-                  controls
-                />
-              ) : (
-                <AuthenticatedAssetImage
-                  assetId={assetId}
-                  alt={item.title}
-                  title={item.title}
-                  className="h-full w-full object-cover"
-                />
-              )}
-              {previewIds.length > 1 && (
-                <span className="sr-only">Frame {index + 1}</span>
-              )}
-            </div>
-          ))}
-        </div>
+        <SocialPostMockup platform={item.platform}>
+          <div
+            className={
+              previewIds.length > 1
+                ? 'grid grid-cols-3 gap-2'
+                : isVideo
+                  ? ''
+                  : 'aspect-video max-h-56 bg-[var(--background-secondary)]'
+            }
+          >
+            {previewIds.map((assetId, index) => (
+              <div
+                key={assetId}
+                className={
+                  previewIds.length > 1
+                    ? 'aspect-square overflow-hidden rounded-md'
+                    : 'h-full w-full'
+                }
+              >
+                {isVideo ? (
+                  <AuthenticatedAssetVideo
+                    assetId={assetId}
+                    title={item.title}
+                    className="max-h-56 w-full rounded-lg"
+                    controls
+                  />
+                ) : (
+                  <AuthenticatedAssetImage
+                    assetId={assetId}
+                    alt={item.title}
+                    title={item.title}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+                {previewIds.length > 1 && (
+                  <span className="sr-only">Frame {index + 1}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </SocialPostMockup>
         {assetIds.length > previewIds.length && (
           <p className="mt-1 text-[10px] text-[var(--foreground-muted)]">
             +{assetIds.length - previewIds.length} frame(s) más en el editor

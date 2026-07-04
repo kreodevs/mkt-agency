@@ -53,6 +53,7 @@ import {
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { buildCompetitorIntelBriefForSocialCopy } from './domain/competitor-intel-brief.util';
+import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 
 @Injectable()
 export class CommunityManagerService {
@@ -448,7 +449,7 @@ export class CommunityManagerService {
   }
 
   private formatPostBody(post: SocialCopyPost): string {
-    const parts = [post.body];
+    const parts = [sanitizePublishableCopy(post.body)];
     if (post.hashtags?.length) {
       parts.push('\n\n' + post.hashtags.map((h) => `#${h}`).join(' '));
     }
@@ -484,5 +485,69 @@ export class CommunityManagerService {
       errorMessage: entity.errorMessage,
       publishedCount: entity.publishedPosts?.length ?? 0,
     };
+  }
+
+  async regeneratePostForContent(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+  ): Promise<{ contentId: string; title: string; regenerated: true }> {
+    const content = await this.contents.findOne({ where: { id: contentId, tenantId } });
+    if (!content) {
+      throw new NotFoundException({ error: 'Contenido no encontrado', code: 'NOT_FOUND' });
+    }
+
+    const platform = this.normalizePlatforms(
+      content.platform ? [content.platform] : undefined,
+    )[0];
+
+    const resolvedProfile = await this.loadResolvedProfile(tenantId);
+    const productContext = await this.resolveProductForGeneration(
+      tenantId,
+      content.productId ?? undefined,
+      content.campaignId ?? undefined,
+    );
+    const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
+    const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
+
+    const result = await runWithLlmUsageContext({ tenantId, userId }, () =>
+      this.adapter.generate({
+        tenantId,
+        platforms: [platform],
+        count: 1,
+        campaignId: content.campaignId ?? undefined,
+        productId: productContext?.id ?? content.productId ?? undefined,
+        brandBrief,
+        productContext: productContext as unknown as Record<string, unknown>,
+        focusProductName: productContext?.name ?? null,
+        competitorIntelBrief,
+      }),
+    );
+
+    const post = result.posts[0];
+    if (!post) {
+      throw new BadRequestException({
+        error: 'No se pudo regenerar el post',
+        code: 'GENERATION_FAILED',
+      });
+    }
+
+    await this.contentService.update(tenantId, userId, contentId, {
+      title: post.title,
+      body: this.formatPostBody(post),
+      changeSummary: 'Regenerado por el copiloto',
+      visualFormat: post.visualFormat,
+      platform: post.platform,
+    });
+
+    if (post.visualDescription?.trim()) {
+      try {
+        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+      } catch (error) {
+        this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+      }
+    }
+
+    return { contentId, title: post.title, regenerated: true };
   }
 }

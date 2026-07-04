@@ -53,6 +53,7 @@ const ImageGeneratorDetailPage = lazy(
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
 const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
+const PublicCapturePage = lazy(() => import('@/pages/capture/PublicCapturePage'));
 
 function Loading() {
   return (
@@ -66,6 +67,8 @@ export function AppRouter() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
+        <Route path="/c/:formId" element={<PublicCapturePage />} />
+
         <Route element={<GuestGuard />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/setup" element={<SetupPage />} />

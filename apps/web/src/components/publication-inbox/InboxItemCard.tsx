@@ -3,6 +3,8 @@ import { CalendarDays, Copy } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
+import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
+import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -31,8 +33,8 @@ interface InboxItemCardProps {
   selected?: boolean;
   onToggleSelect?: (contentId: string) => void;
   showApproval?: boolean;
-  /** CTA principal: copiar/publicar (SOHO) o editar (avanzado). */
   primaryAction?: 'copy' | 'edit';
+  sohoMode?: boolean;
 }
 
 export function InboxItemCard({
@@ -42,8 +44,10 @@ export function InboxItemCard({
   onToggleSelect,
   showApproval = false,
   primaryAction = 'copy',
+  sohoMode = false,
 }: InboxItemCardProps) {
   const formattedDate = formatScheduledDate(item.scheduledDate);
+  const displayPreview = sanitizePublishableCopy(item.preview);
 
   return (
     <article className="rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--primary)]/40">
@@ -79,35 +83,31 @@ export function InboxItemCard({
           <InboxItemVisualPreview item={item} />
 
           <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--foreground-muted)]">
-            {item.preview}
+            {displayPreview}
           </p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {primaryAction === 'copy' ? (
-              <Link
-                to={`/contents/${item.contentId}`}
-                className="inline-flex items-center gap-1 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90"
-              >
-                <Copy className="h-3 w-3" />
-                Copiar y publicar
-              </Link>
-            ) : (
-              <Link
-                to={`/contents/${item.contentId}`}
-                className="text-xs font-medium text-[var(--primary)] hover:underline"
-              >
-                Editar contenido
-              </Link>
-            )}
-            {primaryAction === 'copy' && (
-              <Link
-                to={`/contents/${item.contentId}`}
-                className="text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
-              >
-                Ver detalle
-              </Link>
-            )}
-          </div>
+          {sohoMode ? (
+            <InboxQuickPublishActions item={item} />
+          ) : (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {primaryAction === 'copy' ? (
+                <Link
+                  to={`/contents/${item.contentId}`}
+                  className="inline-flex items-center gap-1 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90"
+                >
+                  <Copy className="h-3 w-3" />
+                  Copiar y publicar
+                </Link>
+              ) : (
+                <Link
+                  to={`/contents/${item.contentId}`}
+                  className="text-xs font-medium text-[var(--primary)] hover:underline"
+                >
+                  Editar contenido
+                </Link>
+              )}
+            </div>
+          )}
 
           {showApproval && item.versionId && !item.signatureHash && (
             <div className="mt-4 border-t border-[var(--border)] pt-4">
@@ -126,6 +126,7 @@ export function InboxItemCard({
                   changeSummary: null,
                   createdAt: '',
                 }}
+                sohoMode={sohoMode}
               />
             </div>
           )}

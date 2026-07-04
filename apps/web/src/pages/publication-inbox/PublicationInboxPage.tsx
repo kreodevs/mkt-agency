@@ -5,28 +5,27 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CopilotStatusPanel } from '@/components/copilot/CopilotStatusPanel';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
 import { InboxKitPanel } from '@/components/publication-inbox/InboxKitPanel';
+import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
+import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPanel';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
-import { apiFetch } from '@/services/api';
+import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import {
   bulkApproveInbox,
   getPublicationInbox,
+  getSohoSummary,
   markAllNotificationsRead,
   markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
 import { useAdvancedNav } from '@/store/copilot-ui';
 
-interface AgencyHomeKpis {
-  leads: { today: number; total: number; clients: number; conversionRate: number };
-  strategy: { suggestionsCount: number } | null;
-}
-
 export default function PublicationInboxPage() {
   const queryClient = useQueryClient();
   const advancedNav = useAdvancedNav();
+  const sohoMode = !advancedNav;
   const [searchParams, setSearchParams] = useSearchParams();
   const activeProductId = useActiveProductStore((s) => s.productId);
   const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
@@ -45,14 +44,10 @@ export default function PublicationInboxPage() {
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
   });
 
-  const kpisQuery = useQuery({
-    queryKey: ['agency-home-kpis'],
-    queryFn: () => apiFetch<AgencyHomeKpis>('/dashboard/agency-home'),
-    select: (data) => ({
-      leadsToday: data.leads.today,
-      conversionRate: data.leads.conversionRate,
-      suggestionsCount: data.strategy?.suggestionsCount ?? 0,
-    }),
+  const sohoSummaryQuery = useQuery({
+    queryKey: ['soho-summary', activeProductId],
+    queryFn: () => getSohoSummary(activeProductId ?? undefined),
+    enabled: sohoMode,
   });
 
   const bulkApproveMutation = useMutation({
@@ -81,6 +76,8 @@ export default function PublicationInboxPage() {
   const ready = data?.readyToPublish ?? [];
   const upcoming = data?.upcoming ?? [];
   const notifications = data?.notifications ?? [];
+
+  useSohoBrowserNotifications(notifications, sohoMode);
 
   const allPendingSelected = useMemo(
     () => pending.length > 0 && pending.every((item) => selectedIds.has(item.contentId)),
@@ -125,19 +122,33 @@ export default function PublicationInboxPage() {
     );
   }
 
+  const summary = sohoSummaryQuery.data;
+  const primaryAction = advancedNav ? 'edit' : 'copy';
+
   return (
     <DashboardShell>
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <Inbox className="h-6 w-6 text-[var(--primary)]" />
-          <h1 className="text-2xl font-black text-[var(--foreground)]">Bandeja de publicación</h1>
+          <h1 className="text-2xl font-black text-[var(--foreground)]">
+            {sohoMode ? 'Tu copiloto de marketing' : 'Bandeja de publicación'}
+          </h1>
         </div>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
           {advancedNav
             ? 'La agencia sugiere — tú apruebas y publicas manualmente'
-            : 'Tu copiloto prepara el contenido — tú solo copias y pegas en tus redes'}
+            : 'Preparar · Revisar · Publicar — el copiloto hace el resto'}
         </p>
       </div>
+
+      {sohoMode && summary && (
+        <SohoResultsBanner
+          leadsToday={summary.leadsToday}
+          leadsThisWeek={summary.leadsThisWeek}
+          attributedLeadsThisWeek={summary.attributedLeadsThisWeek}
+          strategyFocus={summary.strategyFocus}
+        />
+      )}
 
       {welcome && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--success)]/30 bg-[var(--success)]/5 p-4">
@@ -145,8 +156,7 @@ export default function PublicationInboxPage() {
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--success)]">¡Tu semana está lista!</p>
             <p className="mt-1 text-[var(--foreground-muted)]">
-              Los agentes generaron publicaciones para tu producto. Revísalas, aprueba las que te
-              gusten y usa Copiar y Llevar para publicar en tus redes.
+              Revisa lo de hoy, aprueba lo que te guste y usa Copiar texto + Abrir red para publicar.
             </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={dismissWelcome}>
@@ -156,7 +166,7 @@ export default function PublicationInboxPage() {
       )}
 
       {notifications.length > 0 && (
-        <Card className="mb-6" title="Notificaciones de la agencia" subtitle="Avisos recientes">
+        <Card className="mb-6" title="Avisos" subtitle="Del copiloto">
           <div className="mb-3 flex justify-end">
             <Button type="button" size="sm" variant="ghost" onClick={() => void handleMarkAllRead()}>
               <CheckCheck className="mr-1 h-4 w-4" />
@@ -193,12 +203,12 @@ export default function PublicationInboxPage() {
         <MiniKpi label="Listas para publicar" value={data?.stats.readyCount ?? 0} tone="emerald" />
         <MiniKpi label="Próximas" value={data?.stats.upcomingCount ?? 0} tone="violet" />
         <MiniKpi
-          label="Leads hoy"
-          value={kpisQuery.data?.leadsToday ?? 0}
+          label={sohoMode ? 'Contactos hoy' : 'Leads hoy'}
+          value={summary?.leadsToday ?? 0}
           tone="blue"
           detail={
-            kpisQuery.data
-              ? `${kpisQuery.data.conversionRate}% conversión · ${kpisQuery.data.suggestionsCount} ajustes estrategia`
+            sohoMode && summary
+              ? `${summary.leadsThisWeek} esta semana`
               : undefined
           }
         />
@@ -206,6 +216,15 @@ export default function PublicationInboxPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          {sohoMode && (
+            <TodayPublishPanel
+              pending={pending}
+              ready={ready}
+              strategyFocus={summary?.strategyFocus}
+              primaryAction={primaryAction}
+            />
+          )}
+
           <Card
             title="Por aprobar"
             subtitle={`${pending.length} pieza(s) sugerida(s) por la agencia`}
@@ -216,57 +235,58 @@ export default function PublicationInboxPage() {
               </p>
             ) : (
               <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
-                    <input
-                      type="checkbox"
-                      checked={allPendingSelected}
-                      onChange={toggleSelectAll}
-                    />
-                    Seleccionar todas
-                  </label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={selectedIds.size === 0 || bulkApproveMutation.isPending}
-                    onClick={() => bulkApproveMutation.mutate([...selectedIds])}
-                  >
-                    Aprobar seleccionadas ({selectedIds.size})
-                  </Button>
-                </div>
+                {!sohoMode && (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
+                      <input
+                        type="checkbox"
+                        checked={allPendingSelected}
+                        onChange={toggleSelectAll}
+                      />
+                      Seleccionar todas
+                    </label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={selectedIds.size === 0 || bulkApproveMutation.isPending}
+                      onClick={() => bulkApproveMutation.mutate([...selectedIds])}
+                    >
+                      Aprobar seleccionadas ({selectedIds.size})
+                    </Button>
+                  </div>
+                )}
 
                 {pending.map((item) => (
                   <InboxItemCard
                     key={item.contentId}
                     item={item}
-                    selectable
+                    selectable={!sohoMode}
                     selected={selectedIds.has(item.contentId)}
                     onToggleSelect={toggleSelect}
                     showApproval
-                    primaryAction={advancedNav ? 'edit' : 'copy'}
+                    primaryAction={primaryAction}
+                    sohoMode={sohoMode}
                   />
                 ))}
               </div>
             )}
           </Card>
 
-          <Card title="Próximas" subtitle="Programadas a futuro">
-            {upcoming.length === 0 ? (
-              <p className="py-4 text-sm text-[var(--foreground-muted)]">
-                Sin publicaciones futuras en el calendario.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {upcoming.map((item) => (
-                  <InboxItemCard
-                    key={item.contentId}
-                    item={item}
-                    primaryAction={advancedNav ? 'edit' : 'copy'}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
+          {!sohoMode && (
+            <Card title="Próximas" subtitle="Programadas a futuro">
+              {upcoming.length === 0 ? (
+                <p className="py-4 text-sm text-[var(--foreground-muted)]">
+                  Sin publicaciones futuras en el calendario.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {upcoming.map((item) => (
+                    <InboxItemCard key={item.contentId} item={item} primaryAction={primaryAction} />
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">

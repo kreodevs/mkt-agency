@@ -28,6 +28,7 @@ import {
   FormSnippetResponseDto,
   PaginatedFormSubmissionsResponseDto,
   PaginatedFormsResponseDto,
+  PublicFormResponseDto,
   SubmitFormResponseDto,
 } from './dto/form.response.dto';
 import { FormService } from './form.service';
@@ -56,6 +57,15 @@ export class FormController {
     return this.formService.create(user.tenantId!, body);
   }
 
+  @Get('capture')
+  @UseGuards(TenantGuard)
+  ensureCapture(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+  ): Promise<FormResponseDto> {
+    return this.formService.ensureCaptureForm(user.tenantId!, productId);
+  }
+
   @Public()
   @Post(':id/submit')
   @HttpCode(HttpStatus.CREATED)
@@ -73,6 +83,14 @@ export class FormController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<FormSnippetResponseDto> {
     return this.formService.getSnippet(user.tenantId!, id);
+  }
+
+  @Public()
+  @Get(':id/public')
+  publicForm(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicFormResponseDto> {
+    return this.formService.findPublicForm(id);
   }
 
   @Get(':id/submissions')

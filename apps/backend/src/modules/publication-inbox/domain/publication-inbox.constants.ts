@@ -1,6 +1,7 @@
 export const AGENCY_NOTIFICATION_TYPES = {
   WEEK_READY: 'week_ready',
   APPROVAL_REMINDER: 'approval_reminder',
+  PUBLISH_REMINDER: 'publish_reminder',
   ONBOARDING_COMPLETE: 'onboarding_complete',
 } as const;
 

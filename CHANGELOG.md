@@ -7,6 +7,9 @@
 - **Página Ajustes** (`/settings/copilot`): redes sociales, volumen semanal y toggle menú avanzado (`mkt-advanced-nav` en localStorage).
 - **CTA Copiar y publicar** en tarjetas de bandeja (modo SOHO); `/contents/:id` sigue disponible para copiar/descargar.
 - Redirects en modo SOHO: `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → bandeja.
+- **SOHO éxito (Fase A/B)**: «Hoy publicas esto», contactos semanales, regenerar un clic, publicación asistida (copiar/abrir red/WhatsApp), mockup por red, `GET /dashboard/soho-summary`, recordatorio `publish_reminder`, notificaciones navegador.
+- **Atribución post → lead**: `GET /forms/capture`, página pública `/c/:formId`, UTM + `contentId` en submit y `lead.metadata`, botón «Link captura» en bandeja, métrica `attributedLeadsThisWeek` en resumen SOHO.
+- **Sanitización de copy**: elimina indicaciones internas «(mostrar fotos…)» del texto publicable.
 
 ### Changed
 

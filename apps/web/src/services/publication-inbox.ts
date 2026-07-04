@@ -4,6 +4,7 @@ import type {
   CopilotStatus,
   PrepareWeekResult,
   PublicationInboxData,
+  SohoSummary,
 } from '@/types/publication-inbox';
 
 export function getPublicationInbox(productId?: string): Promise<PublicationInboxData> {
@@ -14,6 +15,15 @@ export function getPublicationInbox(productId?: string): Promise<PublicationInbo
 export function getCopilotStatus(productId?: string): Promise<CopilotStatus> {
   const query = productId ? `?productId=${encodeURIComponent(productId)}` : '';
   return apiFetch<CopilotStatus>(`/publication-inbox/copilot-status${query}`);
+}
+
+export function getSohoSummary(productId?: string): Promise<SohoSummary> {
+  const query = productId ? `?productId=${encodeURIComponent(productId)}` : '';
+  return apiFetch<SohoSummary>(`/dashboard/soho-summary${query}`);
+}
+
+export function regenerateInboxContent(contentId: string): Promise<{ contentId: string; title: string; regenerated: true }> {
+  return apiFetch(`/publication-inbox/regenerate/${contentId}`, { method: 'POST' });
 }
 
 export function prepareWeek(productId?: string): Promise<PrepareWeekResult> {

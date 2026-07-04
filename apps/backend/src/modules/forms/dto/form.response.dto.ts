@@ -13,6 +13,14 @@ export class FormResponseDto {
   updatedAt!: string;
 }
 
+export class PublicFormResponseDto {
+  id!: string;
+  name!: string;
+  fields!: FormFieldDefinition[];
+  style!: Record<string, unknown>;
+  productId!: string | null;
+}
+
 export class PaginatedFormsResponseDto {
   items!: FormResponseDto[];
   total!: number;

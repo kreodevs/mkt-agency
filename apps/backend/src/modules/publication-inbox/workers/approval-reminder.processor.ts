@@ -12,7 +12,11 @@ export class ApprovalReminderProcessor extends WorkerHost {
     super();
   }
 
-  async process(_job: Job<ApprovalReminderJobData>): Promise<void> {
+  async process(job: Job<ApprovalReminderJobData>): Promise<void> {
+    if (job.name === 'remind-publish') {
+      await this.reminderWorker.sendPublishReminders();
+      return;
+    }
     await this.reminderWorker.sendReminders();
   }
 }

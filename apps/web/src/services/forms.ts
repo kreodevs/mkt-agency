@@ -5,6 +5,8 @@ import type {
   FormSnippetResponse,
   PaginatedFormSubmissionsResponse,
   PaginatedFormsResponse,
+  PublicForm,
+  SubmitFormResult,
   UpdateFormPayload,
 } from '@/types/forms';
 
@@ -46,4 +48,23 @@ export async function listFormSubmissions(
   return apiFetch<PaginatedFormSubmissionsResponse>(
     `/forms/${id}/submissions?page=${page}&limit=${limit}`,
   );
+}
+
+export async function ensureCaptureForm(productId?: string): Promise<Form> {
+  const query = productId ? `?productId=${encodeURIComponent(productId)}` : '';
+  return apiFetch<Form>(`/forms/capture${query}`);
+}
+
+export async function getPublicForm(id: string): Promise<PublicForm> {
+  return apiFetch<PublicForm>(`/forms/${id}/public`);
+}
+
+export async function submitPublicForm(
+  id: string,
+  payload: Record<string, string>,
+): Promise<SubmitFormResult> {
+  return apiFetch<SubmitFormResult>(`/forms/${id}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
