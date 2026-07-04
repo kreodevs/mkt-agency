@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LlmClient } from '../../../shared/ai/llm.client';
 import { TavilySearchService } from '../../../shared/search/tavily.client';
-import { isRetailBusiness, extractWebSearchCandidates } from '../domain/competitor-discovery-context.util';
+import { isRetailBusiness, extractWebSearchCandidates, competitorsFromWebEvidence } from '../domain/competitor-discovery-context.util';
 import {
   CompetitorDiscoveryAdapterPort,
   CompetitorDiscoveryContext,
@@ -148,13 +148,74 @@ export class OpenRouterCompetitorDiscoveryAdapter implements CompetitorDiscovery
       maxTokens: 4000,
     });
 
-    return (parsed.competitors ?? [])
-      .filter((item) => item.name?.trim() && item.confidence !== 'low')
+    const llmItems = this.mapLlmCompetitors(parsed);
+    if (llmItems.length >= 2) {
+      return llmItems;
+    }
+
+    if (usingWebSearch) {
+      const webItems = competitorsFromWebEvidence(
+        webSearchEvidence.map((entry) => ({
+          query: entry.query,
+          hits: entry.hits.map((hit) => ({
+            title: hit.title,
+            url: hit.url,
+            snippet: hit.snippet,
+          })),
+        })),
+      );
+      if (webItems.length > 0) {
+        this.logger.warn(
+          `LLM returned ${llmItems.length} competitors; supplementing with ${webItems.length} Tavily candidates`,
+        );
+        return this.mergeDiscoveredCompetitors(llmItems, webItems);
+      }
+    }
+
+    return llmItems;
+  }
+
+  private mapLlmCompetitors(parsed: DiscoveryJsonResponse): DiscoveredCompetitorResult[] {
+    const mapped = (parsed.competitors ?? [])
+      .filter((item) => item.name?.trim())
       .map((item) => ({
         name: item.name!.trim(),
         website: item.website?.trim() || null,
         industry: item.industry?.trim() || null,
         rationale: item.rationale?.trim() || null,
+        confidence: (item.confidence ?? 'medium').toString().toLowerCase(),
       }));
+
+    const preferred = mapped.filter((item) => item.confidence !== 'low');
+    const selected = preferred.length >= 2 ? preferred : mapped;
+
+    return selected.map(({ name, website, industry, rationale }) => ({
+      name,
+      website,
+      industry,
+      rationale,
+    }));
+  }
+
+  private mergeDiscoveredCompetitors(
+    primary: DiscoveredCompetitorResult[],
+    secondary: DiscoveredCompetitorResult[],
+  ): DiscoveredCompetitorResult[] {
+    const seen = new Set(primary.map((item) => item.name.trim().toLowerCase()));
+    const merged = [...primary];
+
+    for (const item of secondary) {
+      const key = item.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push(item);
+      if (merged.length >= 12) {
+        break;
+      }
+    }
+
+    return merged;
   }
 }

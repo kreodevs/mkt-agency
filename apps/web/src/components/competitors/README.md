@@ -5,7 +5,7 @@ Componentes para monitoreo de competencia.
 ## Componentes
 
 - `MentionList.tsx` — listado de menciones con filtro de sentimiento
-- `CompetitorDiscoveryPanel.tsx` — búsqueda IA por alcance global, país o ciudad; registro bulk de sugerencias
+- `CompetitorDiscoveryPanel.tsx` — búsqueda IA por alcance global, país o ciudad; preselecciona producto único y país México; registro bulk de sugerencias
 
 ## API relacionada
 

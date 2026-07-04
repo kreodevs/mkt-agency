@@ -30,7 +30,7 @@ interface TavilyApiResponse {
 
 const DEFAULT_QUERY_TIMEOUT_MS = 15_000;
 const DEFAULT_GATHER_BUDGET_MS = 45_000;
-const MAX_DISCOVERY_QUERIES = 5;
+const MAX_DISCOVERY_QUERIES = 8;
 const MAX_RESULTS_PER_QUERY = 6;
 
 @Injectable()
@@ -106,7 +106,7 @@ export class TavilySearchService {
   async gatherCompetitorEvidence(
     context: CompetitorDiscoveryContext,
   ): Promise<TavilyQueryEvidence[]> {
-    const queries = (context.searchQueries ?? []).filter(Boolean).slice(0, MAX_DISCOVERY_QUERIES);
+    const queries = this.resolveDiscoveryQueries(context);
     if (queries.length === 0) {
       return [];
     }
@@ -141,6 +141,31 @@ export class TavilySearchService {
     }
 
     return evidence;
+  }
+
+  private resolveDiscoveryQueries(context: CompetitorDiscoveryContext): string[] {
+    const fromContext = (context.searchQueries ?? []).filter(Boolean);
+    if (fromContext.length > 0) {
+      return fromContext.slice(0, MAX_DISCOVERY_QUERIES);
+    }
+
+    const geo = (context.country ?? context.city ?? '').trim();
+    const fallback: string[] = [];
+    if (context.productName?.trim()) {
+      fallback.push(
+        geo
+          ? `competidores ${context.productName.trim()} ${geo}`
+          : `competidores ${context.productName.trim()}`,
+      );
+    }
+    for (const keyword of (context.productKeywords ?? []).slice(0, 2)) {
+      fallback.push(geo ? `${keyword} empresas ${geo}` : `${keyword} competidores`);
+    }
+
+    return [...new Set(fallback.map((query) => query.trim()).filter(Boolean))].slice(
+      0,
+      MAX_DISCOVERY_QUERIES,
+    );
   }
 
   async testConnection(): Promise<{ ok: true; resultCount: number; query: string }> {

@@ -52,7 +52,7 @@ export function CompetitorDiscoveryPanel({
 }: CompetitorDiscoveryPanelProps) {
   const [scope, setScope] = useState<CompetitorDiscoveryScope>('country');
   const [productId, setProductId] = useState('');
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState('México');
   const [city, setCity] = useState('');
   const [results, setResults] = useState<DiscoveredCompetitor[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -65,8 +65,14 @@ export function CompetitorDiscoveryPanel({
   useEffect(() => {
     if (defaultProductId && !productId) {
       setProductId(defaultProductId);
+      return;
     }
-  }, [defaultProductId, productId]);
+
+    const products = productsQuery.data?.items ?? [];
+    if (!productId && products.length === 1) {
+      setProductId(products[0].id);
+    }
+  }, [defaultProductId, productId, productsQuery.data?.items]);
 
   const discoverMutation = useMutation({
     mutationFn: () =>
@@ -137,7 +143,7 @@ export function CompetitorDiscoveryPanel({
     <Card title={title} subtitle={subtitle}>
       <div className="space-y-4">
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-[var(--foreground)]">Producto (opcional)</span>
+          <span className="text-sm font-medium text-[var(--foreground)]">Producto</span>
           <select
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
@@ -150,6 +156,9 @@ export function CompetitorDiscoveryPanel({
               </option>
             ))}
           </select>
+          <p className="text-xs text-[var(--foreground-muted)]">
+            Recomendado: elige el producto con tags SEO para mejores resultados.
+          </p>
         </label>
 
         <div className="grid gap-2 sm:grid-cols-3">

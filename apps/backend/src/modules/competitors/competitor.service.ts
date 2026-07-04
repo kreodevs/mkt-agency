@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,7 +21,7 @@ import type { MentionSentiment } from './domain/competitor.constants';
 import {
   buildDiscoverySearchQueries,
   extractStructuredBriefExcerpt,
-  filterIrrelevantCompetitors,
+  filterIrrelevantCompetitorsWithFallback,
   formatIndustryLabel,
   hasMinimalDiscoveryContext,
   parseKnownCompetitorsFromProfile,
@@ -49,6 +50,8 @@ import { CompetitorEntity } from './infrastructure/typeorm/competitor.entity';
 
 @Injectable()
 export class CompetitorService {
+  private readonly logger = new Logger(CompetitorService.name);
+
   constructor(
     @InjectRepository(CompetitorEntity)
     private readonly competitors: Repository<CompetitorEntity>,
@@ -155,12 +158,16 @@ export class CompetitorService {
 
     const discoveryContext = await this.buildDiscoveryContext(tenantId, dto);
     const rawItems = await this.discoveryAdapter.discover(discoveryContext);
-    const items = filterIrrelevantCompetitors(discoveryContext, rawItems);
+    const items = filterIrrelevantCompetitorsWithFallback(discoveryContext, rawItems);
+
+    this.logger.log(
+      `Competitor discovery tenant=${tenantId} scope=${dto.scope} raw=${rawItems.length} filtered=${items.length} queries=${discoveryContext.searchQueries?.length ?? 0}`,
+    );
 
     if (items.length === 0) {
       throw new BadRequestException({
         error:
-          'No se encontraron competidores relevantes para tu sector. Completa el onboarding o el Brand Brief y vuelve a intentar.',
+          'No se encontraron competidores relevantes para tu sector. Verifica tags SEO del producto, completa el Brand Brief o prueba otro alcance geográfico.',
         code: 'NO_RELEVANT_COMPETITORS',
       });
     }
