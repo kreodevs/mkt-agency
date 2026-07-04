@@ -80,12 +80,66 @@ export function detectGenerationMediaType(prompt: string): GenerationMediaType {
   return VIDEO_PROMPT_KEYWORDS.test(prompt) ? 'video' : 'image';
 }
 
-export function detectReelFrameCount(prompt: string): number {
-  if (detectGenerationMediaType(prompt) === 'video') {
+/**
+ * Evita que palabras como "video" en el copy del post (`Contexto:`) disparen Video API
+ * al regenerar desde Contenidos.
+ */
+export function extractScenePromptForMediaDetection(prompt: string): string {
+  const contextIndex = prompt.indexOf('Contexto:');
+  return contextIndex >= 0 ? prompt.slice(0, contextIndex) : prompt;
+}
+
+export function resolveGenerationMediaType(
+  prompt: string,
+  options?: { contentLinked?: boolean; forced?: GenerationMediaType },
+): GenerationMediaType {
+  if (options?.forced) {
+    return options.forced;
+  }
+
+  const detectionPrompt = options?.contentLinked
+    ? extractScenePromptForMediaDetection(prompt)
+    : prompt;
+
+  return detectGenerationMediaType(detectionPrompt);
+}
+
+export function detectReelFrameCount(
+  prompt: string,
+  options?: { contentLinked?: boolean },
+): number {
+  if (resolveGenerationMediaType(prompt, options) === 'video') {
     return 1;
   }
 
-  return STATIC_CAROUSEL_KEYWORDS.test(prompt) ? REEL_FRAME_COUNT : 1;
+  const detectionPrompt = options?.contentLinked
+    ? extractScenePromptForMediaDetection(prompt)
+    : prompt;
+
+  return STATIC_CAROUSEL_KEYWORDS.test(detectionPrompt) ? REEL_FRAME_COUNT : 1;
+}
+
+export function formatGenerationError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : 'Generation failed';
+
+  if (/unexpected internal error/i.test(raw)) {
+    return 'El proveedor de IA devolvió un error interno. Reintenta en unos minutos o cambia el modelo en Ajustes → Modelos por tarea.';
+  }
+
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { error?: { message?: string } };
+      const providerMessage = parsed.error?.message?.trim();
+      if (providerMessage) {
+        return providerMessage;
+      }
+    } catch {
+      // ignore malformed JSON tail
+    }
+  }
+
+  return raw.length > 500 ? `${raw.slice(0, 497)}…` : raw;
 }
 
 export function resolveVideoAspectRatio(prompt: string): string {
@@ -302,6 +356,7 @@ export interface ImageGenerationFrameMeta {
 
 export interface ImageGenerationMetadata {
   mediaType?: GenerationMediaType;
+  intendedMediaType?: GenerationMediaType;
   mimeType?: string;
   duration?: number;
   frameCount: number;

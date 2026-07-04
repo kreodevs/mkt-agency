@@ -23,12 +23,14 @@ import { buildBrandedImagePrompt } from './domain/image-branding.util';
 import {
   buildFramePrompt,
   buildVideoGenerationPrompt,
-  detectGenerationMediaType,
   detectReelFrameCount,
+  formatGenerationError,
   isImageGenerationMetadata,
+  resolveGenerationMediaType,
   resolveVideoAspectRatio,
   resolveVideoDuration,
   shouldGenerateVideoAudio,
+  type GenerationMediaType,
   type ImageGenerationFrameMeta,
   type ImageGenerationMetadata,
 } from './domain/image-generation.utils';
@@ -114,7 +116,13 @@ export class ImageGenerationService {
         status: 'processing',
         productId: options.productId ?? null,
         contentId: options.contentId ?? null,
-        metadata: {},
+        metadata: {
+          intendedMediaType: resolveGenerationMediaType(trimmed, {
+            contentLinked: !!options.contentId,
+          }),
+          frameCount: 0,
+          frames: [],
+        },
       }),
     );
 
@@ -234,11 +242,20 @@ export class ImageGenerationService {
     prompt: string,
     options: GenerateImageOptions,
   ): Promise<GenerateImageResult> {
-    if (detectGenerationMediaType(prompt) === 'video') {
+    const contentLinked = Boolean(options.contentId ?? record.contentId);
+    const storedIntent = isImageGenerationMetadata(record.metadata)
+      ? record.metadata.intendedMediaType
+      : undefined;
+    const mediaType = resolveGenerationMediaType(prompt, {
+      contentLinked,
+      forced: storedIntent,
+    });
+
+    if (mediaType === 'video') {
       return this.runVideoGeneration(tenantId, userId, record, prompt, options);
     }
 
-    return this.runImageGeneration(tenantId, userId, record, prompt, options);
+    return this.runImageGeneration(tenantId, userId, record, prompt, options, { contentLinked });
   }
 
   private async runVideoGeneration(
@@ -274,6 +291,7 @@ export class ImageGenerationService {
 
       const metadata: ImageGenerationMetadata = {
         mediaType: 'video',
+        intendedMediaType: 'video',
         mimeType: result.mimeType ?? 'video/mp4',
         duration,
         frameCount: 1,
@@ -304,8 +322,10 @@ export class ImageGenerationService {
     } catch (error) {
       this.logger.warn(`Video generation failed: ${error instanceof Error ? error.message : error}`);
       record.status = 'failed';
-      record.errorMessage = error instanceof Error ? error.message : 'Video generation failed';
-      record.metadata = {};
+      record.errorMessage = formatGenerationError(error);
+      record.metadata = isImageGenerationMetadata(record.metadata)
+        ? { ...record.metadata, mediaType: 'video', frameCount: 0, frames: [] }
+        : { intendedMediaType: 'video', mediaType: 'video', frameCount: 0, frames: [] };
       await this.generations.save(record);
       return this.toResult(record);
     }
@@ -317,6 +337,7 @@ export class ImageGenerationService {
     record: AgentImageGenerationEntity,
     prompt: string,
     options: GenerateImageOptions,
+    context: { contentLinked: boolean },
   ): Promise<GenerateImageResult> {
     const productId = await this.resolveEffectiveProductId(tenantId, options, record);
 
@@ -326,7 +347,7 @@ export class ImageGenerationService {
     }
 
     try {
-      const frameCount = detectReelFrameCount(prompt);
+      const frameCount = detectReelFrameCount(prompt, { contentLinked: context.contentLinked });
       const frames: ImageGenerationFrameMeta[] = [];
 
       for (let index = 0; index < frameCount; index += 1) {
@@ -350,6 +371,7 @@ export class ImageGenerationService {
       const primary = frames[0];
       const metadata: ImageGenerationMetadata = {
         mediaType: 'image',
+        intendedMediaType: 'image',
         frameCount,
         frames,
       };
@@ -383,8 +405,11 @@ export class ImageGenerationService {
     } catch (error) {
       this.logger.warn(`Image generation failed: ${error instanceof Error ? error.message : error}`);
       record.status = 'failed';
-      record.errorMessage = error instanceof Error ? error.message : 'Generation failed';
-      record.metadata = {};
+      record.errorMessage = formatGenerationError(error);
+      const intendedMediaType: GenerationMediaType = 'image';
+      record.metadata = isImageGenerationMetadata(record.metadata)
+        ? { ...record.metadata, mediaType: 'image', intendedMediaType, frameCount: 0, frames: [] }
+        : { intendedMediaType, mediaType: 'image', frameCount: 0, frames: [] };
       await this.generations.save(record);
       return this.toResult(record);
     }
@@ -551,12 +576,6 @@ export class ImageGenerationService {
     assetIds: string[],
     mediaType: 'image' | 'video' = 'image',
   ): Promise<void> {
-    const content = await this.contentService.findOne(tenantId, contentId);
-    const currentAssets = content.currentVersion?.assets ?? [];
-    const existingIds = currentAssets.map((asset) =>
-      typeof asset === 'string' ? asset : (asset as { id: string }).id,
-    );
-
     const changeSummary =
       mediaType === 'video'
         ? 'Video generado por Image Generator'
@@ -565,7 +584,7 @@ export class ImageGenerationService {
           : 'Imagen generada por Image Generator';
 
     await this.contentService.update(tenantId, userId, contentId, {
-      assets: [...new Set([...existingIds, ...assetIds])],
+      assets: assetIds,
       changeSummary,
     });
   }
@@ -738,7 +757,14 @@ export class ImageGenerationService {
     record.imageUrl = null;
     record.assetId = null;
     record.errorMessage = null;
-    record.metadata = {};
+    const intendedMediaType = resolveGenerationMediaType(record.prompt, {
+      contentLinked: !!record.contentId,
+    });
+    record.metadata = {
+      intendedMediaType,
+      frameCount: 0,
+      frames: [],
+    };
     await this.generations.save(record);
 
     if (options.background) {

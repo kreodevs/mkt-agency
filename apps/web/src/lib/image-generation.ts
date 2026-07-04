@@ -67,11 +67,17 @@ export function resolveContentVisualAssetIds(input: {
   generation?: { assetId: string | null; metadata?: unknown; status?: string } | null;
   versionAssets?: unknown[];
 }): string[] {
-  if (input.generation?.status === 'completed') {
-    const fromGeneration = listGenerationAssetIds(input.generation);
+  const generation = input.generation;
+
+  if (generation?.status === 'completed') {
+    const fromGeneration = listGenerationAssetIds(generation);
     if (fromGeneration.length) {
       return fromGeneration;
     }
+  }
+
+  if (generation) {
+    return [];
   }
 
   return extractContentAssetIds(input.versionAssets);

@@ -65,13 +65,15 @@ export default function ImageGeneratorPage() {
     onSuccess: (result) => {
       if (result.status === 'failed') {
         toast.error(result.errorMessage ?? 'Error al generar imagen');
+      } else if (result.status === 'processing') {
+        toast.info('Generando en segundo plano… puedes salir de esta página.');
       } else {
         const meta = parseImageGenerationMetadata(result.metadata);
         toast.success(
           meta && (meta.frameCount ?? meta.frames.length) > 1
-            ? `${meta.frameCount ?? meta.frames.length} frames generados para reel/carrusel`
+            ? `${meta.frameCount ?? meta.frames.length} frames encolados para reel/carrusel`
             : meta?.mediaType === 'video'
-              ? 'Video generado'
+              ? 'Video en generación'
               : 'Imagen generada',
         );
         setPrompt('');

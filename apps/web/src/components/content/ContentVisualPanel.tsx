@@ -106,7 +106,13 @@ export function ContentVisualPanel({
       ) : null}
 
       {isFailed && generation?.errorMessage ? (
-        <p className="mb-3 text-sm text-destructive">{generation.errorMessage}</p>
+        <div className="mb-3 space-y-2">
+          <p className="text-sm text-destructive">{generation.errorMessage}</p>
+          <p className="text-xs text-[var(--foreground-muted)]">
+            Si el copy menciona &quot;video&quot;, la regeneración desde Contenidos genera imagen
+            (no clip). Usa Image Generator con un prompt de video si necesitas MP4.
+          </p>
+        </div>
       ) : null}
 
       {hasVisual ? (
@@ -320,7 +326,11 @@ function handleGenerationResult(
   }
 
   if (result.status === 'processing') {
-    toast.info(regenerating ? 'Regenerando imagen…' : 'Generando imagen…');
+    toast.info(
+      regenerating
+        ? 'Regenerando en segundo plano… puedes salir de esta página.'
+        : 'Generando en segundo plano… puedes salir de esta página.',
+    );
     return;
   }
 

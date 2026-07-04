@@ -43,6 +43,7 @@ export class ImageGenerationController {
       size: body.size,
       productId: body.productId,
       contentId: body.contentId,
+      background: true,
     });
   }
 
