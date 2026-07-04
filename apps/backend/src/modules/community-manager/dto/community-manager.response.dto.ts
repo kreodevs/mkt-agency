@@ -5,6 +5,7 @@ export interface SocialCopyPostResponse {
   body: string;
   hashtags: string[];
   visualDescription: string;
+  visualFormat: string;
   bestTime: string;
   targetAudience: string;
   callToAction: string;

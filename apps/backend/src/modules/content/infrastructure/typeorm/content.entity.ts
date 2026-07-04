@@ -40,6 +40,10 @@ export class ContentEntity {
   @Column({ type: 'varchar', length: 20, nullable: true })
   platform!: string | null;
 
+  /** Formato visual a generar: image | video | carousel (Image/Video Generator). */
+  @Column({ name: 'visual_format', type: 'varchar', length: 20, default: 'image' })
+  visualFormat!: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

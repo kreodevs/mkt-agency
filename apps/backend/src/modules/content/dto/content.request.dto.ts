@@ -10,7 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { CONTENT_STATUSES, CONTENT_TYPES } from '../domain/content.constants';
+import { CONTENT_STATUSES, CONTENT_TYPES, CONTENT_VISUAL_FORMATS } from '../domain/content.constants';
 import { CM_PLATFORMS } from '../../community-manager/domain/cm-platforms.constants';
 
 export class CreateContentDto {
@@ -45,6 +45,11 @@ export class CreateContentDto {
   @IsString()
   @IsIn([...CM_PLATFORMS])
   platform?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CONTENT_VISUAL_FORMATS])
+  visualFormat?: string;
 }
 
 export class UpdateContentDto {
@@ -73,6 +78,11 @@ export class UpdateContentDto {
   @IsOptional()
   @IsDateString()
   scheduledDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CONTENT_VISUAL_FORMATS])
+  visualFormat?: string;
 }
 
 export class ListContentsQueryDto {

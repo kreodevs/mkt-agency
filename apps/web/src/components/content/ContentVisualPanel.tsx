@@ -24,19 +24,28 @@ import {
 } from '@/lib/image-destination-formats';
 import type { CmPlatform } from '@/services/community-manager';
 
+import {
+  CONTENT_VISUAL_FORMAT_LABELS,
+  normalizeContentVisualFormat,
+  type ContentVisualFormat,
+} from '@/lib/visual-format';
+
 import type { ImageGeneration } from '@/types/agents';
 
 type ContentVisualPanelProps = {
   contentId: string;
   versionAssets?: unknown[];
   platform?: string | null;
+  visualFormat?: ContentVisualFormat;
 };
 
 export function ContentVisualPanel({
   contentId,
   versionAssets,
   platform = null,
+  visualFormat = 'image',
 }: ContentVisualPanelProps) {
+  const formatLabel = CONTENT_VISUAL_FORMAT_LABELS[normalizeContentVisualFormat(visualFormat)];
   const destinationFormat = getDefaultFormatForPlatform(platform as CmPlatform | null);
   const platformLabel = platform ? destinationPlatformLabel(platform as CmPlatform) : null;
   const queryClient = useQueryClient();
@@ -80,15 +89,15 @@ export function ContentVisualPanel({
 
   return (
     <Card
-      title="Imagen del contenido"
+      title={visualFormat === 'video' ? 'Video del contenido' : 'Imagen del contenido'}
       subtitle={
         platformLabel
-          ? `Formato ${destinationFormat.label} · ${destinationFormat.aspectLabel} (${platformLabel})`
+          ? `Formato ${destinationFormat.label} · ${formatLabel} · ${destinationFormat.aspectLabel} (${platformLabel})`
           : isVideo
-            ? `Video · ${frameMeta?.duration ?? '?'}s`
+            ? `Video · ${frameMeta?.duration ?? '?'}s · ${formatLabel}`
             : frameCount > 1
-              ? `${frameCount} frames · reel/carrusel`
-              : 'Generada con Image Generator desde el copy'
+              ? `${frameCount} frames · carrusel`
+              : `Generado con Image Generator · ${formatLabel}`
       }
     >
       {generationQuery.isLoading ? (
@@ -109,8 +118,8 @@ export function ContentVisualPanel({
         <div className="mb-3 space-y-2">
           <p className="text-sm text-destructive">{generation.errorMessage}</p>
           <p className="text-xs text-[var(--foreground-muted)]">
-            Si el copy menciona &quot;video&quot;, la regeneración desde Contenidos genera imagen
-            (no clip). Usa Image Generator con un prompt de video si necesitas MP4.
+            El formato visual del editor es <strong>{formatLabel}</strong>. Regenerar usará ese
+            tipo (imagen, video o carrusel), no palabras sueltas del copy.
           </p>
         </div>
       ) : null}
@@ -168,7 +177,11 @@ export function ContentVisualPanel({
             onClick={() => generateMutation.mutate()}
           >
             <Sparkles className="h-4 w-4" />
-            Generar imagen
+            {visualFormat === 'video'
+              ? 'Generar video'
+              : visualFormat === 'carousel'
+                ? 'Generar carrusel'
+                : 'Generar imagen'}
           </Button>
         ) : null}
 

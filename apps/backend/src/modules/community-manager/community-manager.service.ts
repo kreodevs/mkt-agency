@@ -311,6 +311,7 @@ export class CommunityManagerService {
           scheduleDate.setDate(scheduleDate.getDate() + i + 1);
           contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
           contentDto.platform = post.platform;
+          contentDto.visualFormat = post.visualFormat;
 
           const content = await this.contentService.create(tenantId, userId, contentDto);
 
@@ -431,6 +432,7 @@ export class CommunityManagerService {
       body: p.body,
       hashtags: p.hashtags,
       visualDescription: p.visualDescription,
+      visualFormat: p.visualFormat,
       bestTime: p.bestTime,
       targetAudience: p.targetAudience,
       callToAction: p.callToAction,

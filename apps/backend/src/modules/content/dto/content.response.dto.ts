@@ -25,6 +25,7 @@ export class ContentResponseDto {
   currentVersionId!: string | null;
   scheduledDate!: string | null;
   platform!: string | null;
+  visualFormat!: string;
   currentVersion?: ContentVersionResponseDto;
   createdAt!: string;
   updatedAt!: string;

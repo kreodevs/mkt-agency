@@ -10,6 +10,7 @@ import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.e
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { ProductService } from '../product/product.service';
 import { ContentStatus } from './domain/content.constants';
+import { normalizeContentVisualFormat } from './domain/content-visual-format.util';
 import {
   CreateContentDto,
   FeedbackDto,
@@ -107,6 +108,7 @@ export class ContentService {
           currentVersionId: null,
           scheduledDate: dto.scheduledDate ?? null,
           platform: dto.platform ?? null,
+          visualFormat: normalizeContentVisualFormat(dto.visualFormat),
         }),
       );
 
@@ -155,18 +157,24 @@ export class ContentService {
       dto.assets !== undefined ||
       dto.reason !== undefined ||
       dto.changeSummary !== undefined;
-    const hasScheduleOnly = dto.scheduledDate !== undefined && !hasVersionFields;
+    const hasMetadataOnly =
+      (dto.scheduledDate !== undefined || dto.visualFormat !== undefined) && !hasVersionFields;
 
-    if (!hasVersionFields && !hasScheduleOnly) {
+    if (!hasVersionFields && !hasMetadataOnly) {
       throw new BadRequestException({
         error: 'At least one field is required to update content',
         code: 'VALIDATION_ERROR',
       });
     }
 
-    if (hasScheduleOnly) {
+    if (hasMetadataOnly) {
       const content = await this.findOwnedContent(tenantId, id);
-      content.scheduledDate = dto.scheduledDate ?? null;
+      if (dto.scheduledDate !== undefined) {
+        content.scheduledDate = dto.scheduledDate ?? null;
+      }
+      if (dto.visualFormat !== undefined) {
+        content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
+      }
       const saved = await this.contents.save(content);
       return this.toContentResponse(saved);
     }
@@ -208,6 +216,10 @@ export class ContentService {
 
       if (dto.scheduledDate !== undefined) {
         content.scheduledDate = dto.scheduledDate ?? null;
+      }
+
+      if (dto.visualFormat !== undefined) {
+        content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
       }
 
       await contentRepo.save(content);
@@ -631,6 +643,7 @@ export class ContentService {
       currentVersionId: content.currentVersionId,
       scheduledDate: content.scheduledDate,
       platform: content.platform ?? null,
+      visualFormat: normalizeContentVisualFormat(content.visualFormat),
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

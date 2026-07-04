@@ -16,6 +16,13 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { getContent, listContentVersions, updateContent, deleteContent } from '@/services/content';
+import type { ContentVisualFormat } from '@/types/content';
+import {
+  CONTENT_VISUAL_FORMAT_HINTS,
+  CONTENT_VISUAL_FORMAT_LABELS,
+  CONTENT_VISUAL_FORMATS,
+  normalizeContentVisualFormat,
+} from '@/lib/visual-format';
 
 export default function ContentEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +32,7 @@ export default function ContentEditPage() {
   const [body, setBody] = useState('');
   const [changeSummary, setChangeSummary] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
+  const [visualFormat, setVisualFormat] = useState<ContentVisualFormat>('image');
 
   const contentQuery = useQuery({
     queryKey: ['content', id],
@@ -46,8 +54,9 @@ export default function ContentEditPage() {
     }
     if (contentQuery.data) {
       setScheduledDate(contentQuery.data.scheduledDate ?? '');
+      setVisualFormat(normalizeContentVisualFormat(contentQuery.data.visualFormat));
     }
-  }, [contentQuery.data?.currentVersion?.id, contentQuery.data?.scheduledDate]);
+  }, [contentQuery.data?.currentVersion?.id, contentQuery.data?.scheduledDate, contentQuery.data?.visualFormat]);
 
   const scheduleMutation = useMutation({
     mutationFn: () =>
@@ -62,6 +71,17 @@ export default function ContentEditPage() {
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar la fecha');
+    },
+  });
+
+  const visualFormatMutation = useMutation({
+    mutationFn: () => updateContent(id!, { visualFormat }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['content', id] });
+      toast.success('Formato visual actualizado');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar el formato');
     },
   });
 
@@ -144,7 +164,7 @@ export default function ContentEditPage() {
     <DashboardShell>
       <PageHeader
         title={content.title}
-        description={`Tipo: ${content.type} · v${currentVersion.versionNumber}`}
+        description={`Tipo: ${content.type} · Formato: ${CONTENT_VISUAL_FORMAT_LABELS[visualFormat]} · v${currentVersion.versionNumber}`}
         actions={
           <div className="flex flex-wrap gap-2">
             {canDelete && (
@@ -214,6 +234,37 @@ export default function ContentEditPage() {
                 Guardar fecha
               </Button>
 
+              <div className="flex flex-col gap-[var(--spacing-xs)]">
+                <label htmlFor="content-visual-format" className="text-sm font-medium">
+                  Formato visual (IA)
+                </label>
+                <select
+                  id="content-visual-format"
+                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
+                  value={visualFormat}
+                  onChange={(event) =>
+                    setVisualFormat(event.target.value as ContentVisualFormat)
+                  }
+                >
+                  {CONTENT_VISUAL_FORMATS.map((format) => (
+                    <option key={format} value={format}>
+                      {CONTENT_VISUAL_FORMAT_LABELS[format]}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-[var(--foreground-muted)]">
+                  {CONTENT_VISUAL_FORMAT_HINTS[visualFormat]}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  loading={visualFormatMutation.isPending}
+                  onClick={() => visualFormatMutation.mutate()}
+                >
+                  Guardar formato visual
+                </Button>
+              </div>
+
               <InputText
                 label="Resumen del cambio (opcional)"
                 value={changeSummary}
@@ -231,6 +282,7 @@ export default function ContentEditPage() {
             contentId={content.id}
             versionAssets={currentVersion.assets}
             platform={content.platform}
+            visualFormat={visualFormat}
           />
 
           <SignatureBadge

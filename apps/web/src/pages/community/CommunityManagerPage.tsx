@@ -37,6 +37,7 @@ import {
 } from '@/services/community-manager';
 import { listProducts } from '@/services/products';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import { CONTENT_VISUAL_FORMAT_LABELS } from '@/lib/visual-format';
 
 interface SocialPost {
   id: string;
@@ -45,6 +46,7 @@ interface SocialPost {
   body: string;
   hashtags: string[];
   visualDescription: string;
+  visualFormat?: string;
   bestTime: string;
   targetAudience: string;
   callToAction: string;
@@ -578,9 +580,19 @@ export default function CommunityManagerPage() {
                       {expanded && (
                         <div className="mt-2 flex items-start gap-2 rounded-lg bg-[var(--secondary)] p-3">
                           <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--foreground-muted)]" />
-                          <p className="text-xs text-[var(--foreground)]">
-                            {post.visualDescription}
-                          </p>
+                          <div className="space-y-1">
+                            {post.visualFormat ? (
+                              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--primary)]">
+                                Formato:{' '}
+                                {CONTENT_VISUAL_FORMAT_LABELS[
+                                  post.visualFormat as keyof typeof CONTENT_VISUAL_FORMAT_LABELS
+                                ] ?? post.visualFormat}
+                              </p>
+                            ) : null}
+                            <p className="text-xs text-[var(--foreground)]">
+                              {post.visualDescription}
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>

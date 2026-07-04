@@ -4,6 +4,7 @@ export interface BrandedImagePromptInput {
   body?: string;
   visualDescription?: string;
   hasLogo: boolean;
+  visualFormat?: 'image' | 'video' | 'carousel';
 }
 
 export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string {
@@ -21,6 +22,14 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
   if (input.body?.trim()) {
     parts.push(`Contexto: ${input.body.replace(/\s+/g, ' ').trim().slice(0, 400)}`);
+  }
+
+  if (input.visualFormat === 'video') {
+    parts.push(
+      'Formato visual: video corto vertical para redes con narración hablada en español.',
+    );
+  } else if (input.visualFormat === 'carousel') {
+    parts.push('Formato visual: carrusel de 3 imágenes relacionadas para redes sociales.');
   }
 
   if (input.hasLogo) {

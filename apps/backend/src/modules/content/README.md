@@ -18,6 +18,8 @@ Cada `PATCH` crea una versión append-only. Si el contenido estaba `approved`, p
 
 Campo opcional `platform` (`instagram`, `facebook`, `linkedin`, `twitter`, `tiktok`) al crear desde Community Manager; el Image Generator usa `shared/social/image-destination-formats.util.ts` para el tamaño de imagen.
 
+Campo `visualFormat` (`image`, `video`, `carousel`) indica qué debe generar Image/Video Generator. El agente de Community Manager lo asigna por post; es editable en el editor de contenido sin crear nueva versión.
+
 Firma: `SHA-256(body|versionId|assetIds ordenados)`.
 
 Eventos en tabla `events` + outbox `ContentApproved` al aprobar.

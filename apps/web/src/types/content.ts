@@ -2,6 +2,8 @@ export type ContentStatus = 'draft' | 'in_review' | 'in_changes' | 'approved' | 
 
 export type ContentType = 'ad' | 'social' | 'email' | 'blog' | 'landing';
 
+export type ContentVisualFormat = 'image' | 'video' | 'carousel';
+
 export interface ContentVersion {
   id: string;
   versionNumber: number;
@@ -28,6 +30,7 @@ export interface Content {
   currentVersion?: ContentVersion;
   scheduledDate: string | null;
   platform: string | null;
+  visualFormat: ContentVisualFormat;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,6 +64,7 @@ export interface UpdateContentPayload {
   title?: string;
   body?: string;
   scheduledDate?: string | null;
+  visualFormat?: ContentVisualFormat;
   assets?: unknown[];
   reason?: string;
   changeSummary?: string;

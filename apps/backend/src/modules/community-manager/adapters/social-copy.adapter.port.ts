@@ -5,6 +5,8 @@ export interface SocialCopyPost {
   body: string;
   hashtags: string[];
   visualDescription: string;
+  /** Formato visual a generar: image | video | carousel */
+  visualFormat: 'image' | 'video' | 'carousel';
   bestTime: string;
   targetAudience: string;
   callToAction: string;

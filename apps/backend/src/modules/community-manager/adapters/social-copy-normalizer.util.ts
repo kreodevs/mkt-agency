@@ -1,4 +1,5 @@
 import type { SocialCopyPost } from './social-copy.adapter.port';
+import { inferContentVisualFormat, normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 
 const ALLOWED_PLATFORMS = new Set(['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok']);
 
@@ -94,6 +95,12 @@ export function normalizeSocialCopyBatch(
           'descripcionVisual',
           'imageDescription',
         ]),
+        visualFormat: normalizeContentVisualFormat(
+          pickString(row, ['visualFormat', 'visual_format', 'formatoVisual', 'formato_visual']) ||
+            inferContentVisualFormat(
+              normalizePlatform(row.platform ?? row.plataforma, context.platforms, index),
+            ),
+        ),
         bestTime: pickString(row, ['bestTime', 'best_time', 'horaIdeal']) || '09:00',
         targetAudience:
           pickString(row, ['targetAudience', 'target_audience', 'audiencia']) || 'Audiencia del producto',

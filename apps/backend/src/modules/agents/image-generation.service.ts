@@ -35,6 +35,11 @@ import {
   type ImageGenerationMetadata,
 } from './domain/image-generation.utils';
 import { ContentService } from '../content/content.service';
+import {
+  normalizeContentVisualFormat,
+  visualFormatToFrameCount,
+  visualFormatToMediaType,
+} from '../content/domain/content-visual-format.util';
 import { ProductService } from '../product/product.service';
 import {
   getProductLogoAssetId,
@@ -60,6 +65,8 @@ export interface GenerateImageOptions {
   productId?: string;
   contentId?: string;
   background?: boolean;
+  forcedMediaType?: GenerationMediaType;
+  forcedFrameCount?: number;
 }
 
 export interface GenerateImageResult {
@@ -117,9 +124,11 @@ export class ImageGenerationService {
         productId: options.productId ?? null,
         contentId: options.contentId ?? null,
         metadata: {
-          intendedMediaType: resolveGenerationMediaType(trimmed, {
-            contentLinked: !!options.contentId,
-          }),
+          intendedMediaType:
+            options.forcedMediaType ??
+            resolveGenerationMediaType(trimmed, {
+              contentLinked: !!options.contentId,
+            }),
           frameCount: 0,
           frames: [],
         },
@@ -148,12 +157,23 @@ export class ImageGenerationService {
       return;
     }
 
+    let forcedMediaType: GenerationMediaType | undefined;
+    let forcedFrameCount: number | undefined;
+    if (record.contentId) {
+      const content = await this.contentService.findOne(data.tenantId, record.contentId);
+      const visualFormat = normalizeContentVisualFormat(content.visualFormat);
+      forcedMediaType = visualFormatToMediaType(visualFormat);
+      forcedFrameCount = visualFormatToFrameCount(visualFormat);
+    }
+
     await runWithLlmUsageContext({ tenantId: data.tenantId, userId: data.userId }, () =>
       this.runGeneration(data.tenantId, data.userId, record, record.prompt, {
         contentId: record.contentId ?? undefined,
         productId: record.productId ?? undefined,
         size: data.size,
         style: data.style,
+        forcedMediaType,
+        forcedFrameCount,
       }),
     );
   }
@@ -170,6 +190,7 @@ export class ImageGenerationService {
     }
 
     const content = await this.contentService.findOne(tenantId, contentId);
+    const visualFormat = normalizeContentVisualFormat(content.visualFormat);
     const effectiveProductId = productId ?? content.productId ?? undefined;
     const size = resolveImageSizeForPlatform(content.platform);
     const style = resolveImageStyleForPlatform(content.platform);
@@ -177,13 +198,15 @@ export class ImageGenerationService {
     return this.generate(
       tenantId,
       userId,
-      await this.buildPromptForProduct(tenantId, visualDescription, effectiveProductId),
+      await this.buildPromptForProduct(tenantId, visualDescription, effectiveProductId, visualFormat),
       {
         contentId,
         productId: effectiveProductId,
         size,
         style,
         background: true,
+        forcedMediaType: visualFormatToMediaType(visualFormat),
+        forcedFrameCount: visualFormatToFrameCount(visualFormat),
       },
     );
   }
@@ -193,6 +216,7 @@ export class ImageGenerationService {
     title: string,
     body: string,
     productId?: string,
+    visualFormat = 'image',
   ): Promise<string> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     return buildBrandedImagePrompt({
@@ -200,6 +224,7 @@ export class ImageGenerationService {
       title,
       body,
       hasLogo: !!branding.logoAssetId,
+      visualFormat: normalizeContentVisualFormat(visualFormat),
     });
   }
 
@@ -207,12 +232,14 @@ export class ImageGenerationService {
     tenantId: string,
     visualDescription: string,
     productId?: string,
+    visualFormat = 'image',
   ): Promise<string> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     return buildBrandedImagePrompt({
       productName: branding.productName,
       visualDescription,
       hasLogo: !!branding.logoAssetId,
+      visualFormat: normalizeContentVisualFormat(visualFormat),
     });
   }
 
@@ -246,16 +273,21 @@ export class ImageGenerationService {
     const storedIntent = isImageGenerationMetadata(record.metadata)
       ? record.metadata.intendedMediaType
       : undefined;
-    const mediaType = resolveGenerationMediaType(prompt, {
-      contentLinked,
-      forced: storedIntent,
-    });
+    const mediaType =
+      options.forcedMediaType ??
+      resolveGenerationMediaType(prompt, {
+        contentLinked,
+        forced: storedIntent,
+      });
 
     if (mediaType === 'video') {
       return this.runVideoGeneration(tenantId, userId, record, prompt, options);
     }
 
-    return this.runImageGeneration(tenantId, userId, record, prompt, options, { contentLinked });
+    return this.runImageGeneration(tenantId, userId, record, prompt, options, {
+      contentLinked,
+      forcedFrameCount: options.forcedFrameCount,
+    });
   }
 
   private async runVideoGeneration(
@@ -337,7 +369,7 @@ export class ImageGenerationService {
     record: AgentImageGenerationEntity,
     prompt: string,
     options: GenerateImageOptions,
-    context: { contentLinked: boolean },
+    context: { contentLinked: boolean; forcedFrameCount?: number },
   ): Promise<GenerateImageResult> {
     const productId = await this.resolveEffectiveProductId(tenantId, options, record);
 
@@ -347,7 +379,9 @@ export class ImageGenerationService {
     }
 
     try {
-      const frameCount = detectReelFrameCount(prompt, { contentLinked: context.contentLinked });
+      const frameCount =
+        context.forcedFrameCount ??
+        detectReelFrameCount(prompt, { contentLinked: context.contentLinked });
       const frames: ImageGenerationFrameMeta[] = [];
 
       for (let index = 0; index < frameCount; index += 1) {
@@ -645,11 +679,13 @@ export class ImageGenerationService {
       return this.retry(tenantId, userId, existing.id, { background: true });
     }
 
+    const visualFormat = normalizeContentVisualFormat(content.visualFormat);
     const prompt = await this.buildContentBrandedPrompt(
       tenantId,
       version.title,
       version.body,
       content.productId ?? undefined,
+      visualFormat,
     );
     const size = resolveImageSizeForPlatform(content.platform);
     const style = resolveImageStyleForPlatform(content.platform);
@@ -659,6 +695,8 @@ export class ImageGenerationService {
       size,
       style,
       background: true,
+      forcedMediaType: visualFormatToMediaType(visualFormat),
+      forcedFrameCount: visualFormatToFrameCount(visualFormat),
     });
   }
 
@@ -713,6 +751,7 @@ export class ImageGenerationService {
       version.title,
       version.body,
       content.productId ?? record.productId ?? undefined,
+      content.visualFormat,
     );
 
     if (content.productId && !record.productId) {
@@ -757,9 +796,15 @@ export class ImageGenerationService {
     record.imageUrl = null;
     record.assetId = null;
     record.errorMessage = null;
-    const intendedMediaType = resolveGenerationMediaType(record.prompt, {
-      contentLinked: !!record.contentId,
-    });
+    let intendedMediaType: GenerationMediaType;
+    if (record.contentId) {
+      const content = await this.contentService.findOne(tenantId, record.contentId);
+      intendedMediaType = visualFormatToMediaType(
+        normalizeContentVisualFormat(content.visualFormat),
+      );
+    } else {
+      intendedMediaType = resolveGenerationMediaType(record.prompt, { contentLinked: false });
+    }
     record.metadata = {
       intendedMediaType,
       frameCount: 0,
