@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import { exec } from 'child_process';
 import {
   BadRequestException,
   Inject,
@@ -32,6 +35,7 @@ import {
   resolveVideoAspectRatio,
   resolveVideoDuration,
   resolveVideoDurationPolicy,
+  splitNarrationIntoSegments,
   sanitizeSpanishNarrationScript,
   shouldGenerateVideoAudio,
   type GenerationMediaType,
@@ -311,13 +315,30 @@ export class ImageGenerationService {
       const durationPolicy = resolveVideoDurationPolicy(videoModel);
 
       const rawNarration = content?.currentVersion?.body;
+      const sanitizedNarration = rawNarration?.trim() ? sanitizeSpanishNarrationScript(rawNarration) : '';
+      
+      // Check if narration exceeds max duration and needs segmentation
+      const needsSegmentation = durationPolicy.truncateNarration && sanitizedNarration &&
+        estimateSpeechDurationSeconds(sanitizedNarration) > durationPolicy.maxDuration;
+
+      if (needsSegmentation && sanitizedNarration) {
+        return this.runSegmentedVideoGeneration(
+          tenantId,
+          userId,
+          record,
+          prompt,
+          sanitizedNarration,
+          durationPolicy.maxDuration,
+        );
+      }
+
+      // Single video generation (original logic)
       let narrationBody = rawNarration;
       let narrationTruncated = false;
 
       if (durationPolicy.truncateNarration && rawNarration?.trim()) {
-        const sanitized = sanitizeSpanishNarrationScript(rawNarration);
         narrationTruncated =
-          estimateSpeechDurationSeconds(sanitized) > durationPolicy.maxDuration;
+          estimateSpeechDurationSeconds(sanitizedNarration) > durationPolicy.maxDuration;
         narrationBody = fitNarrationBodyForDuration(rawNarration, durationPolicy.maxDuration);
       }
 
@@ -382,6 +403,124 @@ export class ImageGenerationService {
     }
   }
 
+
+
+  private async runSegmentedVideoGeneration(
+    tenantId: string,
+    userId: string,
+    record: AgentImageGenerationEntity,
+    prompt: string,
+    narrationBody: string,
+    segmentDuration: number,
+  ): Promise<GenerateImageResult> {
+    const segments = splitNarrationIntoSegments(narrationBody, segmentDuration);
+    this.logger.log(`Split narration into ${segments.length} segments for segmented video generation`);
+
+    // Generate all clips in parallel
+    const clipPromises = segments.map(async (seg) => {
+      const videoPrompt = buildVideoGenerationPrompt({
+        basePrompt: prompt,
+        narrationBody: seg.body,
+        durationSeconds: Math.min(seg.durationSeconds, segmentDuration),
+      });
+
+      return this.videoAdapter.generateVideo(videoPrompt, {
+        duration: Math.min(seg.durationSeconds, segmentDuration),
+        aspectRatio: resolveVideoAspectRatio(prompt),
+        resolution: '720p',
+        generateAudio: true,
+      });
+    });
+
+    const clipResults = await Promise.all(clipPromises);
+
+    // Concatenate clips
+    const concatenatedVideo = await this.concatVideoClips(clipResults);
+
+    const asset = await this.uploadGeneratedVideo(tenantId, prompt, concatenatedVideo);
+
+    const metadata: ImageGenerationMetadata = {
+      mediaType: 'video',
+      intendedMediaType: 'video',
+      mimeType: 'video/mp4',
+      duration: clipResults.reduce((sum, r) => sum + (r.duration || 0), 0) || 0,
+      frameCount: 1,
+      frames: [{ assetId: asset.id, index: 0 }],
+    };
+
+    record.imageUrl = `/api/v1/assets/${asset.id}/file`;
+    record.assetId = asset.id;
+    record.metadata = metadata;
+    record.status = 'completed';
+    record.errorMessage = null;
+    await this.generations.save(record);
+
+    if (record.contentId) {
+      await this.attachAssetsToContent(tenantId, userId, record.contentId, [asset.id], 'video');
+    }
+
+    await this.recordMediaUsage({
+      tenantId,
+      userId,
+      taskType: 'video_generation',
+      modality: 'video',
+      metadata: { duration: metadata.duration, generationId: record.id, segmented: true },
+      estimatedCostUsd: estimateVideoCostUsd(Math.max(1, metadata.duration || 0)),
+    });
+
+    return this.toResult(record);
+  }
+
+  private async concatVideoClips(
+    results: VideoGenerationResult[],
+  ): Promise<VideoGenerationResult> {
+    if (results.length === 1) {
+      return results[0];
+    }
+
+    const tempDir = '/tmp/video-clips-' + Date.now();
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    try {
+      // Download each clip to temp directory
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        const buffer = result.videoBuffer
+          ? result.videoBuffer
+          : result.videoUrl
+            ? Buffer.from(new Uint8Array(await (await fetch(result.videoUrl)).arrayBuffer()))
+            : null;
+
+        if (!buffer) continue;
+        await fs.promises.writeFile(path.join(tempDir, `clip_${i}.mp4`), buffer);
+      }
+
+      // Create concat file
+      const concatFile = path.join(tempDir, 'concat.txt');
+      const concatList = results.map((_, i) => `file '${tempDir}/clip_${i}.mp4'`).join('\n');
+      await fs.promises.writeFile(concatFile, concatList);
+
+      // Run ffmpeg concat
+      await new Promise<void>((resolve, reject) => {
+        exec(
+          `ffmpeg -f concat -safe 0 -i ${concatFile} -c copy ${tempDir}/output.mp4 -y`,
+          (error) => (error ? reject(error) : resolve()),
+        );
+      });
+
+      // Read output
+      const outputBuffer = await fs.promises.readFile(path.join(tempDir, 'output.mp4'));
+
+      return {
+        videoBuffer: outputBuffer,
+        mimeType: 'video/mp4',
+        duration: results.reduce((sum, r) => sum + (r.duration || 0), 0),
+      };
+    } finally {
+      // Cleanup temp files
+      await fs.promises.rm(tempDir, { recursive: true, force: true });
+    }
+  }
   private async runImageGeneration(
     tenantId: string,
     userId: string,

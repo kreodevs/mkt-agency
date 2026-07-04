@@ -1,3 +1,10 @@
+## [Unreleased]
+
+### Added
+- Video segmentation for texts exceeding model duration limits
+- Automatic FFmpeg concatenation of multiple video clips into single asset
+- Support for ~21-second texts split into 2-3 clips (Seedance 15s limit)
+
 # Changelog
 
 ## [0.2.3] — 2026-07-03

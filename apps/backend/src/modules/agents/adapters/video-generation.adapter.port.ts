@@ -2,6 +2,7 @@ export interface VideoGenerationResult {
   videoUrl?: string;
   videoBuffer?: Buffer;
   mimeType?: string;
+  duration?: number;
 }
 
 export interface VideoGenerationOptions {

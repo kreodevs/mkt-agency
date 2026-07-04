@@ -360,3 +360,55 @@ export function buildContentImagePrompt(title: string, body: string): string {
     .filter(Boolean)
     .join(' ');
 }
+
+/** Segmentos para división de texto largo en múltiples clips. */
+export interface NarrationSegment {
+  index: number;
+  total: number;
+  body: string;
+  durationSeconds: number;
+}
+
+/** Divide un cuerpo de narración en segmentos manejables para generación de video. */
+export function splitNarrationIntoSegments(
+  body: string,
+  maxDurationSeconds: number = 10,
+): NarrationSegment[] {
+  const script = sanitizeSpanishNarrationScript(body);
+  const sentences = script.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  
+  const segments: NarrationSegment[] = [];
+  let currentWords: string[] = [];
+  let wordCount = 0;
+  const maxWords = maxSpeakableWordsForDuration(maxDurationSeconds);
+  
+  for (const sentence of sentences) {
+    const sentenceWordCount = countSpeakableWords(sentence);
+    
+    if (wordCount + sentenceWordCount > maxWords && currentWords.length > 0) {
+      segments.push({
+        index: segments.length,
+        total: 0,
+        body: currentWords.join(' '),
+        durationSeconds: estimateSpeechDurationSeconds(currentWords.join(' ')),
+      });
+      currentWords = [];
+      wordCount = 0;
+    }
+    
+    currentWords.push(sentence);
+    wordCount += sentenceWordCount;
+  }
+  
+  if (currentWords.length > 0) {
+    segments.push({
+      index: segments.length,
+      total: 0,
+      body: currentWords.join(' '),
+      durationSeconds: estimateSpeechDurationSeconds(currentWords.join(' ')),
+    });
+  }
+  
+  const total = segments.length;
+  return segments.map((s) => ({ ...s, total }));
+}
