@@ -63,4 +63,38 @@ export class CompetitorIntelService {
     }
     return analysis;
   }
+
+  async getLatestCompletedAnalysis(
+    tenantId: string,
+  ): Promise<AgentCompetitorAnalysisEntity | null> {
+    return this.analyses.findOne({
+      where: { tenantId, status: 'completed' },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  async waitForAnalysisCompletion(
+    tenantId: string,
+    analysisId: string,
+    options?: { timeoutMs?: number; pollIntervalMs?: number },
+  ): Promise<AgentCompetitorAnalysisEntity> {
+    const timeoutMs = options?.timeoutMs ?? 180_000;
+    const pollIntervalMs = options?.pollIntervalMs ?? 3_000;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      const analysis = await this.getAnalysis(tenantId, analysisId);
+      if (analysis.status === 'completed' || analysis.status === 'failed') {
+        return analysis;
+      }
+
+      await sleep(pollIntervalMs);
+    }
+
+    return this.getAnalysis(tenantId, analysisId);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

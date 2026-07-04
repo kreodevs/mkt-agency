@@ -35,6 +35,8 @@ import { ProductLogoService } from './product-logo.service';
 import { AGENCY_NOTIFICATION_TYPES } from '../publication-inbox/domain/publication-inbox.constants';
 import { PublicationInboxService } from '../publication-inbox/publication-inbox.service';
 
+const ONBOARDING_COMPETITOR_INTEL_WAIT_MS = 180_000;
+
 @Injectable()
 export class ProductOnboardingService {
   private readonly logger = new Logger(ProductOnboardingService.name);
@@ -447,17 +449,46 @@ export class ProductOnboardingService {
       this.logger.warn('Competitor discovery failed', error);
     }
 
+    let competitorAnalysisId: string | null = null;
+
     try {
       const analysis = await this.competitorIntel.triggerAnalysis(tenantId);
+      competitorAnalysisId = analysis.id;
       result.competitorAnalysisId = analysis.id;
     } catch (error) {
       if (error instanceof ConflictException) {
         const body = error.getResponse() as { analysisId?: string };
-        result.competitorAnalysisId = body.analysisId ?? null;
+        competitorAnalysisId = body.analysisId ?? null;
+        result.competitorAnalysisId = competitorAnalysisId;
+        result.warnings?.push('Ya había un análisis de competidores en curso; esperando su resultado.');
       } else {
         result.skippedAgents?.push('competitor_intel');
         result.warnings?.push('No se pudo iniciar Competitor Intel.');
         this.logger.warn('Competitor intel trigger failed', error);
+      }
+    }
+
+    if (competitorAnalysisId) {
+      try {
+        const finished = await this.competitorIntel.waitForAnalysisCompletion(
+          tenantId,
+          competitorAnalysisId,
+          { timeoutMs: ONBOARDING_COMPETITOR_INTEL_WAIT_MS },
+        );
+        result.competitorAnalysisId = finished.id;
+
+        if (finished.status === 'failed') {
+          result.warnings?.push(
+            'El análisis de competidores falló; el copy se generará con la lista de competidores disponible.',
+          );
+        } else if (finished.status !== 'completed') {
+          result.warnings?.push(
+            'El análisis de competidores sigue en proceso; el copy puede generarse sin intel completa.',
+          );
+        }
+      } catch (error) {
+        result.warnings?.push('No se pudo confirmar el análisis de competidores antes de generar copy.');
+        this.logger.warn('Competitor intel wait failed', error);
       }
     }
 

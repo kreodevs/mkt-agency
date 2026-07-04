@@ -40,6 +40,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       ? `IMPORTANTE: Todo el copy debe promocionar exclusivamente el producto/servicio "${context.focusProductName}". No mezcles otros productos del catálogo.`
       : '';
 
+    const competitorIntelGuide = context.competitorIntelBrief
+      ? [
+          `Inteligencia competitiva (último análisis): ${JSON.stringify(context.competitorIntelBrief)}`,
+          'Usa competitorIntel para diferenciar el producto: explota marketGaps y recommendation como ángulos de contenido.',
+          'No copies el tono ni mensajes de competidores; evita reforzar sus fortalezas.',
+          'Menciona ventajas propias frente a debilidades rivales cuando aporte valor, sin naming-shaming agresivo.',
+        ].join('\n')
+      : '';
+
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
@@ -76,6 +85,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       topicsGuide,
       brandContext,
       productFocus,
+      competitorIntelGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       'Para cada post asigna visualFormat: tiktok→video preferente; carruseles educativos→carousel; linkedin/twitter/facebook feed→image salvo que el post pida reel/video explícitamente.',
       'visualDescription debe describir la escena visual acorde a visualFormat (no repitas el body del post).',

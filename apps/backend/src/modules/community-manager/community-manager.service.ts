@@ -17,6 +17,8 @@ import {
   ResolvedProfileValues,
 } from '../company-profile/services/profile-section-sync.service';
 import { ContentService } from '../content/content.service';
+import { CompetitorIntelService } from '../agents/competitor-intel.service';
+import { CompetitorService } from '../competitors/competitor.service';
 import { ImageGenerationService } from '../agents/image-generation.service';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import {
@@ -50,6 +52,7 @@ import {
 } from './dto/community-manager.request.dto';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
+import { buildCompetitorIntelBriefForSocialCopy } from './domain/competitor-intel-brief.util';
 
 @Injectable()
 export class CommunityManagerService {
@@ -77,6 +80,8 @@ export class CommunityManagerService {
     private readonly imageGeneration: ImageGenerationService,
     private readonly productService: ProductService,
     private readonly profileSectionSync: ProfileSectionSyncService,
+    private readonly competitorIntel: CompetitorIntelService,
+    private readonly competitorService: CompetitorService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -197,6 +202,31 @@ export class CommunityManagerService {
     return mergeBrandAndProductBrief(values, productContext);
   }
 
+  private async resolveCompetitorIntelBrief(
+    tenantId: string,
+  ): Promise<Record<string, unknown> | null> {
+    const [latestAnalysis, competitorList] = await Promise.all([
+      this.competitorIntel.getLatestCompletedAnalysis(tenantId),
+      this.competitorService.list(tenantId),
+    ]);
+
+    const trackedCompetitorNames = competitorList.items.map((item) => item.name);
+    const brief = buildCompetitorIntelBriefForSocialCopy({
+      analysisId: latestAnalysis?.id ?? 'none',
+      generatedAt: latestAnalysis?.updatedAt.toISOString() ?? new Date().toISOString(),
+      analysis: latestAnalysis?.analysis ?? null,
+      trackedCompetitorNames,
+    });
+
+    if (brief) {
+      this.logger.log(
+        `Competitor intel wired into CM: analysis=${latestAnalysis?.id ?? 'names-only'} competitors=${brief.competitors.length}`,
+      );
+    }
+
+    return brief as unknown as Record<string, unknown> | null;
+  }
+
   private async resolveProductForGeneration(
     tenantId: string,
     productId?: string,
@@ -274,6 +304,7 @@ export class CommunityManagerService {
         dto.campaignId,
       );
       const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
+      const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
 
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await runWithLlmUsageContext(
@@ -290,6 +321,7 @@ export class CommunityManagerService {
             brandBrief,
             productContext: productContext as unknown as Record<string, unknown>,
             focusProductName: productContext?.name ?? null,
+            competitorIntelBrief,
           }),
       );
 

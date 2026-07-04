@@ -32,6 +32,7 @@ export interface SocialCopyContext {
   productId?: string;
   tone?: string;
   topics?: string[];
+  competitorIntelBrief?: Record<string, unknown> | null;
 }
 
 export interface SocialCopyAdapterPort {

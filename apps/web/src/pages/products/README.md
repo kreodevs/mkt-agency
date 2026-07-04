@@ -18,7 +18,7 @@ Wizard de 7 pasos alineado al de empresa (`/onboarding`):
 3. Precio (opcional)
 4. Tags SEO (mín. 3) — también generables desde la misma URL
 
-Al completar (`POST /products/:id/onboarding/complete`) se detonan Brand Analyst, descubrimiento de competidores (usa tags SEO + perfil del producto + alcance geográfico inferido), Competitor Intel y Community Manager con `productId`.
+Al completar (`POST /products/:id/onboarding/complete`) se detonan Brand Analyst, descubrimiento de competidores (usa tags SEO + perfil del producto + alcance geográfico inferido), Competitor Intel (el backend espera el análisis antes del CM) y Community Manager con `productId`.
 
 ## Componentes compartidos
 

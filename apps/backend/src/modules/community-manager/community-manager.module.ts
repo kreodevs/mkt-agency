@@ -7,6 +7,7 @@ import { CompanyProfileModule } from '../company-profile/company-profile.module'
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { AgentsModule } from '../agents/agents.module';
 import { ProductModule } from '../product/product.module';
+import { CompetitorsModule } from '../competitors/competitors.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
@@ -38,6 +39,7 @@ import { TonePresetController } from './tone-preset.controller';
     ]),
     CompanyProfileModule,
     ProductModule,
+    CompetitorsModule,
     AgentsModule,
     LlmModule,
     ContentModule,

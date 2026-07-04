@@ -26,8 +26,8 @@ Al completar (si `ready=true`), en background:
 
 1. **Brand Analyst** — entrevista `brand_interview` con `productId`
 2. **Competitors** — `discover` global + `bulkCreate` (hasta 8) usando keywords del producto (omite si falta perfil de empresa)
-3. **Competitor Intel** — `triggerAnalysis`
-4. **Community Manager** — `generate` con `productId` (sin imágenes en onboarding; más rápido)
+3. **Competitor Intel** — `triggerAnalysis` y **espera** hasta `completed`/`failed` (máx. 3 min)
+4. **Community Manager** — `generate` con `productId` usando el análisis ya cableado (sin imágenes en onboarding)
 
 Lógica en `product-onboarding.service.ts`, `product-onboarding.module.ts` y `domain/product-onboarding.util.ts`.
 
