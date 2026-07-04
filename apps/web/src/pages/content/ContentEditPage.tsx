@@ -26,12 +26,14 @@ import {
   normalizeContentVisualFormat,
 } from '@/lib/visual-format';
 import { getContentPlatformLabel } from '@/lib/content-platform';
+import { useAdvancedNav } from '@/store/copilot-ui';
 import type { CmPlatform } from '@/services/community-manager';
 
 export default function ContentEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const advancedNav = useAdvancedNav();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [changeSummary, setChangeSummary] = useState('');
@@ -41,8 +43,10 @@ export default function ContentEditPage() {
 
   const contentQuery = useQuery({
     queryKey: ['content', id],
-    queryFn: () => getContent(id!),
+    queryFn: async ({ signal }) => getContent(id!, signal),
     enabled: !!id,
+    retry: 1,
+    staleTime: 30_000,
   });
 
   const versionsQuery = useQuery({
@@ -150,10 +154,45 @@ export default function ContentEditPage() {
   const currentVersion = content?.currentVersion;
   const isFrozen = !!currentVersion?.signatureHash;
 
-  if (contentQuery.isLoading) {
+  const backHref = advancedNav
+    ? content?.campaignId
+      ? `/contents?campaignId=${content.campaignId}`
+      : '/contents'
+    : '/';
+
+  if (contentQuery.isPending) {
     return (
       <DashboardShell>
-        <p className="text-sm text-[var(--foreground-muted)]">Cargando...</p>
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+          <p className="text-sm text-[var(--foreground-muted)]">Cargando contenido…</p>
+          <Link to={backHref}>
+            <Button variant="outline" size="sm">
+              Volver a la bandeja
+            </Button>
+          </Link>
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  if (contentQuery.isError) {
+    return (
+      <DashboardShell>
+        <Card title="No se pudo cargar el contenido">
+          <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+            {contentQuery.error instanceof ApiError
+              ? contentQuery.error.message
+              : 'Revisa tu conexión e intenta de nuevo.'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => void contentQuery.refetch()}>
+              Reintentar
+            </Button>
+            <Link to={backHref}>
+              <Button variant="ghost">Volver a la bandeja</Button>
+            </Link>
+          </div>
+        </Card>
       </DashboardShell>
     );
   }
@@ -162,17 +201,13 @@ export default function ContentEditPage() {
     return (
       <DashboardShell>
         <Card title="Contenido no encontrado">
-          <Link to="/contents">
-            <Button variant="outline">Volver</Button>
+          <Link to={backHref}>
+            <Button variant="outline">Volver a la bandeja</Button>
           </Link>
         </Card>
       </DashboardShell>
     );
   }
-
-  const backHref = content.campaignId
-    ? `/contents?campaignId=${content.campaignId}`
-    : '/contents';
 
   const canDelete = content.status === 'draft' && !isFrozen;
 

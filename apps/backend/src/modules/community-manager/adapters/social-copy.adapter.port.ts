@@ -33,6 +33,13 @@ export interface SocialCopyContext {
   tone?: string;
   topics?: string[];
   competitorIntelBrief?: Record<string, unknown> | null;
+  /** Feedback del usuario para revisar un post existente. */
+  revisionBrief?: string;
+  previousPost?: {
+    title: string;
+    body: string;
+    platform?: string;
+  };
 }
 
 export interface SocialCopyAdapterPort {

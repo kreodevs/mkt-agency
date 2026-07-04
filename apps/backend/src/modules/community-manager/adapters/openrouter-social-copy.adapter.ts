@@ -49,6 +49,20 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ].join('\n')
       : '';
 
+    const revisionGuide = context.revisionBrief?.trim()
+      ? [
+          'REVISIÓN DE POST EXISTENTE — el usuario pidió cambios. NO reutilices el copy anterior tal cual.',
+          `Feedback del usuario: ${context.revisionBrief.trim()}`,
+          context.previousPost
+            ? `Post anterior (${context.previousPost.platform ?? 'red social'}):\nTítulo: ${context.previousPost.title}\nCuerpo: ${context.previousPost.body}`
+            : '',
+          'Genera una versión nueva que incorpore el feedback (tono, nicho, tipo de visual en visualDescription).',
+          'Si el feedback critica la imagen, describe en visualDescription una escena acorde al nicho y al comentario.',
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : '';
+
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
@@ -86,6 +100,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       brandContext,
       productFocus,
       competitorIntelGuide,
+      revisionGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       'Para cada post asigna visualFormat: tiktok→video preferente; carruseles educativos→carousel; linkedin/twitter/facebook feed→image salvo que el post pida reel/video explícitamente.',
       'visualDescription debe describir la escena visual acorde a visualFormat (no repitas el body del post).',

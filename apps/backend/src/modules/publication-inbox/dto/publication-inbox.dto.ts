@@ -1,4 +1,4 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsOptional, IsUUID } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class PublicationInboxQueryDto {
   @IsOptional()
@@ -97,4 +97,20 @@ export class PrepareWeekResponseDto {
   strategyId?: string | null;
   topicsUsed?: string[];
   warnings!: string[];
+}
+
+export class RequestInboxChangesDto {
+  @IsUUID()
+  versionId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
+  feedback!: string;
+}
+
+export class RequestInboxChangesResponseDto {
+  contentId!: string;
+  title!: string;
+  regenerated!: true;
 }

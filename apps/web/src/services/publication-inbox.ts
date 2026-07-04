@@ -26,6 +26,17 @@ export function regenerateInboxContent(contentId: string): Promise<{ contentId: 
   return apiFetch(`/publication-inbox/regenerate/${contentId}`, { method: 'POST' });
 }
 
+export function requestInboxChanges(
+  contentId: string,
+  versionId: string,
+  feedback: string,
+): Promise<{ contentId: string; title: string; regenerated: true }> {
+  return apiFetch(`/publication-inbox/request-changes/${contentId}`, {
+    method: 'POST',
+    body: JSON.stringify({ versionId, feedback }),
+  });
+}
+
 export function prepareWeek(productId?: string): Promise<PrepareWeekResult> {
   return apiFetch<PrepareWeekResult>('/publication-inbox/prepare-week', {
     method: 'POST',

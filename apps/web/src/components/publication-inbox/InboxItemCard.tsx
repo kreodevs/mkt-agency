@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Copy } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxContentDetailDialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
@@ -46,6 +48,7 @@ export function InboxItemCard({
   primaryAction = 'copy',
   sohoMode = false,
 }: InboxItemCardProps) {
+  const [detailOpen, setDetailOpen] = useState(false);
   const formattedDate = formatScheduledDate(item.scheduledDate);
   const displayPreview = sanitizePublishableCopy(item.preview);
 
@@ -87,7 +90,16 @@ export function InboxItemCard({
           </p>
 
           {sohoMode ? (
-            <InboxQuickPublishActions item={item} />
+            <div className="mt-3 space-y-2">
+              <InboxQuickPublishActions item={item} />
+              <button
+                type="button"
+                className="text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+                onClick={() => setDetailOpen(true)}
+              >
+                Ver detalle
+              </button>
+            </div>
           ) : (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {primaryAction === 'copy' ? (
@@ -106,8 +118,22 @@ export function InboxItemCard({
                   Editar contenido
                 </Link>
               )}
+              <button
+                type="button"
+                className="text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+                onClick={() => setDetailOpen(true)}
+              >
+                Ver detalle
+              </button>
             </div>
           )}
+
+          <InboxContentDetailDialog
+            item={item}
+            open={detailOpen}
+            onOpenChange={setDetailOpen}
+            sohoMode={sohoMode}
+          />
 
           {showApproval && item.versionId && !item.signatureHash && (
             <div className="mt-4 border-t border-[var(--border)] pt-4">

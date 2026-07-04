@@ -491,10 +491,31 @@ export class CommunityManagerService {
     tenantId: string,
     userId: string,
     contentId: string,
+    options?: { feedback?: string; versionId?: string },
   ): Promise<{ contentId: string; title: string; regenerated: true }> {
     const content = await this.contents.findOne({ where: { id: contentId, tenantId } });
     if (!content) {
       throw new NotFoundException({ error: 'Contenido no encontrado', code: 'NOT_FOUND' });
+    }
+
+    const feedback = options?.feedback?.trim();
+    const fullContent = await this.contentService.findOne(tenantId, contentId);
+    const currentVersion = fullContent.currentVersion ?? null;
+
+    if (feedback) {
+      if (!options?.versionId) {
+        throw new BadRequestException({
+          error: 'versionId is required when providing feedback',
+          code: 'VALIDATION_ERROR',
+        });
+      }
+      await this.contentService.recordChangesRequested(
+        tenantId,
+        userId,
+        contentId,
+        options.versionId,
+        feedback,
+      );
     }
 
     const platform = this.normalizePlatforms(
@@ -521,6 +542,14 @@ export class CommunityManagerService {
         productContext: productContext as unknown as Record<string, unknown>,
         focusProductName: productContext?.name ?? null,
         competitorIntelBrief,
+        revisionBrief: feedback,
+        previousPost: currentVersion
+          ? {
+              title: currentVersion.title,
+              body: currentVersion.body,
+              platform: content.platform ?? undefined,
+            }
+          : undefined,
       }),
     );
 
@@ -535,12 +564,15 @@ export class CommunityManagerService {
     await this.contentService.update(tenantId, userId, contentId, {
       title: post.title,
       body: this.formatPostBody(post),
-      changeSummary: 'Regenerado por el copiloto',
+      changeSummary: feedback
+        ? `Regenerado con feedback: ${feedback.slice(0, 120)}`
+        : 'Regenerado por el copiloto',
       visualFormat: post.visualFormat,
       platform: post.platform,
     });
 
-    if (post.visualDescription?.trim()) {
+    const shouldRegenerateVisual = Boolean(feedback || post.visualDescription?.trim());
+    if (shouldRegenerateVisual) {
       try {
         await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
       } catch (error) {

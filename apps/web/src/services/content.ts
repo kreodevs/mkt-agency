@@ -28,8 +28,8 @@ export async function listContents(
   );
 }
 
-export async function getContent(id: string): Promise<Content> {
-  return apiFetch<Content>(`/contents/${id}`);
+export async function getContent(id: string, signal?: AbortSignal): Promise<Content> {
+  return apiFetch<Content>(`/contents/${id}`, { signal });
 }
 
 export async function createContent(payload: CreateContentPayload): Promise<Content> {

@@ -9,8 +9,8 @@ import { ApiError } from '@/services/api';
 import {
   approveContentVersion,
   rejectContentVersion,
-  requestContentChanges,
 } from '@/services/content';
+import { requestInboxChanges } from '@/services/publication-inbox';
 import type { ContentVersion } from '@/types/content';
 
 interface ApprovalActionsProps {
@@ -27,6 +27,7 @@ export function ApprovalActions({ contentId, version, disabled, sohoMode }: Appr
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['content', contentId] });
     void queryClient.invalidateQueries({ queryKey: ['content-versions', contentId] });
+    void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });
     void queryClient.invalidateQueries({ queryKey: ['calendar'] });
     void queryClient.invalidateQueries({ queryKey: ['calendar-day'] });
     void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
@@ -55,15 +56,19 @@ export function ApprovalActions({ contentId, version, disabled, sohoMode }: Appr
   });
 
   const changesMutation = useMutation({
-    mutationFn: () => requestContentChanges(contentId, version.id, feedback || undefined),
-    onSuccess: () => {
+    mutationFn: () =>
+      requestInboxChanges(contentId, version.id, feedback.trim()),
+    onSuccess: (result) => {
       invalidate();
-      toast.message('Cambios solicitados — nueva versión en borrador');
+      setFeedback('');
+      toast.success(`Nueva versión generada: ${result.title}`);
     },
     onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo solicitar cambios');
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo aplicar el feedback');
     },
   });
+
+  const hasFeedback = feedback.trim().length > 0;
 
   if (version.signatureHash) {
     return null;
@@ -77,20 +82,24 @@ export function ApprovalActions({ contentId, version, disabled, sohoMode }: Appr
       title={sohoMode ? '¿Te gusta?' : 'Aprobación'}
       subtitle={
         sohoMode
-          ? 'Aprueba para copiar y publicar'
+          ? 'Describe qué cambiar y el copiloto regenera texto e imagen'
           : 'Kill Switch — firma SHA-256 al aprobar'
       }
     >
       <div className="space-y-3">
         <div className="flex flex-col gap-[var(--spacing-xs)]">
           <label className="text-sm font-medium text-[var(--foreground)]">
-            Feedback (opcional)
+            {sohoMode ? '¿Qué quieres cambiar?' : 'Feedback (opcional)'}
           </label>
           <Textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            rows={2}
-            placeholder="Comentarios para el equipo o la IA"
+            rows={sohoMode ? 3 : 2}
+            placeholder={
+              sohoMode
+                ? 'Ej.: la imagen es muy corporativa, quiero algo más de eventos/bodas…'
+                : 'Comentarios para el equipo o la IA'
+            }
             disabled={disabled || isBusy}
           />
         </div>
@@ -122,11 +131,11 @@ export function ApprovalActions({ contentId, version, disabled, sohoMode }: Appr
             size="sm"
             variant="ghost"
             loading={changesMutation.isPending}
-            disabled={disabled || isBusy}
+            disabled={disabled || isBusy || !hasFeedback}
             onClick={() => changesMutation.mutate()}
           >
             <MessageSquare className="mr-1 h-4 w-4" />
-            Solicitar cambios
+            {changesMutation.isPending ? 'Regenerando…' : 'Solicitar cambios'}
           </Button>
         </div>
       </div>

@@ -10,6 +10,8 @@ import {
   PrepareWeekResponseDto,
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
+  RequestInboxChangesDto,
+  RequestInboxChangesResponseDto,
 } from './dto/publication-inbox.dto';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { CopilotOrchestrationService } from './copilot-orchestration.service';
@@ -88,6 +90,20 @@ export class PublicationInboxController {
       user.tenantId!,
       user.id,
       contentId,
+    );
+  }
+
+  @Post('request-changes/:contentId')
+  requestChanges(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+    @Body() body: RequestInboxChangesDto,
+  ): Promise<RequestInboxChangesResponseDto> {
+    return this.communityManager.regeneratePostForContent(
+      user.tenantId!,
+      user.id,
+      contentId,
+      { feedback: body.feedback, versionId: body.versionId },
     );
   }
 }

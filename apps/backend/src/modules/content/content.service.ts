@@ -491,6 +491,56 @@ export class ContentService {
     });
   }
 
+  async recordChangesRequested(
+    tenantId: string,
+    authorId: string,
+    contentId: string,
+    versionId: string,
+    feedback: string,
+  ): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const contentRepo = manager.getRepository(ContentEntity);
+      const versionRepo = manager.getRepository(ContentVersionEntity);
+      const approvalRepo = manager.getRepository(ContentApprovalEntity);
+
+      const content = await this.findOwnedContent(tenantId, contentId);
+      const source = await versionRepo.findOne({ where: { id: versionId, contentId } });
+
+      if (!source) {
+        throw new NotFoundException({
+          error: 'Content version not found',
+          code: 'NOT_FOUND',
+        });
+      }
+
+      if (source.signatureHash) {
+        throw new ConflictException({
+          error: 'Content version is already approved.',
+          code: 'ALREADY_APPROVED',
+        });
+      }
+
+      await approvalRepo.save(
+        approvalRepo.create({
+          contentVersionId: source.id,
+          approvedBy: authorId,
+          signatureHash: 'changes_requested',
+          status: 'pending',
+          feedback,
+        }),
+      );
+
+      content.status = 'draft';
+      await contentRepo.save(content);
+
+      await this.eventSourcing.append(manager, {
+        contentId,
+        eventType: 'ContentChangesRequested',
+        data: { versionId: source.id, feedback },
+      });
+    });
+  }
+
   async requestChanges(
     tenantId: string,
     authorId: string,
