@@ -88,7 +88,7 @@ export function fitNarrationBodyForDuration(body: string, maxSeconds: number): s
     if (kept.length === 0) {
       const words = sentence.split(/\s+/).filter(Boolean);
       const truncated = words.slice(0, maxWords).join(' ');
-      const cleaned = truncated.replace(/[,;:]\s*$/, '').trim();
+      const cleaned = truncated.replace(/[,;:]+\s*$/, '').trim();
       kept.push(
         /[.!?…]$/.test(cleaned) ? cleaned : `${cleaned.replace(/…$/, '')}…`,
       );
@@ -152,7 +152,7 @@ function resolveVideoDurationFromPrompt(prompt: string): number {
     return 5;
   }
 
-  if (/\breel/i.test(prompt)) {
+  if (/\breel\b/i.test(prompt)) {
     return 10;
   }
 
@@ -268,132 +268,13 @@ export function shouldGenerateVideoAudio(prompt: string, narrationBody?: string)
   );
 }
 
-/** Anglicismos frecuentes que Seedance vocaliza mal si llegan al guion. */
-const NARRATION_ANGLICISM_FIXES: ReadonlyArray<readonly [RegExp, string]> = [
-  [/\btechnology\b/gi, 'tecnología'],
-  [/\btechnolog[yí]a\b/gi, 'tecnología'],
-  [/\btechnologia\b/gi, 'tecnología'],
-  [/\bsoftware\b/gi, 'software'],
-  [/\bbranding\b/gi, 'branding'],
-  [/\bplanner\b/gi, 'planner'],
-];
-
-const MAX_DIALOGUE_WORDS_PER_LINE = 9;
-
-export function normalizeCopyForNarration(body: string): string {
+export function sanitizeSpanishNarrationScript(body: string): string {
   return body
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
     .replace(/[#*_`]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 700);
-}
-
-export function sanitizeSpanishNarrationScript(body: string): string {
-  let script = normalizeCopyForNarration(body);
-
-  for (const [pattern, replacement] of NARRATION_ANGLICISM_FIXES) {
-    script = script.replace(pattern, replacement);
-  }
-
-  return script;
-}
-
-function extractOrthographyAnchors(script: string, title?: string): string[] {
-  const combined = `${title?.trim() ?? ''} ${script}`.trim();
-  const anchors = new Set<string>();
-
-  if (/tecnolog/i.test(combined)) {
-    anchors.add('tecnología');
-  }
-
-  const accentWords = combined.match(/\b[\wáéíóúüñÁÉÍÓÚÜÑ]{4,}\b/gu) ?? [];
-  for (const word of accentWords) {
-    if (/[áéíóúüñ]/i.test(word)) {
-      anchors.add(word);
-    }
-  }
-
-  const properNouns =
-    combined.match(/\b(?:[A-ZÁÉÍÓÚÜÑ][\wáéíóúüñ]*|[A-Za-z]*[A-Z][A-Za-záéíóúüñ0-9]*)\b/gu) ?? [];
-  for (const word of properNouns) {
-    if (word.length >= 4) {
-      anchors.add(word);
-    }
-  }
-
-  return [...anchors].slice(0, 16);
-}
-
-export function buildOrthographyGuardrails(script: string, title?: string): string {
-  const anchors = extractOrthographyAnchors(script, title);
-  const lines = [
-    'REGLAS DE ORTOGRAFÍA Y LOCUTOR (obligatorias):',
-    '- Idioma del audio: español de México (es-MX). Cero palabras en inglés salvo nombres propios de marca ya presentes en el guion.',
-    '- Pronuncia literalmente el GUION DE VOZ; no parafrasees, no traduzcas, no sustituyas sinónimos ni anglicismos.',
-    '- Respeta tildes, eñes y signos de puntuación del guion al hablar.',
-    '- Prohibido decir "technology", "technología" u otras variantes incorrectas: usa "tecnología" (con c).',
-  ];
-
-  if (anchors.length > 0) {
-    lines.push('- Ortografía exacta obligatoria en audio (y en texto en pantalla si aparece):');
-    for (const word of anchors) {
-      lines.push(`  • "${word}"`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-function chunkDialogueLine(text: string, maxWords = MAX_DIALOGUE_WORDS_PER_LINE): string[] {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) {
-    return [words.join(' ')];
-  }
-
-  const chunks: string[] = [];
-  let current: string[] = [];
-
-  for (const word of words) {
-    current.push(word);
-    const nextIsBreak =
-      current.length >= maxWords ||
-      /[,.;:!?…]$/.test(word) ||
-      (current.length >= 6 && /^y$|^o$|^pero$|^con$|^sin$|^para$/i.test(word));
-
-    if (nextIsBreak) {
-      chunks.push(current.join(' '));
-      current = [];
-    }
-  }
-
-  if (current.length > 0) {
-    chunks.push(current.join(' '));
-  }
-
-  return chunks;
-}
-
-/**
- * Formato recomendado por Seedance: diálogo citado, idioma explícito y frases cortas.
- */
-export function formatNarrationDialogueForVideo(script: string): string {
-  const sentences = script.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  const lines: string[] = [
-    'AUDIO / DIÁLOGO — narrador en español de México (es-MX), voz clara de locutor de redes:',
-  ];
-
-  let index = 1;
-  for (const sentence of sentences) {
-    for (const chunk of chunkDialogueLine(sentence)) {
-      lines.push(
-        `${index}. El narrador dice en español, sin cambiar palabras: "${chunk}"`,
-      );
-      index += 1;
-    }
-  }
-
-  return lines.join('\n');
 }
 
 export interface VideoGenerationPromptInput {
@@ -408,45 +289,32 @@ export interface VideoGenerationPromptInput {
  * Prompt enviado a la Video API: mismo base que el registro (UI) + guion de voz explícito.
  */
 export function buildVideoGenerationPrompt(input: VideoGenerationPromptInput): string {
-  const durationSeconds = input.durationSeconds ?? 8;
+  const script = input.narrationBody?.trim()
+    ? sanitizeSpanishNarrationScript(input.narrationBody)
+    : '';
+
   const parts = [
     'Video corto para redes sociales.',
-    `Duración objetivo del clip: ${durationSeconds} segundos.`,
+    `Duración objetivo del clip: ${input.durationSeconds ?? 8} segundos.`,
     'ESCENA VISUAL (no vocalizar como diálogo):',
     input.basePrompt.trim(),
   ];
 
-  if (input.narrationBody?.trim()) {
-    const script = sanitizeSpanishNarrationScript(input.narrationBody);
-    const estimatedSeconds = estimateSpeechDurationSeconds(script);
-    const narrationHint =
-      estimatedSeconds > durationSeconds
-        ? ' Ritmo de locutor claro para cubrir todo el guion dentro de la duración, sin omitir frases.'
-        : '';
-
-    if (input.narrationTruncated) {
-      parts.push(
-        `NOTA: El guion de voz se acortó a ~${durationSeconds}s para el modelo de video. Narra solo el texto indicado, sin añadir ni omitir palabras.`,
-      );
-    }
-
-    parts.push(buildOrthographyGuardrails(script, input.title));
+  if (script) {
     parts.push(
-      `${formatNarrationDialogueForVideo(script)}${narrationHint}`,
-    );
-    parts.push(
-      `GUION DE VOZ (texto literal obligatorio):\n"""${script}"""`,
+      `Narración en español de México (es-MX), pronunciación perfecta:
+"""${script}"""`,
     );
   }
 
   if (input.title?.trim()) {
     parts.push(
-      `TEXTO EN PANTALLA (si aparece): "${input.title.trim()}". Ortografía española estricta; nunca "technology" ni "technología".`,
+      `TEXTO EN PANTALLA (si aparece): "${input.title.trim()}" (ortografía española estricta).`,
     );
   }
 
   parts.push(
-    'La narración sigue el guion de voz palabra por palabra; el visual sigue la escena. No sustituyas el copy del post por un mensaje distinto.',
+    'La narración sigue el guion de voz palabra por palabra; el visual sigue la escena.',
   );
 
   return parts.join('\n\n');
