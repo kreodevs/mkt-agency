@@ -591,27 +591,10 @@ export class CommunityManagerService {
     });
 
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
-    const shouldRegenerateVisual =
-      !feedback || Boolean(feedback || post.visualDescription?.trim());
 
-    if (shouldRegenerateVisual) {
-      const composed = await this.attachVisualForPost(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        content.productId ?? productContext?.id,
-        kit,
-        visualVariantIndex,
-      );
-      if (!composed) {
-        try {
-          await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
-        } catch (error) {
-          this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
-        }
-      } else if (!feedback && post.visualDescription?.trim()) {
-        try {
+    if (!feedback) {
+      try {
+        if (post.visualDescription?.trim()) {
           await this.imageGeneration.attachVisualToContent(
             tenantId,
             userId,
@@ -619,8 +602,30 @@ export class CommunityManagerService {
             post.visualDescription,
             content.productId ?? productContext?.id ?? undefined,
           );
-        } catch (error) {
-          this.logger.warn(`AI visual variant failed for content ${contentId}`, error);
+        } else {
+          await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+        }
+      } catch (error) {
+        this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+      }
+    } else {
+      const shouldRegenerateVisual = Boolean(feedback || post.visualDescription?.trim());
+      if (shouldRegenerateVisual) {
+        const composed = await this.attachVisualForPost(
+          tenantId,
+          userId,
+          contentId,
+          post,
+          content.productId ?? productContext?.id,
+          kit,
+          visualVariantIndex,
+        );
+        if (!composed) {
+          try {
+            await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+          } catch (error) {
+            this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+          }
         }
       }
     }

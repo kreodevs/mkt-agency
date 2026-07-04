@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImageIcon, Loader2, Video } from 'lucide-react';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { SocialPostMockup } from '@/components/publication-inbox/SocialPostMockup';
 import { getImageGenerationByContentId } from '@/services/agents';
 import {
+  isStaleImageGeneration,
   isVideoGeneration,
   resolveContentVisualAssetIds,
 } from '@/lib/image-generation';
@@ -17,14 +19,23 @@ interface InboxItemVisualPreviewProps {
 }
 
 export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisualPreviewProps) {
+  const queryClient = useQueryClient();
   const versionAssets = item.assets ?? [];
-  const hasVersionAssets = versionAssets.length > 0;
 
   const generationQuery = useQuery({
     queryKey: ['image-generation-by-content', item.contentId],
     queryFn: () => getImageGenerationByContentId(item.contentId),
-    enabled: !hasVersionAssets,
-    staleTime: 60_000,
+    staleTime: 5_000,
+    refetchInterval: (query) => {
+      const generation = query.state.data?.generation;
+      if (!generation || generation.status !== 'processing') {
+        return false;
+      }
+      if (isStaleImageGeneration(generation)) {
+        return false;
+      }
+      return 3000;
+    },
   });
 
   const generation = generationQuery.data?.generation ?? null;
@@ -34,17 +45,37 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
     versionAssets,
   });
   const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
-  const isProcessing = generation?.status === 'processing' && assetIds.length === 0;
-  const isFailed = generation?.status === 'failed' && assetIds.length === 0;
+  const isStaleProcessing = generation ? isStaleImageGeneration(generation) : false;
+  const isProcessing = generation?.status === 'processing' && !isStaleProcessing;
+  const isFailed = generation?.status === 'failed' || isStaleProcessing;
+
+  useEffect(() => {
+    if (generation?.status !== 'completed') {
+      return;
+    }
+
+    void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+  }, [generation?.status, queryClient]);
 
   const isDetail = variant === 'detail';
   const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : 'max-h-56';
+  const processingLabel =
+    visualFormat === 'video' ? 'Generando video…' : 'Generando imagen…';
 
-  if (generationQuery.isLoading && !hasVersionAssets) {
+  if (generationQuery.isLoading && assetIds.length === 0) {
     return (
       <div className="mt-3 flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         Cargando visual…
+      </div>
+    );
+  }
+
+  if (isProcessing) {
+    return (
+      <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        {processingLabel}
       </div>
     );
   }
@@ -100,15 +131,6 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
             +{assetIds.length - previewIds.length} frame(s) más en el editor
           </p>
         )}
-      </div>
-    );
-  }
-
-  if (isProcessing) {
-    return (
-      <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Generando {visualFormat === 'video' ? 'video' : 'imagen'}…
       </div>
     );
   }

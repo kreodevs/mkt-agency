@@ -87,15 +87,15 @@ export function resolveContentVisualAssetIds(input: {
 }): string[] {
   const generation = input.generation;
 
+  if (generation?.status === 'processing') {
+    return [];
+  }
+
   if (generation?.status === 'completed') {
     const fromGeneration = listGenerationAssetIds(generation);
     if (fromGeneration.length) {
       return fromGeneration;
     }
-  }
-
-  if (generation) {
-    return [];
   }
 
   return extractContentAssetIds(input.versionAssets);

@@ -32,9 +32,11 @@ export function InboxQuickPublishActions({
 
   const regenerateMutation = useMutation({
     mutationFn: () => regenerateInboxContent(item.contentId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
-      void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', item.contentId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['image-generation-by-content', item.contentId],
+      });
       toast.success('Nueva versión en camino — texto actualizado e imagen regenerándose');
     },
     onError: () => toast.error('No se pudo regenerar'),

@@ -4,7 +4,7 @@
 |---------|-----|
 | `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
 | `InboxContentDetailDialog.tsx` | Ficha completa en modal ancho con scroll y acciones de aprobación |
-| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup` |
+| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; hace polling mientras regenera |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
