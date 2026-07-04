@@ -15,7 +15,7 @@
 
 ### Changed
 
-- **Generación de video**: duración estimada por palabras del copy (~2.35 pal/s, máx. 15s en Seedance); guion con reglas de ortografía es-MX para narración.
+- **Generación de video**: simplificado prompt para narración en español (es-MX) con instrucción explícita; removidos arreglos de anglicismos limitados y guardrails de ortografía complejos.
 - **Image Generator**: las generaciones desde API se encolan siempre en background (BullMQ).
 - Política de duración por modelo de video (`resolveVideoDurationPolicy`): Wan y Veo 3.1 con límites y truncado de guion; Seedance mantiene hasta 15s.
 
