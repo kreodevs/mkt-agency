@@ -12,6 +12,10 @@ export interface PublicationInboxItem {
   signatureHash: string | null;
   scheduledDate: string;
   preview: string;
+  body: string;
+  platform: string | null;
+  visualFormat: string;
+  assets: unknown[];
 }
 
 export interface AgencyNotification {

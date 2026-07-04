@@ -37,6 +37,9 @@ interface InboxRow {
   versionId: string | null;
   body: string | null;
   signatureHash: string | null;
+  platform: string | null;
+  visualFormat: string | null;
+  assets: unknown;
 }
 
 @Injectable()
@@ -237,6 +240,9 @@ export class PublicationInboxService {
         'v.id AS "versionId"',
         'v.body AS body',
         'v.signature_hash AS "signatureHash"',
+        'v.assets AS assets',
+        'c.platform AS platform',
+        'c.visual_format AS "visualFormat"',
       ])
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere(
@@ -253,6 +259,7 @@ export class PublicationInboxService {
 
   private toInboxItem(row: InboxRow): PublicationInboxItemDto {
     const body = row.body ?? '';
+    const assets = this.parseAssets(row.assets);
     return {
       contentId: row.id,
       title: row.title,
@@ -267,7 +274,26 @@ export class PublicationInboxService {
       signatureHash: row.signatureHash,
       scheduledDate: this.effectiveDate(row),
       preview: body.length > 220 ? `${body.slice(0, 220)}…` : body,
+      body,
+      platform: row.platform,
+      visualFormat: row.visualFormat ?? 'image',
+      assets,
     };
+  }
+
+  private parseAssets(raw: unknown): unknown[] {
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   }
 
   private toNotificationDto(row: AgencyNotificationEntity): AgencyNotificationDto {

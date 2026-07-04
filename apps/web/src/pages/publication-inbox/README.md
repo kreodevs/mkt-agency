@@ -16,7 +16,8 @@ Toggle: sidebar «Modo agencia (avanzado)» o `/settings/copilot`.
 | Archivo | Rol |
 |---------|-----|
 | `pages/publication-inbox/PublicationInboxPage.tsx` | Vista hub + `CopilotStatusPanel` |
-| `components/publication-inbox/InboxItemCard.tsx` | CTA «Copiar y publicar» (SOHO) |
+| `components/publication-inbox/InboxItemCard.tsx` | CTA «Copiar y publicar» + preview visual |
+| `components/publication-inbox/InboxItemVisualPreview.tsx` | Imagen/video/carrusel antes de aprobar |
 | `components/publication-inbox/InboxKitPanel.tsx` | Kit Copiar y Llevar multi-día |
 | `components/copilot/CopilotStatusPanel.tsx` | Estado pipeline + preparar semana |
 | `services/publication-inbox.ts` | Cliente API (incl. copilot-status, prepare-week) |

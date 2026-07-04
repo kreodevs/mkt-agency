@@ -17,12 +17,11 @@
 
 ### Mecanismos en el cliente (`registerPwa.ts`)
 
-1. **Registro SW** con `immediate: true` — Workbox recarga al detectar versión nueva.
-2. **Comprobación periódica** cada 30 min (`registration.update()`).
+1. **Registro SW** con `immediate: true` — Workbox recarga al detectar versión nueva (`autoUpdate`).
+2. **Comprobación periódica** cada 5 min (`registration.update()` + `version.json`).
 3. **Al volver a la pestaña** (`visibilitychange` → visible).
 4. **Chunks obsoletos** — listener `vite:preloadError` recarga tras deploy con app abierta.
-
-No hay polling a `version.json` (legacy eliminado); el service worker es la fuente de verdad.
+5. **Red de seguridad** — si `version.json.build` ≠ `VITE_APP_VERSION` embebido, recarga (cubre iOS/PWA donde el SW tarda).
 
 ## Migración one-shot
 

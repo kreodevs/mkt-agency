@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays, Copy, ExternalLink } from 'lucide-react';
+import { CalendarDays, Copy } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
+import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -10,6 +12,18 @@ const STATUS_LABELS: Record<string, string> = {
   in_review: 'En revisión',
   in_changes: 'En cambios',
 };
+
+function formatScheduledDate(dateKey: string): string {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(dateKey);
+  if (!match) {
+    return 'Sin fecha';
+  }
+  return new Date(`${match[1]}T12:00:00`).toLocaleDateString('es-MX', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
 
 interface InboxItemCardProps {
   item: PublicationInboxItem;
@@ -29,11 +43,7 @@ export function InboxItemCard({
   showApproval = false,
   primaryAction = 'copy',
 }: InboxItemCardProps) {
-  const formattedDate = new Date(`${item.scheduledDate}T12:00:00`).toLocaleDateString('es-MX', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  const formattedDate = formatScheduledDate(item.scheduledDate);
 
   return (
     <article className="rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--primary)]/40">
@@ -54,6 +64,7 @@ export function InboxItemCard({
             <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium uppercase text-[var(--foreground-muted)]">
               {STATUS_LABELS[item.status] ?? item.status}
             </span>
+            <ContentPlatformBadge platform={item.platform} size="sm" />
           </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--foreground-muted)]">
@@ -64,6 +75,8 @@ export function InboxItemCard({
             {item.productName && <span>{item.productName}</span>}
             {item.type && <span className="uppercase">{item.type}</span>}
           </div>
+
+          <InboxItemVisualPreview item={item} />
 
           <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--foreground-muted)]">
             {item.preview}
@@ -81,18 +94,17 @@ export function InboxItemCard({
             ) : (
               <Link
                 to={`/contents/${item.contentId}`}
-                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline"
+                className="text-xs font-medium text-[var(--primary)] hover:underline"
               >
-                Editar
-                <ExternalLink className="h-3 w-3" />
+                Editar contenido
               </Link>
             )}
             {primaryAction === 'copy' && (
               <Link
                 to={`/contents/${item.contentId}`}
-                className="inline-flex items-center gap-1 text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+                className="text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
               >
-                Editar
+                Ver detalle
               </Link>
             )}
           </div>
@@ -105,11 +117,11 @@ export function InboxItemCard({
                   id: item.versionId,
                   versionNumber: item.versionNumber ?? 1,
                   title: item.title,
-                  body: item.preview,
+                  body: item.body,
                   signatureHash: item.signatureHash,
                   signedAt: null,
                   authorId: '',
-                  assets: [],
+                  assets: item.assets,
                   reason: null,
                   changeSummary: null,
                   createdAt: '',

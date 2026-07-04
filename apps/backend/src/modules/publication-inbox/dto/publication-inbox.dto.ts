@@ -28,6 +28,10 @@ export class PublicationInboxItemDto {
   signatureHash!: string | null;
   scheduledDate!: string;
   preview!: string;
+  body!: string;
+  platform!: string | null;
+  visualFormat!: string;
+  assets!: unknown[];
 }
 
 export class AgencyNotificationDto {

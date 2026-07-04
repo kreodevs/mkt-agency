@@ -20,7 +20,7 @@ yarn build
 
 - Instalable como PWA (`manifest.webmanifest`, icono `public/favicon.svg`, metadatos iOS/Android).
 - Cada build genera `version.json` con el **commit del deploy** (hash inyectado por Dokploy en el build del frontend).
-- Tras un deploy: Workbox `autoUpdate` + comprobaciones periódicas/al volver a la pestaña + recarga si falla un chunk lazy.
+- Tras un deploy: Workbox `autoUpdate` + comprobaciones cada 5 min / al volver a la pestaña + `version.json` + recarga si falla un chunk lazy.
 - `index.html` y el SW se sirven sin cache (`infra/nginx/frontend.conf`).
 - Detalle: `src/pwa/README.md`
 
