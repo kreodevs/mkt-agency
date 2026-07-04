@@ -498,8 +498,7 @@ export class ImageGenerationService {
         await fs.promises.writeFile(path.join(tempDir, `clip_${i}.mp4`), buffer);
       }
 
-      // Build ffmpeg filter_complex for crossfade transitions
-            const crossfadeDuration = 0.5;
+      // Build ffmpeg filter_complex for crossfade transitions (0.5s fade)
             const clipDurations = results.map(r => r.duration || 15);
 
             // Video inputs: normalize timestamps
@@ -515,7 +514,7 @@ export class ImageGenerationService {
               offset += clipDurations[i + 1] - crossfadeDuration;
             }
 
-            // Audio concat (no overlap, just join)
+            // Audio concat (no overlap, just join all audio streams)
             const audioConcat = results.map((_, i) => `[a${i}]`).join('');
             const audioFilter = `${audioConcat}concat=n=${results.length}:v=0:a=1[a]`;
 
@@ -526,18 +525,24 @@ export class ImageGenerationService {
               const inputFiles = results.map((_, i) => `-i ${tempDir}/clip_${i}.mp4`).join(' ');
               exec(
                 `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a]" ${tempDir}/output.mp4 -y`,
-                (error) => (error ? reject(error) : resolve()),
+                (error, stdout, stderr) => {
+                  if (error) {
+                    this.logger.error(`FFmpeg concat error: ${stderr || error.message}`);
+                    return reject(new Error(`FFmpeg concatenation failed: ${stderr || error.message}`));
+                  }
+                  resolve();
+                },
               );
             });
 
-      // Read output
-      const outputBuffer = await fs.promises.readFile(path.join(tempDir, 'output.mp4'));
+            // Read output
+            const outputBuffer = await fs.promises.readFile(path.join(tempDir, 'output.mp4'));
 
-      return {
-        videoBuffer: outputBuffer,
-        mimeType: 'video/mp4',
-        duration: results.reduce((sum, r) => sum + (r.duration || 0), 0) - (crossfadeDuration * (results.length - 1)),
-      };
+            return {
+              videoBuffer: outputBuffer,
+              mimeType: 'video/mp4',
+              duration: results.reduce((sum, r) => sum + (r.duration || 0), 0) - (crossfadeDuration * (results.length - 1)),
+            };
     } finally {
       // Cleanup temp files
       await fs.promises.rm(tempDir, { recursive: true, force: true });
