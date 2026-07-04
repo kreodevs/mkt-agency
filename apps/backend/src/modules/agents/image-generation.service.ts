@@ -318,8 +318,10 @@ export class ImageGenerationService {
       const sanitizedNarration = rawNarration?.trim() ? sanitizeSpanishNarrationScript(rawNarration) : '';
       
       // Check if narration exceeds max duration and needs segmentation
-      const needsSegmentation = durationPolicy.truncateNarration && sanitizedNarration &&
-        estimateSpeechDurationSeconds(sanitizedNarration) > durationPolicy.maxDuration;
+      // Max 20-24s per combined video, segment if needed
+      const maxCombinedDuration = 22;
+      const needsSegmentation = durationPolicy.truncateNarration && sanitizedNarration
+        && estimateSpeechDurationSeconds(sanitizedNarration) > durationPolicy.maxDuration;
 
       if (needsSegmentation && sanitizedNarration) {
         return this.runSegmentedVideoGeneration(
@@ -328,7 +330,7 @@ export class ImageGenerationService {
           record,
           prompt,
           sanitizedNarration,
-          durationPolicy.maxDuration,
+          maxCombinedDuration,
         );
       }
 
@@ -497,33 +499,36 @@ export class ImageGenerationService {
       }
 
       // Build ffmpeg filter_complex for crossfade transitions
-      let filterComplex = '';
-      let offset = (results[0]?.duration || 15) - crossfadeDuration;
-      
-      // Video streams with fade transition
-      for (let i = 0; i < results.length; i++) {
-        filterComplex += `[${i}:v]setpts=PTS-STARTPTS[v${i}];[${i}:a]asetpts=PTS-STARTPTS[a${i}];`;
-      }
-      
-      // Build crossfade chain
-      for (let i = 0; i < results.length - 1; i++) {
-        filterComplex += `[v${i}][v${i + 1}]xfade=transition=fade:duration=${crossfadeDuration}:offset=${offset}[v${i + 1}];`;
-        filterComplex += `[a${i}][a${i + 1}]concat=n=2:v=0:a=1[a${i + 1}];`;
-      }
+            const crossfadeDuration = 0.5;
+            const clipDurations = results.map(r => r.duration || 15);
 
-      // Final output mapping
-      filterComplex += `[v${results.length - 1}][a${results.length - 1}]format=yuv420p[vv]`;
+            // Video inputs: normalize timestamps
+            const videoInputs = results.map((_, i) => `[${i}:v]setpts=PTS-STARTPTS[v${i}];`).join('');
+            // Audio inputs: normalize timestamps
+            const audioInputs = results.map((_, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join('');
 
-      // Run ffmpeg with crossfade transitions
-      await new Promise<void>((resolve, reject) => {
-        const inputFiles = results
-          .map((_, i) => `-i ${tempDir}/clip_${i}.mp4`)
-          .join(' ');
-        exec(
-          `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a${results.length - 1}]" ${tempDir}/output.mp4 -y -shortest`,
-          (error) => (error ? reject(error) : resolve()),
-        );
-      });
+            // Xfade chain (video transition)
+            let videoFilter = '';
+            let offset = clipDurations[0] - crossfadeDuration;
+            for (let i = 0; i < results.length - 1; i++) {
+              videoFilter += `[v${i}][v${i + 1}]xfade=transition=fade:duration=${crossfadeDuration}:offset=${offset}[v${i + 1}];`;
+              offset += clipDurations[i + 1] - crossfadeDuration;
+            }
+
+            // Audio concat (no overlap, just join)
+            const audioConcat = results.map((_, i) => `[a${i}]`).join('');
+            const audioFilter = `${audioConcat}concat=n=${results.length}:v=0:a=1[a]`;
+
+            const filterComplex = `${videoInputs}${audioInputs}${videoFilter}[v${results.length - 1}]format=yuv420p[vv];${audioFilter}`;
+
+            // Run ffmpeg with crossfade transitions
+            await new Promise<void>((resolve, reject) => {
+              const inputFiles = results.map((_, i) => `-i ${tempDir}/clip_${i}.mp4`).join(' ');
+              exec(
+                `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a]" ${tempDir}/output.mp4 -y`,
+                (error) => (error ? reject(error) : resolve()),
+              );
+            });
 
       // Read output
       const outputBuffer = await fs.promises.readFile(path.join(tempDir, 'output.mp4'));

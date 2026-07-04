@@ -4,7 +4,10 @@
 - Video segmentation for texts exceeding model duration limits
 - Automatic FFmpeg concatenation of multiple video clips into single asset
 - Crossfade fade-in transitions (0.5s) between video clips without audio alteration
-- Support for dynamic model duration limits (Wan: 10s, Veo-3.1: 8s, Seedance: 15s)
+
+### Fixed
+- **FFmpeg crossfade filter**: Corrected filter_complex syntax to properly chain video transitions and audio concatenation
+- **Job status synchronization**: Fixed job not updating to completed after video concatenation, resolving persistent spinner in UI
 
 # Changelog
 
