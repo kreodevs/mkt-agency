@@ -43,10 +43,10 @@ export default function AgentListPage() {
               key={agent.id}
               className="relative overflow-hidden border border-[var(--border)] transition-all hover:shadow-lg hover:-translate-y-0.5"
             >
-              <div className={`h-2 bg-gradient-to-r ${agent.color}`} />
-              <div className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20">
-                  <Icon className="h-6 w-6 text-violet-600" />
+              <div className="h-2 bg-[var(--accent)]/30" />
+              <div className="p-[var(--spacing-md)]">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--accent)]/20 bg-[var(--accent)]/10">
+                  <Icon className="h-6 w-6 text-[var(--accent)]" />
                 </div>
                 <h3 className="text-lg font-black tracking-tight text-[var(--foreground)]">
                   {agent.name}

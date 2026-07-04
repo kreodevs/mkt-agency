@@ -21,11 +21,11 @@ import {
   TrendingUp,
   Users,
   Activity,
-  AlertCircle,
 } from 'lucide-react';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
-import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { StatsCard } from '@/components/molecules/StatsCard';
+import { PageHeader } from '@/components/molecules/PageHeader';
 import { apiFetch } from '@/services/api';
 
 interface MetricsResponse {
@@ -86,48 +86,49 @@ export default function MetricsDashboardPage() {
           No hay datos suficientes para mostrar métricas.
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Row 1: KPI cards */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
-              icon={Users}
-              label="Total leads"
+        <div className="space-y-[var(--spacing-lg)]">
+          <div className="grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total leads"
               value={data.leads.total}
-              color="text-blue-600"
-              bg="bg-blue-500/10"
+              icon={<Users className="h-5 w-5" aria-hidden />}
+              iconTone="primary"
             />
-            <KpiCard
-              icon={TrendingUp}
-              label="Tasa conversión"
+            <StatsCard
+              title="Tasa conversión"
               value={`${data.leads.conversionRate}%`}
-              color="text-emerald-600"
-              bg="bg-emerald-500/10"
-              indicator={
+              description={
                 data.leads.conversionRate >= 20
-                  ? { type: 'positive', text: '¡Funciona!' }
+                  ? '¡Funciona!'
                   : data.leads.conversionRate >= 10
-                    ? { type: 'neutral', text: 'Estable' }
-                    : { type: 'negative', text: 'Mejorable' }
+                    ? 'Estable'
+                    : 'Mejorable'
+              }
+              icon={<TrendingUp className="h-5 w-5" aria-hidden />}
+              iconTone={
+                data.leads.conversionRate >= 20
+                  ? 'success'
+                  : data.leads.conversionRate >= 10
+                    ? 'warning'
+                    : 'warning'
               }
             />
-            <KpiCard
-              icon={FileText}
-              label="Contenidos"
+            <StatsCard
+              title="Contenidos"
               value={data.content.total}
-              color="text-violet-600"
-              bg="bg-violet-500/10"
+              icon={<FileText className="h-5 w-5" aria-hidden />}
+              iconTone="accent"
             />
-            <KpiCard
-              icon={Target}
-              label="Campañas activas"
+            <StatsCard
+              title="Campañas activas"
               value={`${data.campaigns.active}/${data.campaigns.total}`}
-              color="text-amber-600"
-              bg="bg-amber-500/10"
-              indicator={
+              description={
                 data.campaigns.active > 0
-                  ? { type: 'positive', text: `${data.campaigns.active} en curso` }
-                  : { type: 'neutral', text: 'Sin campañas activas' }
+                  ? `${data.campaigns.active} en curso`
+                  : 'Sin campañas activas'
               }
+              icon={<Target className="h-5 w-5" aria-hidden />}
+              iconTone={data.campaigns.active > 0 ? 'success' : 'warning'}
             />
           </div>
 
@@ -236,7 +237,7 @@ export default function MetricsDashboardPage() {
                       </span>
                     </div>
                   ))}
-                  <div className="flex items-center gap-2 border-t border-[var(--border)] pt-2 text-sm font-medium text-emerald-500">
+                  <div className="flex items-center gap-2 border-t border-[var(--border)] pt-2 text-sm font-medium text-[var(--success)]">
                     <Activity className="h-3.5 w-3.5" />
                     <span>{data.content.approvalRate}% aprobado</span>
                   </div>
@@ -285,18 +286,18 @@ export default function MetricsDashboardPage() {
             <Card title="¿Qué está funcionando?" subtitle="Diagnóstico automático">
               <div className="space-y-4">
                 {/* Conversion rate gauge */}
-                <div className="rounded-xl border border-[var(--border)] p-4">
-                  <div className="mb-2 flex items-center justify-between">
+                <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]">
+                  <div className="mb-[var(--spacing-sm)] flex items-center justify-between">
                     <span className="text-sm font-medium text-[var(--foreground)]">
                       Tasa de conversión
                     </span>
                     <span
                       className={`text-sm font-bold ${
                         data.leads.conversionRate >= 20
-                          ? 'text-emerald-500'
+                          ? 'text-[var(--success)]'
                           : data.leads.conversionRate >= 10
-                            ? 'text-amber-500'
-                            : 'text-red-500'
+                            ? 'text-[var(--warning)]'
+                            : 'text-[var(--destructive)]'
                       }`}
                     >
                       {data.leads.conversionRate >= 20
@@ -310,10 +311,10 @@ export default function MetricsDashboardPage() {
                     <div
                       className={`h-full rounded-full transition-all ${
                         data.leads.conversionRate >= 20
-                          ? 'bg-emerald-500'
+                          ? 'bg-[var(--success)]'
                           : data.leads.conversionRate >= 10
-                            ? 'bg-amber-500'
-                            : 'bg-red-500'
+                            ? 'bg-[var(--warning)]'
+                            : 'bg-[var(--destructive)]'
                       }`}
                       style={{ width: `${Math.min(data.leads.conversionRate, 100)}%` }}
                     />
@@ -328,18 +329,18 @@ export default function MetricsDashboardPage() {
                 </div>
 
                 {/* Approval rate */}
-                <div className="rounded-xl border border-[var(--border)] p-4">
-                  <div className="mb-2 flex items-center justify-between">
+                <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]">
+                  <div className="mb-[var(--spacing-sm)] flex items-center justify-between">
                     <span className="text-sm font-medium text-[var(--foreground)]">
                       Tasa de aprobación
                     </span>
                     <span
                       className={`text-sm font-bold ${
                         data.content.approvalRate >= 70
-                          ? 'text-emerald-500'
+                          ? 'text-[var(--success)]'
                           : data.content.approvalRate >= 40
-                            ? 'text-amber-500'
-                            : 'text-red-500'
+                            ? 'text-[var(--warning)]'
+                            : 'text-[var(--destructive)]'
                       }`}
                     >
                       {data.content.approvalRate >= 70
@@ -353,10 +354,10 @@ export default function MetricsDashboardPage() {
                     <div
                       className={`h-full rounded-full transition-all ${
                         data.content.approvalRate >= 70
-                          ? 'bg-emerald-500'
+                          ? 'bg-[var(--success)]'
                           : data.content.approvalRate >= 40
-                            ? 'bg-amber-500'
-                            : 'bg-red-500'
+                            ? 'bg-[var(--warning)]'
+                            : 'bg-[var(--destructive)]'
                       }`}
                       style={{ width: `${Math.min(data.content.approvalRate, 100)}%` }}
                     />
@@ -371,16 +372,16 @@ export default function MetricsDashboardPage() {
                 </div>
 
                 {/* Campaign status */}
-                <div className="rounded-xl border border-[var(--border)] p-4">
-                  <div className="mb-2 flex items-center justify-between">
+                <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]">
+                  <div className="mb-[var(--spacing-sm)] flex items-center justify-between">
                     <span className="text-sm font-medium text-[var(--foreground)]">
                       Campañas activas
                     </span>
                     <span
                       className={`text-sm font-bold ${
                         data.campaigns.active > 0
-                          ? 'text-emerald-500'
-                          : 'text-amber-500'
+                          ? 'text-[var(--success)]'
+                          : 'text-[var(--warning)]'
                       }`}
                     >
                       {data.campaigns.active > 0
@@ -400,55 +401,5 @@ export default function MetricsDashboardPage() {
         </div>
       )}
     </DashboardShell>
-  );
-}
-
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-  bg,
-  indicator,
-}: {
-  icon: React.FC<{ className?: string }>;
-  label: string;
-  value: string | number;
-  color: string;
-  bg: string;
-  indicator?: { type: 'positive' | 'neutral' | 'negative'; text: string };
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-all hover:shadow-md">
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${bg}`}>
-        <Icon className={`h-6 w-6 ${color}`} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-          {label}
-        </p>
-        <p className="mt-0.5 text-2xl font-black text-[var(--foreground)]">{value}</p>
-        {indicator && (
-          <p
-            className={`mt-0.5 flex items-center gap-1 text-[10px] font-medium ${
-              indicator.type === 'positive'
-                ? 'text-emerald-500'
-                : indicator.type === 'negative'
-                  ? 'text-red-500'
-                  : 'text-amber-500'
-            }`}
-          >
-            {indicator.type === 'positive' ? (
-              <TrendingUp className="h-3 w-3" />
-            ) : indicator.type === 'negative' ? (
-              <AlertCircle className="h-3 w-3" />
-            ) : (
-              <Activity className="h-3 w-3" />
-            )}
-            {indicator.text}
-          </p>
-        )}
-      </div>
-    </div>
   );
 }

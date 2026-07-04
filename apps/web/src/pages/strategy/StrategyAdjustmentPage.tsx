@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
-  BarChart3,
   CheckCircle2,
   CheckSquare,
   ChevronDown,
@@ -21,7 +20,9 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { StatsCard } from '@/components/molecules/StatsCard';
 import { Button } from '@/components/atoms/Button';
+import { HEALTH_UI, type HealthKey } from '@/lib/semantic-ui';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -59,18 +60,17 @@ interface Adjustment {
 }
 
 const ACTION_TYPE_BADGES: Record<string, { label: string; class: string }> = {
-  adjust_content: { label: 'Ajustar contenido', class: 'bg-blue-500/10 text-blue-600' },
-  reallocate_budget: { label: 'Reasignar presupuesto', class: 'bg-amber-500/10 text-amber-600' },
-  change_strategy: { label: 'Cambiar estrategia', class: 'bg-violet-500/10 text-violet-600' },
-  pause_channel: { label: 'Pausar canal', class: 'bg-red-500/10 text-red-600' },
-  amplify: { label: 'Amplificar', class: 'bg-emerald-500/10 text-emerald-600' },
+  adjust_content: { label: 'Ajustar contenido', class: 'bg-[var(--accent)]/10 text-[var(--accent)]' },
+  reallocate_budget: { label: 'Reasignar presupuesto', class: 'bg-[var(--warning)]/10 text-[var(--warning)]' },
+  change_strategy: { label: 'Cambiar estrategia', class: 'bg-[var(--accent)]/10 text-[var(--accent)]' },
+  pause_channel: { label: 'Pausar canal', class: 'bg-[var(--destructive)]/10 text-[var(--destructive)]' },
+  amplify: { label: 'Amplificar', class: 'bg-[var(--success)]/10 text-[var(--success)]' },
 };
 
-const HEALTH_CONFIG: Record<string, { icon: typeof TrendingUp; label: string; color: string }> = {
-  good: { icon: TrendingUp, label: 'Bueno', color: 'text-emerald-500' },
-  fair: { icon: BarChart3, label: 'Estable', color: 'text-amber-500' },
-  poor: { icon: TrendingDown, label: 'Crítico', color: 'text-red-500' },
-};
+function resolveHealth(key?: string): (typeof HEALTH_UI)[HealthKey] {
+  if (key === 'good' || key === 'poor') return HEALTH_UI[key];
+  return HEALTH_UI.fair;
+}
 
 export default function StrategyAdjustmentPage() {
   const queryClient = useQueryClient();
@@ -206,7 +206,7 @@ export default function StrategyAdjustmentPage() {
       ) : latest.status === 'failed' ? (
         <Card>
           <div className="flex flex-col items-center gap-4 py-12 text-center">
-            <XCircle className="h-10 w-10 text-red-500" />
+            <XCircle className="h-10 w-10 text-[var(--destructive)]" />
             <p className="text-lg font-semibold text-[var(--foreground)]">
               Error en el análisis
             </p>
@@ -224,41 +224,42 @@ export default function StrategyAdjustmentPage() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {/* Health summary */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <HealthCard
-              icon={TrendingUp}
-              label="Rendimiento general"
-              value={
-                HEALTH_CONFIG[latest.data.overallHealth ?? 'fair']?.label ?? 'Estable'
-              }
-              color={
-                HEALTH_CONFIG[latest.data.overallHealth ?? 'fair']?.color ?? 'text-amber-500'
+        <div className="space-y-[var(--spacing-lg)]">
+          <div className="grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Rendimiento general"
+              value={resolveHealth(latest.data.overallHealth).label}
+              icon={<TrendingUp className="h-5 w-5" aria-hidden />}
+              iconTone={
+                latest.data.overallHealth === 'good'
+                  ? 'success'
+                  : latest.data.overallHealth === 'poor'
+                    ? 'warning'
+                    : 'warning'
               }
             />
-            <HealthCard
-              icon={ThumbsUp}
-              label="Funciona"
+            <StatsCard
+              title="Funciona"
               value={latest.data.topPerforming?.length ?? 0}
-              color="text-emerald-500"
+              icon={<ThumbsUp className="h-5 w-5" aria-hidden />}
+              iconTone="success"
             />
-            <HealthCard
-              icon={AlertCircle}
-              label="No funciona"
+            <StatsCard
+              title="No funciona"
               value={latest.data.underperforming?.length ?? 0}
-              color="text-red-500"
+              icon={<AlertCircle className="h-5 w-5" aria-hidden />}
+              iconTone="warning"
             />
-            <HealthCard
-              icon={Lightbulb}
-              label="Sugerencias"
+            <StatsCard
+              title="Sugerencias"
               value={latest.suggestions.length}
-              color="text-violet-500"
-              indented={
+              description={
                 latest.suggestions.filter((s) => s.status === 'approved').length > 0
                   ? `${latest.suggestions.filter((s) => s.status === 'approved').length} aprobadas`
                   : undefined
               }
+              icon={<Lightbulb className="h-5 w-5" aria-hidden />}
+              iconTone="accent"
             />
           </div>
 
@@ -271,14 +272,14 @@ export default function StrategyAdjustmentPage() {
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               {latest.data.topPerforming && latest.data.topPerforming.length > 0 && (
                 <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-emerald-500">
+                  <p className="mb-[var(--spacing-sm)] flex items-center gap-1.5 text-sm font-semibold text-[var(--success)]">
                     <TrendingUp className="h-4 w-4" />
                     Lo que funciona
                   </p>
                   <ul className="space-y-1.5">
                     {latest.data.topPerforming.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--success)]" />
                         {item}
                       </li>
                     ))}
@@ -288,14 +289,14 @@ export default function StrategyAdjustmentPage() {
 
               {latest.data.underperforming && latest.data.underperforming.length > 0 && (
                 <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-red-500">
+                  <p className="mb-[var(--spacing-sm)] flex items-center gap-1.5 text-sm font-semibold text-[var(--destructive)]">
                     <TrendingDown className="h-4 w-4" />
                     Lo que no funciona
                   </p>
                   <ul className="space-y-1.5">
                     {latest.data.underperforming.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--destructive)]" />
                         {item}
                       </li>
                     ))}
@@ -314,13 +315,13 @@ export default function StrategyAdjustmentPage() {
               {latest.suggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className={`rounded-xl border p-4 transition-all ${
+                  className={`rounded-[var(--radius-md)] border p-[var(--spacing-md)] transition-colors ${
                     suggestion.status === 'approved'
-                      ? 'border-emerald-400 bg-emerald-500/5'
+                      ? 'border-[var(--success)]/30 bg-[var(--success)]/5'
                       : suggestion.status === 'rejected'
-                        ? 'border-red-400 bg-red-500/5'
+                        ? 'border-[var(--destructive)]/30 bg-[var(--destructive)]/5'
                         : suggestion.status === 'applied'
-                          ? 'border-emerald-600 bg-emerald-500/10'
+                          ? 'border-[var(--success)]/40 bg-[var(--success)]/10'
                           : 'border-[var(--border)]'
                   }`}
                 >
@@ -331,7 +332,7 @@ export default function StrategyAdjustmentPage() {
                           {suggestion.channel}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          className={`rounded-full px-[var(--spacing-sm)] py-0.5 text-xs font-semibold ${
                             ACTION_TYPE_BADGES[suggestion.actionType]?.class ??
                             'bg-[var(--secondary)] text-[var(--foreground-muted)]'
                           }`}
@@ -340,19 +341,19 @@ export default function StrategyAdjustmentPage() {
                             suggestion.actionType}
                         </span>
                         {suggestion.status === 'approved' && (
-                          <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-500">
+                          <span className="flex items-center gap-1 text-xs font-medium text-[var(--success)]">
                             <CheckCircle2 className="h-3 w-3" />
                             Aprobada
                           </span>
                         )}
                         {suggestion.status === 'rejected' && (
-                          <span className="flex items-center gap-1 text-[10px] font-medium text-red-500">
+                          <span className="flex items-center gap-1 text-xs font-medium text-[var(--destructive)]">
                             <XCircle className="h-3 w-3" />
                             Rechazada
                           </span>
                         )}
                         {suggestion.status === 'applied' && (
-                          <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                          <span className="flex items-center gap-1 text-xs font-medium text-[var(--success)]">
                             <CheckSquare className="h-3 w-3" />
                             Aplicada
                           </span>
@@ -395,7 +396,7 @@ export default function StrategyAdjustmentPage() {
                             <span className="font-medium">Recomendación:</span>{' '}
                             {suggestion.recommendation}
                           </p>
-                          <p className="text-xs font-medium text-emerald-500">
+                          <p className="text-xs font-medium text-[var(--success)]">
                             Impacto esperado: {suggestion.expectedImpact}
                           </p>
                         </div>
@@ -447,9 +448,9 @@ export default function StrategyAdjustmentPage() {
 
             {/* Apply button */}
             {latest.suggestions.some((s) => s.status === 'approved') && (
-              <div className="mt-6 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <div className="mt-[var(--spacing-lg)] flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--success)]/30 bg-[var(--success)]/5 p-[var(--spacing-md)]">
                 <div>
-                  <p className="text-sm font-semibold text-emerald-600">
+                  <p className="text-sm font-semibold text-[var(--success)]">
                     Sugerencias aprobadas listas para aplicar
                   </p>
                   <p className="text-xs text-[var(--foreground-muted)]">
@@ -459,7 +460,7 @@ export default function StrategyAdjustmentPage() {
                 <Button
                   onClick={() => applyMutation.mutate(latest.id)}
                   loading={applyMutation.isPending}
-                  className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                  className="gap-2"
                 >
                   <CheckSquare className="h-4 w-4" />
                   Aplicar ajustes
@@ -470,38 +471,5 @@ export default function StrategyAdjustmentPage() {
         </div>
       )}
     </DashboardShell>
-  );
-}
-
-function HealthCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-  indented,
-}: {
-  icon: React.FC<{ className?: string }>;
-  label: string;
-  value: string | number;
-  color: string;
-  indented?: string;
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-all hover:shadow-md">
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)]`}>
-        <Icon className={`h-6 w-6 ${color}`} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-          {label}
-        </p>
-        <p className={`mt-0.5 text-2xl font-black ${color}`}>{value}</p>
-        {indented && (
-          <p className="mt-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
-            {indented}
-          </p>
-        )}
-      </div>
-    </div>
   );
 }

@@ -170,7 +170,7 @@ export function CompetitorDiscoveryPanel({
                 key={option.value}
                 type="button"
                 onClick={() => setScope(option.value)}
-                className={`rounded-xl border p-3 text-left transition-colors ${
+                className={`rounded-[var(--radius-md)] border p-[var(--spacing-md)] text-left transition-colors ${
                   active
                     ? 'border-[var(--primary)] bg-[var(--primary)]/5'
                     : 'border-[var(--border)] hover:border-[var(--primary)]/40'
@@ -225,7 +225,7 @@ export function CompetitorDiscoveryPanel({
         )}
 
         {results.length > 0 && (
-          <div className="space-y-3 rounded-xl border border-[var(--border)] p-3">
+          <div className="space-y-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {results.length} sugerencia{results.length === 1 ? '' : 's'}

@@ -24,7 +24,9 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
+import { EmptyState } from '@/components/molecules/EmptyState';
 import { toast } from '@/components/molecules/Sonner';
+import { PLATFORM_ICON_TONE } from '@/lib/semantic-ui';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
 import {
@@ -83,11 +85,11 @@ const PLATFORM_ICONS: Record<string, React.FC<{ className?: string }>> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  instagram: 'text-pink-500 bg-pink-500/10',
-  linkedin: 'text-blue-600 bg-blue-500/10',
-  twitter: 'text-sky-500 bg-sky-500/10',
-  facebook: 'text-blue-500 bg-blue-500/10',
-  tiktok: 'text-rose-400 bg-rose-400/10',
+  instagram: PLATFORM_ICON_TONE,
+  linkedin: PLATFORM_ICON_TONE,
+  twitter: PLATFORM_ICON_TONE,
+  facebook: PLATFORM_ICON_TONE,
+  tiktok: PLATFORM_ICON_TONE,
 };
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -390,7 +392,7 @@ export default function CommunityManagerPage() {
                       key={preset.id}
                       type="button"
                       onClick={() => setTone(preset.toneText)}
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                      className={`rounded-full px-[var(--spacing-sm)] py-0.5 text-xs font-medium transition-colors ${
                         tone === preset.toneText
                           ? 'bg-[var(--primary)]/10 text-[var(--primary)] ring-1 ring-[var(--primary)]'
                           : 'bg-[var(--secondary)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)]/80'
@@ -435,15 +437,12 @@ export default function CommunityManagerPage() {
         <div className="py-12 text-center text-[var(--foreground-muted)]">Cargando...</div>
       ) : !latestBatch ? (
         <Card>
-          <div className="flex flex-col items-center gap-4 py-12 text-center">
-            <MessageSquare className="h-12 w-12 text-[var(--foreground-muted)]" />
-            <p className="text-lg font-semibold text-[var(--foreground)]">
-              Sin contenido generado aún
-            </p>
-            <p className="text-sm text-[var(--foreground-muted)]">
-              Selecciona plataformas y genera tu primer batch de copy para redes sociales.
-            </p>
-          </div>
+          <EmptyState
+            compact
+            icon={MessageSquare}
+            title="Sin contenido generado aún"
+            description="Selecciona plataformas y genera tu primer batch de copy para redes sociales."
+          />
         </Card>
       ) : latestBatch.status === 'failed' || latestBatch.posts.length === 0 ? (
         <Card title="Última generación fallida">
@@ -478,18 +477,18 @@ export default function CommunityManagerPage() {
             <div className="space-y-3">
               {latestBatch.posts.map((post) => {
                 const Icon = PLATFORM_ICONS[post.platform] ?? Globe;
-                const colorClass = PLATFORM_COLORS[post.platform] ?? 'text-gray-500 bg-gray-500/10';
+                const colorClass = PLATFORM_COLORS[post.platform] ?? PLATFORM_ICON_TONE;
                 const expanded = expandedBatch === post.id;
                 return (
                   <div
                     key={post.id}
-                    className="rounded-xl border border-[var(--border)] transition-all hover:shadow-sm"
+                    className="rounded-[var(--radius-md)] border border-[var(--border)] transition-colors hover:border-[var(--primary)]"
                   >
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
                           <div
-                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${colorClass}`}
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] ${colorClass}`}
                           >
                             <Icon className="h-5 w-5" />
                           </div>
@@ -519,12 +518,12 @@ export default function CommunityManagerPage() {
                           }`}
                         >
                           {post.contentId ? (
-                            <span className="flex items-center gap-1 text-[10px] font-medium">
+                            <span className="flex items-center gap-1 text-xs font-medium">
                               <CheckCircle2 className="h-3 w-3" />
                               En contenido
                             </span>
                           ) : (
-                            <span className="text-[10px]">Sin guardar</span>
+                            <span className="text-xs">Sin guardar</span>
                           )}
                         </a>
                       </div>
@@ -578,11 +577,11 @@ export default function CommunityManagerPage() {
                       </button>
 
                       {expanded && (
-                        <div className="mt-2 flex items-start gap-2 rounded-lg bg-[var(--secondary)] p-3">
+                        <div className="mt-[var(--spacing-sm)] flex items-start gap-[var(--spacing-sm)] rounded-[var(--radius-md)] bg-[var(--secondary)] p-[var(--spacing-md)]">
                           <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--foreground-muted)]" />
                           <div className="space-y-1">
                             {post.visualFormat ? (
-                              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--primary)]">
+                              <p className="text-xs font-medium uppercase tracking-wide text-[var(--primary)]">
                                 Formato:{' '}
                                 {CONTENT_VISUAL_FORMAT_LABELS[
                                   post.visualFormat as keyof typeof CONTENT_VISUAL_FORMAT_LABELS
@@ -606,8 +605,8 @@ export default function CommunityManagerPage() {
 
       {/* Save tone preset dialog */}
       {showSavePreset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl">
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-[var(--foreground)]/40 p-[var(--spacing-md)]">
+          <div className="w-full max-w-sm rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-lg)] shadow-xl">
             <h3 className="text-lg font-semibold text-[var(--foreground)]">Guardar tono</h3>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
               Dale un nombre a esta plantilla de tono

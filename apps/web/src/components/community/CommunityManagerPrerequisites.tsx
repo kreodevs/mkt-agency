@@ -35,12 +35,12 @@ export function CommunityManagerPrerequisites({ readiness }: CommunityManagerPre
         {readiness.items.map((item) => (
           <li
             key={item.key}
-            className="flex items-start gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5"
+            className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--border)] px-[var(--spacing-md)] py-[var(--spacing-sm)]"
           >
             {item.complete ? (
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
             ) : (
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--warning)]" />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">

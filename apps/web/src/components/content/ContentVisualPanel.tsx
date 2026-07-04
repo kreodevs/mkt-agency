@@ -173,10 +173,10 @@ export function ContentVisualPanel({
           {assetIds.map((assetId, index) => (
             <div
               key={assetId}
-              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--background-secondary)]"
+              className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)]"
             >
               {assetIds.length > 1 ? (
-                <p className="border-b border-[var(--border)] px-2 py-1 text-[10px] text-[var(--foreground-muted)]">
+                <p className="border-b border-[var(--border)] px-[var(--spacing-sm)] py-[var(--spacing-xs)] text-xs text-[var(--foreground-muted)]">
                   Frame {index + 1}
                 </p>
               ) : null}
@@ -200,7 +200,7 @@ export function ContentVisualPanel({
           ))}
         </div>
       ) : !isProcessing ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-[var(--border)] p-6 text-center">
+        <div className="flex flex-col items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-[var(--spacing-lg)] text-center">
           <p className="text-sm text-[var(--foreground-muted)]">
             Aún no hay imagen para esta pieza.
           </p>

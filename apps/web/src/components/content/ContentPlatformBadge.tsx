@@ -9,13 +9,7 @@ const PLATFORM_ICONS = {
   tiktok: Music2,
 } as const;
 
-const PLATFORM_COLORS: Record<string, string> = {
-  instagram: 'text-pink-600 bg-pink-500/10 border-pink-500/20',
-  linkedin: 'text-blue-700 bg-blue-500/10 border-blue-500/20',
-  twitter: 'text-sky-600 bg-sky-500/10 border-sky-500/20',
-  facebook: 'text-blue-600 bg-blue-500/10 border-blue-500/20',
-  tiktok: 'text-rose-500 bg-rose-400/10 border-rose-400/20',
-};
+const PLATFORM_STYLE = 'text-[var(--foreground-muted)] bg-[var(--secondary)] border-[var(--border)]';
 
 type ContentPlatformBadgeProps = {
   platform: string | null | undefined;
@@ -49,7 +43,7 @@ export function ContentPlatformBadge({
 
   const Icon = isContentPlatform(platform) ? PLATFORM_ICONS[platform] : Globe;
   const colorClass = isContentPlatform(platform)
-    ? PLATFORM_COLORS[platform]
+    ? PLATFORM_STYLE
     : 'text-[var(--foreground-muted)] bg-[var(--background-secondary)] border-[var(--border)]';
 
   return (

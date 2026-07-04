@@ -303,7 +303,7 @@ export default function ProductOnboardingWizardPage() {
           </ul>
 
           {agents.warnings && agents.warnings.length > 0 && (
-            <div className="rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-200">
+            <div className="rounded-[var(--radius-md)] border border-[var(--warning)]/30 bg-[var(--warning)]/5 p-[var(--spacing-md)] text-sm text-[var(--warning)]">
               {agents.warnings.map((w) => (
                 <p key={w}>{w}</p>
               ))}

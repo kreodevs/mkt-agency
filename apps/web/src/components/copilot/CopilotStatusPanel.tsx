@@ -68,15 +68,15 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
       title="Tu copiloto"
       subtitle={`Producto: ${status.productName}`}
     >
-      <div className="space-y-4">
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--secondary)]/30 p-3">
+      <div className="space-y-[var(--spacing-md)]">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--secondary)]/30 p-[var(--spacing-md)]">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
             Siguiente paso
           </p>
-          <p className="mt-1 text-sm font-medium text-[var(--foreground)]">{status.nextStep}</p>
+          <p className="mt-[var(--spacing-xs)] text-sm font-medium text-[var(--foreground)]">{status.nextStep}</p>
         </div>
 
-        <ul className="space-y-2 text-sm">
+        <ul className="space-y-[var(--spacing-sm)] text-sm">
           <PipelineRow
             icon={CheckCircle2}
             label="Producto listo"
@@ -103,7 +103,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
         </ul>
 
         {status.prepareBlockedReason && (
-          <p className="text-xs text-amber-600">{status.prepareBlockedReason}</p>
+          <p className="text-xs text-[var(--warning)]">{status.prepareBlockedReason}</p>
         )}
 
         <Button
@@ -125,7 +125,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           )}
         </Button>
 
-        <p className="text-[10px] text-[var(--foreground-subtle)]">
+        <p className="text-xs text-[var(--foreground-subtle)]">
           El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
           solo copies y pegues.
         </p>
@@ -150,7 +150,7 @@ function PipelineRow({
   const content = (
     <span className="flex items-center gap-2">
       <Icon
-        className={`h-4 w-4 ${done ? 'text-emerald-500' : 'text-[var(--foreground-muted)]'}`}
+        className={`h-4 w-4 ${done ? 'text-[var(--success)]' : 'text-[var(--foreground-muted)]'}`}
       />
       <span className={done ? 'text-[var(--foreground)]' : 'text-[var(--foreground-muted)]'}>
         {label}

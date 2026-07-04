@@ -157,7 +157,7 @@ export default function ImageGeneratorPage() {
               {history.map((img) => (
                 <div
                   key={img.id}
-                  className="overflow-hidden rounded-xl border border-[var(--border)] transition-shadow hover:shadow-lg"
+                  className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] transition-shadow hover:shadow-md"
                   onClick={() => navigate(`/agents/image-generator/${img.id}`)}
                   role="button"
                   tabIndex={0}
@@ -200,7 +200,7 @@ export default function ImageGeneratorPage() {
                         <ImageIcon className="h-8 w-8" />
                         {img.status === 'failed' ? 'Error' : 'Sin imagen'}
                         {img.status === 'failed' && img.errorMessage && (
-                          <p className="line-clamp-3 text-[10px] text-destructive">{img.errorMessage}</p>
+                          <p className="line-clamp-3 text-xs text-destructive">{img.errorMessage}</p>
                         )}
                       </div>
                     )}
@@ -210,20 +210,20 @@ export default function ImageGeneratorPage() {
                       const meta = parseImageGenerationMetadata(img.metadata);
                       if (meta?.mediaType === 'video') {
                         return (
-                          <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
+                          <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--foreground-muted)]">
                             Video · {meta.duration ?? '?'}s
                           </span>
                         );
                       }
                       if (!meta || (meta.frameCount ?? meta.frames.length) <= 1) return null;
                       return (
-                        <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground-muted)]">
+                        <span className="mb-1 inline-block rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--foreground-muted)]">
                           {meta.frameCount ?? meta.frames.length} frames · reel
                         </span>
                       );
                     })()}
                     <p className="line-clamp-2 text-xs text-[var(--foreground)]">{img.prompt}</p>
-                    <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">
+                    <p className="mt-[var(--spacing-xs)] text-xs text-[var(--foreground-subtle)]">
                       {new Date(img.createdAt).toLocaleString('es-MX')}
                     </p>
                     <div className="mt-2 flex gap-1">

@@ -239,7 +239,7 @@ export default function BrandInterviewPage() {
           <Card title={brandInterviews.length > 0 ? 'Brand Brief' : 'Brand Analyst'}>
             <div className="flex flex-col items-center gap-4 py-4 text-center sm:py-6">
               {brandInterviews.length === 0 && !selectedProductNeedsOnboarding && (
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+                <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-md)] border border-[var(--accent)]/20 bg-[var(--accent)]/10 shadow-sm">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
               )}
@@ -435,7 +435,7 @@ export default function BrandInterviewPage() {
       )}
 
       <div className="mx-auto mt-4 max-w-2xl space-y-3">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] px-[var(--spacing-md)] py-[var(--spacing-md)]">
           <div className="mb-2 flex items-center justify-between text-xs text-[var(--foreground-muted)]">
             <span>
               {fromOnboarding
@@ -490,7 +490,7 @@ export default function BrandInterviewPage() {
                 className={`flex gap-3 ${isAgent ? '' : 'flex-row-reverse'}`}
               >
                 {isAgent && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10">
                     <Bot className="h-4 w-4 text-white" />
                   </div>
                 )}
@@ -508,7 +508,7 @@ export default function BrandInterviewPage() {
           })}
 
           {(isProcessing || isSending) && (
-            <div className="flex items-start gap-3 rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
+            <div className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent)]/5 p-[var(--spacing-md)]">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600">
                 <Sparkles className="h-4 w-4 animate-pulse text-white" />
               </div>

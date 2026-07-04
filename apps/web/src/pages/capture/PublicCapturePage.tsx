@@ -68,7 +68,7 @@ export default function PublicCapturePage() {
   if (submitted) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md rounded-xl border border-[var(--border)] bg-[var(--background)] p-8 text-center shadow-sm">
+        <div className="max-w-md rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background)] p-[var(--spacing-xl)] text-center shadow-sm">
           <p className="text-lg font-bold text-[var(--foreground)]">¡Gracias!</p>
           <p className="mt-2 text-sm text-[var(--foreground-muted)]">
             Recibimos tu mensaje. Te contactaremos pronto.
@@ -80,7 +80,7 @@ export default function PublicCapturePage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--background-muted)] px-4 py-10">
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-sm">
+      <div className="w-full max-w-md rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background)] p-[var(--spacing-lg)] shadow-sm">
         <h1 className="text-xl font-black text-[var(--foreground)]">{form.name}</h1>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
           Déjanos tus datos y te respondemos.

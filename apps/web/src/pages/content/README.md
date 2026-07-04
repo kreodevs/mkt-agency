@@ -4,6 +4,6 @@
 - `ContentCreatePage` — `/contents/new`
 - `ContentEditPage` — `/contents/:id` (editor, imagen IA, historial, aprobación, eliminar borradores)
 
-Componentes: `@/components/content/` — `VersionHistory`, `SignatureBadge`, `ApprovalActions`.
+Componentes: `@/components/content/` — `VersionHistory`, `SignatureBadge`, `ApprovalActions`, `ContentPlatformBadge` (tokens neutros), `ContentVisualPanel`.
 
 API: `@/services/content.ts`

@@ -31,7 +31,7 @@ export default function ProductListPage() {
           <div className="flex items-center gap-2">
             <span className="font-medium">{product.name}</span>
             {product.isPrimary && (
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-label="Principal" />
+              <Star className="h-3.5 w-3.5 fill-[var(--warning)] text-[var(--warning)]" aria-label="Principal" />
             )}
           </div>
         );

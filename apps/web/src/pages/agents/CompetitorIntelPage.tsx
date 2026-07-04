@@ -106,8 +106,8 @@ export default function CompetitorIntelPage() {
         )}
 
         {activeAnalysis && (
-          <Card className="border-amber-200 bg-amber-50/50">
-            <div className="flex items-center gap-3 text-sm text-amber-800">
+          <Card className="border-[var(--warning)]/30 bg-[var(--warning)]/5">
+            <div className="flex items-center gap-[var(--spacing-md)] text-sm text-[var(--warning)]">
               <Loader2 className="h-5 w-5 animate-spin" />
               Analizando competidores... esto puede tomar unos segundos.
             </div>
@@ -163,8 +163,8 @@ export default function CompetitorIntelPage() {
         <Card title={analyses.length > 0 ? 'Nuevo análisis' : 'Primer análisis'}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-1 items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
-                <Crosshair className="h-6 w-6 text-amber-600" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--warning)]/20 bg-[var(--warning)]/10">
+                <Crosshair className="h-6 w-6 text-[var(--warning)]" />
               </div>
               <p className="text-sm text-[var(--foreground-muted)]">
                 {hasCompetitors

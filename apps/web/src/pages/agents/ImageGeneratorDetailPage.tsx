@@ -199,7 +199,7 @@ export default function ImageGeneratorDetailPage() {
               }
             >
               {frames.map((assetId, index) => (
-                <div key={assetId} className="overflow-hidden rounded-xl border border-[var(--border)]">
+                <div key={assetId} className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
                   {frames.length > 1 && !isVideo && (
                     <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-1.5">
                       <p className="text-xs font-medium text-[var(--foreground-muted)]">

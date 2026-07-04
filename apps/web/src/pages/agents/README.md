@@ -1,5 +1,7 @@
 # Páginas de agentes IA
 
+Tokens Kreo (`--accent`, `--warning`, `--radius-md`); sin gradientes violet/amber hardcoded.
+
 | Ruta | Hub |
 |------|-----|
 | `/agents` | Catálogo con estado e historial por agente |
