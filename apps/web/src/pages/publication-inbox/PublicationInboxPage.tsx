@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, Inbox, PartyPopper } from 'lucide-react';
+import {
+  Bell,
+  CalendarClock,
+  CheckCheck,
+  ClipboardCheck,
+  PartyPopper,
+  Send,
+  Users,
+} from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CopilotStatusPanel } from '@/components/copilot/CopilotStatusPanel';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
@@ -10,6 +18,9 @@ import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPa
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
+import { EmptyState } from '@/components/molecules/EmptyState';
+import { PageHeader } from '@/components/molecules/PageHeader';
+import { StatsCard } from '@/components/molecules/StatsCard';
 import { toast } from '@/components/molecules/Sonner';
 import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import {
@@ -115,7 +126,7 @@ export default function PublicationInboxPage() {
   if (inboxQuery.isLoading) {
     return (
       <DashboardShell>
-        <div className="flex min-h-[60vh] items-center justify-center text-[var(--foreground-muted)]">
+        <div className="flex min-h-[60vh] items-center justify-center text-sm text-[var(--foreground-muted)]">
           Cargando bandeja de publicación...
         </div>
       </DashboardShell>
@@ -127,19 +138,14 @@ export default function PublicationInboxPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Inbox className="h-6 w-6 text-[var(--primary)]" />
-          <h1 className="text-2xl font-black text-[var(--foreground)]">
-            {sohoMode ? 'Tu copiloto de marketing' : 'Bandeja de publicación'}
-          </h1>
-        </div>
-        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          {advancedNav
+      <PageHeader
+        title={sohoMode ? 'Tu copiloto de marketing' : 'Bandeja de publicación'}
+        description={
+          advancedNav
             ? 'La agencia sugiere — tú apruebas y publicas manualmente'
-            : 'Preparar · Revisar · Publicar — el copiloto hace el resto'}
-        </p>
-      </div>
+            : 'Preparar · Revisar · Publicar — el copiloto hace el resto'
+        }
+      />
 
       {sohoMode && summary && (
         <SohoResultsBanner
@@ -151,11 +157,11 @@ export default function PublicationInboxPage() {
       )}
 
       {welcome && (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--success)]/30 bg-[var(--success)]/5 p-4">
-          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" />
+        <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--success)]/30 bg-[var(--success)]/5 p-[var(--spacing-md)]">
+          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" aria-hidden />
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--success)]">¡Tu semana está lista!</p>
-            <p className="mt-1 text-[var(--foreground-muted)]">
+            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
               Revisa lo de hoy, aprueba lo que te guste y usa Copiar texto + Abrir red para publicar.
             </p>
           </div>
@@ -166,20 +172,20 @@ export default function PublicationInboxPage() {
       )}
 
       {notifications.length > 0 && (
-        <Card className="mb-6" title="Avisos" subtitle="Del copiloto">
-          <div className="mb-3 flex justify-end">
+        <Card className="mb-[var(--spacing-lg)]" title="Avisos" subtitle="Del copiloto">
+          <div className="mb-[var(--spacing-md)] flex justify-end">
             <Button type="button" size="sm" variant="ghost" onClick={() => void handleMarkAllRead()}>
               <CheckCheck className="mr-1 h-4 w-4" />
               Marcar todas leídas
             </Button>
           </div>
-          <ul className="space-y-2">
+          <ul className="space-y-[var(--spacing-sm)]">
             {notifications.map((notification) => (
               <li
                 key={notification.id}
-                className="flex items-start gap-3 rounded-lg border border-[var(--border)] p-3"
+                className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]"
               >
-                <Bell className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+                <Bell className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-[var(--foreground)]">{notification.title}</p>
                   <p className="text-xs text-[var(--foreground-muted)]">{notification.body}</p>
@@ -198,24 +204,38 @@ export default function PublicationInboxPage() {
         </Card>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MiniKpi label="Por aprobar" value={data?.stats.pendingCount ?? 0} tone="amber" />
-        <MiniKpi label="Listas para publicar" value={data?.stats.readyCount ?? 0} tone="emerald" />
-        <MiniKpi label="Próximas" value={data?.stats.upcomingCount ?? 0} tone="violet" />
-        <MiniKpi
-          label={sohoMode ? 'Contactos hoy' : 'Leads hoy'}
+      <div className="mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Por aprobar"
+          value={data?.stats.pendingCount ?? 0}
+          icon={<ClipboardCheck className="h-5 w-5" aria-hidden />}
+          iconTone="warning"
+        />
+        <StatsCard
+          title="Listas para publicar"
+          value={data?.stats.readyCount ?? 0}
+          icon={<Send className="h-5 w-5" aria-hidden />}
+          iconTone="success"
+        />
+        <StatsCard
+          title="Próximas"
+          value={data?.stats.upcomingCount ?? 0}
+          icon={<CalendarClock className="h-5 w-5" aria-hidden />}
+          iconTone="accent"
+        />
+        <StatsCard
+          title={sohoMode ? 'Contactos hoy' : 'Leads hoy'}
           value={summary?.leadsToday ?? 0}
-          tone="blue"
-          detail={
-            sohoMode && summary
-              ? `${summary.leadsThisWeek} esta semana`
-              : undefined
+          description={
+            sohoMode && summary ? `${summary.leadsThisWeek} esta semana` : undefined
           }
+          icon={<Users className="h-5 w-5" aria-hidden />}
+          iconTone="primary"
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
+        <div className="space-y-[var(--spacing-lg)] lg:col-span-2">
           {sohoMode && (
             <TodayPublishPanel
               pending={pending}
@@ -230,16 +250,19 @@ export default function PublicationInboxPage() {
             subtitle={`${pending.length} pieza(s) sugerida(s) por la agencia`}
           >
             {pending.length === 0 ? (
-              <p className="py-6 text-center text-sm text-[var(--foreground-muted)]">
-                No hay publicaciones pendientes de aprobación esta semana.
-              </p>
+              <EmptyState
+                compact
+                title="Sin pendientes"
+                description="No hay publicaciones pendientes de aprobación esta semana."
+              />
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-[var(--spacing-md)]">
                 {!sohoMode && (
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <label className="flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
+                  <div className="flex flex-wrap items-center justify-between gap-[var(--spacing-sm)]">
+                    <label className="flex items-center gap-[var(--spacing-sm)] text-xs text-[var(--foreground-muted)]">
                       <input
                         type="checkbox"
+                        className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--border)]"
                         checked={allPendingSelected}
                         onChange={toggleSelectAll}
                       />
@@ -275,11 +298,13 @@ export default function PublicationInboxPage() {
           {!sohoMode && (
             <Card title="Próximas" subtitle="Programadas a futuro">
               {upcoming.length === 0 ? (
-                <p className="py-4 text-sm text-[var(--foreground-muted)]">
-                  Sin publicaciones futuras en el calendario.
-                </p>
+                <EmptyState
+                  compact
+                  title="Sin programación"
+                  description="Sin publicaciones futuras en el calendario."
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-[var(--spacing-md)]">
                   {upcoming.map((item) => (
                     <InboxItemCard key={item.contentId} item={item} primaryAction={primaryAction} />
                   ))}
@@ -289,28 +314,28 @@ export default function PublicationInboxPage() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-[var(--spacing-lg)]">
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
           <InboxKitPanel items={ready} />
 
           {advancedNav && (
             <Card title="Acciones de la agencia" subtitle="Generar más contenido">
-              <div className="space-y-2 text-sm">
+              <div className="space-y-[var(--spacing-sm)] text-sm">
                 <Link
                   to={`/community${activeProductId ? `?productId=${activeProductId}` : ''}`}
-                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >
                   Generar más copy (Community Manager)
                 </Link>
                 <Link
                   to="/calendar"
-                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >
                   Ver calendario completo
                 </Link>
                 <Link
                   to="/agency-overview"
-                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >
                   Resumen de agencia (KPIs)
                 </Link>
@@ -320,34 +345,5 @@ export default function PublicationInboxPage() {
         </div>
       </div>
     </DashboardShell>
-  );
-}
-
-function MiniKpi({
-  label,
-  value,
-  tone,
-  detail,
-}: {
-  label: string;
-  value: number | string;
-  tone: 'amber' | 'emerald' | 'violet' | 'blue';
-  detail?: string;
-}) {
-  const colors = {
-    amber: 'text-amber-600 bg-amber-500/10',
-    emerald: 'text-emerald-600 bg-emerald-500/10',
-    violet: 'text-violet-600 bg-violet-500/10',
-    blue: 'text-blue-600 bg-blue-500/10',
-  };
-
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-        {label}
-      </p>
-      <p className={`mt-1 text-2xl font-black ${colors[tone].split(' ')[0]}`}>{value}</p>
-      {detail && <p className="mt-1 text-[10px] text-[var(--foreground-subtle)]">{detail}</p>}
-    </div>
   );
 }

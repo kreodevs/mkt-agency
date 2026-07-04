@@ -4,6 +4,7 @@ import { CalendarDays, Copy, Maximize2 } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { Button } from '@/components/atoms/Button';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxContentDetailDialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
@@ -28,6 +29,13 @@ function formatScheduledDate(dateKey: string): string {
     day: 'numeric',
     month: 'short',
   });
+}
+
+function statusToPill(status: string): 'success' | 'warning' | 'error' | 'neutral' {
+  if (status === 'approved') return 'success';
+  if (status === 'rejected') return 'error';
+  if (status === 'in_review' || status === 'in_changes') return 'warning';
+  return 'neutral';
 }
 
 interface InboxItemCardProps {
@@ -55,8 +63,8 @@ export function InboxItemCard({
   const showBodyClamp = displayBody.length > 320;
 
   return (
-    <article className="rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--primary)]/40">
-      <div className="flex items-start gap-3">
+    <article className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]/40">
+      <div className="flex items-start gap-[var(--spacing-md)]">
         {selectable && (
           <input
             type="checkbox"
@@ -70,9 +78,9 @@ export function InboxItemCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="line-clamp-2 text-sm font-semibold text-[var(--foreground)]">{item.title}</h3>
-            <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium uppercase text-[var(--foreground-muted)]">
+            <StatusPill status={statusToPill(item.status)} size="sm">
               {STATUS_LABELS[item.status] ?? item.status}
-            </span>
+            </StatusPill>
             <ContentPlatformBadge platform={item.platform} size="sm" />
           </div>
 
@@ -105,7 +113,7 @@ export function InboxItemCard({
           )}
 
           {sohoMode ? (
-            <div className="mt-3 space-y-2">
+            <div className="mt-[var(--spacing-md)] space-y-[var(--spacing-sm)]">
               <InboxQuickPublishActions item={item} />
               <Button
                 type="button"
@@ -119,21 +127,19 @@ export function InboxItemCard({
               </Button>
             </div>
           ) : (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-[var(--spacing-md)] flex flex-wrap items-center gap-[var(--spacing-sm)]">
               {primaryAction === 'copy' ? (
-                <Link
-                  to={`/contents/${item.contentId}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90"
-                >
-                  <Copy className="h-3 w-3" />
-                  Copiar y publicar
+                <Link to={`/contents/${item.contentId}`}>
+                  <Button type="button" size="sm" className="gap-[var(--spacing-xs)]">
+                    <Copy className="h-3.5 w-3.5" />
+                    Copiar y publicar
+                  </Button>
                 </Link>
               ) : (
-                <Link
-                  to={`/contents/${item.contentId}`}
-                  className="text-xs font-medium text-[var(--primary)] hover:underline"
-                >
-                  Editar contenido
+                <Link to={`/contents/${item.contentId}`}>
+                  <Button type="button" size="sm" variant="link">
+                    Editar contenido
+                  </Button>
                 </Link>
               )}
               <Button
@@ -158,7 +164,7 @@ export function InboxItemCard({
           />
 
           {showApproval && item.versionId && !item.signatureHash && (
-            <div className="mt-4 border-t border-[var(--border)] pt-4">
+            <div className="mt-[var(--spacing-md)] border-t border-[var(--border)] pt-[var(--spacing-md)]">
               <ApprovalActions
                 contentId={item.contentId}
                 version={{

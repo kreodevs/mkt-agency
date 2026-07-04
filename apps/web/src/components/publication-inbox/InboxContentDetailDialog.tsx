@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { Button } from '@/components/atoms/Button';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
@@ -27,6 +28,13 @@ function formatScheduledDate(dateKey: string): string {
     day: 'numeric',
     month: 'long',
   });
+}
+
+function statusToPill(status: string): 'success' | 'warning' | 'error' | 'neutral' {
+  if (status === 'approved') return 'success';
+  if (status === 'rejected') return 'error';
+  if (status === 'in_review' || status === 'in_changes') return 'warning';
+  return 'neutral';
 }
 
 interface InboxContentDetailDialogProps {
@@ -57,7 +65,7 @@ export function InboxContentDetailDialog({
       title={item.title}
       size="full"
       footer={
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-[var(--spacing-sm)]">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cerrar
           </Button>
@@ -69,11 +77,11 @@ export function InboxContentDetailDialog({
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium uppercase text-[var(--foreground-muted)]">
+      <div className="space-y-[var(--spacing-md)]">
+        <div className="flex flex-wrap items-center gap-[var(--spacing-sm)]">
+          <StatusPill status={statusToPill(item.status)} size="sm">
             {STATUS_LABELS[item.status] ?? item.status}
-          </span>
+          </StatusPill>
           <ContentPlatformBadge platform={item.platform} size="sm" />
           <span className="inline-flex items-center gap-1 text-xs text-[var(--foreground-muted)]">
             <CalendarDays className="h-3.5 w-3.5" />
@@ -86,8 +94,8 @@ export function InboxContentDetailDialog({
 
         <InboxItemVisualPreview item={item} variant="detail" />
 
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
+          <p className="mb-[var(--spacing-sm)] text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
             Texto completo
           </p>
           <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{displayBody}</p>

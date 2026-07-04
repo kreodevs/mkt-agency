@@ -64,7 +64,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
 
   if (generationQuery.isLoading && assetIds.length === 0) {
     return (
-      <div className="mt-3 flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
+      <div className="mt-[var(--spacing-md)] flex items-center gap-[var(--spacing-sm)] text-xs text-[var(--foreground-muted)]">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         Cargando visual…
       </div>
@@ -73,7 +73,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
 
   if (isProcessing) {
     return (
-      <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
+      <div className="mt-[var(--spacing-md)] flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-dashed border-[var(--border)] px-[var(--spacing-sm)] py-[var(--spacing-xs)] text-xs text-[var(--foreground-muted)]">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         {processingLabel}
       </div>
@@ -84,7 +84,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
     const previewIds = assetIds.slice(0, visualFormat === 'carousel' ? 3 : 1);
 
     return (
-      <div className="mt-3">
+      <div className="mt-[var(--spacing-md)]">
         <SocialPostMockup platform={item.platform}>
           <div
             className={
@@ -100,7 +100,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                 key={assetId}
                 className={
                   previewIds.length > 1
-                    ? 'aspect-square overflow-hidden rounded-md'
+                    ? 'aspect-square overflow-hidden rounded-[var(--radius-sm)]'
                     : 'h-full w-full'
                 }
               >
@@ -108,7 +108,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                   <AuthenticatedAssetVideo
                     assetId={assetId}
                     title={item.title}
-                    className={`${imageMaxClass} w-full rounded-lg`}
+                    className={`${imageMaxClass} w-full rounded-[var(--radius-md)]`}
                     controls
                   />
                 ) : (
@@ -127,7 +127,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
           </div>
         </SocialPostMockup>
         {assetIds.length > previewIds.length && (
-          <p className="mt-1 text-[10px] text-[var(--foreground-muted)]">
+          <p className="mt-[var(--spacing-xs)] text-xs text-[var(--foreground-muted)]">
             +{assetIds.length - previewIds.length} frame(s) más en el editor
           </p>
         )}
@@ -137,7 +137,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
 
   if (isFailed) {
     return (
-      <p className="mt-3 text-xs text-destructive">
+      <p className="mt-[var(--spacing-md)] text-xs text-destructive">
         No se generó el visual. Ábrelo en el editor para reintentar.
       </p>
     );
@@ -145,7 +145,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
 
   if (visualFormat !== 'image' || item.type === 'social') {
     return (
-      <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
+      <div className="mt-[var(--spacing-md)] flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-dashed border-[var(--border)] px-[var(--spacing-sm)] py-[var(--spacing-xs)] text-xs text-[var(--foreground-muted)]">
         {visualFormat === 'video' ? (
           <Video className="h-3.5 w-3.5 shrink-0" />
         ) : (

@@ -86,7 +86,7 @@ export function ProductLogoPanel({
     disabled || syncMutation.isPending || uploadMutation.isPending || removeMutation.isPending;
 
   return (
-    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background-secondary)] p-4">
+    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-[var(--foreground)]">Logo de {productName}</p>
@@ -99,7 +99,7 @@ export function ProductLogoPanel({
             </p>
           )}
           {!websiteUrl?.trim() && (
-            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            <p className="mt-1 text-xs text-[var(--warning)]">
               Guarda la URL del producto abajo para poder extraer el logo automáticamente.
             </p>
           )}

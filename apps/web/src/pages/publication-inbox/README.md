@@ -13,6 +13,8 @@ Toggle: sidebar «Modo agencia (avanzado)» o `/settings/copilot`.
 
 ## Archivos
 
+Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `EmptyState`, `StatusPill`.
+
 | Archivo | Rol |
 |---------|-----|
 | `pages/publication-inbox/PublicationInboxPage.tsx` | Vista hub + `CopilotStatusPanel` |

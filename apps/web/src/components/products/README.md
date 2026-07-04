@@ -1,6 +1,6 @@
 # Product components
 
-Componentes UI reutilizables del eje producto-first.
+Componentes UI reutilizables del eje producto-first. Tokens Kreo y moléculas `Card`, `EmptyState`, `StatusPill`.
 
 | Componente | Uso |
 |---|---|

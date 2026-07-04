@@ -51,8 +51,12 @@ export default function ProductMediaKitPage() {
           </Link>
         }
       />
-
-      <ProductMediaKitPanel productId={id} productName={productQuery.data.name} />
+      <Card
+        title="Assets del producto"
+        subtitle="Arrastra archivos o súbelos por tipo. El Community Manager los prioriza al componer visuales."
+      >
+        <ProductMediaKitPanel productId={id} productName={productQuery.data.name} />
+      </Card>
     </DashboardShell>
   );
 }

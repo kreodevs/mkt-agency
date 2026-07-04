@@ -14,9 +14,9 @@ export function SohoResultsBanner({
   strategyFocus,
 }: SohoResultsBannerProps) {
   return (
-    <div className="mb-6 rounded-xl border border-[var(--border)] bg-gradient-to-r from-[var(--primary)]/5 to-transparent p-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
+    <div className="mb-[var(--spacing-lg)] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
+      <div className="flex flex-wrap items-center gap-[var(--spacing-md)]">
+        <div className="flex items-center gap-[var(--spacing-sm)]">
           <Users className="h-5 w-5 text-[var(--primary)]" />
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">

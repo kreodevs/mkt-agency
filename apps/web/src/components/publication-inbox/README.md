@@ -1,5 +1,7 @@
 # Bandeja — componentes
 
+Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y moléculas `StatsCard`, `EmptyState`, `PageHeader`, `StatusPill`.
+
 | Archivo | Rol |
 |---------|-----|
 | `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |

@@ -3,6 +3,8 @@ import { Film, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { EmptyState } from '@/components/molecules/EmptyState';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
 import { getAssetFileUrl } from '@/services/assets';
 import { ApiError } from '@/services/api';
@@ -142,7 +144,7 @@ export function ProductMediaKitPanel({
   const items = kitQuery.data?.items ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-[var(--spacing-lg)]">
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-[var(--foreground)]">Tipo de asset</span>
@@ -246,9 +248,16 @@ export function ProductMediaKitPanel({
         {kitQuery.isLoading ? (
           <p className="text-xs text-[var(--foreground-muted)]">Cargando kit...</p>
         ) : items.length === 0 ? (
-          <p className="rounded-[var(--radius)] border border-[var(--border)] px-4 py-6 text-center text-xs text-[var(--foreground-muted)]">
-            Aún no hay assets. Sube capturas de la app, fotos de eventos o un video demo.
-          </p>
+          <EmptyState
+            compact
+            icon={ImageIcon}
+            title="Sin assets todavía"
+            description="Sube capturas de la app, fotos de eventos o un video demo para que el Community Manager los use al componer posts."
+            action={{
+              label: 'Subir archivo',
+              onClick: () => fileInputRef.current?.click(),
+            }}
+          />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
@@ -279,7 +288,11 @@ export function ProductMediaKitPanel({
                     ) : (
                       <ImageIcon className="h-8 w-8 text-[var(--foreground-muted)]" />
                     )}
-                    <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                    <StatusPill
+                      status="neutral"
+                      size="sm"
+                      className="absolute left-[var(--spacing-sm)] top-[var(--spacing-sm)] bg-[var(--foreground)]/80 text-[var(--background)]"
+                    >
                       {isVideo ? (
                         <span className="inline-flex items-center gap-1">
                           <Film className="h-3 w-3" />
@@ -288,7 +301,7 @@ export function ProductMediaKitPanel({
                       ) : (
                         'Imagen'
                       )}
-                    </span>
+                    </StatusPill>
                   </div>
 
                   <div className="space-y-1 p-3">
@@ -300,7 +313,7 @@ export function ProductMediaKitPanel({
                         {item.label}
                       </p>
                     )}
-                    <p className="truncate text-[10px] text-[var(--foreground-muted)]" title={item.assetName}>
+                    <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.assetName}>
                       {item.assetName}
                     </p>
                     <Button
