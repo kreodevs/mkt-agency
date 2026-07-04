@@ -209,3 +209,15 @@ S3_REGION=us-east-1
 **Solución:** redeploy con compose actual (`minio-init` + API que crea bucket al arrancar). Tras el deploy, reinicia el servicio `api` y reintenta la imagen.
 
 Si usas **DigitalOcean Spaces** u otro S3 externo (sin MinIO), crea el bucket manualmente en el panel del proveedor y apunta `S3_ENDPOINT` a la URL pública del space (no uses `http://minio:9000`).
+
+### Video segmentado: `FFmpeg concatenation failed: ffmpeg: not found`
+
+La concatenación de clips (copy largo con Wan) usa **FFmpeg** en los contenedores `api` y `worker`.
+
+**Solución:** redeploy con `Dockerfile.api` actual (`apk add ffmpeg`). Tras el build, en la terminal del contenedor `api`:
+
+```bash
+ffmpeg -version
+```
+
+Si falta FFmpeg, el backend **no** dispara múltiples APIs de video: cae a un solo clip truncado (~10s) para no quemar créditos.

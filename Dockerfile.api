@@ -16,7 +16,8 @@ RUN yarn workspace @mkt-agency/backend build
 # ---- Runtime Stage ----
 FROM node:20-alpine AS runtime
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apk add --no-cache ffmpeg \
+  && addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 

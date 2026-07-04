@@ -7,6 +7,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -44,6 +45,11 @@ import {
   type ImageGenerationFrameMeta,
   type ImageGenerationMetadata,
 } from './domain/image-generation.utils';
+import {
+  FFMPEG_UNAVAILABLE_MESSAGE,
+  isFfmpegAvailable,
+  resolveFfmpegPath,
+} from './domain/video-ffmpeg.util';
 import { ContentService } from '../content/content.service';
 import {
   normalizeContentVisualFormat,
@@ -95,8 +101,20 @@ export interface GenerateImageResult {
 }
 
 @Injectable()
-export class ImageGenerationService {
+export class ImageGenerationService implements OnModuleInit {
   private readonly logger = new Logger(ImageGenerationService.name);
+
+  async onModuleInit(): Promise<void> {
+    const ffmpegPath = await resolveFfmpegPath();
+    if (!ffmpegPath) {
+      this.logger.warn(
+        'FFmpeg no encontrado: la segmentación de video usará un solo clip truncado hasta instalar FFmpeg en API/worker',
+      );
+      return;
+    }
+
+    this.logger.log(`FFmpeg disponible en ${ffmpegPath}`);
+  }
 
   constructor(
     @InjectRepository(AgentImageGenerationEntity)
@@ -338,13 +356,19 @@ export class ImageGenerationService {
         && estimateSpeechDurationSeconds(sanitizedNarration) > durationPolicy.maxDuration;
 
       if (needsSegmentation && sanitizedNarration) {
-        return this.runSegmentedVideoGeneration(
-          tenantId,
-          userId,
-          record,
-          prompt,
-          sanitizedNarration,
-          maxCombinedDuration,
+        if (await isFfmpegAvailable()) {
+          return this.runSegmentedVideoGeneration(
+            tenantId,
+            userId,
+            record,
+            prompt,
+            sanitizedNarration,
+            maxCombinedDuration,
+          );
+        }
+
+        this.logger.warn(
+          'FFmpeg no disponible; omitiendo segmentación y usando un solo clip truncado para no gastar múltiples APIs de video',
         );
       }
 
@@ -429,6 +453,10 @@ export class ImageGenerationService {
     narrationBody: string,
     segmentDuration: number,
   ): Promise<GenerateImageResult> {
+    if (!(await isFfmpegAvailable())) {
+      throw new Error(FFMPEG_UNAVAILABLE_MESSAGE);
+    }
+
     const segments = splitNarrationIntoSegments(narrationBody, segmentDuration);
     this.logger.log(`Split narration into ${segments.length} segments for segmented video generation`);
 
@@ -494,6 +522,11 @@ export class ImageGenerationService {
       return results[0];
     }
 
+    const ffmpegPath = await resolveFfmpegPath();
+    if (!ffmpegPath) {
+      throw new Error(FFMPEG_UNAVAILABLE_MESSAGE);
+    }
+
     const tempDir = '/tmp/video-clips-' + Date.now();
     fs.mkdirSync(tempDir, { recursive: true });
     const crossfadeDuration = 0.5; // 0.5 second fade transition
@@ -538,7 +571,7 @@ export class ImageGenerationService {
     await new Promise<void>((resolve, reject) => {
       const inputFiles = results.map((_, i) => `-i ${tempDir}/clip_${i}.mp4`).join(' ');
       exec(
-        `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a]" ${tempDir}/output.mp4 -y`,
+        `"${ffmpegPath}" ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a]" ${tempDir}/output.mp4 -y`,
         (error, stdout, stderr) => {
           if (error) {
             this.logger.error(`FFmpeg concat error: ${stderr || error.message}`);
