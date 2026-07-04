@@ -15,6 +15,100 @@ export const SPANISH_WORDS_PER_SECOND = 2.35;
 export const MIN_VIDEO_DURATION = 4;
 export const MAX_VIDEO_DURATION = 15;
 
+export interface VideoDurationPolicy {
+  minDuration: number;
+  maxDuration: number;
+  defaultDuration: number;
+  /** Acorta el guion de voz del contenido al regenerar para caber en maxDuration. */
+  truncateNarration: boolean;
+}
+
+const DEFAULT_VIDEO_DURATION_POLICY: VideoDurationPolicy = {
+  minDuration: MIN_VIDEO_DURATION,
+  maxDuration: MAX_VIDEO_DURATION,
+  defaultDuration: 8,
+  truncateNarration: false,
+};
+
+/** Límites por modelo según OpenRouter Video API (`/videos/models`). */
+export function resolveVideoDurationPolicy(modelId?: string): VideoDurationPolicy {
+  const id = modelId?.trim().toLowerCase() ?? '';
+
+  if (id.includes('wan')) {
+    return {
+      minDuration: 2,
+      maxDuration: 10,
+      defaultDuration: 10,
+      truncateNarration: true,
+    };
+  }
+
+  if (id.includes('veo-3.1')) {
+    return {
+      minDuration: 4,
+      maxDuration: 8,
+      defaultDuration: 8,
+      truncateNarration: true,
+    };
+  }
+
+  return DEFAULT_VIDEO_DURATION_POLICY;
+}
+
+export function maxSpeakableWordsForDuration(seconds: number): number {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return 0;
+  }
+
+  return Math.max(1, Math.floor(seconds * SPANISH_WORDS_PER_SECOND));
+}
+
+/**
+ * Recorta el copy narrable a ~maxSeconds de locución, priorizando frases completas.
+ */
+export function fitNarrationBodyForDuration(body: string, maxSeconds: number): string {
+  const script = sanitizeSpanishNarrationScript(body);
+  if (!script || estimateSpeechDurationSeconds(script) <= maxSeconds) {
+    return script;
+  }
+
+  const maxWords = maxSpeakableWordsForDuration(maxSeconds);
+  const sentences = script.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  const kept: string[] = [];
+  let wordCount = 0;
+
+  for (const sentence of sentences) {
+    const sentenceWords = countSpeakableWords(sentence);
+    if (wordCount + sentenceWords <= maxWords) {
+      kept.push(sentence);
+      wordCount += sentenceWords;
+      continue;
+    }
+
+    if (kept.length === 0) {
+      const words = sentence.split(/\s+/).filter(Boolean);
+      const truncated = words.slice(0, maxWords).join(' ');
+      const cleaned = truncated.replace(/[,;:]\s*$/, '').trim();
+      kept.push(
+        /[.!?…]$/.test(cleaned) ? cleaned : `${cleaned.replace(/…$/, '')}…`,
+      );
+    }
+
+    break;
+  }
+
+  const fitted = kept.join(' ').trim();
+  if (!fitted) {
+    return script
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, maxWords)
+      .join(' ');
+  }
+
+  return fitted;
+}
+
 export function countSpeakableWords(text: string): number {
   return text
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
@@ -33,12 +127,16 @@ export function estimateSpeechDurationSeconds(text: string): number {
   return Math.ceil(words / SPANISH_WORDS_PER_SECOND);
 }
 
-function clampVideoDuration(seconds: number): number {
+function clampVideoDuration(seconds: number, policy?: VideoDurationPolicy): number {
+  const min = policy?.minDuration ?? MIN_VIDEO_DURATION;
+  const max = policy?.maxDuration ?? MAX_VIDEO_DURATION;
+  const fallback = policy?.defaultDuration ?? 8;
+
   if (!Number.isFinite(seconds)) {
-    return 8;
+    return fallback;
   }
 
-  return Math.min(MAX_VIDEO_DURATION, Math.max(MIN_VIDEO_DURATION, Math.round(seconds)));
+  return Math.min(max, Math.max(min, Math.round(seconds)));
 }
 
 function resolveVideoDurationFromPrompt(prompt: string): number {
@@ -61,19 +159,25 @@ function resolveVideoDurationFromPrompt(prompt: string): number {
   return 8;
 }
 
-export function resolveVideoDuration(prompt: string, narrationBody?: string): number {
+export function resolveVideoDuration(
+  prompt: string,
+  narrationBody?: string,
+  policy?: VideoDurationPolicy,
+): number {
   const fromPrompt = resolveVideoDurationFromPrompt(prompt);
 
   if (!narrationBody?.trim()) {
-    return clampVideoDuration(fromPrompt);
+    const target = fromPrompt === 8 && policy?.defaultDuration ? policy.defaultDuration : fromPrompt;
+    return clampVideoDuration(target, policy);
   }
 
   const fromNarration = estimateSpeechDurationSeconds(narrationBody);
   if (fromNarration <= 0) {
-    return clampVideoDuration(fromPrompt);
+    const target = fromPrompt === 8 && policy?.defaultDuration ? policy.defaultDuration : fromPrompt;
+    return clampVideoDuration(target, policy);
   }
 
-  return clampVideoDuration(Math.max(fromPrompt, fromNarration));
+  return clampVideoDuration(Math.max(fromPrompt, fromNarration), policy);
 }
 
 export function detectGenerationMediaType(prompt: string): GenerationMediaType {
@@ -297,6 +401,7 @@ export interface VideoGenerationPromptInput {
   title?: string;
   narrationBody?: string;
   durationSeconds?: number;
+  narrationTruncated?: boolean;
 }
 
 /**
@@ -318,6 +423,12 @@ export function buildVideoGenerationPrompt(input: VideoGenerationPromptInput): s
       estimatedSeconds > durationSeconds
         ? ' Ritmo de locutor claro para cubrir todo el guion dentro de la duración, sin omitir frases.'
         : '';
+
+    if (input.narrationTruncated) {
+      parts.push(
+        `NOTA: El guion de voz se acortó a ~${durationSeconds}s para el modelo de video. Narra solo el texto indicado, sin añadir ni omitir palabras.`,
+      );
+    }
 
     parts.push(buildOrthographyGuardrails(script, input.title));
     parts.push(

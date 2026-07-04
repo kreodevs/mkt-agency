@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LlmConfigService } from '../../../shared/ai/llm-config.service';
+import { resolveVideoDurationPolicy } from '../domain/image-generation.utils';
 import {
   VideoGenerationAdapterPort,
   VideoGenerationOptions,
@@ -30,7 +31,8 @@ export class OpenRouterVideoGenerationAdapter implements VideoGenerationAdapterP
   ): Promise<VideoGenerationResult> {
     const resolved = await this.llmConfig.resolve('video_generation');
     const model = resolved.model?.trim() || DEFAULT_MODEL;
-    const duration = clampDuration(options?.duration ?? 8);
+    const durationPolicy = resolveVideoDurationPolicy(model);
+    const duration = clampDuration(options?.duration ?? durationPolicy.defaultDuration, durationPolicy);
     const aspectRatio = options?.aspectRatio ?? '9:16';
     const resolution = options?.resolution ?? '720p';
 
@@ -156,11 +158,15 @@ function resolvePollingUrl(job: VideoJobResponse): string {
   throw new Error('Video job did not include polling_url or id');
 }
 
-function clampDuration(seconds: number): number {
+function clampDuration(
+  seconds: number,
+  policy = resolveVideoDurationPolicy(),
+): number {
   if (!Number.isFinite(seconds)) {
-    return 8;
+    return policy.defaultDuration;
   }
-  return Math.min(15, Math.max(4, Math.round(seconds)));
+
+  return Math.min(policy.maxDuration, Math.max(policy.minDuration, Math.round(seconds)));
 }
 
 function sleep(ms: number): Promise<void> {

@@ -24,11 +24,15 @@ import {
   buildFramePrompt,
   buildVideoGenerationPrompt,
   detectReelFrameCount,
+  estimateSpeechDurationSeconds,
+  fitNarrationBodyForDuration,
   formatGenerationError,
   isImageGenerationMetadata,
   resolveGenerationMediaType,
   resolveVideoAspectRatio,
   resolveVideoDuration,
+  resolveVideoDurationPolicy,
+  sanitizeSpanishNarrationScript,
   shouldGenerateVideoAudio,
   type GenerationMediaType,
   type ImageGenerationFrameMeta,
@@ -301,14 +305,29 @@ export class ImageGenerationService {
       const content = options.contentId
         ? await this.contentService.findOne(tenantId, options.contentId)
         : null;
-      
-      const narrationBody = content?.currentVersion?.body;
-      const duration = resolveVideoDuration(prompt, narrationBody);
+
+      const videoResolved = await this.llmConfig.resolve('video_generation');
+      const videoModel = videoResolved.model?.trim() || 'bytedance/seedance-2.0-fast';
+      const durationPolicy = resolveVideoDurationPolicy(videoModel);
+
+      const rawNarration = content?.currentVersion?.body;
+      let narrationBody = rawNarration;
+      let narrationTruncated = false;
+
+      if (durationPolicy.truncateNarration && rawNarration?.trim()) {
+        const sanitized = sanitizeSpanishNarrationScript(rawNarration);
+        narrationTruncated =
+          estimateSpeechDurationSeconds(sanitized) > durationPolicy.maxDuration;
+        narrationBody = fitNarrationBodyForDuration(rawNarration, durationPolicy.maxDuration);
+      }
+
+      const duration = resolveVideoDuration(prompt, narrationBody, durationPolicy);
       const videoPrompt = buildVideoGenerationPrompt({
         basePrompt: prompt,
         title: content?.title,
         narrationBody,
         durationSeconds: duration,
+        narrationTruncated,
       });
 
       const result = await this.videoAdapter.generateVideo(videoPrompt, {
