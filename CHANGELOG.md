@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.3] — 2026-07-03
+
+### Added
+
+- **Formato visual de contenido** (`visualFormat`: `image` | `video` | `carousel`): el Community Manager asigna el formato por post; el editor de contenido permite cambiarlo sin nueva versión; Image/Video Generator respeta el formato al regenerar desde Contenidos.
+- Migración `1730000000031-AddVisualFormatToContents` y utilidades `content-visual-format.util.ts` / `visual-format.ts` en frontend.
+
+### Fixed
+
+- **Video con Wan (OpenRouter)**: al regenerar desde Contenidos, el guion narrable se acorta a ~10s y la duración se limita al rango del modelo (2–10s), evitando el error *Duration 15s is not supported*.
+- **Regeneración visual**: ya no dispara Video API por la palabra "video" en el copy; los assets viejos no se acumulan en la UI.
+- **Dropdown de modelos LLM en modales Radix**: la lista de modelos se renderiza correctamente dentro de diálogos.
+
+### Changed
+
+- **Generación de video**: duración estimada por palabras del copy (~2.35 pal/s, máx. 15s en Seedance); guion con reglas de ortografía es-MX para narración.
+- **Image Generator**: las generaciones desde API se encolan siempre en background (BullMQ).
+- Política de duración por modelo de video (`resolveVideoDurationPolicy`): Wan y Veo 3.1 con límites y truncado de guion; Seedance mantiene hasta 15s.
+
 ## [0.2.2] — 2026-06-30
 
 ### Added
