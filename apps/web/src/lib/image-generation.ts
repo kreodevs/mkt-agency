@@ -32,6 +32,24 @@ export function isVideoGeneration(metadata: unknown): boolean {
   return (metadata as ImageGenerationMetadata).mediaType === 'video';
 }
 
+/** Mismo umbral que el backend: generación en cola sin actualizar >20 min. */
+export const IMAGE_GENERATION_STALE_PROCESSING_MS = 20 * 60 * 1000;
+
+export function isStaleImageGeneration(generation: {
+  status: string;
+  updatedAt: string;
+}): boolean {
+  if (generation.status !== 'processing') {
+    return false;
+  }
+
+  const updatedAtMs = Date.parse(generation.updatedAt);
+  return (
+    Number.isFinite(updatedAtMs) &&
+    Date.now() - updatedAtMs > IMAGE_GENERATION_STALE_PROCESSING_MS
+  );
+}
+
 export function listGenerationAssetIds(generation: {
   assetId: string | null;
   metadata?: unknown;

@@ -11,6 +11,7 @@ import {
   parseImageGenerationMetadata,
   resolveContentVisualAssetIds,
   isVideoGeneration,
+  isStaleImageGeneration,
 } from '@/lib/image-generation';
 import {
   generateImageForContent,
@@ -55,19 +56,40 @@ export function ContentVisualPanel({
     queryFn: () => getImageGenerationByContentId(contentId),
     refetchInterval: (query) => {
       const generation = query.state.data?.generation;
-      return generation?.status === 'processing' ? 3000 : false;
+      if (!generation || generation.status !== 'processing') {
+        return false;
+      }
+      if (isStaleImageGeneration(generation)) {
+        return false;
+      }
+      return 3000;
     },
   });
 
   const generation = generationQuery.data?.generation ?? null;
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const frameMeta = parseImageGenerationMetadata(generation?.metadata);
-  const isVideo = isVideoGeneration(generation?.metadata);
+  const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
   const frameCount = frameMeta ? frameMeta.frameCount ?? frameMeta.frames.length : 0;
   const hasVisual = assetIds.length > 0;
-  const isProcessing = generation?.status === 'processing';
-  const isFailed = generation?.status === 'failed';
+  const isStaleProcessing = generation ? isStaleImageGeneration(generation) : false;
+  const processingAgeMs = generation?.updatedAt
+    ? Date.now() - Date.parse(generation.updatedAt)
+    : 0;
+  const showForceRetry =
+    generation?.status === 'processing' &&
+    !isStaleProcessing &&
+    Number.isFinite(processingAgeMs) &&
+    processingAgeMs > 5 * 60 * 1000;
+  const isProcessing = generation?.status === 'processing' && !isStaleProcessing;
+  const isFailed = generation?.status === 'failed' || isStaleProcessing;
   const isCompleted = generation?.status === 'completed' && hasVisual;
+  const processingLabel =
+    visualFormat === 'video'
+      ? 'Generando video con IA…'
+      : visualFormat === 'carousel'
+        ? 'Generando carrusel con IA…'
+        : 'Generando imagen con IA…';
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });
@@ -110,13 +132,18 @@ export function ContentVisualPanel({
       {isProcessing ? (
         <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-4 text-sm text-[var(--foreground-muted)]">
           <Loader2 className="h-5 w-5 animate-spin" />
-          Generando imagen con IA…
+          {processingLabel}
         </div>
       ) : null}
 
-      {isFailed && generation?.errorMessage ? (
+      {isFailed ? (
         <div className="mb-3 space-y-2">
-          <p className="text-sm text-destructive">{generation.errorMessage}</p>
+          <p className="text-sm text-destructive">
+            {generation?.errorMessage ??
+              (isStaleProcessing
+                ? 'La generación tardó demasiado o se interrumpió. Puedes reintentar.'
+                : 'No se pudo generar el visual.')}
+          </p>
           <p className="text-xs text-[var(--foreground-muted)]">
             El formato visual del editor es <strong>{formatLabel}</strong>. Regenerar usará ese
             tipo (imagen, video o carrusel), no palabras sueltas del copy.
@@ -185,15 +212,15 @@ export function ContentVisualPanel({
           </Button>
         ) : null}
 
-        {isFailed ? (
+        {isFailed || showForceRetry ? (
           <Button
             variant="outline"
             className="gap-2"
-            loading={generateMutation.isPending}
-            onClick={() => generateMutation.mutate()}
+            loading={regenerateMutation.isPending}
+            onClick={() => regenerateMutation.mutate()}
           >
             <RefreshCw className="h-4 w-4" />
-            Reintentar
+            {showForceRetry && !isFailed ? 'Forzar reintento' : 'Reintentar'}
           </Button>
         ) : null}
 
@@ -242,8 +269,9 @@ export function ContentVisualActions({
 
   const generation = generationQuery.data?.generation ?? generationHint ?? null;
   const hasVisual = resolveContentVisualAssetIds({ generation, versionAssets }).length > 0;
-  const isProcessing = generation?.status === 'processing';
-  const isFailed = generation?.status === 'failed';
+  const isStaleProcessing = generation ? isStaleImageGeneration(generation) : false;
+  const isProcessing = generation?.status === 'processing' && !isStaleProcessing;
+  const isFailed = generation?.status === 'failed' || isStaleProcessing;
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });

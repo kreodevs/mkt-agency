@@ -31,6 +31,8 @@ import {
   fitNarrationBodyForDuration,
   formatGenerationError,
   isImageGenerationMetadata,
+  isStaleProcessingGeneration,
+  IMAGE_GENERATION_STALE_PROCESSING_MESSAGE,
   resolveGenerationMediaType,
   resolveVideoAspectRatio,
   resolveVideoDuration,
@@ -174,16 +176,28 @@ export class ImageGenerationService {
       forcedFrameCount = visualFormatToFrameCount(visualFormat);
     }
 
-    await runWithLlmUsageContext({ tenantId: data.tenantId, userId: data.userId }, () =>
-      this.runGeneration(data.tenantId, data.userId, record, record.prompt, {
-        contentId: record.contentId ?? undefined,
-        productId: record.productId ?? undefined,
-        size: data.size,
-        style: data.style,
-        forcedMediaType,
-        forcedFrameCount,
-      }),
-    );
+    try {
+      await runWithLlmUsageContext({ tenantId: data.tenantId, userId: data.userId }, () =>
+        this.runGeneration(data.tenantId, data.userId, record, record.prompt, {
+          contentId: record.contentId ?? undefined,
+          productId: record.productId ?? undefined,
+          size: data.size,
+          style: data.style,
+          forcedMediaType,
+          forcedFrameCount,
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Queued image generation ${record.id} failed: ${error instanceof Error ? error.message : error}`,
+      );
+
+      if (record.status === 'processing') {
+        record.status = 'failed';
+        record.errorMessage = formatGenerationError(error);
+        await this.generations.save(record);
+      }
+    }
   }
 
   async attachVisualToContent(
@@ -836,10 +850,27 @@ export class ImageGenerationService {
     tenantId: string,
     contentId: string,
   ): Promise<AgentImageGenerationEntity | null> {
-    return this.generations.findOne({
+    const record = await this.generations.findOne({
       where: { tenantId, contentId },
       order: { createdAt: 'DESC' },
     });
+
+    return this.recoverStaleProcessingRecord(record);
+  }
+
+  private async recoverStaleProcessingRecord(
+    record: AgentImageGenerationEntity | null,
+  ): Promise<AgentImageGenerationEntity | null> {
+    if (!record || !isStaleProcessingGeneration(record)) {
+      return record;
+    }
+
+    record.status = 'failed';
+    record.errorMessage = IMAGE_GENERATION_STALE_PROCESSING_MESSAGE;
+    await this.generations.save(record);
+    this.logger.warn(`Recovered stale image generation ${record.id} as failed`);
+
+    return record;
   }
 
   async generateForContent(
@@ -855,6 +886,9 @@ export class ImageGenerationService {
 
     const existing = await this.findByContentId(tenantId, contentId);
     if (existing?.status === 'processing') {
+      if (isStaleProcessingGeneration(existing)) {
+        return this.retry(tenantId, userId, existing.id, { background: true });
+      }
       return this.toResult(existing);
     }
     if (existing?.status === 'completed' && this.generationHasVisual(existing)) {
@@ -909,7 +943,7 @@ export class ImageGenerationService {
       throw new NotFoundException({ error: 'Generation not found', code: 'NOT_FOUND' });
     }
 
-    if (record.status === 'processing') {
+    if (record.status === 'processing' && !isStaleProcessingGeneration(record)) {
       return this.toResult(record);
     }
 
@@ -955,7 +989,8 @@ export class ImageGenerationService {
   }
 
   async findOne(tenantId: string, id: string): Promise<AgentImageGenerationEntity | null> {
-    return this.generations.findOne({ where: { id, tenantId } });
+    const record = await this.generations.findOne({ where: { id, tenantId } });
+    return this.recoverStaleProcessingRecord(record);
   }
 
   async delete(tenantId: string, id: string): Promise<void> {

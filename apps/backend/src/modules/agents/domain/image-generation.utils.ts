@@ -412,3 +412,28 @@ export function splitNarrationIntoSegments(
   const total = segments.length;
   return segments.map((s) => ({ ...s, total }));
 }
+
+/** Tiempo sin actualizar antes de considerar atascada una generación en cola (video puede tardar ~10 min). */
+export const IMAGE_GENERATION_STALE_PROCESSING_MS = 20 * 60 * 1000;
+
+export const IMAGE_GENERATION_STALE_PROCESSING_MESSAGE =
+  'La generación tardó demasiado o se interrumpió. Puedes reintentar.';
+
+export function isStaleProcessingGeneration(
+  record: { status: string; updatedAt: Date | string },
+  now = Date.now(),
+): boolean {
+  if (record.status !== 'processing') {
+    return false;
+  }
+
+  const updatedAtMs =
+    record.updatedAt instanceof Date
+      ? record.updatedAt.getTime()
+      : Date.parse(record.updatedAt);
+
+  return (
+    Number.isFinite(updatedAtMs) &&
+    now - updatedAtMs > IMAGE_GENERATION_STALE_PROCESSING_MS
+  );
+}
