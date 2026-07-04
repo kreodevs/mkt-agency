@@ -144,6 +144,17 @@ export function ContentVisualPanel({
                 ? 'La generación tardó demasiado o se interrumpió. Puedes reintentar.'
                 : 'No se pudo generar el visual.')}
           </p>
+          {generation?.updatedAt ? (
+            <p className="text-xs text-[var(--foreground-muted)]">
+              Último intento:{' '}
+              {new Date(generation.updatedAt).toLocaleString('es-MX', {
+                dateStyle: 'short',
+                timeStyle: 'short',
+              })}
+              . Tras un redeploy del backend, pulsa <strong>Reintentar</strong> (refrescar la
+              página no vuelve a generar).
+            </p>
+          ) : null}
           <p className="text-xs text-[var(--foreground-muted)]">
             El formato visual del editor es <strong>{formatLabel}</strong>. Regenerar usará ese
             tipo (imagen, video o carrusel), no palabras sueltas del copy.

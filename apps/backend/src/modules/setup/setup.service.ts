@@ -11,6 +11,10 @@ import {
 import { SetupInitRequestDto } from './dto/setup-init.request.dto';
 import { SetupInitResponseDto } from './dto/setup-init.response.dto';
 import { SetupStatusResponseDto } from './dto/setup-status.response.dto';
+import {
+  isFfmpegAvailable,
+  resolveFfmpegPath,
+} from '../agents/domain/video-ffmpeg.util';
 
 @Injectable()
 export class SetupService {
@@ -23,12 +27,18 @@ export class SetupService {
   async getStatus(): Promise<SetupStatusResponseDto> {
     const superadminCount = await this.userRepository.countSuperadmins();
     const isConfigured = superadminCount > 0;
+    const ffmpegAvailable = await isFfmpegAvailable();
+    const ffmpegPath = ffmpegAvailable ? await resolveFfmpegPath() : null;
 
     return {
       isConfigured,
       message: isConfigured
         ? 'System ready. Redirect to /auth/login.'
         : 'No superadmin configured. Use /setup/init to bootstrap.',
+      runtime: {
+        ffmpegAvailable,
+        ffmpegPath,
+      },
     };
   }
 

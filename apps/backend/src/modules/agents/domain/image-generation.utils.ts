@@ -226,6 +226,10 @@ export function detectReelFrameCount(
 export function formatGenerationError(error: unknown): string {
   const raw = error instanceof Error ? error.message : 'Generation failed';
 
+  if (/ffmpeg: not found/i.test(raw) || /FFmpeg concatenation failed/i.test(raw)) {
+    return 'FFmpeg no está disponible en el worker. Redeploy de api+worker con rebuild (sin caché) y pulsa Reintentar. Ver GET /api/v1/setup/status → runtime.ffmpegAvailable.';
+  }
+
   if (/unexpected internal error/i.test(raw)) {
     return 'El proveedor de IA devolvió un error interno. Reintenta en unos minutos o cambia el modelo en Ajustes → Modelos por tarea.';
   }

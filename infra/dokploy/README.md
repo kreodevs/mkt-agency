@@ -214,10 +214,17 @@ Si usas **DigitalOcean Spaces** u otro S3 externo (sin MinIO), crea el bucket ma
 
 La concatenación de clips (copy largo con Wan) usa **FFmpeg** en los contenedores `api` y `worker`.
 
-**Solución:** redeploy con `Dockerfile.api` actual (`apk add ffmpeg`). Tras el build, en la terminal del contenedor `api`:
+1. **Verificar deploy (no basta con refrescar el editor):**
+   ```bash
+   curl -s https://TU_DOMINIO/api/v1/setup/status | jq .runtime
+   ```
+   Debe devolver `"ffmpegAvailable": true` y `"ffmpegPath": "/usr/bin/ffmpeg"`.
 
-```bash
-ffmpeg -version
-```
+2. **Rebuild sin caché** en Dokploy (servicios `api` y `worker` comparten `Dockerfile.api`). En terminal del contenedor `worker`:
+   ```bash
+   ffmpeg -version
+   ```
 
-Si falta FFmpeg, el backend **no** dispara múltiples APIs de video: cae a un solo clip truncado (~10s) para no quemar créditos.
+3. **En el editor de contenido:** pulsa **Reintentar** (el mensaje rojo es del último intento guardado en BD).
+
+Si `ffmpegAvailable` es `false`, el backend evita segmentación y usa un solo clip (~10s) para no gastar varias APIs.
