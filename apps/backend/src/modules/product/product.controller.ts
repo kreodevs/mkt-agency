@@ -30,8 +30,18 @@ import {
   ProductResponseDto,
 } from './dto/product.response.dto';
 import { ProductLogoResponseDto, SyncProductLogoFromWebsiteDto } from './dto/product-logo.dto';
+import {
+  AddProductMediaKitItemDto,
+  ProductMediaKitItemResponseDto,
+  ProductMediaKitListResponseDto,
+} from './dto/product-media-kit.dto';
 import { ProductLogoService } from './product-logo.service';
+import { ProductMediaKitService } from './product-media-kit.service';
 import { ProductService } from './product.service';
+import type { ProductMediaRole } from './domain/product-media-kit.constants';
+import { PRODUCT_MEDIA_ROLES } from './domain/product-media-kit.constants';
+
+const MAX_MEDIA_KIT_FILE_SIZE = 52_428_800;
 
 @Controller('products')
 @UseGuards(TenantGuard)
@@ -39,6 +49,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly productLogoService: ProductLogoService,
+    private readonly productMediaKitService: ProductMediaKitService,
   ) {}
 
   @Get()
@@ -119,5 +130,55 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ProductLogoResponseDto> {
     return this.productLogoService.removeLogo(user.tenantId!, id);
+  }
+
+  @Get(':id/media-kit')
+  listMediaKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ProductMediaKitListResponseDto> {
+    return this.productMediaKitService.listForProduct(user.tenantId!, id);
+  }
+
+  @Post(':id/media-kit/upload')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_MEDIA_KIT_FILE_SIZE } }),
+  )
+  uploadMediaKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Query('role') role: ProductMediaRole,
+    @Query('label') label?: string,
+  ): Promise<ProductMediaKitItemResponseDto> {
+    const resolvedRole = PRODUCT_MEDIA_ROLES.includes(role) ? role : 'other';
+    return this.productMediaKitService.uploadToKit(
+      user.tenantId!,
+      id,
+      file,
+      resolvedRole,
+      label,
+    );
+  }
+
+  @Post(':id/media-kit/link')
+  @HttpCode(HttpStatus.CREATED)
+  linkMediaKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: AddProductMediaKitItemDto,
+  ): Promise<ProductMediaKitItemResponseDto> {
+    return this.productMediaKitService.linkAsset(user.tenantId!, id, body);
+  }
+
+  @Delete(':id/media-kit/:itemId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeMediaKitItem(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+  ): Promise<void> {
+    await this.productMediaKitService.removeFromKit(user.tenantId!, id, itemId);
   }
 }

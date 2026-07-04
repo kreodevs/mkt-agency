@@ -120,6 +120,47 @@ export interface ProductLogoResponse {
   synced: boolean;
 }
 
+export const PRODUCT_MEDIA_ROLES = [
+  'product-screenshot',
+  'product-demo',
+  'event-photo',
+  'team-photo',
+  'testimonial',
+  'b-roll',
+  'other',
+] as const;
+
+export type ProductMediaRole = (typeof PRODUCT_MEDIA_ROLES)[number];
+
+export const PRODUCT_MEDIA_ROLE_LABELS: Record<ProductMediaRole, string> = {
+  'product-screenshot': 'Captura de producto / app',
+  'product-demo': 'Video demo del producto',
+  'event-photo': 'Foto de evento o taller',
+  'team-photo': 'Foto del equipo',
+  testimonial: 'Testimonial',
+  'b-roll': 'B-roll del nicho',
+  other: 'Otro',
+};
+
+export interface ProductMediaKitItem {
+  id: string;
+  productId: string;
+  assetId: string;
+  role: ProductMediaRole;
+  label: string | null;
+  sortOrder: number;
+  assetName: string;
+  assetType: string;
+  mimeType: string | null;
+  url: string | null;
+  createdAt: string;
+}
+
+export interface ProductMediaKitListResponse {
+  items: ProductMediaKitItem[];
+  total: number;
+}
+
 export interface ProductOnboardingAgentsResult {
   brandInterviewId?: string | null;
   competitorAnalysisId?: string | null;

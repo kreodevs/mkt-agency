@@ -9,6 +9,9 @@ import type {
   PaginatedProductsResponse,
   Product,
   ProductLogoResponse,
+  ProductMediaKitItem,
+  ProductMediaKitListResponse,
+  ProductMediaRole,
   ProductOnboardingStatus,
   InferProductFromPageResponse,
   SuggestProductKeywordsResponse,
@@ -164,6 +167,57 @@ export function uploadProductLogo(productId: string, file: File): Promise<Produc
 
 export async function removeProductLogo(id: string): Promise<ProductLogoResponse> {
   return apiFetch<ProductLogoResponse>(`/products/${id}/logo`, {
+    method: 'DELETE',
+  });
+}
+
+export async function listProductMediaKit(productId: string): Promise<ProductMediaKitListResponse> {
+  return apiFetch<ProductMediaKitListResponse>(`/products/${productId}/media-kit`);
+}
+
+export function uploadProductMediaKit(
+  productId: string,
+  file: File,
+  role: ProductMediaRole,
+  label?: string,
+): Promise<ProductMediaKitItem> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const params = new URLSearchParams({ role });
+    if (label?.trim()) {
+      params.set('label', label.trim());
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText) as ProductMediaKitItem);
+        return;
+      }
+
+      try {
+        const body = JSON.parse(xhr.responseText) as { error?: string };
+        reject(new Error(body.error ?? 'Upload failed'));
+      } catch {
+        reject(new Error('Upload failed'));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+
+    xhr.open('POST', `${API_BASE}/products/${productId}/media-kit/upload?${params.toString()}`);
+    const token = getAccessToken();
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    xhr.send(formData);
+  });
+}
+
+export async function removeProductMediaKitItem(productId: string, itemId: string): Promise<void> {
+  await apiFetch<void>(`/products/${productId}/media-kit/${itemId}`, {
     method: 'DELETE',
   });
 }

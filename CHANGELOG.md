@@ -9,6 +9,7 @@
 - Redirects en modo SOHO: `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → bandeja.
 - **SOHO éxito (Fase A/B)**: «Hoy publicas esto», contactos semanales, regenerar un clic, publicación asistida (copiar/abrir red/WhatsApp), mockup por red, `GET /dashboard/soho-summary`, recordatorio `publish_reminder`, notificaciones navegador.
 - **Atribución post → lead**: `GET /forms/capture`, página pública `/c/:formId`, UTM + `contentId` en submit y `lead.metadata`, botón «Link captura» en bandeja, métrica `attributedLeadsThisWeek` en resumen SOHO.
+- **Kit de medios por producto**: tabla `product_media_kit_items`, API CRUD en `/products/:id/media-kit`, panel en detalle de producto; el Community Manager compone visuales reales (Ken Burns / video demo) antes de recurrir a IA generativa.
 - **Sanitización de copy**: elimina indicaciones internas «(mostrar fotos…)» del texto publicable.
 
 ### Changed

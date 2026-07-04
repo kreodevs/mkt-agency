@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
+import { ProductMediaKitPanel } from '@/components/products/ProductMediaKitPanel';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import type { ProductCategory, UpdateProductPayload } from '@/types/product';
@@ -138,7 +139,7 @@ export default function ProductDetailPage() {
         }
       />
 
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
         <ProductLogoPanel
           productId={id}
           productName={productQuery.data.name}
@@ -149,6 +150,7 @@ export default function ProductDetailPage() {
             void queryClient.invalidateQueries({ queryKey: ['product', id] });
           }}
         />
+        <ProductMediaKitPanel productId={id} productName={productQuery.data.name} />
       </div>
 
       <Card title="Detalle del producto">

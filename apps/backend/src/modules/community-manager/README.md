@@ -12,6 +12,13 @@ Generación de copy para redes sociales con IA.
 | GET | `/api/v1/community-manager/readiness` | Prerrequisitos (producto + marca) |
 | POST | `/api/v1/community-manager/generate` | Generar copy (`productId` opcional); guarda `platform` en cada contenido e imágenes con formato por red |
 
-El prompt del LLM incluye el **último análisis completado** de Competitor Intel (`agent_competitor_analyses`) y los nombres registrados en `competitors`, para diferenciar el copy y explotar `marketGaps` / `recommendation`. Si no hay análisis, usa solo la lista de competidores si existe.
+## Kit de medios y composición visual
+
+Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposerService` prioriza assets reales antes de Image/Video API:
+
+1. **Post estático** — imagen del kit por rol (`product-screenshot` > `event-photo` > …).
+2. **Reel / video** — `product-demo` si existe; si no, Ken Burns (FFmpeg) sobre imagen del kit; fallback a generación IA.
+
+El prompt del CM recibe contexto `mediaKit` para evitar copy de stock corporativo cuando hay material humano.
 
 Preferencias en `tenants.settings.communityManager` (JSONB, sin migración). Tamaños de imagen: `shared/social/image-destination-formats.util.ts` (TikTok vertical 9:16, resto feed 1:1 por defecto).

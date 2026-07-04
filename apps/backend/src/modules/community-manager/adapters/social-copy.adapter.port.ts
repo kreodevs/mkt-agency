@@ -40,6 +40,11 @@ export interface SocialCopyContext {
     body: string;
     platform?: string;
   };
+  mediaKit?: Array<{
+    role: string;
+    label: string | null;
+    assetType: 'image' | 'video';
+  }>;
 }
 
 export interface SocialCopyAdapterPort {

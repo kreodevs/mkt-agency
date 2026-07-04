@@ -73,6 +73,7 @@ import { ProductModule } from './modules/product/product.module';
 import { ProductOnboardingModule } from './modules/product/product-onboarding.module';
 import { PublicationInboxModule } from './modules/publication-inbox/publication-inbox.module';
 import { ProductEntity } from './modules/product/infrastructure/typeorm/product.entity';
+import { ProductMediaKitItemEntity } from './modules/product/infrastructure/typeorm/product-media-kit-item.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
@@ -128,6 +129,7 @@ import {
           CampaignTemplateEntity,
           CampaignEntity,
           ProductEntity,
+          ProductMediaKitItemEntity,
           BudgetEntity,
           AudienceEntity,
           CampaignStrategyAssignmentEntity,

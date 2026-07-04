@@ -63,6 +63,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           .join('\n')
       : '';
 
+    const mediaKitGuide = context.mediaKit?.length
+      ? [
+          `Kit de medios del producto (${context.mediaKit.length} archivos reales): ${JSON.stringify(context.mediaKit)}`,
+          'IMPORTANTE: El sistema COMBINARÁ fotos/videos reales del kit en el post. NO pidas dashboards genéricos ni stock corporativo si hay capturas o fotos de evento.',
+          'En visualDescription indica cómo se verá el asset real (ej. "screenshot de la app en mockup móvil", "foto del taller con copy superpuesto").',
+          'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
+        ].join('\n')
+      : '';
+
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
@@ -101,6 +110,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       productFocus,
       competitorIntelGuide,
       revisionGuide,
+      mediaKitGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       'Para cada post asigna visualFormat: tiktok→video preferente; carruseles educativos→carousel; linkedin/twitter/facebook feed→image salvo que el post pida reel/video explícitamente.',
       'visualDescription debe describir la escena visual acorde a visualFormat (no repitas el body del post).',
@@ -108,10 +118,12 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       .filter(Boolean)
       .join('\n\n');
 
+    const temperature = context.revisionBrief?.trim() ? 0.45 : 0.6;
+
     const result = await this.llm.chatJson<Record<string, unknown>>(
       systemPrompt,
       userPrompt,
-      { taskType: 'social_copy', maxTokens: 8192 },
+      { taskType: 'social_copy', maxTokens: 8192, temperature },
     );
 
     const normalized = normalizeSocialCopyBatch(result, {

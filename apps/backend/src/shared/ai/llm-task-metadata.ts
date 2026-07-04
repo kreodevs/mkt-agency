@@ -48,13 +48,13 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
     label: 'Competitor Intel',
     description: 'Análisis profundo de competidores',
     defaultModel: 'deepseek/deepseek-v4-flash',
-    temperature: '0.7',
+    temperature: '0.4',
   },
   competitor_discovery: {
     label: 'Descubrimiento de competidores',
     description: 'Sugerencias IA de competidores',
     defaultModel: 'deepseek/deepseek-v4-flash',
-    temperature: '0.7',
+    temperature: '0.3',
   },
   image_generation: {
     label: 'Generación de imágenes',
@@ -72,12 +72,12 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
     label: 'Ajuste de estrategia',
     description: 'Recomendaciones de ajuste según métricas',
     defaultModel: 'deepseek/deepseek-v4-flash',
-    temperature: '0.7',
+    temperature: '0.45',
   },
   social_copy: {
     label: 'Copy para redes',
     description: 'Generación de copy para Community Manager',
     defaultModel: 'deepseek/deepseek-v4-flash',
-    temperature: '0.7',
+    temperature: '0.6',
   },
 };

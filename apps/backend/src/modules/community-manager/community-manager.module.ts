@@ -6,6 +6,8 @@ import { ContentModule } from '../content/content.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { AgentsModule } from '../agents/agents.module';
+import { AssetEntity } from '../assets/infrastructure/typeorm/asset.entity';
+import { AssetsModule } from '../assets/assets.module';
 import { ProductModule } from '../product/product.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
@@ -21,6 +23,7 @@ import {
 } from './adapters/social-copy.adapter.port';
 import { CommunityManagerBatchEntity } from './infrastructure/typeorm/community-manager-batch.entity';
 import { TonePresetEntity } from './infrastructure/typeorm/tone-preset.entity';
+import { ContentVisualComposerService } from './content-visual-composer.service';
 import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
 import { TonePresetController } from './tone-preset.controller';
@@ -36,9 +39,11 @@ import { TonePresetController } from './tone-preset.controller';
       ProductEntity,
       CampaignEntity,
       ContentEntity,
+      AssetEntity,
     ]),
     CompanyProfileModule,
     ProductModule,
+    AssetsModule,
     CompetitorsModule,
     AgentsModule,
     LlmModule,
@@ -47,6 +52,7 @@ import { TonePresetController } from './tone-preset.controller';
   controllers: [CommunityManagerController, TonePresetController],
   providers: [
     CommunityManagerService,
+    ContentVisualComposerService,
     StubSocialCopyAdapter,
     OpenRouterSocialCopyAdapter,
     {

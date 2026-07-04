@@ -33,6 +33,7 @@ import { ReportEntity } from '../modules/reports/infrastructure/typeorm/report.e
 import { SecurityEventEntity } from '../modules/security/infrastructure/typeorm/security-event.entity';
 import { ImpersonationLogEntity } from '../modules/superadmin/infrastructure/typeorm/impersonation-log.entity';
 import { ProductEntity } from '../modules/product/infrastructure/typeorm/product.entity';
+import { ProductMediaKitItemEntity } from '../modules/product/infrastructure/typeorm/product-media-kit-item.entity';
 import { TenantEntity } from '../modules/tenant/infrastructure/typeorm/tenant.entity';
 import { UserEntity } from '../shared/infrastructure/typeorm/user.entity';
 import {
@@ -62,6 +63,7 @@ export default new DataSource({
     CampaignTemplateEntity,
     CampaignEntity,
     ProductEntity,
+    ProductMediaKitItemEntity,
     BudgetEntity,
     AudienceEntity,
     CampaignStrategyAssignmentEntity,

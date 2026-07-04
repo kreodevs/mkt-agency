@@ -27,7 +27,9 @@ import {
 } from '../product/domain/product-context.util';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
+import { ProductMediaKitService } from '../product/product-media-kit.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
+import { ContentVisualComposerService } from './content-visual-composer.service';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -83,6 +85,8 @@ export class CommunityManagerService {
     private readonly profileSectionSync: ProfileSectionSyncService,
     private readonly competitorIntel: CompetitorIntelService,
     private readonly competitorService: CompetitorService,
+    private readonly mediaKitService: ProductMediaKitService,
+    private readonly visualComposer: ContentVisualComposerService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -306,6 +310,10 @@ export class CommunityManagerService {
       );
       const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
       const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
+      const effectiveProductId = productContext?.id ?? dto.productId;
+      const kit = effectiveProductId
+        ? await this.mediaKitService.listEntitiesForProduct(tenantId, effectiveProductId)
+        : [];
 
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await runWithLlmUsageContext(
@@ -316,13 +324,18 @@ export class CommunityManagerService {
             platforms: dto.platforms,
             count: dto.count,
             campaignId: dto.campaignId,
-            productId: productContext?.id ?? dto.productId,
+            productId: effectiveProductId,
             tone: dto.tone,
             topics: dto.topics,
             brandBrief,
             productContext: productContext as unknown as Record<string, unknown>,
             focusProductName: productContext?.name ?? null,
             competitorIntelBrief,
+            mediaKit: kit.map((item) => ({
+              role: item.role,
+              label: item.label,
+              assetType: item.role === 'product-demo' ? 'video' : 'image',
+            })),
           }),
       );
 
@@ -351,20 +364,18 @@ export class CommunityManagerService {
           post.contentId = content.id;
           publishedPosts.push(content.id);
 
-          if (dto.attachImages !== false && post.visualDescription?.trim()) {
-            try {
-              const imageResult = await this.imageGeneration.attachVisualToContent(
-                tenantId,
-                userId,
-                content.id,
-                post.visualDescription,
-                productContext?.id ?? dto.productId,
-              );
-              if (imageResult?.status === 'completed') {
-                imagesAttached += 1;
-              }
-            } catch (imageError) {
-              this.logger.warn(`Image attach failed for content ${content.id}`, imageError);
+          if (dto.attachImages !== false) {
+            const attached = await this.attachVisualForPost(
+              tenantId,
+              userId,
+              content.id,
+              post,
+              effectiveProductId,
+              kit,
+              i,
+            );
+            if (attached) {
+              imagesAttached += 1;
             }
           }
         } catch (err) {
@@ -530,6 +541,9 @@ export class CommunityManagerService {
     );
     const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
     const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
+    const kit = content.productId
+      ? await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId)
+      : [];
 
     const result = await runWithLlmUsageContext({ tenantId, userId }, () =>
       this.adapter.generate({
@@ -550,6 +564,11 @@ export class CommunityManagerService {
               platform: content.platform ?? undefined,
             }
           : undefined,
+        mediaKit: kit.map((item) => ({
+          role: item.role,
+          label: item.label,
+          assetType: item.role === 'product-demo' ? 'video' : 'image',
+        })),
       }),
     );
 
@@ -573,13 +592,67 @@ export class CommunityManagerService {
 
     const shouldRegenerateVisual = Boolean(feedback || post.visualDescription?.trim());
     if (shouldRegenerateVisual) {
-      try {
-        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
-      } catch (error) {
-        this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+      const composed = await this.attachVisualForPost(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        content.productId ?? productContext?.id,
+        kit,
+        0,
+      );
+      if (!composed) {
+        try {
+          await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+        } catch (error) {
+          this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+        }
       }
     }
 
     return { contentId, title: post.title, regenerated: true };
+  }
+
+  private async attachVisualForPost(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+    post: SocialCopyPost,
+    productId: string | null | undefined,
+    kit: Awaited<ReturnType<ProductMediaKitService['listEntitiesForProduct']>>,
+    postIndex: number,
+  ): Promise<boolean> {
+    if (productId && kit.length) {
+      const composed = await this.visualComposer.tryComposeFromKit(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        kit,
+        postIndex,
+      );
+      if (composed.attached) {
+        return true;
+      }
+    }
+
+    if (!post.visualDescription?.trim()) {
+      return false;
+    }
+
+    try {
+      const imageResult = await this.imageGeneration.attachVisualToContent(
+        tenantId,
+        userId,
+        contentId,
+        post.visualDescription,
+        productId ?? undefined,
+      );
+      return imageResult?.status === 'completed';
+    } catch (error) {
+      this.logger.warn(`Image attach failed for content ${contentId}`, error);
+      return false;
+    }
   }
 }

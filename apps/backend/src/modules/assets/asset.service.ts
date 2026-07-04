@@ -147,6 +147,58 @@ export class AssetService {
     return this.toResponse(saved);
   }
 
+  async uploadBuffer(
+    tenantId: string,
+    buffer: Buffer,
+    filename: string,
+    mimeType: string,
+  ): Promise<AssetResponseDto> {
+    if (!buffer.length) {
+      throw new BadRequestException({
+        error: 'File is required',
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    if (buffer.length > MAX_ASSET_FILE_SIZE) {
+      throw new PayloadTooLargeException({
+        error: 'File size exceeds platform maximum',
+        code: 'PAYLOAD_TOO_LARGE',
+        maxSize: MAX_ASSET_FILE_SIZE,
+      });
+    }
+
+    await this.tenantLimitsService.assertCanUpload(tenantId, buffer.length);
+
+    const fileKey = `tenants/${tenantId}/${randomUUID()}/${filename}`;
+    await this.storage.upload({
+      key: fileKey,
+      body: buffer,
+      contentType: mimeType,
+    });
+
+    const saved = await this.assets.save(
+      this.assets.create({
+        tenantId,
+        folderId: null,
+        name: filename,
+        type: inferAssetType(mimeType),
+        mimeType,
+        fileKey,
+        fileSize: String(buffer.length),
+        url: '',
+        metadata: { source: 'kit-compose' },
+        referenceCount: 0,
+        isInUse: false,
+      }),
+    );
+
+    saved.url = this.buildApiFileUrl(saved.id);
+    await this.assets.save(saved);
+
+    return this.toResponse(saved);
+  }
+
   async update(
     tenantId: string,
     id: string,
