@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays, ExternalLink } from 'lucide-react';
+import { CalendarDays, Copy, ExternalLink } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
@@ -17,6 +17,8 @@ interface InboxItemCardProps {
   selected?: boolean;
   onToggleSelect?: (contentId: string) => void;
   showApproval?: boolean;
+  /** CTA principal: copiar/publicar (SOHO) o editar (avanzado). */
+  primaryAction?: 'copy' | 'edit';
 }
 
 export function InboxItemCard({
@@ -25,6 +27,7 @@ export function InboxItemCard({
   selected = false,
   onToggleSelect,
   showApproval = false,
+  primaryAction = 'copy',
 }: InboxItemCardProps) {
   const formattedDate = new Date(`${item.scheduledDate}T12:00:00`).toLocaleDateString('es-MX', {
     weekday: 'short',
@@ -67,13 +70,31 @@ export function InboxItemCard({
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Link
-              to={`/contents/${item.contentId}`}
-              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline"
-            >
-              Editar
-              <ExternalLink className="h-3 w-3" />
-            </Link>
+            {primaryAction === 'copy' ? (
+              <Link
+                to={`/contents/${item.contentId}`}
+                className="inline-flex items-center gap-1 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90"
+              >
+                <Copy className="h-3 w-3" />
+                Copiar y publicar
+              </Link>
+            ) : (
+              <Link
+                to={`/contents/${item.contentId}`}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline"
+              >
+                Editar
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+            {primaryAction === 'copy' && (
+              <Link
+                to={`/contents/${item.contentId}`}
+                className="inline-flex items-center gap-1 text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+              >
+                Editar
+              </Link>
+            )}
           </div>
 
           {showApproval && item.versionId && !item.signatureHash && (

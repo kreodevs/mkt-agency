@@ -16,6 +16,7 @@ export interface AppLayoutProps {
   className?: string;
   linkComponent?: React.ElementType;
   onLogout?: () => void;
+  sidebarFooter?: React.ReactNode;
 }
 
 export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
@@ -31,6 +32,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
       linkComponent,
       className,
       onLogout,
+      sidebarFooter,
     },
     ref,
   ) => {
@@ -53,6 +55,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
           linkComponent={linkComponent}
           onLogout={onLogout}
           onNavClick={() => setMobileMenuOpen(false)}
+          sidebarFooter={sidebarFooter}
         />
       ) : null);
 

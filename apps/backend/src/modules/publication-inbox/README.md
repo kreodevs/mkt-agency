@@ -7,6 +7,8 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas + notificaciones |
+| GET | `/publication-inbox/copilot-status?productId=` | Estado del copiloto (producto, competidores, análisis, bandeja) |
+| POST | `/publication-inbox/prepare-week` | Orquestación manual: competidores → intel → estrategia → CM |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |
 | PATCH | `/publication-inbox/notifications/read-all` | Marca todas leídas |
@@ -27,6 +29,15 @@ Por cada producto activo:
 3. **Community Manager** — genera copy usando `topics` de la estrategia
 4. **Image Generator** — adjunta imagen por post (`visualDescription` → asset en versión del contenido)
 5. **Notificación** — bandeja con resumen (posts + imágenes)
+
+### Copiloto SOHO (`CopilotService` + `CopilotOrchestrationService`)
+
+- `GET copilot-status` — siguiente paso sugerido y flags (`canPrepareWeek`)
+- `POST prepare-week` — mismo pipeline que el cron semanal, disparado por el usuario:
+  1. Descubre competidores si hay &lt; 2
+  2. Competitor Intel (espera hasta 120 s)
+  3. `AgencyOrchestrationService.runWeeklyForProduct`
+  4. Notificación `week_ready`
 
 ## Notificaciones
 

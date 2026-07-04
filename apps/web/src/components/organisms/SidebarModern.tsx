@@ -34,6 +34,7 @@ export interface SidebarModernProps {
   onLogout?: () => void;
   onNavClick?: () => void;
   linkComponent?: React.ElementType;
+  sidebarFooter?: React.ReactNode;
   className?: string;
 }
 
@@ -50,6 +51,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       onLogout,
       onNavClick,
       linkComponent: LinkComponent = 'a',
+      sidebarFooter,
       className,
     },
     ref,
@@ -173,6 +175,12 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
               </div>
             ))}
           </div>
+
+          {sidebarFooter && !collapsed && (
+            <div className="shrink-0 border-t border-[var(--border)] px-[var(--spacing-md)] py-[var(--spacing-sm)]">
+              {sidebarFooter}
+            </div>
+          )}
 
           {user && (
             <div className="mt-auto shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">

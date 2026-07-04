@@ -58,3 +58,39 @@ export class BulkApproveResponseDto {
   approved!: number;
   failed!: Array<{ contentId: string; reason: string }>;
 }
+
+export class PrepareWeekDto {
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
+}
+
+export class CopilotStatusResponseDto {
+  productId!: string;
+  productName!: string;
+  onboardingCompleted!: boolean;
+  competitorsCount!: number;
+  analysisStatus!: string;
+  analysisUpdatedAt!: string | null;
+  inbox!: {
+    pendingCount: number;
+    readyCount: number;
+    upcomingCount: number;
+    unreadNotifications: number;
+  };
+  nextStep!: string;
+  canPrepareWeek!: boolean;
+  prepareBlockedReason!: string | null;
+}
+
+export class PrepareWeekResponseDto {
+  status!: 'completed' | 'empty' | 'blocked';
+  message!: string;
+  productId!: string;
+  productName!: string;
+  postsGenerated!: number;
+  imagesAttached!: number;
+  strategyId?: string | null;
+  topicsUsed?: string[];
+  warnings!: string[];
+}

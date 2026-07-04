@@ -5,15 +5,24 @@ import { TenantGuard } from '../../shared/guards/tenant.guard';
 import {
   BulkApproveDto,
   BulkApproveResponseDto,
+  CopilotStatusResponseDto,
+  PrepareWeekDto,
+  PrepareWeekResponseDto,
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
 } from './dto/publication-inbox.dto';
+import { CopilotOrchestrationService } from './copilot-orchestration.service';
+import { CopilotService } from './copilot.service';
 import { PublicationInboxService } from './publication-inbox.service';
 
 @Controller('publication-inbox')
 @UseGuards(TenantGuard)
 export class PublicationInboxController {
-  constructor(private readonly inboxService: PublicationInboxService) {}
+  constructor(
+    private readonly inboxService: PublicationInboxService,
+    private readonly copilotService: CopilotService,
+    private readonly copilotOrchestration: CopilotOrchestrationService,
+  ) {}
 
   @Get()
   getInbox(
@@ -46,5 +55,25 @@ export class PublicationInboxController {
   ): Promise<{ marked: number }> {
     const marked = await this.inboxService.markAllNotificationsRead(user.tenantId!);
     return { marked };
+  }
+
+  @Get('copilot-status')
+  getCopilotStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PublicationInboxQueryDto,
+  ): Promise<CopilotStatusResponseDto> {
+    return this.copilotService.getStatus(user.tenantId!, query.productId);
+  }
+
+  @Post('prepare-week')
+  prepareWeek(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: PrepareWeekDto,
+  ): Promise<PrepareWeekResponseDto> {
+    return this.copilotOrchestration.prepareWeek(
+      user.tenantId!,
+      user.id,
+      body.productId,
+    );
   }
 }

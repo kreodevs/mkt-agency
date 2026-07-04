@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, Inbox, PartyPopper, Sparkles } from 'lucide-react';
+import { Bell, CheckCheck, Inbox, PartyPopper } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { CopilotStatusPanel } from '@/components/copilot/CopilotStatusPanel';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
 import { InboxKitPanel } from '@/components/publication-inbox/InboxKitPanel';
 import { DashboardShell } from '@/components/layout/DashboardShell';
@@ -16,6 +17,7 @@ import {
   markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
+import { useAdvancedNav } from '@/store/copilot-ui';
 
 interface AgencyHomeKpis {
   leads: { today: number; total: number; clients: number; conversionRate: number };
@@ -24,6 +26,7 @@ interface AgencyHomeKpis {
 
 export default function PublicationInboxPage() {
   const queryClient = useQueryClient();
+  const advancedNav = useAdvancedNav();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeProductId = useActiveProductStore((s) => s.productId);
   const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
@@ -130,7 +133,9 @@ export default function PublicationInboxPage() {
           <h1 className="text-2xl font-black text-[var(--foreground)]">Bandeja de publicación</h1>
         </div>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          La agencia sugiere — tú apruebas y publicas manualmente
+          {advancedNav
+            ? 'La agencia sugiere — tú apruebas y publicas manualmente'
+            : 'Tu copiloto prepara el contenido — tú solo copias y pegas en tus redes'}
         </p>
       </div>
 
@@ -238,6 +243,7 @@ export default function PublicationInboxPage() {
                     selected={selectedIds.has(item.contentId)}
                     onToggleSelect={toggleSelect}
                     showApproval
+                    primaryAction={advancedNav ? 'edit' : 'copy'}
                   />
                 ))}
               </div>
@@ -252,7 +258,11 @@ export default function PublicationInboxPage() {
             ) : (
               <div className="space-y-3">
                 {upcoming.map((item) => (
-                  <InboxItemCard key={item.contentId} item={item} />
+                  <InboxItemCard
+                    key={item.contentId}
+                    item={item}
+                    primaryAction={advancedNav ? 'edit' : 'copy'}
+                  />
                 ))}
               </div>
             )}
@@ -260,31 +270,33 @@ export default function PublicationInboxPage() {
         </div>
 
         <div className="space-y-6">
+          <CopilotStatusPanel productId={activeProductId ?? undefined} />
           <InboxKitPanel items={ready} />
 
-          <Card title="Acciones de la agencia" subtitle="Generar más contenido">
-            <div className="space-y-2 text-sm">
-              <Link
-                to={`/community${activeProductId ? `?productId=${activeProductId}` : ''}`}
-                className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
-              >
-                <Sparkles className="h-4 w-4 text-pink-500" />
-                Generar más copy (Community Manager)
-              </Link>
-              <Link
-                to="/calendar"
-                className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
-              >
-                Ver calendario completo
-              </Link>
-              <Link
-                to="/agency-overview"
-                className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
-              >
-                Resumen de agencia (KPIs)
-              </Link>
-            </div>
-          </Card>
+          {advancedNav && (
+            <Card title="Acciones de la agencia" subtitle="Generar más contenido">
+              <div className="space-y-2 text-sm">
+                <Link
+                  to={`/community${activeProductId ? `?productId=${activeProductId}` : ''}`}
+                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                >
+                  Generar más copy (Community Manager)
+                </Link>
+                <Link
+                  to="/calendar"
+                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                >
+                  Ver calendario completo
+                </Link>
+                <Link
+                  to="/agency-overview"
+                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--primary)]"
+                >
+                  Resumen de agencia (KPIs)
+                </Link>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </DashboardShell>

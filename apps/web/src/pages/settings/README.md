@@ -1,8 +1,3 @@
-# settings
+# Ajustes del copiloto
 
-Páginas de configuración del tenant.
-
-## Páginas
-
-- `DomainSettingsPage.tsx` — CRUD de dominios + panel `DNSVerification` (`/settings/domain`)
-- `CompetitorsPage.tsx` — competidores y menciones (`/settings/competitors`)
+`/settings/copilot` — preferencias de redes y volumen semanal (delega en Community Manager preferences) y toggle de menú avanzado.

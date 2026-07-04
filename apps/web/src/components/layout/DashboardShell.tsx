@@ -1,71 +1,26 @@
-import { AlertTriangle, BarChart3, Bot, Building2, CalendarDays, ClipboardList, Coins, FileInput, FileSignature, FileText, FolderOpen, Globe, Inbox, Lightbulb, Megaphone, MessageSquare, Package, ScrollText, Shield, Sparkles, Target, Users } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
 import { ImpersonationSwitcher } from '@/components/admin/ImpersonationSwitcher';
 import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonationSelect';
 import { ActiveProductSelector } from '@/components/products/ActiveProductSelector';
+import { Button } from '@/components/atoms/Button';
 import { logout } from '@/services/auth';
 import { useAuthStore } from '@/store/auth';
 import { isImpersonating } from '@/lib/impersonation';
+import {
+  superadminNavigation,
+  tenantAdvancedNavigation,
+  tenantSohoNavigation,
+} from '@/lib/tenant-navigation';
+import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
 
-export const superadminNavigation = [
-  {
-    title: 'Administración',
-    items: [
-      { label: 'Inicio', href: '/', icon: Shield },
-      { label: 'Tenants', href: '/tenants', icon: Building2 },
-      { label: 'Paquetes', href: '/admin/packages', icon: Package },
-      { label: 'Usuarios', href: '/admin/users', icon: Users },
-      { label: 'Auditoría', href: '/admin/audit-logs', icon: ScrollText },
-      { label: 'Seguridad', href: '/admin/security-events', icon: AlertTriangle },
-    ],
-  },
-  {
-    title: 'Configuración IA',
-    items: [
-      { label: 'Proveedores LLM', href: '/admin/llm-providers', icon: Bot },
-      { label: 'Modelos por tarea', href: '/admin/llm-settings', icon: Sparkles },
-      { label: 'Consumo IA', href: '/admin/llm-usage', icon: Coins },
-      { label: 'Integraciones', href: '/admin/integrations', icon: Globe },
-    ],
-  },
-];
-
-export const tenantNavigation = [
-  {
-    title: 'Mi negocio',
-    items: [
-      { label: 'Bandeja', href: '/', icon: Inbox },
-      { label: 'Mis productos', href: '/products', icon: Package },
-      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-      { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
-    ],
-  },
-  {
-    title: 'Agentes',
-    items: [
-      { label: 'Brand Analyst', href: '/agents', icon: Bot },
-      { label: 'Community Manager', href: '/community', icon: MessageSquare },
-      { label: 'Estrategia', href: '/strategy', icon: Lightbulb },
-    ],
-  },
-  {
-    title: 'Marketing',
-    items: [
-      { label: 'Campañas', href: '/campaigns', icon: Megaphone },
-      { label: 'Contenidos', href: '/contents', icon: FileText },
-      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
-      { label: 'Formularios', href: '/forms', icon: FileInput },
-      { label: 'Leads', href: '/leads', icon: Users },
-      { label: 'Activos', href: '/assets', icon: FolderOpen },
-      { label: 'Propuestas', href: '/proposals', icon: FileSignature },
-      { label: 'Reportes', href: '/reports', icon: BarChart3 },
-      { label: 'Dominio', href: '/settings/domain', icon: Globe },
-      { label: 'Competidores', href: '/settings/competitors', icon: Target },
-    ],
-  },
-];
+export {
+  superadminNavigation,
+  tenantAdvancedNavigation as tenantNavigation,
+  tenantSohoNavigation,
+} from '@/lib/tenant-navigation';
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -76,15 +31,21 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const advancedNav = useAdvancedNav();
+  const toggleAdvancedNav = useCopilotUiStore((s) => s.toggleAdvancedNav);
 
   const navigationGroups =
     navigationOverride ??
     (user?.impersonating && user.tenantId
-      ? tenantNavigation
+      ? advancedNav
+        ? tenantAdvancedNavigation
+        : tenantSohoNavigation
       : user?.isSuperadmin
         ? superadminNavigation
         : user?.tenantId
-          ? tenantNavigation
+          ? advancedNav
+            ? tenantAdvancedNavigation
+            : tenantSohoNavigation
           : []);
 
   const handleLogout = async () => {
@@ -103,6 +64,8 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     <ActiveProductSelector />
   ) : null;
 
+  const showNavModeToggle = Boolean(user?.tenantId && !user.isSuperadmin && !navigationOverride);
+
   return (
     <AppLayout
       navigationGroups={navigationGroups}
@@ -111,6 +74,20 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
       user={user ? { name: user.name, email: user.email } : undefined}
       headerActions={headerActions}
       onLogout={handleLogout}
+      sidebarFooter={
+        showNavModeToggle ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-xs text-[var(--foreground-muted)]"
+            onClick={toggleAdvancedNav}
+          >
+            <Layers className="mr-2 h-3.5 w-3.5" />
+            {advancedNav ? 'Modo copiloto (simple)' : 'Modo agencia (avanzado)'}
+          </Button>
+        ) : undefined
+      }
     >
       {children}
     </AppLayout>

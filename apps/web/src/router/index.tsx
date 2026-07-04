@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { SohoLegacyRedirect } from '@/components/copilot/SohoLegacyRedirect';
 import { AuthGuard, GuestGuard, SuperadminGuard, TenantGuard } from '@/guards/AuthGuard';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
@@ -51,6 +52,7 @@ const ImageGeneratorDetailPage = lazy(
 );
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
+const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
 
 function Loading() {
   return (
@@ -84,15 +86,43 @@ export function AppRouter() {
             <Route path="/admin/security-events" element={<SecurityEventsPage />} />
           </Route>
           <Route element={<TenantGuard />}>
-            <Route path="/dashboard" element={<MetricsDashboardPage />} />
-            <Route path="/agents" element={<AgentListPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <SohoLegacyRedirect>
+                  <MetricsDashboardPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/agents"
+              element={
+                <SohoLegacyRedirect>
+                  <AgentListPage />
+                </SohoLegacyRedirect>
+              }
+            />
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
             <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
             <Route path="/agents/image-generator/:id" element={<ImageGeneratorDetailPage />} />
-            <Route path="/strategy" element={<StrategyAdjustmentPage />} />
-            <Route path="/community" element={<CommunityManagerPage />} />
+            <Route
+              path="/strategy"
+              element={
+                <SohoLegacyRedirect>
+                  <StrategyAdjustmentPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/community"
+              element={
+                <SohoLegacyRedirect>
+                  <CommunityManagerPage />
+                </SohoLegacyRedirect>
+              }
+            />
             <Route path="/onboarding" element={<OnboardingWizardPage />} />
             <Route path="/products" element={<ProductListPage />} />
             <Route path="/products/new" element={<ProductCreatePage />} />
@@ -102,10 +132,31 @@ export function AppRouter() {
             <Route path="/campaigns" element={<CampaignListPage />} />
             <Route path="/campaigns/new" element={<CampaignCreatePage />} />
             <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
-            <Route path="/contents" element={<ContentListPage />} />
-            <Route path="/contents/new" element={<ContentCreatePage />} />
+            <Route
+              path="/contents"
+              element={
+                <SohoLegacyRedirect>
+                  <ContentListPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/contents/new"
+              element={
+                <SohoLegacyRedirect>
+                  <ContentCreatePage />
+                </SohoLegacyRedirect>
+              }
+            />
             <Route path="/contents/:id" element={<ContentEditPage />} />
-            <Route path="/calendar" element={<CalendarPage />} />
+            <Route
+              path="/calendar"
+              element={
+                <SohoLegacyRedirect>
+                  <CalendarPage />
+                </SohoLegacyRedirect>
+              }
+            />
             <Route path="/forms" element={<FormListPage />} />
             <Route path="/leads" element={<LeadPipelinePage />} />
             <Route path="/assets" element={<AssetLibraryPage />} />
@@ -114,7 +165,15 @@ export function AppRouter() {
             <Route path="/reports" element={<ReportListPage />} />
             <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/settings/domain" element={<DomainSettingsPage />} />
-            <Route path="/settings/competitors" element={<CompetitorsPage />} />
+            <Route path="/settings/copilot" element={<CopilotSettingsPage />} />
+            <Route
+              path="/settings/competitors"
+              element={
+                <SohoLegacyRedirect>
+                  <CompetitorsPage />
+                </SohoLegacyRedirect>
+              }
+            />
           </Route>
         </Route>
 

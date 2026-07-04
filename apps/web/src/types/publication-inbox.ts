@@ -42,3 +42,28 @@ export interface BulkApproveResult {
   approved: number;
   failed: Array<{ contentId: string; reason: string }>;
 }
+
+export interface CopilotStatus {
+  productId: string;
+  productName: string;
+  onboardingCompleted: boolean;
+  competitorsCount: number;
+  analysisStatus: string;
+  analysisUpdatedAt: string | null;
+  inbox: PublicationInboxData['stats'];
+  nextStep: string;
+  canPrepareWeek: boolean;
+  prepareBlockedReason: string | null;
+}
+
+export interface PrepareWeekResult {
+  status: 'completed' | 'empty' | 'blocked';
+  message: string;
+  productId: string;
+  productName: string;
+  postsGenerated: number;
+  imagesAttached: number;
+  strategyId?: string | null;
+  topicsUsed?: string[];
+  warnings: string[];
+}

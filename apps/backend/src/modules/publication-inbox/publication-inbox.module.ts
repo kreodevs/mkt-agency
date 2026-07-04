@@ -3,8 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { UserEntity } from '../../shared/infrastructure/typeorm/user.entity';
+import { AgentsModule } from '../agents/agents.module';
 import { CommunityManagerModule } from '../community-manager/community-manager.module';
+import { CompetitorsModule } from '../competitors/competitors.module';
 import { ContentModule } from '../content/content.module';
+import { ProductModule } from '../product/product.module';
 import { StrategyModule } from '../strategy/strategy.module';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
@@ -13,6 +16,8 @@ import { AgencyNotificationEntity } from './infrastructure/typeorm/agency-notifi
 import { PublicationInboxController } from './publication-inbox.controller';
 import { PublicationInboxService } from './publication-inbox.service';
 import { AgencyOrchestrationService } from './agency-orchestration.service';
+import { CopilotOrchestrationService } from './copilot-orchestration.service';
+import { CopilotService } from './copilot.service';
 import { AgencyWeeklyRunProcessor } from './workers/agency-weekly-run.processor';
 import { AgencyWeeklyRunWorkerService } from './workers/agency-weekly-run.worker';
 import { ApprovalReminderProcessor } from './workers/approval-reminder.processor';
@@ -25,6 +30,9 @@ import { ApprovalReminderWorkerService } from './workers/approval-reminder.worke
     ContentModule,
     CommunityManagerModule,
     StrategyModule,
+    ProductModule,
+    AgentsModule,
+    CompetitorsModule,
     TypeOrmModule.forFeature([
       ContentEntity,
       AgencyNotificationEntity,
@@ -36,6 +44,8 @@ import { ApprovalReminderWorkerService } from './workers/approval-reminder.worke
   controllers: [PublicationInboxController],
   providers: [
     PublicationInboxService,
+    CopilotService,
+    CopilotOrchestrationService,
     AgencyOrchestrationService,
     AgencyWeeklyRunWorkerService,
     AgencyWeeklyRunProcessor,

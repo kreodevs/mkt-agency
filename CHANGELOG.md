@@ -1,6 +1,18 @@
 ## [Unreleased]
 
 ### Added
+
+- **Modo copiloto SOHO** (UX por defecto para tenants): menú reducido (Inicio, Mi producto, Ajustes), panel de estado del pipeline en bandeja y botón **Preparar mi semana**.
+- **API copiloto**: `GET /publication-inbox/copilot-status` y `POST /publication-inbox/prepare-week` (descubre competidores, Competitor Intel, estrategia + CM bajo demanda).
+- **Página Ajustes** (`/settings/copilot`): redes sociales, volumen semanal y toggle menú avanzado (`mkt-advanced-nav` en localStorage).
+- **CTA Copiar y publicar** en tarjetas de bandeja (modo SOHO); `/contents/:id` sigue disponible para copiar/descargar.
+- Redirects en modo SOHO: `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → bandeja.
+
+### Changed
+
+- Navegación tenant extraída a `lib/tenant-navigation.ts`; toggle «Modo agencia (avanzado)» en sidebar.
+
+### Added (video)
 - Video segmentation for texts exceeding model duration limits
 - Automatic FFmpeg concatenation of multiple video clips into single asset
 - Crossfade fade-in transitions (0.5s) between video clips without audio alteration
