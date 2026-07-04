@@ -3,7 +3,8 @@
 ### Added
 - Video segmentation for texts exceeding model duration limits
 - Automatic FFmpeg concatenation of multiple video clips into single asset
-- Support for ~21-second texts split into 2-3 clips (Seedance 15s limit)
+- Crossfade fade-in transitions (0.5s) between video clips without audio alteration
+- Support for dynamic model duration limits (Wan: 10s, Veo-3.1: 8s, Seedance: 15s)
 
 # Changelog
 

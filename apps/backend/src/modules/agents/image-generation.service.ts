@@ -480,6 +480,7 @@ export class ImageGenerationService {
 
     const tempDir = '/tmp/video-clips-' + Date.now();
     fs.mkdirSync(tempDir, { recursive: true });
+    const crossfadeDuration = 0.5; // 0.5 second fade transition
 
     try {
       // Download each clip to temp directory
@@ -495,15 +496,31 @@ export class ImageGenerationService {
         await fs.promises.writeFile(path.join(tempDir, `clip_${i}.mp4`), buffer);
       }
 
-      // Create concat file
-      const concatFile = path.join(tempDir, 'concat.txt');
-      const concatList = results.map((_, i) => `file '${tempDir}/clip_${i}.mp4'`).join('\n');
-      await fs.promises.writeFile(concatFile, concatList);
+      // Build ffmpeg filter_complex for crossfade transitions
+      let filterComplex = '';
+      let offset = (results[0]?.duration || 15) - crossfadeDuration;
+      
+      // Video streams with fade transition
+      for (let i = 0; i < results.length; i++) {
+        filterComplex += `[${i}:v]setpts=PTS-STARTPTS[v${i}];[${i}:a]asetpts=PTS-STARTPTS[a${i}];`;
+      }
+      
+      // Build crossfade chain
+      for (let i = 0; i < results.length - 1; i++) {
+        filterComplex += `[v${i}][v${i + 1}]xfade=transition=fade:duration=${crossfadeDuration}:offset=${offset}[v${i + 1}];`;
+        filterComplex += `[a${i}][a${i + 1}]concat=n=2:v=0:a=1[a${i + 1}];`;
+      }
 
-      // Run ffmpeg concat
+      // Final output mapping
+      filterComplex += `[v${results.length - 1}][a${results.length - 1}]format=yuv420p[vv]`;
+
+      // Run ffmpeg with crossfade transitions
       await new Promise<void>((resolve, reject) => {
+        const inputFiles = results
+          .map((_, i) => `-i ${tempDir}/clip_${i}.mp4`)
+          .join(' ');
         exec(
-          `ffmpeg -f concat -safe 0 -i ${concatFile} -c copy ${tempDir}/output.mp4 -y`,
+          `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[vv]" -map "[a${results.length - 1}]" ${tempDir}/output.mp4 -y -shortest`,
           (error) => (error ? reject(error) : resolve()),
         );
       });
@@ -514,7 +531,7 @@ export class ImageGenerationService {
       return {
         videoBuffer: outputBuffer,
         mimeType: 'video/mp4',
-        duration: results.reduce((sum, r) => sum + (r.duration || 0), 0),
+        duration: results.reduce((sum, r) => sum + (r.duration || 0), 0) - (crossfadeDuration * (results.length - 1)),
       };
     } finally {
       // Cleanup temp files
