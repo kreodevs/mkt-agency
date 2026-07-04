@@ -35,7 +35,7 @@ export function InboxQuickPublishActions({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
       void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', item.contentId] });
-      toast.success('Publicación regenerada');
+      toast.success('Nueva versión en camino — texto actualizado e imagen regenerándose');
     },
     onError: () => toast.error('No se pudo regenerar'),
   });

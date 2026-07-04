@@ -590,7 +590,10 @@ export class CommunityManagerService {
       platform: post.platform,
     });
 
-    const shouldRegenerateVisual = Boolean(feedback || post.visualDescription?.trim());
+    const visualVariantIndex = currentVersion?.versionNumber ?? 0;
+    const shouldRegenerateVisual =
+      !feedback || Boolean(feedback || post.visualDescription?.trim());
+
     if (shouldRegenerateVisual) {
       const composed = await this.attachVisualForPost(
         tenantId,
@@ -599,13 +602,25 @@ export class CommunityManagerService {
         post,
         content.productId ?? productContext?.id,
         kit,
-        0,
+        visualVariantIndex,
       );
       if (!composed) {
         try {
           await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
         } catch (error) {
           this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+        }
+      } else if (!feedback && post.visualDescription?.trim()) {
+        try {
+          await this.imageGeneration.attachVisualToContent(
+            tenantId,
+            userId,
+            contentId,
+            post.visualDescription,
+            content.productId ?? productContext?.id ?? undefined,
+          );
+        } catch (error) {
+          this.logger.warn(`AI visual variant failed for content ${contentId}`, error);
         }
       }
     }

@@ -9,7 +9,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas + notificaciones (incl. `assets`, `platform`, `visualFormat`) |
 | GET | `/publication-inbox/copilot-status?productId=` | Estado del copiloto (producto, competidores, análisis, bandeja) |
 | POST | `/publication-inbox/prepare-week` | Orquestación manual: competidores → intel → estrategia → CM |
-| POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual de un contenido |
+| POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual («Otra versión» siempre refresca imagen) |
 | POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }` |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |

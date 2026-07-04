@@ -8,7 +8,7 @@
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
-| `InboxQuickPublishActions.tsx` | Copiar, abrir red, WhatsApp, link captura (UTM), regenerar |
+| `InboxQuickPublishActions.tsx` | Copiar, abrir red, WhatsApp, link captura, **Otra versión** (copy + imagen) |
 | `InboxKitPanel.tsx` | Kit Copiar y Llevar (aprobadas) |
 
 Hook: `hooks/useSohoBrowserNotifications.ts` — avisos del navegador para `week_ready`, `publish_reminder`, `approval_reminder`.
