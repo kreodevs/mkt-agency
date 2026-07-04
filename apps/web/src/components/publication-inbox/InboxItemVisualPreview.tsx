@@ -13,9 +13,10 @@ import type { PublicationInboxItem } from '@/types/publication-inbox';
 
 interface InboxItemVisualPreviewProps {
   item: PublicationInboxItem;
+  variant?: 'card' | 'detail';
 }
 
-export function InboxItemVisualPreview({ item }: InboxItemVisualPreviewProps) {
+export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisualPreviewProps) {
   const versionAssets = item.assets ?? [];
   const hasVersionAssets = versionAssets.length > 0;
 
@@ -35,6 +36,9 @@ export function InboxItemVisualPreview({ item }: InboxItemVisualPreviewProps) {
   const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
   const isProcessing = generation?.status === 'processing' && assetIds.length === 0;
   const isFailed = generation?.status === 'failed' && assetIds.length === 0;
+
+  const isDetail = variant === 'detail';
+  const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : 'max-h-56';
 
   if (generationQuery.isLoading && !hasVersionAssets) {
     return (
@@ -57,7 +61,7 @@ export function InboxItemVisualPreview({ item }: InboxItemVisualPreviewProps) {
                 ? 'grid grid-cols-3 gap-2'
                 : isVideo
                   ? ''
-                  : 'aspect-video max-h-56 bg-[var(--background-secondary)]'
+                  : `aspect-video ${imageMaxClass} bg-[var(--background-secondary)]`
             }
           >
             {previewIds.map((assetId, index) => (
@@ -73,7 +77,7 @@ export function InboxItemVisualPreview({ item }: InboxItemVisualPreviewProps) {
                   <AuthenticatedAssetVideo
                     assetId={assetId}
                     title={item.title}
-                    className="max-h-56 w-full rounded-lg"
+                    className={`${imageMaxClass} w-full rounded-lg`}
                     controls
                   />
                 ) : (

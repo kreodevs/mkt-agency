@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, Copy } from 'lucide-react';
+import { CalendarDays, Copy, Maximize2 } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { Button } from '@/components/atoms/Button';
 import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxContentDetailDialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
@@ -50,7 +51,8 @@ export function InboxItemCard({
 }: InboxItemCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const formattedDate = formatScheduledDate(item.scheduledDate);
-  const displayPreview = sanitizePublishableCopy(item.preview);
+  const displayBody = sanitizePublishableCopy(item.body);
+  const showBodyClamp = displayBody.length > 320;
 
   return (
     <article className="rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--primary)]/40">
@@ -67,7 +69,7 @@ export function InboxItemCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-[var(--foreground)]">{item.title}</h3>
+            <h3 className="line-clamp-2 text-sm font-semibold text-[var(--foreground)]">{item.title}</h3>
             <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium uppercase text-[var(--foreground-muted)]">
               {STATUS_LABELS[item.status] ?? item.status}
             </span>
@@ -85,20 +87,36 @@ export function InboxItemCard({
 
           <InboxItemVisualPreview item={item} />
 
-          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--foreground-muted)]">
-            {displayPreview}
+          <p
+            className={[
+              'mt-2 whitespace-pre-wrap text-sm text-[var(--foreground-muted)]',
+              showBodyClamp ? 'line-clamp-5' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {displayBody}
           </p>
+
+          {showBodyClamp && (
+            <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+              Texto recortado en la tarjeta.
+            </p>
+          )}
 
           {sohoMode ? (
             <div className="mt-3 space-y-2">
               <InboxQuickPublishActions item={item} />
-              <button
+              <Button
                 type="button"
-                className="text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+                variant="outline"
+                size="sm"
+                className="gap-2"
                 onClick={() => setDetailOpen(true)}
               >
-                Ver detalle
-              </button>
+                <Maximize2 className="h-3.5 w-3.5" />
+                Ver ficha completa
+              </Button>
             </div>
           ) : (
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -118,13 +136,16 @@ export function InboxItemCard({
                   Editar contenido
                 </Link>
               )}
-              <button
+              <Button
                 type="button"
-                className="text-xs text-[var(--foreground-muted)] hover:text-[var(--primary)]"
+                variant="outline"
+                size="sm"
+                className="gap-2"
                 onClick={() => setDetailOpen(true)}
               >
-                Ver detalle
-              </button>
+                <Maximize2 className="h-3.5 w-3.5" />
+                Ver ficha completa
+              </Button>
             </div>
           )}
 
@@ -133,6 +154,7 @@ export function InboxItemCard({
             open={detailOpen}
             onOpenChange={setDetailOpen}
             sohoMode={sohoMode}
+            showApproval={showApproval}
           />
 
           {showApproval && item.versionId && !item.signatureHash && (

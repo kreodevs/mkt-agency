@@ -55,7 +55,7 @@ export function InboxContentDetailDialog({
       visible={open}
       onHide={() => onOpenChange(false)}
       title={item.title}
-      size="xl"
+      size="full"
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -69,7 +69,7 @@ export function InboxContentDetailDialog({
         </div>
       }
     >
-      <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-medium uppercase text-[var(--foreground-muted)]">
             {STATUS_LABELS[item.status] ?? item.status}
@@ -84,7 +84,7 @@ export function InboxContentDetailDialog({
           )}
         </div>
 
-        <InboxItemVisualPreview item={item} />
+        <InboxItemVisualPreview item={item} variant="detail" />
 
         <div className="rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">

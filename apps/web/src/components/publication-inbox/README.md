@@ -2,8 +2,8 @@
 
 | Archivo | Rol |
 |---------|-----|
-| `InboxItemCard.tsx` | Tarjeta con preview, modal «Ver detalle» y acciones rápidas |
-| `InboxContentDetailDialog.tsx` | Detalle completo en modal (sin navegar a `/contents/:id`) |
+| `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
+| `InboxContentDetailDialog.tsx` | Ficha completa en modal ancho con scroll y acciones de aprobación |
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup` |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
