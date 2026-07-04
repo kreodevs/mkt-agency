@@ -6,7 +6,8 @@
 - Crossfade fade-in transitions (0.5s) between video clips without audio alteration
 
 ### Fixed
-- **FFmpeg crossfade filter**: Corrected filter_complex syntax to properly chain video transitions and audio concatenation
+- **FFmpeg crossfade filter**: Corrected filter_complex syntax to properly chain video transitions and audio concatenation (separate video xfade chain from audio concat chain)
+- **FFmpeg error visibility**: Added stderr capture to surface FFmpeg failures instead of silent failures
 - **Job status synchronization**: Fixed job not updating to completed after video concatenation, resolving persistent spinner in UI
 
 # Changelog
