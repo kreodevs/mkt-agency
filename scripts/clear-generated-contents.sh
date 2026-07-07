@@ -23,8 +23,13 @@ if [ "$SKIP_GENERATED_CONTENT_RESET" = "true" ]; then
 fi
 
 echo "SKIP_GENERATED_CONTENT_RESET=false — limpiando contenidos generados..."
-yarn build
-yarn migration:run:prod
-node dist/database/clear-generated-contents.cli.js
+
+if [ -f dist/database/clear-generated-contents.cli.js ]; then
+  yarn clear-generated-contents:prod
+else
+  yarn build
+  yarn migration:run:prod
+  yarn clear-generated-contents:prod
+fi
 
 echo "Listo. Tenants, productos y tags SEO intactos; contenidos, análisis y competidores eliminados."

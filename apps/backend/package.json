@@ -9,6 +9,7 @@
     "start:prod": "node dist/main",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:run:prod": "typeorm migration:run -d dist/database/data-source.js",
+    "clear-generated-contents:prod": "node dist/database/clear-generated-contents.cli.js",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts"
   },
   "dependencies": {

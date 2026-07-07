@@ -79,6 +79,16 @@ SKIP_GENERATED_CONTENT_RESET=true
 
 El script ejecuta migraciones pendientes y además `clear-generated-contents.cli.js` (idempotente), así funciona aunque `0032` ya figure en `typeorm_migrations`.
 
+**Dokploy (contenedor `api`, tras redeploy):**
+
+```bash
+SKIP_GENERATED_CONTENT_RESET=false /app/scripts/clear-generated-contents.sh
+# o directo:
+cd /app/apps/backend && SKIP_GENERATED_CONTENT_RESET=false yarn clear-generated-contents:prod
+```
+
+Verificar: `SELECT count(*) FROM contents;` debe devolver `0`.
+
 DataSource: `src/database/data-source.ts`.
 
 La migración `1730000000000` es la **baseline** para despliegues sin `synchronize`.
