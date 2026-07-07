@@ -70,9 +70,14 @@ Migración **`1730000000032-ClearGeneratedContentsAndCompetitorAnalyses`**: elim
 ```bash
 ./scripts/clear-generated-contents.sh
 
+# Explícito (default del script)
+SKIP_GENERATED_CONTENT_RESET=false ./scripts/clear-generated-contents.sh
+
 # Omitir en un deploy concreto
 SKIP_GENERATED_CONTENT_RESET=true
 ```
+
+El script ejecuta migraciones pendientes y además `clear-generated-contents.cli.js` (idempotente), así funciona aunque `0032` ya figure en `typeorm_migrations`.
 
 DataSource: `src/database/data-source.ts`.
 
