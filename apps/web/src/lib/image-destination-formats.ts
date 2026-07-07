@@ -1,7 +1,7 @@
 import type { CmPlatform } from '@/services/community-manager';
 
-/** Tamaños soportados por el Image Generator (OpenRouter). */
-export type ImageGenerationSize = '1024x1024' | '1792x1024' | '1024x1792';
+/** Tamaños enviados al Image Generator (OpenRouter / Flux 2+). */
+export type ImageGenerationSize = '1920x1920' | '2560x1440' | '1440x2560';
 
 export interface ImageDestinationFormat {
   id: string;
@@ -31,7 +31,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Post en feed',
         label: 'Post en feed',
         aspectLabel: 'Cuadrado 1:1',
-        size: '1024x1024',
+        size: '1920x1920',
       },
       {
         id: 'instagram-portrait',
@@ -39,7 +39,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Post vertical',
         label: 'Post vertical en feed',
         aspectLabel: 'Vertical 4:5',
-        size: '1024x1792',
+        size: '1440x2560',
       },
       {
         id: 'instagram-story',
@@ -47,7 +47,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Story / Reel',
         label: 'Story o Reel',
         aspectLabel: 'Vertical 9:16',
-        size: '1024x1792',
+        size: '1440x2560',
       },
     ],
   },
@@ -61,7 +61,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Post en feed',
         label: 'Post en feed',
         aspectLabel: 'Cuadrado 1:1',
-        size: '1024x1024',
+        size: '1920x1920',
       },
       {
         id: 'facebook-story',
@@ -69,7 +69,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Story',
         label: 'Story',
         aspectLabel: 'Vertical 9:16',
-        size: '1024x1792',
+        size: '1440x2560',
       },
       {
         id: 'facebook-cover',
@@ -77,7 +77,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Portada',
         label: 'Portada de página',
         aspectLabel: 'Horizontal 16:9',
-        size: '1792x1024',
+        size: '2560x1440',
       },
     ],
   },
@@ -91,7 +91,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Publicación',
         label: 'Publicación',
         aspectLabel: 'Cuadrado 1:1',
-        size: '1024x1024',
+        size: '1920x1920',
       },
       {
         id: 'linkedin-banner',
@@ -99,7 +99,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Imagen ancha',
         label: 'Artículo o imagen ancha',
         aspectLabel: 'Horizontal 16:9',
-        size: '1792x1024',
+        size: '2560x1440',
       },
     ],
   },
@@ -113,7 +113,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Video / portada',
         label: 'Video o portada vertical',
         aspectLabel: 'Vertical 9:16',
-        size: '1024x1792',
+        size: '1440x2560',
       },
     ],
   },
@@ -127,7 +127,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Publicación',
         label: 'Publicación',
         aspectLabel: 'Cuadrado 1:1',
-        size: '1024x1024',
+        size: '1920x1920',
       },
       {
         id: 'twitter-header',
@@ -135,7 +135,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Encabezado',
         label: 'Encabezado de perfil',
         aspectLabel: 'Horizontal 16:9',
-        size: '1792x1024',
+        size: '2560x1440',
       },
     ],
   },
@@ -149,7 +149,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Cuadrado universal',
         label: 'Cuadrado universal',
         aspectLabel: '1:1 · feed en la mayoría de redes',
-        size: '1024x1024',
+        size: '1920x1920',
       },
       {
         id: 'general-vertical',
@@ -157,7 +157,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Vertical universal',
         label: 'Vertical (Stories / Reels)',
         aspectLabel: '9:16 · Stories y Reels',
-        size: '1024x1792',
+        size: '1440x2560',
       },
       {
         id: 'general-horizontal',
@@ -165,7 +165,7 @@ export const IMAGE_DESTINATION_GROUPS: Array<{
         format: 'Horizontal universal',
         label: 'Horizontal (portadas / banners)',
         aspectLabel: '16:9 · portadas y banners',
-        size: '1792x1024',
+        size: '2560x1440',
       },
     ],
   },

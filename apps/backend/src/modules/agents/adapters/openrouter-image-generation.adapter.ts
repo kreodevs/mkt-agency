@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LlmConfigService } from '../../../shared/ai/llm-config.service';
+import { normalizeImageGenerationSize } from '../../../shared/social/image-generation-size.util';
 import {
   ImageGenerationAdapterPort,
   ImageGenerationResult,
@@ -19,7 +20,7 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
     const resolved = await this.llmConfig.resolve('image_generation');
 
     const model = resolved.model?.trim() || 'black-forest-labs/flux-2-pro';
-    const size = options?.size || '1024x1024';
+    const size = normalizeImageGenerationSize(options?.size || '1920x1920');
 
     const body = {
       model,

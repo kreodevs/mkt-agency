@@ -2,15 +2,17 @@ import {
   CM_PLATFORMS,
   type CmPlatform,
 } from '../../modules/community-manager/domain/cm-platforms.constants';
-
-export type ImageGenerationSize = '1024x1024' | '1792x1024' | '1024x1792';
+import {
+  type ImageGenerationSize,
+  normalizeImageGenerationSize,
+} from './image-generation-size.util';
 
 const DEFAULT_SIZE_BY_PLATFORM: Record<CmPlatform, ImageGenerationSize> = {
-  instagram: '1024x1024',
-  facebook: '1024x1024',
-  linkedin: '1024x1024',
-  twitter: '1024x1024',
-  tiktok: '1024x1792',
+  instagram: '1920x1920',
+  facebook: '1920x1920',
+  linkedin: '1920x1920',
+  twitter: '1920x1920',
+  tiktok: '1440x2560',
 };
 
 const PLATFORM_FORMAT_LABELS: Record<CmPlatform, string> = {
@@ -31,8 +33,10 @@ export function resolveImageSizeForPlatform(
   if (isCmPlatform(platform)) {
     return DEFAULT_SIZE_BY_PLATFORM[platform];
   }
-  return '1024x1024';
+  return '1920x1920';
 }
+
+export { normalizeImageGenerationSize, type ImageGenerationSize };
 
 export function resolveImageStyleForPlatform(platform: string | null | undefined): string {
   const base = 'social media post, professional';
