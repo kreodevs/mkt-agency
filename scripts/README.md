@@ -11,3 +11,4 @@ Variables:
 - `RUN_MIGRATIONS` — `true` en servicio `api`; `false` en `worker` (ver `docker-compose.dokploy.yml`).
 - `SKIP_OPERATIONAL_DATA_RESET` — `true` omite la migración `0024` (borrado de datos operativos).
 - `SKIP_GENERATED_CONTENT_RESET` — `true` omite la limpieza de contenidos (`0032` + CLI idempotente). Default: `false`.
+- `RUN_GENERATED_CONTENT_RESET` — `true` en servicio `api` ejecuta la limpieza al arrancar (logs `[entrypoint]`). **Usar solo un deploy** y volver a `false`.

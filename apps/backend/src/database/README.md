@@ -77,6 +77,8 @@ SKIP_GENERATED_CONTENT_RESET=false ./scripts/clear-generated-contents.sh
 SKIP_GENERATED_CONTENT_RESET=true
 ```
 
+**Deploy automático (Dokploy, servicio `api`):** `RUN_GENERATED_CONTENT_RESET=true` + `SKIP_GENERATED_CONTENT_RESET=false` → el entrypoint ejecuta el CLI y deja trazas `[entrypoint]` / `[clear-generated-contents]` en logs. Quitar la variable tras un deploy.
+
 El script ejecuta migraciones pendientes y además `clear-generated-contents.cli.js` (idempotente), así funciona aunque `0032` ya figure en `typeorm_migrations`.
 
 **Dokploy (contenedor `api`, tras redeploy):**
