@@ -197,23 +197,17 @@ export function resolveGenerationMediaType(
   prompt: string,
   options?: { contentLinked?: boolean; forced?: GenerationMediaType },
 ): GenerationMediaType {
-  if (options?.forced) {
-    return options.forced;
-  }
-
-  const detectionPrompt = options?.contentLinked
-    ? extractScenePromptForMediaDetection(prompt)
-    : prompt;
-
-  return detectGenerationMediaType(detectionPrompt);
+  void prompt;
+  void options;
+  return 'image';
 }
 
 export function detectReelFrameCount(
   prompt: string,
-  options?: { contentLinked?: boolean },
+  options?: { contentLinked?: boolean; forcedFrameCount?: number },
 ): number {
-  if (resolveGenerationMediaType(prompt, options) === 'video') {
-    return 1;
+  if (options?.forcedFrameCount && options.forcedFrameCount > 1) {
+    return options.forcedFrameCount;
   }
 
   const detectionPrompt = options?.contentLinked

@@ -639,8 +639,14 @@ export class ImageGenerationService implements OnModuleInit {
     try {
       const frameCount =
         context.forcedFrameCount ??
-        detectReelFrameCount(prompt, { contentLinked: context.contentLinked });
+        detectReelFrameCount(prompt, {
+          contentLinked: context.contentLinked,
+          forcedFrameCount: context.forcedFrameCount,
+        });
       const frames: ImageGenerationFrameMeta[] = [];
+      const contentMeta = options.contentId
+        ? await this.contentService.findOne(tenantId, options.contentId).catch(() => null)
+        : null;
 
       for (let index = 0; index < frameCount; index += 1) {
         const framePrompt = buildFramePrompt(prompt, index, frameCount);
@@ -655,7 +661,12 @@ export class ImageGenerationService implements OnModuleInit {
           index,
           frameCount,
           result,
-          productId,
+          {
+            productId,
+            contentId: options.contentId ?? record.contentId ?? undefined,
+            generationId: record.id,
+            platform: contentMeta?.platform ?? null,
+          },
         );
         frames.push({ assetId: asset.id, index });
       }
@@ -713,8 +724,14 @@ export class ImageGenerationService implements OnModuleInit {
     index: number,
     frameCount: number,
     result: ImageGenerationResult,
-    productId?: string,
+    context: {
+      productId?: string;
+      contentId?: string;
+      generationId?: string;
+      platform?: string | null;
+    } = {},
   ) {
+    const { productId } = context;
     const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
     let finalBuffer = imageBuffer;
 
@@ -742,7 +759,8 @@ export class ImageGenerationService implements OnModuleInit {
     const extension = contentType.split('/').pop() || 'png';
     const slug = prompt.slice(0, 32).replace(/[^a-zA-Z0-9]/g, '_');
     const suffix = frameCount > 1 ? `_frame${index + 1}` : '';
-    const fileName = `${slug}${suffix}.${extension}`;
+    const prefix = context.contentId ? `copiloto-${context.contentId.slice(0, 8)}` : slug || 'copiloto';
+    const fileName = `${prefix}${suffix}.${extension}`;
 
     const fakeFile: Express.Multer.File = {
       buffer: finalBuffer,
@@ -757,7 +775,15 @@ export class ImageGenerationService implements OnModuleInit {
       path: '',
     };
 
-    return this.assetService.upload(tenantId, fakeFile);
+    return this.assetService.upload(tenantId, fakeFile, undefined, undefined, {
+      source: 'copilot-week',
+      contentId: context.contentId ?? null,
+      productId: productId ?? null,
+      generationId: context.generationId ?? null,
+      platform: context.platform ?? null,
+      frameIndex: index,
+      frameCount,
+    });
   }
 
   private async resolveEffectiveProductId(

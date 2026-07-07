@@ -63,8 +63,8 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
     temperature: '0',
   },
   video_generation: {
-    label: 'Generación de video',
-    description: 'Clips MP4 para reels, GIFs y videos sociales vía OpenRouter Video API',
+    label: 'Generación de video (deshabilitada)',
+    description: 'Reservado; la app no genera video por IA. Futuro: composición FFmpeg con material del kit.',
     defaultModel: 'bytedance/seedance-2.0-fast',
     temperature: '0',
   },

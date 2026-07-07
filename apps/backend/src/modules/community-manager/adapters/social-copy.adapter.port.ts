@@ -1,3 +1,5 @@
+import type { ContentVisualFormat } from '../../content/domain/content.constants';
+
 export interface SocialCopyPost {
   id: string;
   platform: 'instagram' | 'linkedin' | 'twitter' | 'facebook' | 'tiktok';
@@ -5,8 +7,8 @@ export interface SocialCopyPost {
   body: string;
   hashtags: string[];
   visualDescription: string;
-  /** Formato visual a generar: image | video | carousel */
-  visualFormat: 'image' | 'video' | 'carousel';
+  /** Formato visual a generar: image | carousel (sin video IA). */
+  visualFormat: ContentVisualFormat;
   bestTime: string;
   targetAudience: string;
   callToAction: string;

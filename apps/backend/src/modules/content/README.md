@@ -18,7 +18,9 @@ Cada `PATCH` crea una versión append-only. Si el contenido estaba `approved`, p
 
 Campo opcional `platform` (`instagram`, `facebook`, `linkedin`, `twitter`, `tiktok`) al crear desde Community Manager; el Image Generator usa `shared/social/image-destination-formats.util.ts` para el tamaño de imagen.
 
-Campo `visualFormat` (`image`, `video`, `carousel`) indica qué debe generar Image/Video Generator. El agente de Community Manager lo asigna por post; es editable en el editor de contenido sin crear nueva versión.
+Campo `visualFormat` (`image`, `carousel`) indica qué debe generar Image Generator. El valor legacy `video` se normaliza a `image`. El agente de Community Manager lo asigna por post; es editable en el editor de contenido sin crear nueva versión.
+
+Los visuales generados para la semana se guardan en la **librería de recursos** (`assets`) con `metadata.source = copilot-week`.
 
 Campo `visualPrompt` (TEXT, metadata-only): brief de escena para Image/Video Generator. **No** es el copy publicable (`body` de la versión). Community Manager lo rellena desde `visualDescription` del LLM; Image Generator lo usa en lugar del body al generar o regenerar arte.
 

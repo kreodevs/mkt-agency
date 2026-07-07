@@ -147,10 +147,12 @@ export class ProductMediaKitService {
     return demoItems[postIndex % demoItems.length].assetId;
   }
 
+import type { ContentVisualFormat } from '../content/domain/content.constants';
+
   async pickImageAssetIdsForCompose(
     tenantId: string,
     kit: ProductMediaKitItemEntity[],
-    visualFormat: 'image' | 'video' | 'carousel',
+    visualFormat: ContentVisualFormat,
     postIndex: number,
   ): Promise<string[]> {
     const assetIds = kit.map((item) => item.assetId);

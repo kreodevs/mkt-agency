@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ImageIcon, Loader2, Video } from 'lucide-react';
+import { ImageIcon, Layers, Loader2 } from 'lucide-react';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { SocialPostMockup } from '@/components/publication-inbox/SocialPostMockup';
@@ -44,7 +44,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
     generation,
     versionAssets,
   });
-  const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
+  const isVideo = isVideoGeneration(generation?.metadata);
   const isStaleProcessing = generation ? isStaleImageGeneration(generation) : false;
   const isProcessing = generation?.status === 'processing' && !isStaleProcessing;
   const isFailed = generation?.status === 'failed' || isStaleProcessing;
@@ -60,7 +60,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
   const isDetail = variant === 'detail';
   const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : 'max-h-56';
   const processingLabel =
-    visualFormat === 'video' ? 'Generando video…' : 'Generando imagen…';
+    visualFormat === 'carousel' ? 'Generando carrusel…' : 'Generando imagen…';
 
   if (generationQuery.isLoading && assetIds.length === 0) {
     return (
@@ -146,8 +146,8 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
   if (visualFormat !== 'image' || item.type === 'social') {
     return (
       <div className="mt-[var(--spacing-md)] flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-dashed border-[var(--border)] px-[var(--spacing-sm)] py-[var(--spacing-xs)] text-xs text-[var(--foreground-muted)]">
-        {visualFormat === 'video' ? (
-          <Video className="h-3.5 w-3.5 shrink-0" />
+        {visualFormat === 'carousel' ? (
+          <Layers className="h-3.5 w-3.5 shrink-0" />
         ) : (
           <ImageIcon className="h-3.5 w-3.5 shrink-0" />
         )}

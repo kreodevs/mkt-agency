@@ -21,7 +21,6 @@ import {
   resolveContentVisualAssetIds,
 } from '@/lib/image-generation';
 import type { CmPlatform } from '@/services/community-manager';
-import type { ContentVisualFormat } from '@/types/content';
 import { ContentPlatformBadge } from './ContentPlatformBadge';
 
 type ContentPublishPanelProps = {
@@ -30,7 +29,6 @@ type ContentPublishPanelProps = {
   body: string;
   platform: string | null | undefined;
   versionAssets?: unknown[];
-  visualFormat?: ContentVisualFormat;
   onPlatformChange?: (platform: CmPlatform | '') => void;
   onSavePlatform?: () => void;
   savingPlatform?: boolean;
@@ -42,7 +40,6 @@ export function ContentPublishPanel({
   body,
   platform,
   versionAssets,
-  visualFormat = 'image',
   onPlatformChange,
   onSavePlatform,
   savingPlatform = false,
@@ -57,7 +54,7 @@ export function ContentPublishPanel({
 
   const generation = generationQuery.data?.generation ?? null;
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
-  const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
+  const isVideo = isVideoGeneration(generation?.metadata);
 
   const copyText = buildPostCopyText(title, sanitizePublishableCopy(body));
   const platformLabel = getContentPlatformLabel(platform);

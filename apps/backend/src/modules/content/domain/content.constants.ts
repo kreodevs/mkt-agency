@@ -12,10 +12,13 @@ export const CONTENT_TYPES = ['ad', 'social', 'email', 'blog', 'landing'] as con
 
 export type ContentType = (typeof CONTENT_TYPES)[number];
 
-/** Formato visual que debe generar Image/Video Generator (distinto del tipo editorial). */
-export const CONTENT_VISUAL_FORMATS = ['image', 'video', 'carousel'] as const;
+/** Formato visual que debe generar Image Generator (sin video IA). */
+export const CONTENT_VISUAL_FORMATS = ['image', 'carousel'] as const;
 
 export type ContentVisualFormat = (typeof CONTENT_VISUAL_FORMATS)[number];
+
+/** Valor legacy en DB; se normaliza a `image` en lectura/escritura. */
+export const LEGACY_VIDEO_VISUAL_FORMAT = 'video' as const;
 
 export const DEFAULT_CONTENT_VISUAL_FORMAT: ContentVisualFormat = 'image';
 

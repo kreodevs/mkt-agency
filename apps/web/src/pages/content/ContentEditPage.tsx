@@ -385,7 +385,6 @@ export default function ContentEditPage() {
             body={body}
             platform={platform || content.platform}
             versionAssets={currentVersion.assets}
-            visualFormat={visualFormat}
             onPlatformChange={setPlatform}
             onSavePlatform={() => platformMutation.mutate()}
             savingPlatform={platformMutation.isPending}

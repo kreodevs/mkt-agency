@@ -3,7 +3,7 @@ export interface BrandedImagePromptInput {
   title?: string;
   visualDescription?: string;
   hasLogo: boolean;
-  visualFormat?: 'image' | 'video' | 'carousel';
+  visualFormat?: 'image' | 'carousel';
 }
 
 export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string {
@@ -20,11 +20,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     parts.push(`Tema ilustrado (sin copiar el texto del post): "${input.title.trim()}".`);
   }
 
-  if (input.visualFormat === 'video') {
-    parts.push(
-      'Formato visual: video corto vertical para redes con narración hablada en español.',
-    );
-  } else if (input.visualFormat === 'carousel') {
+  if (input.visualFormat === 'carousel') {
     parts.push('Formato visual: carrusel de 3 imágenes relacionadas para redes sociales.');
   }
 

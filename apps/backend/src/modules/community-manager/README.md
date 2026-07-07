@@ -14,12 +14,10 @@ Generación de copy para redes sociales con IA.
 
 ## Kit de medios y composición visual
 
-Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposerService` prioriza assets reales antes de Image/Video API:
+Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposerService` prioriza fotos reales del kit antes de la API de imágenes.
 
-1. **Post estático** — imagen del kit por rol (`product-screenshot` > `event-photo` > …).
-2. **Reel / video** — `product-demo` si existe; si no, Ken Burns (FFmpeg) sobre imagen del kit; fallback a generación IA.
-
-El prompt del CM recibe contexto `mediaKit` para evitar copy de stock corporativo cuando hay material humano.
+1. **Post estático / carrusel** — imágenes del kit por rol (`product-screenshot` > `event-photo` > …).
+2. **Video IA** — deshabilitado. Futuro: reel con FFmpeg y material del kit.
 
 El LLM devuelve `body` (copy publicable) y `visualDescription` (brief de arte) por separado. Al guardar contenido, `visualDescription` se persiste en `contents.visual_prompt`; Image Generator **no** usa el body del post como prompt de imagen.
 

@@ -2,6 +2,7 @@ import {
   CAROUSEL_FRAME_COUNT,
   CONTENT_VISUAL_FORMATS,
   DEFAULT_CONTENT_VISUAL_FORMAT,
+  LEGACY_VIDEO_VISUAL_FORMAT,
   type ContentVisualFormat,
 } from './content.constants';
 
@@ -9,6 +10,10 @@ export function normalizeContentVisualFormat(value: unknown): ContentVisualForma
   const raw = String(value ?? '')
     .trim()
     .toLowerCase();
+
+  if (raw === LEGACY_VIDEO_VISUAL_FORMAT) {
+    return DEFAULT_CONTENT_VISUAL_FORMAT;
+  }
 
   if ((CONTENT_VISUAL_FORMATS as readonly string[]).includes(raw)) {
     return raw as ContentVisualFormat;
@@ -18,23 +23,23 @@ export function normalizeContentVisualFormat(value: unknown): ContentVisualForma
 }
 
 export function inferContentVisualFormat(
-  platform: string | null | undefined,
+  _platform: string | null | undefined,
   explicit?: string | null,
 ): ContentVisualFormat {
   const normalized = explicit?.trim().toLowerCase();
+  if (normalized === LEGACY_VIDEO_VISUAL_FORMAT) {
+    return DEFAULT_CONTENT_VISUAL_FORMAT;
+  }
   if (normalized && (CONTENT_VISUAL_FORMATS as readonly string[]).includes(normalized)) {
     return normalized as ContentVisualFormat;
-  }
-
-  if (platform === 'tiktok') {
-    return 'video';
   }
 
   return DEFAULT_CONTENT_VISUAL_FORMAT;
 }
 
-export function visualFormatToMediaType(format: ContentVisualFormat): 'image' | 'video' {
-  return format === 'video' ? 'video' : 'image';
+/** Generación IA de video deshabilitada; solo imágenes y carruseles. */
+export function visualFormatToMediaType(_format: ContentVisualFormat): 'image' {
+  return 'image';
 }
 
 export function visualFormatToFrameCount(format: ContentVisualFormat): number {
@@ -47,8 +52,6 @@ export function visualFormatToFrameCount(format: ContentVisualFormat): number {
 
 export function buildVisualFormatSceneHint(format: ContentVisualFormat): string {
   switch (format) {
-    case 'video':
-      return 'Formato visual: video corto vertical para redes con narración hablada en español.';
     case 'carousel':
       return `Formato visual: carrusel de ${CAROUSEL_FRAME_COUNT} imágenes relacionadas para redes sociales.`;
     default:
@@ -58,6 +61,5 @@ export function buildVisualFormatSceneHint(format: ContentVisualFormat): string 
 
 export const CONTENT_VISUAL_FORMAT_LABELS: Record<ContentVisualFormat, string> = {
   image: 'Imagen',
-  video: 'Video',
   carousel: 'Carrusel',
 };

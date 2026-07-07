@@ -69,7 +69,7 @@ export function ContentVisualPanel({
   const generation = generationQuery.data?.generation ?? null;
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const frameMeta = parseImageGenerationMetadata(generation?.metadata);
-  const isVideo = isVideoGeneration(generation?.metadata) || visualFormat === 'video';
+  const isVideo = isVideoGeneration(generation?.metadata);
   const frameCount = frameMeta ? frameMeta.frameCount ?? frameMeta.frames.length : 0;
   const hasVisual = assetIds.length > 0;
   const isStaleProcessing = generation ? isStaleImageGeneration(generation) : false;
@@ -85,11 +85,9 @@ export function ContentVisualPanel({
   const isFailed = generation?.status === 'failed' || isStaleProcessing;
   const isCompleted = generation?.status === 'completed' && hasVisual;
   const processingLabel =
-    visualFormat === 'video'
-      ? 'Generando video con IA…'
-      : visualFormat === 'carousel'
-        ? 'Generando carrusel con IA…'
-        : 'Generando imagen con IA…';
+    visualFormat === 'carousel'
+      ? 'Generando carrusel con IA…'
+      : 'Generando imagen con IA…';
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });
@@ -111,7 +109,7 @@ export function ContentVisualPanel({
 
   return (
     <Card
-      title={visualFormat === 'video' ? 'Video del contenido' : 'Imagen del contenido'}
+      title={isVideo ? 'Video del contenido (legacy)' : 'Imagen del contenido'}
       subtitle={
         platformLabel
           ? `Formato ${destinationFormat.label} · ${formatLabel} · ${destinationFormat.aspectLabel} (${platformLabel})`
@@ -215,11 +213,9 @@ export function ContentVisualPanel({
             onClick={() => generateMutation.mutate()}
           >
             <Sparkles className="h-4 w-4" />
-            {visualFormat === 'video'
-              ? 'Generar video'
-              : visualFormat === 'carousel'
-                ? 'Generar carrusel'
-                : 'Generar imagen'}
+            {visualFormat === 'carousel'
+              ? 'Generar carrusel'
+              : 'Generar imagen'}
           </Button>
         ) : null}
 

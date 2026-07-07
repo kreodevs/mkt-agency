@@ -94,6 +94,7 @@ export class AssetService {
     file: Express.Multer.File,
     folderId?: string,
     tagIdsRaw?: string,
+    metadata: Record<string, unknown> = {},
   ): Promise<AssetResponseDto> {
     if (!file?.buffer?.length) {
       throw new BadRequestException({
@@ -130,7 +131,7 @@ export class AssetService {
         fileKey,
         fileSize: String(file.size),
         url: '',
-        metadata: {},
+        metadata: { source: 'upload', ...metadata },
         referenceCount: 0,
         isInUse: false,
       }),
