@@ -44,6 +44,10 @@ export class ContentEntity {
   @Column({ name: 'visual_format', type: 'varchar', length: 20, default: 'image' })
   visualFormat!: string;
 
+  /** Prompt de escena para IA (NO es el copy publicable del post). */
+  @Column({ name: 'visual_prompt', type: 'text', nullable: true })
+  visualPrompt!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

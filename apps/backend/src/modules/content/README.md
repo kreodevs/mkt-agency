@@ -20,7 +20,9 @@ Campo opcional `platform` (`instagram`, `facebook`, `linkedin`, `twitter`, `tikt
 
 Campo `visualFormat` (`image`, `video`, `carousel`) indica qué debe generar Image/Video Generator. El agente de Community Manager lo asigna por post; es editable en el editor de contenido sin crear nueva versión.
 
-Campo `platform` (red social destino) también es metadata-only: editable vía `PATCH` sin nueva versión (`scheduledDate`, `visualFormat`, `platform`).
+Campo `visualPrompt` (TEXT, metadata-only): brief de escena para Image/Video Generator. **No** es el copy publicable (`body` de la versión). Community Manager lo rellena desde `visualDescription` del LLM; Image Generator lo usa en lugar del body al generar o regenerar arte.
+
+Campo `platform` (red social destino) también es metadata-only: editable vía `PATCH` sin nueva versión (`scheduledDate`, `visualFormat`, `visualPrompt`, `platform`).
 
 Firma: `SHA-256(body|versionId|assetIds ordenados)`.
 

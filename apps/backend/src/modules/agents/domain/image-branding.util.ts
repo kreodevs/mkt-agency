@@ -1,7 +1,6 @@
 export interface BrandedImagePromptInput {
   productName: string;
   title?: string;
-  body?: string;
   visualDescription?: string;
   hasLogo: boolean;
   visualFormat?: 'image' | 'video' | 'carousel';
@@ -12,16 +11,13 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
   const parts = [
     `Imagen de marketing para el producto "${productName}".`,
     'Debe ser claramente sobre este producto/marca, no un visual genérico intercambiable.',
+    'NO renderices el texto del post, hashtags, captions ni copy publicable dentro de la imagen.',
   ];
 
   if (input.visualDescription?.trim()) {
-    parts.push(`Escena: ${input.visualDescription.trim()}`);
+    parts.push(`Escena visual (solo composición/fotografía/ilustración): ${input.visualDescription.trim()}`);
   } else if (input.title?.trim()) {
-    parts.push(`Tema del post: "${input.title.trim()}".`);
-  }
-
-  if (input.body?.trim()) {
-    parts.push(`Contexto: ${input.body.replace(/\s+/g, ' ').trim().slice(0, 400)}`);
+    parts.push(`Tema ilustrado (sin copiar el texto del post): "${input.title.trim()}".`);
   }
 
   if (input.visualFormat === 'video') {

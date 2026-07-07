@@ -21,4 +21,6 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 
 El prompt del CM recibe contexto `mediaKit` para evitar copy de stock corporativo cuando hay material humano.
 
+El LLM devuelve `body` (copy publicable) y `visualDescription` (brief de arte) por separado. Al guardar contenido, `visualDescription` se persiste en `contents.visual_prompt`; Image Generator **no** usa el body del post como prompt de imagen.
+
 Preferencias en `tenants.settings.communityManager` (JSONB, sin migración). Tamaños de imagen: `shared/social/image-destination-formats.util.ts` (TikTok vertical 9:16, resto feed 1:1 por defecto).

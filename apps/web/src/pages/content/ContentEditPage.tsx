@@ -39,6 +39,7 @@ export default function ContentEditPage() {
   const [changeSummary, setChangeSummary] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [visualFormat, setVisualFormat] = useState<ContentVisualFormat>('image');
+  const [visualPrompt, setVisualPrompt] = useState('');
   const [platform, setPlatform] = useState<CmPlatform | ''>('');
 
   const contentQuery = useQuery({
@@ -64,12 +65,14 @@ export default function ContentEditPage() {
     if (contentQuery.data) {
       setScheduledDate(contentQuery.data.scheduledDate ?? '');
       setVisualFormat(normalizeContentVisualFormat(contentQuery.data.visualFormat));
+      setVisualPrompt(contentQuery.data.visualPrompt ?? '');
       setPlatform((contentQuery.data.platform as CmPlatform) ?? '');
     }
   }, [
     contentQuery.data?.currentVersion?.id,
     contentQuery.data?.scheduledDate,
     contentQuery.data?.visualFormat,
+    contentQuery.data?.visualPrompt,
     contentQuery.data?.platform,
   ]);
 
@@ -97,6 +100,17 @@ export default function ContentEditPage() {
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar el formato');
+    },
+  });
+
+  const visualPromptMutation = useMutation({
+    mutationFn: () => updateContent(id!, { visualPrompt: visualPrompt.trim() || null }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['content', id] });
+      toast.success('Prompt visual actualizado');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar el prompt');
     },
   });
 
@@ -325,6 +339,30 @@ export default function ContentEditPage() {
                   onClick={() => visualFormatMutation.mutate()}
                 >
                   Guardar formato visual
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-[var(--spacing-xs)]">
+                <label htmlFor="content-visual-prompt" className="text-sm font-medium">
+                  Prompt visual (IA)
+                </label>
+                <Textarea
+                  id="content-visual-prompt"
+                  value={visualPrompt}
+                  onChange={(e) => setVisualPrompt(e.target.value)}
+                  rows={4}
+                  placeholder="Escena, estilo, encuadre… No copies el texto del post ni hashtags."
+                />
+                <p className="text-xs text-[var(--foreground-muted)]">
+                  Brief de arte para Image Generator. Es independiente del copy publicable de arriba.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  loading={visualPromptMutation.isPending}
+                  onClick={() => visualPromptMutation.mutate()}
+                >
+                  Guardar prompt visual
                 </Button>
               </div>
 

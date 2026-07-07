@@ -1,5 +1,6 @@
 import type { SocialCopyPost } from './social-copy.adapter.port';
 import { inferContentVisualFormat, normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
+import { sanitizeVisualPromptForArt } from '../../content/domain/visual-prompt.util';
 
 const ALLOWED_PLATFORMS = new Set(['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok']);
 
@@ -83,18 +84,21 @@ export function normalizeSocialCopyBatch(
         return null;
       }
 
+      const rawVisualDescription = pickString(row, [
+        'visualDescription',
+        'visual_description',
+        'descripcionVisual',
+        'imageDescription',
+      ]);
+      const visualDescription = sanitizeVisualPromptForArt(rawVisualDescription, body);
+
       return {
         id: pickString(row, ['id']) || `post-${index + 1}`,
         platform: normalizePlatform(row.platform ?? row.plataforma, context.platforms, index),
         title: pickString(row, ['title', 'titulo', 'headline']) || `Publicación ${index + 1}`,
         body,
         hashtags: pickStringArray(row, ['hashtags', 'tags', 'etiquetas']),
-        visualDescription: pickString(row, [
-          'visualDescription',
-          'visual_description',
-          'descripcionVisual',
-          'imageDescription',
-        ]),
+        visualDescription,
         visualFormat: normalizeContentVisualFormat(
           pickString(row, ['visualFormat', 'visual_format', 'formatoVisual', 'formato_visual']) ||
             inferContentVisualFormat(

@@ -50,6 +50,12 @@ export class CreateContentDto {
   @IsString()
   @IsIn([...CONTENT_VISUAL_FORMATS])
   visualFormat?: string;
+
+  /** Escena visual para Image/Video Generator — no incluir el copy del post. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  visualPrompt?: string | null;
 }
 
 export class UpdateContentDto {
@@ -88,6 +94,11 @@ export class UpdateContentDto {
   @IsString()
   @IsIn([...CM_PLATFORMS])
   platform?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  visualPrompt?: string | null;
 }
 
 export class ListContentsQueryDto {

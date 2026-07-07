@@ -31,6 +31,7 @@ export interface Content {
   scheduledDate: string | null;
   platform: string | null;
   visualFormat: ContentVisualFormat;
+  visualPrompt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +66,7 @@ export interface UpdateContentPayload {
   body?: string;
   scheduledDate?: string | null;
   visualFormat?: ContentVisualFormat;
+  visualPrompt?: string | null;
   platform?: string | null;
   assets?: unknown[];
   reason?: string;

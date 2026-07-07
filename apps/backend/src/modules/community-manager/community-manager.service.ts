@@ -54,6 +54,7 @@ import {
 } from './dto/community-manager.request.dto';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
+import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
 import { buildCompetitorIntelBriefForSocialCopy } from './domain/competitor-intel-brief.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 
@@ -358,6 +359,10 @@ export class CommunityManagerService {
           contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
           contentDto.platform = post.platform;
           contentDto.visualFormat = post.visualFormat;
+          contentDto.visualPrompt = sanitizeVisualPromptForArt(
+            post.visualDescription,
+            post.body,
+          ) || null;
 
           const content = await this.contentService.create(tenantId, userId, contentDto);
 
@@ -588,6 +593,8 @@ export class CommunityManagerService {
         : 'Regenerado por el copiloto',
       visualFormat: post.visualFormat,
       platform: post.platform,
+      visualPrompt:
+        sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
     });
 
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;

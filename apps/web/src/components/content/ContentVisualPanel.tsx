@@ -156,8 +156,8 @@ export function ContentVisualPanel({
             </p>
           ) : null}
           <p className="text-xs text-[var(--foreground-muted)]">
-            El formato visual del editor es <strong>{formatLabel}</strong>. Regenerar usará ese
-            tipo (imagen, video o carrusel), no palabras sueltas del copy.
+            El formato visual del editor es <strong>{formatLabel}</strong>. Regenerar usará el{' '}
+            <strong>prompt visual</strong> guardado (no el copy del post).
           </p>
         </div>
       ) : null}

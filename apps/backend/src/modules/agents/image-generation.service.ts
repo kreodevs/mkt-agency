@@ -56,10 +56,14 @@ import {
   visualFormatToFrameCount,
   visualFormatToMediaType,
 } from '../content/domain/content-visual-format.util';
-import { ProductService } from '../product/product.service';
+import {
+  buildTitleOnlyVisualFallback,
+  sanitizeVisualPromptForArt,
+} from '../content/domain/visual-prompt.util';
 import {
   getProductLogoAssetId,
 } from '../product/domain/product-logo.metadata.util';
+import { ProductService } from '../product/product.service';
 import { ImageBrandingService } from './image-branding.service';
 import {
   VIDEO_GENERATION_ADAPTER,
@@ -225,11 +229,21 @@ export class ImageGenerationService implements OnModuleInit {
     visualDescription: string,
     productId?: string,
   ): Promise<GenerateImageResult | null> {
-    if (!visualDescription.trim()) {
+    const trimmed = visualDescription.trim();
+    if (!trimmed) {
       return null;
     }
 
     const content = await this.contentService.findOne(tenantId, contentId);
+    const publishableBody = content.currentVersion?.body;
+    const sanitizedPrompt = sanitizeVisualPromptForArt(trimmed, publishableBody) || trimmed;
+
+    if (sanitizedPrompt !== (content.visualPrompt ?? '')) {
+      await this.contentService.update(tenantId, userId, contentId, {
+        visualPrompt: sanitizedPrompt,
+      });
+    }
+
     const visualFormat = normalizeContentVisualFormat(content.visualFormat);
     const effectiveProductId = productId ?? content.productId ?? undefined;
     const size = resolveImageSizeForPlatform(content.platform);
@@ -238,7 +252,12 @@ export class ImageGenerationService implements OnModuleInit {
     return this.generate(
       tenantId,
       userId,
-      await this.buildPromptForProduct(tenantId, visualDescription, effectiveProductId, visualFormat),
+      await this.buildPromptForProduct(
+        tenantId,
+        sanitizedPrompt,
+        effectiveProductId,
+        visualFormat,
+      ),
       {
         contentId,
         productId: effectiveProductId,
@@ -253,18 +272,25 @@ export class ImageGenerationService implements OnModuleInit {
 
   private async buildContentBrandedPrompt(
     tenantId: string,
-    title: string,
-    body: string,
-    productId?: string,
-    visualFormat = 'image',
+    content: {
+      title: string;
+      visualPrompt?: string | null;
+      visualFormat?: string;
+      productId?: string | null;
+    },
+    publishableBody?: string,
   ): Promise<string> {
-    const branding = await this.resolveProductBranding(tenantId, productId);
+    const branding = await this.resolveProductBranding(tenantId, content.productId ?? undefined);
+    const visualDescription =
+      sanitizeVisualPromptForArt(content.visualPrompt, publishableBody) ||
+      buildTitleOnlyVisualFallback(content.title);
+
     return buildBrandedImagePrompt({
       productName: branding.productName,
-      title,
-      body,
+      title: content.title,
+      visualDescription,
       hasLogo: !!branding.logoAssetId,
-      visualFormat: normalizeContentVisualFormat(visualFormat),
+      visualFormat: normalizeContentVisualFormat(content.visualFormat),
     });
   }
 
@@ -934,10 +960,13 @@ export class ImageGenerationService implements OnModuleInit {
     const visualFormat = normalizeContentVisualFormat(content.visualFormat);
     const prompt = await this.buildContentBrandedPrompt(
       tenantId,
-      version.title,
+      {
+        title: version.title,
+        visualPrompt: content.visualPrompt,
+        visualFormat: content.visualFormat,
+        productId: content.productId,
+      },
       version.body,
-      content.productId ?? undefined,
-      visualFormat,
     );
     const size = resolveImageSizeForPlatform(content.platform);
     const style = resolveImageStyleForPlatform(content.platform);
@@ -1000,10 +1029,13 @@ export class ImageGenerationService implements OnModuleInit {
 
     record.prompt = await this.buildContentBrandedPrompt(
       tenantId,
-      version.title,
+      {
+        title: version.title,
+        visualPrompt: content.visualPrompt,
+        visualFormat: content.visualFormat,
+        productId: content.productId ?? record.productId,
+      },
       version.body,
-      content.productId ?? record.productId ?? undefined,
-      content.visualFormat,
     );
 
     if (content.productId && !record.productId) {

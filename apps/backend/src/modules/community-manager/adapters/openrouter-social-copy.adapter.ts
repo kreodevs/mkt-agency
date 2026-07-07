@@ -86,7 +86,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             title: 'título o idea principal del post',
             body: 'texto completo del post con saltos de línea y emojis apropiados',
             hashtags: ['hashtag1', 'hashtag2'],
-            visualDescription: 'descripción de la imagen/video que acompañaría este post',
+            visualDescription: 'escena visual para IA: composición, sujetos, ambiente y estilo — SIN repetir el body ni hashtags',
             visualFormat:
               'image | video | carousel — image=post estático, video=clip con narración (TikTok/Reels), carousel=3 slides',
             bestTime: 'mejor hora para publicar según la plataforma',
@@ -113,7 +113,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       mediaKitGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       'Para cada post asigna visualFormat: tiktok→video preferente; carruseles educativos→carousel; linkedin/twitter/facebook feed→image salvo que el post pida reel/video explícitamente.',
-      'visualDescription debe describir la escena visual acorde a visualFormat (no repitas el body del post).',
+      'visualDescription = brief de arte para generador de imágenes (escena, luz, encuadre, estilo). NUNCA copies el body, hashtags ni CTA.',
+      'body = copy publicable listo para publicar en la red. Son campos independientes.',
     ]
       .filter(Boolean)
       .join('\n\n');

@@ -109,6 +109,7 @@ export class ContentService {
           scheduledDate: dto.scheduledDate ?? null,
           platform: dto.platform ?? null,
           visualFormat: normalizeContentVisualFormat(dto.visualFormat),
+          visualPrompt: dto.visualPrompt ?? null,
         }),
       );
 
@@ -160,7 +161,8 @@ export class ContentService {
     const hasMetadataOnly =
       (dto.scheduledDate !== undefined ||
         dto.visualFormat !== undefined ||
-        dto.platform !== undefined) &&
+        dto.platform !== undefined ||
+        dto.visualPrompt !== undefined) &&
       !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
@@ -180,6 +182,9 @@ export class ContentService {
       }
       if (dto.platform !== undefined) {
         content.platform = dto.platform ?? null;
+      }
+      if (dto.visualPrompt !== undefined) {
+        content.visualPrompt = dto.visualPrompt ?? null;
       }
       const saved = await this.contents.save(content);
       return this.toContentResponse(saved);
@@ -230,6 +235,10 @@ export class ContentService {
 
       if (dto.platform !== undefined) {
         content.platform = dto.platform ?? null;
+      }
+
+      if (dto.visualPrompt !== undefined) {
+        content.visualPrompt = dto.visualPrompt ?? null;
       }
 
       await contentRepo.save(content);
@@ -704,6 +713,7 @@ export class ContentService {
       scheduledDate: content.scheduledDate,
       platform: content.platform ?? null,
       visualFormat: normalizeContentVisualFormat(content.visualFormat),
+      visualPrompt: content.visualPrompt ?? null,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };
