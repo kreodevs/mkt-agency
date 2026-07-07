@@ -99,6 +99,18 @@ export class PrepareWeekResponseDto {
   warnings!: string[];
 }
 
+export class PrepareWeekJobStartedDto {
+  jobId!: string;
+  status!: 'processing';
+}
+
+export class PrepareWeekJobStatusDto {
+  jobId!: string;
+  status!: 'processing' | 'completed' | 'failed';
+  result?: PrepareWeekResponseDto;
+  error?: string;
+}
+
 export class RequestInboxChangesDto {
   @IsUUID()
   versionId!: string;

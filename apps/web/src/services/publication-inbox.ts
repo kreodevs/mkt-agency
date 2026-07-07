@@ -1,11 +1,19 @@
-import { apiFetch } from './api';
+import { apiFetch, ApiError } from './api';
 import type {
   BulkApproveResult,
   CopilotStatus,
+  PrepareWeekJobStatus,
   PrepareWeekResult,
   PublicationInboxData,
   SohoSummary,
 } from '@/types/publication-inbox';
+
+const PREPARE_WEEK_POLL_INTERVAL_MS = 4000;
+const PREPARE_WEEK_POLL_MAX_ATTEMPTS = 180;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function getPublicationInbox(productId?: string): Promise<PublicationInboxData> {
   const query = productId ? `?productId=${encodeURIComponent(productId)}` : '';
@@ -37,11 +45,37 @@ export function requestInboxChanges(
   });
 }
 
-export function prepareWeek(productId?: string): Promise<PrepareWeekResult> {
-  return apiFetch<PrepareWeekResult>('/publication-inbox/prepare-week', {
-    method: 'POST',
-    body: JSON.stringify(productId ? { productId } : {}),
-  });
+export function getPrepareWeekJob(jobId: string): Promise<PrepareWeekJobStatus> {
+  return apiFetch<PrepareWeekJobStatus>(`/publication-inbox/prepare-week/jobs/${jobId}`);
+}
+
+export async function prepareWeek(productId?: string): Promise<PrepareWeekResult> {
+  const started = await apiFetch<{ jobId: string; status: 'processing' }>(
+    '/publication-inbox/prepare-week',
+    {
+      method: 'POST',
+      body: JSON.stringify(productId ? { productId } : {}),
+    },
+  );
+
+  for (let attempt = 0; attempt < PREPARE_WEEK_POLL_MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(PREPARE_WEEK_POLL_INTERVAL_MS);
+    }
+
+    const status = await getPrepareWeekJob(started.jobId);
+    if (status.status === 'completed' && status.result) {
+      return status.result;
+    }
+    if (status.status === 'failed') {
+      throw new ApiError(status.error ?? 'No se pudo preparar la semana', 500);
+    }
+  }
+
+  throw new ApiError(
+    'El copiloto sigue preparando tu semana. Revisa la bandeja en unos minutos.',
+    504,
+  );
 }
 
 export function bulkApproveInbox(contentIds: string[]): Promise<BulkApproveResult> {

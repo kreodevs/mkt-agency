@@ -11,6 +11,7 @@ import {
   QUEUE_SSL_PROVISION,
   QUEUE_AGENCY_WEEKLY_RUN,
   QUEUE_APPROVAL_REMINDER,
+  QUEUE_COPILOT_PREPARE_WEEK,
   QUEUE_COMPETITOR_DISCOVERY,
 } from './queue.constants';
 
@@ -35,6 +36,7 @@ import {
       { name: QUEUE_SECURITY_ALERT },
       { name: QUEUE_AGENCY_WEEKLY_RUN },
       { name: QUEUE_APPROVAL_REMINDER },
+      { name: QUEUE_COPILOT_PREPARE_WEEK },
       { name: QUEUE_COMPETITOR_DISCOVERY },
     ),
   ],

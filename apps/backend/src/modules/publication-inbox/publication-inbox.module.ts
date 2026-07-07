@@ -22,6 +22,8 @@ import { AgencyWeeklyRunProcessor } from './workers/agency-weekly-run.processor'
 import { AgencyWeeklyRunWorkerService } from './workers/agency-weekly-run.worker';
 import { ApprovalReminderProcessor } from './workers/approval-reminder.processor';
 import { ApprovalReminderWorkerService } from './workers/approval-reminder.worker';
+import { CopilotPrepareWeekProcessor } from './workers/copilot-prepare-week.processor';
+import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.worker';
 
 @Module({
   imports: [
@@ -51,6 +53,8 @@ import { ApprovalReminderWorkerService } from './workers/approval-reminder.worke
     AgencyWeeklyRunProcessor,
     ApprovalReminderWorkerService,
     ApprovalReminderProcessor,
+    CopilotPrepareWeekWorkerService,
+    CopilotPrepareWeekProcessor,
   ],
   exports: [PublicationInboxService],
 })

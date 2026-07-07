@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
+import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
 
 interface CopilotStatusPanelProps {
@@ -45,7 +46,13 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
         result.warnings.forEach((warning) => toast.message(warning));
       }
     },
-    onError: () => toast.error('No se pudo preparar la semana'),
+    onError: (error) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'No se pudo preparar la semana';
+      toast.error(message);
+    },
   });
 
   const status = statusQuery.data;

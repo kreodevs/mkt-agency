@@ -72,6 +72,13 @@ export interface PrepareWeekResult {
   warnings: string[];
 }
 
+export interface PrepareWeekJobStatus {
+  jobId: string;
+  status: 'processing' | 'completed' | 'failed';
+  result?: PrepareWeekResult;
+  error?: string;
+}
+
 export interface SohoSummary {
   leadsToday: number;
   leadsThisWeek: number;

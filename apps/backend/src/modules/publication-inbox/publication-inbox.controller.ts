@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
@@ -7,16 +18,17 @@ import {
   BulkApproveResponseDto,
   CopilotStatusResponseDto,
   PrepareWeekDto,
-  PrepareWeekResponseDto,
+  PrepareWeekJobStartedDto,
+  PrepareWeekJobStatusDto,
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
   RequestInboxChangesDto,
   RequestInboxChangesResponseDto,
 } from './dto/publication-inbox.dto';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
-import { CopilotOrchestrationService } from './copilot-orchestration.service';
 import { CopilotService } from './copilot.service';
 import { PublicationInboxService } from './publication-inbox.service';
+import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.worker';
 
 @Controller('publication-inbox')
 @UseGuards(TenantGuard)
@@ -24,8 +36,8 @@ export class PublicationInboxController {
   constructor(
     private readonly inboxService: PublicationInboxService,
     private readonly copilotService: CopilotService,
-    private readonly copilotOrchestration: CopilotOrchestrationService,
     private readonly communityManager: CommunityManagerService,
+    private readonly prepareWeekWorker: CopilotPrepareWeekWorkerService,
   ) {}
 
   @Get()
@@ -70,15 +82,25 @@ export class PublicationInboxController {
   }
 
   @Post('prepare-week')
-  prepareWeek(
+  @HttpCode(HttpStatus.ACCEPTED)
+  async prepareWeek(
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: PrepareWeekDto,
-  ): Promise<PrepareWeekResponseDto> {
-    return this.copilotOrchestration.prepareWeek(
+  ): Promise<PrepareWeekJobStartedDto> {
+    const jobId = await this.prepareWeekWorker.enqueue(
       user.tenantId!,
       user.id,
       body.productId,
     );
+    return { jobId, status: 'processing' };
+  }
+
+  @Get('prepare-week/jobs/:jobId')
+  getPrepareWeekJob(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('jobId') jobId: string,
+  ): Promise<PrepareWeekJobStatusDto> {
+    return this.prepareWeekWorker.getStatus(jobId, user.tenantId!);
   }
 
   @Post('regenerate/:contentId')
