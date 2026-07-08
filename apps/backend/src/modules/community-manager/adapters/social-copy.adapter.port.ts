@@ -49,6 +49,15 @@ export interface SocialCopyContext {
     role: string;
     label: string | null;
     assetType: 'image' | 'video';
+    folderPath?: string | null;
+    device?: 'pc' | 'ipad' | 'ios' | null;
+  }>;
+  /** Carpetas de la librería con conteo de medios (para contexto del CM). */
+  libraryFolders?: Array<{
+    path: string;
+    device?: 'pc' | 'ipad' | 'ios' | null;
+    imageCount: number;
+    videoCount: number;
   }>;
   /** Al menos una CM virtual lista — habilita visualFormat talking-head en TikTok. */
   cmCharacterReady?: boolean;

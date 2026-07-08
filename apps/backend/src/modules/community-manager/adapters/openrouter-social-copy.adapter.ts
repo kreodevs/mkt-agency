@@ -67,8 +67,17 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       ? [
           `Kit de medios del producto (${context.mediaKit.length} archivos reales): ${JSON.stringify(context.mediaKit)}`,
           'IMPORTANTE: El sistema COMBINARÁ fotos/videos reales del kit en el post. NO pidas dashboards genéricos ni stock corporativo si hay capturas o fotos de evento.',
-          'En visualDescription indica cómo se verá el asset real (ej. "screenshot de la app en mockup móvil", "foto del taller con copy superpuesto").',
+          'Cada ítem puede incluir folderPath (carpeta en librería) y device (pc|ipad|ios). Usa device para elegir capturas acordes a la plataforma: TikTok/Instagram→ios/ipad; LinkedIn→pc.',
+          'En visualDescription indica cómo se verá el asset real (ej. "screenshot de la app iOS en mockup móvil", "captura desktop en MacBook").',
           'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
+        ].join('\n')
+      : '';
+
+    const libraryFoldersGuide = context.libraryFolders?.length
+      ? [
+          `Librería multimedia organizada en carpetas (${context.libraryFolders.length} carpetas con archivos): ${JSON.stringify(context.libraryFolders)}`,
+          'Las carpetas agrupan capturas por dispositivo (PC, iPad, iOS). Si el kit de medios está vacío o incompleto, menciona en visualDescription qué tipo de captura encaja (ej. app móvil → carpeta iOS).',
+          'Sugiere al usuario enlazar assets desde estas carpetas al kit de medios del producto para posts con capturas reales.',
         ].join('\n')
       : '';
 
@@ -131,6 +140,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       competitorIntelGuide,
       revisionGuide,
       mediaKitGuide,
+      libraryFoldersGuide,
       cmCharacterGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       context.cmCharacterReady

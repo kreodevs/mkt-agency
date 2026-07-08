@@ -13,8 +13,21 @@ import {
   AssetFolderResponseDto,
   AssetFoldersListResponseDto,
 } from './dto/asset.response.dto';
+import {
+  buildFolderPathMap,
+  inferDeviceFromFolderPath,
+  type AssetDeviceHint,
+} from './domain/asset-folder.util';
 import { AssetFolderEntity } from './infrastructure/typeorm/asset-folder.entity';
 import { AssetEntity } from './infrastructure/typeorm/asset.entity';
+
+export type LibraryFolderSummary = {
+  folderId: string;
+  path: string;
+  device: AssetDeviceHint | null;
+  imageCount: number;
+  videoCount: number;
+};
 
 @Injectable()
 export class AssetFolderService {
@@ -76,6 +89,67 @@ export class AssetFolderService {
 
     const saved = await this.folders.save(folder);
     return this.toResponse(saved);
+  }
+
+  async buildLibrarySummaryForLlm(tenantId: string): Promise<LibraryFolderSummary[]> {
+    const folders = await this.folders.find({ where: { tenantId } });
+    if (!folders.length) {
+      return [];
+    }
+
+    const pathMap = buildFolderPathMap(folders);
+    const counts = await this.assets
+      .createQueryBuilder('a')
+      .select('a.folder_id', 'folderId')
+      .addSelect('a.type', 'type')
+      .addSelect('COUNT(*)', 'count')
+      .where('a.tenant_id = :tenantId', { tenantId })
+      .andWhere('a.folder_id IS NOT NULL')
+      .groupBy('a.folder_id')
+      .addGroupBy('a.type')
+      .getRawMany<{ folderId: string; type: string; count: string }>();
+
+    const countByFolder = new Map<string, { imageCount: number; videoCount: number }>();
+    for (const row of counts) {
+      const current = countByFolder.get(row.folderId) ?? { imageCount: 0, videoCount: 0 };
+      const amount = Number(row.count) || 0;
+      if (row.type === 'image') {
+        current.imageCount += amount;
+      } else if (row.type === 'video') {
+        current.videoCount += amount;
+      }
+      countByFolder.set(row.folderId, current);
+    }
+
+    return folders
+      .map((folder) => {
+        const path = pathMap.get(folder.id) ?? folder.name;
+        const folderCounts = countByFolder.get(folder.id) ?? { imageCount: 0, videoCount: 0 };
+        return {
+          folderId: folder.id,
+          path,
+          device: inferDeviceFromFolderPath(path),
+          imageCount: folderCounts.imageCount,
+          videoCount: folderCounts.videoCount,
+        };
+      })
+      .filter((entry) => entry.imageCount > 0 || entry.videoCount > 0)
+      .sort((a, b) => a.path.localeCompare(b.path, 'es'));
+  }
+
+  resolveFolderPath(
+    folders: Pick<AssetFolderEntity, 'id' | 'name' | 'parentId'>[],
+    folderId: string | null,
+  ): { path: string | null; device: AssetDeviceHint | null } {
+    if (!folderId) {
+      return { path: null, device: null };
+    }
+    const pathMap = buildFolderPathMap(folders);
+    const path = pathMap.get(folderId) ?? null;
+    return {
+      path,
+      device: path ? inferDeviceFromFolderPath(path) : null,
+    };
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

@@ -41,6 +41,7 @@ export interface PaginatedAssetsResponse {
 
 export interface ListAssetsParams {
   folderId?: string;
+  unfiled?: boolean;
   type?: AssetType;
   tagIds?: string;
   page?: number;

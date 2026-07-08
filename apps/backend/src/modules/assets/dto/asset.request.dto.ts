@@ -17,6 +17,11 @@ export class ListAssetsQueryDto {
   @IsUUID()
   folderId?: string;
 
+  /** Si es `true`, solo activos sin carpeta asignada. */
+  @IsOptional()
+  @IsIn(['true'])
+  unfiled?: string;
+
   @IsOptional()
   @IsIn([...ASSET_TYPES])
   type?: (typeof ASSET_TYPES)[number];

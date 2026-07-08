@@ -6,6 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { AssetService } from '../assets/asset.service';
+import { AssetFolderService } from '../assets/asset-folder.service';
+import {
+  preferredDevicesForPlatform,
+  type AssetDeviceHint,
+} from '../assets/domain/asset-folder.util';
 import { AssetEntity } from '../assets/infrastructure/typeorm/asset.entity';
 import {
   COMPOSE_IMAGE_ROLE_PRIORITY,
@@ -21,6 +26,14 @@ import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-medi
 import { ProductService } from './product.service';
 import type { ContentVisualFormat } from '../content/domain/content.constants';
 
+export type MediaKitLlmItem = {
+  role: string;
+  label: string | null;
+  assetType: 'image' | 'video';
+  folderPath: string | null;
+  device: AssetDeviceHint | null;
+};
+
 @Injectable()
 export class ProductMediaKitService {
   constructor(
@@ -29,6 +42,7 @@ export class ProductMediaKitService {
     @InjectRepository(AssetEntity)
     private readonly assets: Repository<AssetEntity>,
     private readonly assetService: AssetService,
+    private readonly assetFolderService: AssetFolderService,
     private readonly productService: ProductService,
   ) {}
 
@@ -127,6 +141,35 @@ export class ProductMediaKitService {
     await this.kitItems.remove(item);
   }
 
+  async buildMediaKitContextForLlm(
+    tenantId: string,
+    kit: ProductMediaKitItemEntity[],
+  ): Promise<MediaKitLlmItem[]> {
+    if (!kit.length) {
+      return [];
+    }
+
+    const assetIds = kit.map((item) => item.assetId);
+    const assets = await this.assets.find({ where: { tenantId, id: In(assetIds) } });
+    const assetMap = new Map(assets.map((asset) => [asset.id, asset]));
+    const folders = (await this.assetFolderService.list(tenantId)).items;
+
+    return kit.map((item) => {
+      const asset = assetMap.get(item.assetId);
+      const folderMeta = this.assetFolderService.resolveFolderPath(
+        folders,
+        asset?.folderId ?? null,
+      );
+      return {
+        role: item.role,
+        label: item.label,
+        assetType: item.role === 'product-demo' ? 'video' : 'image',
+        folderPath: folderMeta.path,
+        device: folderMeta.device,
+      };
+    });
+  }
+
   async listEntitiesForProduct(
     tenantId: string,
     productId: string,
@@ -153,18 +196,42 @@ export class ProductMediaKitService {
     kit: ProductMediaKitItemEntity[],
     visualFormat: ContentVisualFormat,
     postIndex: number,
+    platform?: string,
   ): Promise<string[]> {
     const assetIds = kit.map((item) => item.assetId);
     const assets = assetIds.length
       ? await this.assets.find({ where: { tenantId, id: In(assetIds) } })
       : [];
+    const assetMap = new Map(assets.map((asset) => [asset.id, asset]));
+    const folders = assets.length
+      ? (await this.assetFolderService.list(tenantId)).items
+      : [];
+
     const imageAssetIds = new Set(
       assets.filter((asset) => asset.type === 'image').map((asset) => asset.id),
     );
 
-    const images = this.filterByRoles(kit, COMPOSE_IMAGE_ROLE_PRIORITY).filter((item) =>
+    let images = this.filterByRoles(kit, COMPOSE_IMAGE_ROLE_PRIORITY).filter((item) =>
       imageAssetIds.has(item.assetId),
     );
+
+    if (platform && images.length > 1) {
+      const preferredDevices = preferredDevicesForPlatform(platform);
+      const withDevice = images.map((item) => {
+        const asset = assetMap.get(item.assetId);
+        const folderMeta = this.assetFolderService.resolveFolderPath(
+          folders,
+          asset?.folderId ?? null,
+        );
+        const deviceRank = folderMeta.device
+          ? preferredDevices.indexOf(folderMeta.device)
+          : preferredDevices.length;
+        return { item, deviceRank };
+      });
+      withDevice.sort((a, b) => a.deviceRank - b.deviceRank);
+      images = withDevice.map((entry) => entry.item);
+    }
+
     if (!images.length) {
       return [];
     }

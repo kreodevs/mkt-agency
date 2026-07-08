@@ -41,6 +41,7 @@ export function resolveAssetPreviewUrl(asset: {
 function buildQuery(params: ListAssetsParams): string {
   const search = new URLSearchParams();
   if (params.folderId) search.set('folderId', params.folderId);
+  if (params.unfiled) search.set('unfiled', 'true');
   if (params.type) search.set('type', params.type);
   if (params.tagIds) search.set('tagIds', params.tagIds);
   if (params.page) search.set('page', String(params.page));
@@ -85,6 +86,20 @@ export async function createAssetFolder(name: string, parentId?: string): Promis
     method: 'POST',
     body: JSON.stringify({ name, parentId: parentId ?? null }),
   });
+}
+
+export async function updateAssetFolder(
+  id: string,
+  payload: { name?: string; parentId?: string | null },
+): Promise<AssetFolder> {
+  return apiFetch<AssetFolder>(`/asset-folders/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteAssetFolder(id: string): Promise<void> {
+  return apiFetch<void>(`/asset-folders/${id}`, { method: 'DELETE' });
 }
 
 export async function listAssetTags(): Promise<{ items: AssetTag[] }> {

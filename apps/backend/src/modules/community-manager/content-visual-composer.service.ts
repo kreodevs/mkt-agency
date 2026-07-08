@@ -22,7 +22,7 @@ export class ContentVisualComposerService {
     tenantId: string,
     userId: string,
     contentId: string,
-    post: Pick<SocialCopyPost, 'visualFormat'>,
+    post: Pick<SocialCopyPost, 'visualFormat' | 'platform'>,
     productId: string | undefined,
     kit: ProductMediaKitItemEntity[],
     postIndex: number,
@@ -38,6 +38,7 @@ export class ContentVisualComposerService {
       kit,
       visualFormat,
       postIndex,
+      post.platform,
     );
     if (!imageIds.length) {
       return { attached: false, mode: 'skipped', assetIds: [] };

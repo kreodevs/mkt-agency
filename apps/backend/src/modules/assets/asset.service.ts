@@ -57,7 +57,9 @@ export class AssetService {
       .skip((page - 1) * limit)
       .take(limit);
 
-    if (query.folderId) {
+    if (query.unfiled === 'true') {
+      qb.andWhere('a.folder_id IS NULL');
+    } else if (query.folderId) {
       qb.andWhere('a.folder_id = :folderId', { folderId: query.folderId });
     }
 

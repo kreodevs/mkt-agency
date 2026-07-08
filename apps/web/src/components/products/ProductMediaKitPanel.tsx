@@ -1,14 +1,16 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Film, ImageIcon, Trash2, Upload } from 'lucide-react';
+import { Film, FolderOpen, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
+import { AssetLibraryPickerDialog } from '@/components/assets/AssetLibraryPickerDialog';
 import { getAssetFileUrl } from '@/services/assets';
 import { ApiError } from '@/services/api';
 import {
+  linkProductMediaKit,
   listProductMediaKit,
   removeProductMediaKitItem,
   uploadProductMediaKit,
@@ -48,6 +50,7 @@ export function ProductMediaKitPanel({
   const [role, setRole] = useState<ProductMediaRole>('product-screenshot');
   const [label, setLabel] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false);
 
   const kitQuery = useQuery({
     queryKey: ['product-media-kit', productId],
@@ -70,6 +73,19 @@ export function ProductMediaKitPanel({
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo eliminar');
+    },
+  });
+
+  const linkMutation = useMutation({
+    mutationFn: (assetId: string) =>
+      linkProductMediaKit(productId, { assetId, role, label: label || undefined }),
+    onSuccess: () => {
+      toast.success('Archivo enlazado desde la librería');
+      setLibraryPickerOpen(false);
+      void kitQuery.refetch();
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo enlazar');
     },
   });
 
@@ -140,12 +156,13 @@ export function ProductMediaKitPanel({
     void uploadFiles(Array.from(event.dataTransfer.files));
   };
 
-  const isBusy = disabled || uploadMutation.isPending || removeMutation.isPending;
+  const isBusy =
+    disabled || uploadMutation.isPending || removeMutation.isPending || linkMutation.isPending;
   const items = kitQuery.data?.items ?? [];
 
   return (
     <div className="space-y-[var(--spacing-lg)]">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-[var(--foreground)]">Tipo de asset</span>
           <select
@@ -169,6 +186,18 @@ export function ProductMediaKitPanel({
           placeholder="Ej. Demo onboarding v2"
           onChange={(e) => setLabel(e.target.value)}
         />
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 sm:mb-0"
+          disabled={isBusy}
+          onClick={() => setLibraryPickerOpen(true)}
+        >
+          <FolderOpen className="h-4 w-4" />
+          Desde librería
+        </Button>
 
         <Button
           type="button"
@@ -338,6 +367,16 @@ export function ProductMediaKitPanel({
           </ul>
         )}
       </div>
+
+      <AssetLibraryPickerDialog
+        visible={libraryPickerOpen}
+        onClose={() => setLibraryPickerOpen(false)}
+        title="Enlazar desde librería"
+        description="Elige capturas organizadas por carpeta (PC, iPad, iOS). El copiloto CM las usará al generar posts."
+        typeFilter={role === 'product-demo' ? 'video' : 'image'}
+        isPending={linkMutation.isPending}
+        onSelect={(asset) => linkMutation.mutate(asset.id)}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Eye, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, FolderInput, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
 import { AssetGridCard } from '@/components/assets/AssetGridCard';
 import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
 import { AssetUploader } from '@/components/assets/AssetUploader';
@@ -15,12 +16,17 @@ import { DataTable, type DataTableColumn } from '@/components/organisms/DataTabl
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import {
+  createAssetFolder,
   deleteAsset,
+  deleteAssetFolder,
   duplicateAsset,
   getAssetDownloadUrl,
   listAssetFolders,
   listAssets,
+  updateAsset,
+  updateAssetFolder,
 } from '@/services/assets';
+import { resolveFolderPath } from '@/lib/asset-folder-tree';
 import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
 
 type ViewMode = 'grid' | 'table';
@@ -72,6 +78,16 @@ function sectionSelectionState(ids: Set<string>, assets: Asset[]) {
     return true;
   }
   return 'indeterminate' as const;
+}
+
+function folderQueryParams(folderFilter: FolderSelection) {
+  if (folderFilter === '__unfiled__') {
+    return { unfiled: true as const };
+  }
+  if (folderFilter) {
+    return { folderId: folderFilter };
+  }
+  return {};
 }
 
 type AssetSectionProps = {
@@ -131,11 +147,12 @@ function AssetSection({
 
 export default function AssetLibraryPage() {
   const queryClient = useQueryClient();
-  const [folderFilter, setFolderFilter] = useState('');
+  const [folderFilter, setFolderFilter] = useState<FolderSelection>('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+  const [moveTargetFolder, setMoveTargetFolder] = useState<string>('');
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -152,14 +169,54 @@ export default function AssetLibraryPage() {
       listAssets({
         page: 1,
         limit: 100,
-        folderId: folderFilter || undefined,
         type: typeFilter || undefined,
+        ...folderQueryParams(folderFilter),
       }),
   });
 
   const invalidateAssets = () => {
     void queryClient.invalidateQueries({ queryKey: ['assets'] });
   };
+
+  const invalidateFolders = () => {
+    void queryClient.invalidateQueries({ queryKey: ['asset-folders'] });
+  };
+
+  const createFolderMutation = useMutation({
+    mutationFn: ({ name, parentId }: { name: string; parentId?: string }) =>
+      createAssetFolder(name, parentId),
+    onSuccess: (folder) => {
+      invalidateFolders();
+      setFolderFilter(folder.id);
+      toast.success('Carpeta creada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo crear la carpeta');
+    },
+  });
+
+  const renameFolderMutation = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => updateAssetFolder(id, { name }),
+    onSuccess: () => {
+      invalidateFolders();
+      toast.message('Carpeta renombrada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo renombrar');
+    },
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: deleteAssetFolder,
+    onSuccess: () => {
+      invalidateFolders();
+      setFolderFilter('');
+      toast.message('Carpeta eliminada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'La carpeta debe estar vacía');
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: deleteAsset,
@@ -190,9 +247,29 @@ export default function AssetLibraryPage() {
       toast.message(ids.length === 1 ? 'Activo eliminado' : `${ids.length} activos eliminados`);
     },
     onError: (error) => {
-      const message = error instanceof ApiError ? error.message : error instanceof Error ? error.message : 'No se pudo eliminar la selección';
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : 'No se pudo eliminar la selección';
       toast.error(message);
       invalidateAssets();
+    },
+  });
+
+  const moveMutation = useMutation({
+    mutationFn: async ({ ids, folderId }: { ids: string[]; folderId: string | null }) => {
+      await Promise.all(ids.map((id) => updateAsset(id, { folderId })));
+    },
+    onSuccess: (_data, { ids }) => {
+      invalidateAssets();
+      setSelectedIds(new Set());
+      setMoveTargetFolder('');
+      toast.success(ids.length === 1 ? 'Activo movido' : `${ids.length} activos movidos`);
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo mover');
     },
   });
 
@@ -207,9 +284,21 @@ export default function AssetLibraryPage() {
     },
   });
 
+  const folderMutationsBusy =
+    createFolderMutation.isPending ||
+    renameFolderMutation.isPending ||
+    deleteFolderMutation.isPending;
+
+  const folders = foldersQuery.data?.items ?? [];
   const items = assetsQuery.data?.items ?? [];
   const imagesOnly = items.filter((a) => a.type === 'image');
   const otherAssets = items.filter((a) => a.type !== 'image');
+  const currentFolderLabel =
+    folderFilter === '__unfiled__'
+      ? 'Sin carpeta'
+      : folderFilter
+        ? resolveFolderPath(folders, folderFilter) ?? 'Carpeta'
+        : 'Todas las carpetas';
 
   const selectedAssets = items.filter((asset) => selectedIds.has(asset.id));
   const deletableSelected = selectedAssets.filter((asset) => !isAssetLocked(asset));
@@ -228,9 +317,30 @@ export default function AssetLibraryPage() {
     bulkDeleteMutation.mutate(deletableSelected.map((asset) => asset.id));
   };
 
+  const handleMoveSelected = () => {
+    if (!selectedIds.size) {
+      return;
+    }
+    const folderId = moveTargetFolder === '__root__' ? null : moveTargetFolder || null;
+    moveMutation.mutate({ ids: [...selectedIds], folderId });
+  };
+
+  const handleDeleteFolder = (folderId: string) => {
+    const folderName = folders.find((folder) => folder.id === folderId)?.name ?? 'esta carpeta';
+    if (!window.confirm(`¿Eliminar "${folderName}"? Debe estar vacía (sin archivos ni subcarpetas).`)) {
+      return;
+    }
+    deleteFolderMutation.mutate(folderId);
+  };
+
   const columns: DataTableColumn[] = useMemo(
     () => [
       { field: 'name', header: 'Nombre', sortable: true },
+      {
+        field: 'folder',
+        header: 'Carpeta',
+        body: (row) => resolveFolderPath(folders, (row as Asset).folderId) ?? '—',
+      },
       {
         field: 'type',
         header: 'Tipo',
@@ -273,11 +383,7 @@ export default function AssetLibraryPage() {
           const locked = isAssetLocked(asset);
           return (
             <div className={ACTION_BUTTON_GROUP_CLASS}>
-              <IconButton
-                type="button"
-                label="Ver"
-                onClick={() => setPreviewAsset(asset)}
-              >
+              <IconButton type="button" label="Ver" onClick={() => setPreviewAsset(asset)}>
                 <Eye />
               </IconButton>
               <IconButton
@@ -310,170 +416,202 @@ export default function AssetLibraryPage() {
         },
       },
     ],
-    [deleteMutation.isPending, duplicateMutation.isPending],
+    [deleteMutation.isPending, duplicateMutation.isPending, folders],
   );
+
+  const uploadFolderId =
+    folderFilter && folderFilter !== '__unfiled__' ? folderFilter : undefined;
 
   return (
     <DashboardShell>
       <PageHeader
         title="Librería multimedia"
-        description="Sube, organiza y descarga activos del tenant"
+        description="Organiza capturas y medios en carpetas. El copiloto CM usa PC / iPad / iOS al generar posts."
       />
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--foreground-muted)]">Carpeta</label>
-              <select
-                className={filterSelectClass}
-                value={folderFilter}
-                onChange={(e) => setFolderFilter(e.target.value)}
-              >
-                <option value="">Todas</option>
-                {(foldersQuery.data?.items ?? []).map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <Card className="h-fit lg:sticky lg:top-4">
+          <AssetFolderTree
+            folders={folders}
+            selectedId={folderFilter}
+            onSelect={setFolderFilter}
+            onCreate={(name, parentId) => createFolderMutation.mutate({ name, parentId })}
+            onRename={(id, name) => renameFolderMutation.mutate({ id, name })}
+            onDelete={handleDeleteFolder}
+            isBusy={folderMutationsBusy}
+          />
+        </Card>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--foreground-muted)]">Tipo</label>
-              <select
-                className={filterSelectClass}
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as '' | AssetType)}
-              >
-                <option value="">Todos</option>
-                {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="min-w-0 space-y-6">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="flex min-w-[140px] flex-col gap-1">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Ubicación</label>
+                  <p className="text-sm font-medium text-[var(--foreground)]">{currentFolderLabel}</p>
+                </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>
-              <div className="flex">
-                <button
-                  type="button"
-                  className={`flex h-10 items-center gap-1 rounded-l-[var(--radius)] border px-3 text-sm transition-colors ${
-                    viewMode === 'grid'
-                      ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
-                      : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
-                  }`}
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                  Grid
-                </button>
-                <button
-                  type="button"
-                  className={`flex h-10 items-center gap-1 rounded-r-[var(--radius)] border px-3 text-sm transition-colors ${
-                    viewMode === 'table'
-                      ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
-                      : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
-                  }`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <LayoutList className="h-4 w-4" />
-                  Tabla
-                </button>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Tipo</label>
+                  <select
+                    className={filterSelectClass}
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value as '' | AssetType)}
+                  >
+                    <option value="">Todos</option>
+                    {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>
+                  <div className="flex">
+                    <button
+                      type="button"
+                      className={`flex h-10 items-center gap-1 rounded-l-[var(--radius)] border px-3 text-sm transition-colors ${
+                        viewMode === 'grid'
+                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
+                          : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
+                      }`}
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <Grid3X3 className="h-4 w-4" />
+                      Grid
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex h-10 items-center gap-1 rounded-r-[var(--radius)] border px-3 text-sm transition-colors ${
+                        viewMode === 'table'
+                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
+                          : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
+                      }`}
+                      onClick={() => setViewMode('table')}
+                    >
+                      <LayoutList className="h-4 w-4" />
+                      Tabla
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </Card>
+            </Card>
 
-        <Card>
-          <AssetUploader
-            folderId={folderFilter || undefined}
-            onUploaded={() => {
-              invalidateAssets();
-            }}
-          />
-        </Card>
+            <Card>
+              <AssetUploader
+                folderId={uploadFolderId}
+                onUploaded={() => {
+                  invalidateAssets();
+                }}
+              />
+            </Card>
+          </div>
+
+          {selectedIds.size > 0 && (
+            <Card className="border-[var(--primary)]/40 bg-[var(--primary)]/5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-[var(--foreground)]">
+                  {selectedIds.size} seleccionado(s)
+                  {lockedSelectedCount > 0 &&
+                    ` · ${lockedSelectedCount} en uso (no se eliminarán)`}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    className={filterSelectClass}
+                    value={moveTargetFolder}
+                    onChange={(event) => setMoveTargetFolder(event.target.value)}
+                    aria-label="Mover a carpeta"
+                  >
+                    <option value="">Mover a…</option>
+                    <option value="__root__">Sin carpeta</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {resolveFolderPath(folders, folder.id)}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="gap-2"
+                    disabled={!moveTargetFolder || moveMutation.isPending}
+                    onClick={handleMoveSelected}
+                  >
+                    <FolderInput className="h-4 w-4" />
+                    Mover
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                    Deseleccionar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="gap-2"
+                    disabled={deletableSelected.length === 0 || bulkDeleteMutation.isPending}
+                    onClick={handleBulkDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Eliminar ({deletableSelected.length})
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {viewMode === 'grid' ? (
+            assetsQuery.isLoading ? (
+              <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
+            ) : items.length === 0 ? (
+              <div className="py-16 text-center text-[var(--foreground-muted)]">
+                No hay activos en {currentFolderLabel.toLowerCase()}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {imagesOnly.length > 0 && (
+                  <AssetSection
+                    title="Imágenes"
+                    subtitle={`${imagesOnly.length} archivos`}
+                    assets={imagesOnly}
+                    selectedIds={selectedIds}
+                    onSelectionChange={setSelectedIds}
+                    onPreview={setPreviewAsset}
+                    onDownload={(asset) => void handleDownload(asset)}
+                    onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                    onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                  />
+                )}
+
+                {otherAssets.length > 0 && (
+                  <AssetSection
+                    title="Otros activos"
+                    subtitle="Documentos, videos, audio"
+                    assets={otherAssets}
+                    selectedIds={selectedIds}
+                    onSelectionChange={setSelectedIds}
+                    onPreview={setPreviewAsset}
+                    onDownload={(asset) => void handleDownload(asset)}
+                    onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                    onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                  />
+                )}
+              </div>
+            )
+          ) : (
+            <Card>
+              <DataTable
+                data={items}
+                columns={columns}
+                loading={assetsQuery.isLoading}
+                emptyMessage="No hay activos en la librería"
+                paginator
+                rows={20}
+              />
+            </Card>
+          )}
+        </div>
       </div>
-
-      {selectedIds.size > 0 && (
-        <Card className="mb-4 border-[var(--primary)]/40 bg-[var(--primary)]/5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-medium text-[var(--foreground)]">
-              {selectedIds.size} seleccionado(s)
-              {lockedSelectedCount > 0 &&
-                ` · ${lockedSelectedCount} en uso (no se eliminarán)`}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-                Deseleccionar
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                className="gap-2"
-                disabled={deletableSelected.length === 0 || bulkDeleteMutation.isPending}
-                onClick={handleBulkDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-                Eliminar ({deletableSelected.length})
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {viewMode === 'grid' ? (
-        assetsQuery.isLoading ? (
-          <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
-        ) : items.length === 0 ? (
-          <div className="py-16 text-center text-[var(--foreground-muted)]">
-            No hay activos en la librería
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {imagesOnly.length > 0 && (
-              <AssetSection
-                title="Imágenes"
-                subtitle={`${imagesOnly.length} archivos`}
-                assets={imagesOnly}
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                onPreview={setPreviewAsset}
-                onDownload={(asset) => void handleDownload(asset)}
-                onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
-                onDelete={(assetId) => deleteMutation.mutate(assetId)}
-              />
-            )}
-
-            {otherAssets.length > 0 && (
-              <AssetSection
-                title="Otros activos"
-                subtitle="Documentos, videos, audio"
-                assets={otherAssets}
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                onPreview={setPreviewAsset}
-                onDownload={(asset) => void handleDownload(asset)}
-                onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
-                onDelete={(assetId) => deleteMutation.mutate(assetId)}
-              />
-            )}
-          </div>
-        )
-      ) : (
-        <Card>
-          <DataTable
-            data={items}
-            columns={columns}
-            loading={assetsQuery.isLoading}
-            emptyMessage="No hay activos en la librería"
-            paginator
-            rows={20}
-          />
-        </Card>
-      )}
 
       <AssetPreviewDialog
         asset={previewAsset}

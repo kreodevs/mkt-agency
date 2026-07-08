@@ -216,6 +216,20 @@ export function uploadProductMediaKit(
   });
 }
 
+export async function linkProductMediaKit(
+  productId: string,
+  payload: { assetId: string; role: ProductMediaRole; label?: string },
+): Promise<ProductMediaKitItem> {
+  return apiFetch<ProductMediaKitItem>(`/products/${productId}/media-kit/link`, {
+    method: 'POST',
+    body: JSON.stringify({
+      assetId: payload.assetId,
+      role: payload.role,
+      label: payload.label?.trim() || undefined,
+    }),
+  });
+}
+
 export async function removeProductMediaKitItem(productId: string, itemId: string): Promise<void> {
   await apiFetch<void>(`/products/${productId}/media-kit/${itemId}`, {
     method: 'DELETE',

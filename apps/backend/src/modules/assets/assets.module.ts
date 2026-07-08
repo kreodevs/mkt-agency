@@ -64,6 +64,6 @@ import { AssetEntity } from './infrastructure/typeorm/asset.entity';
       inject: [ConfigService, S3StorageAdapter, LocalStorageAdapter],
     },
   ],
-  exports: [AssetService],
+  exports: [AssetService, AssetFolderService],
 })
 export class AssetsModule {}

@@ -27,7 +27,7 @@ import {
 } from '../product/domain/product-context.util';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
-import { ProductMediaKitService } from '../product/product-media-kit.service';
+import { AssetFolderService } from '../assets/asset-folder.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { ContentVisualComposerService } from './content-visual-composer.service';
 import { CmCharacterService } from './cm-character.service';
@@ -90,6 +90,7 @@ export class CommunityManagerService {
     private readonly competitorIntel: CompetitorIntelService,
     private readonly competitorService: CompetitorService,
     private readonly mediaKitService: ProductMediaKitService,
+    private readonly assetFolderService: AssetFolderService,
     private readonly visualComposer: ContentVisualComposerService,
     private readonly cmCharacter: CmCharacterService,
     private readonly talkingHeadComposer: TalkingHeadPostComposerService,
@@ -327,6 +328,11 @@ export class CommunityManagerService {
         ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
         : false;
 
+      const libraryFolders = await this.assetFolderService.buildLibrarySummaryForLlm(tenantId);
+      const mediaKitContext = kit.length
+        ? await this.mediaKitService.buildMediaKitContextForLlm(tenantId, kit)
+        : [];
+
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await runWithLlmUsageContext(
         { tenantId, userId },
@@ -345,10 +351,12 @@ export class CommunityManagerService {
             competitorIntelBrief,
             cmCharacterReady,
             cmCharacters: cmCharacters.length > 0 ? cmCharacters : undefined,
-            mediaKit: kit.map((item) => ({
-              role: item.role,
-              label: item.label,
-              assetType: item.role === 'product-demo' ? 'video' : 'image',
+            mediaKit: mediaKitContext,
+            libraryFolders: libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
+              path,
+              device,
+              imageCount,
+              videoCount,
             })),
           }),
       );
@@ -579,6 +587,11 @@ export class CommunityManagerService {
       ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
       : false;
 
+    const libraryFolders = await this.assetFolderService.buildLibrarySummaryForLlm(tenantId);
+    const mediaKitContext = kit.length
+      ? await this.mediaKitService.buildMediaKitContextForLlm(tenantId, kit)
+      : [];
+
     const result = await runWithLlmUsageContext({ tenantId, userId }, () =>
       this.adapter.generate({
         tenantId,
@@ -600,10 +613,12 @@ export class CommunityManagerService {
               platform: content.platform ?? undefined,
             }
           : undefined,
-        mediaKit: kit.map((item) => ({
-          role: item.role,
-          label: item.label,
-          assetType: item.role === 'product-demo' ? 'video' : 'image',
+        mediaKit: mediaKitContext,
+        libraryFolders: libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
+          path,
+          device,
+          imageCount,
+          videoCount,
         })),
       }),
     );
