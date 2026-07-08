@@ -2,6 +2,59 @@ import type { CalendarDaySummary, CalendarDominantStatus, CalendarMonthResponse 
 import type { PublicationInboxData, PublicationInboxItem } from '@/types/publication-inbox';
 import type { ContentStatus } from '@/types/content';
 
+const MONTH_ABBR: Record<string, number> = {
+  Jan: 1,
+  Feb: 2,
+  Mar: 3,
+  Apr: 4,
+  May: 5,
+  Jun: 6,
+  Jul: 7,
+  Aug: 8,
+  Sep: 9,
+  Oct: 10,
+  Nov: 11,
+  Dec: 12,
+};
+
+/** Normaliza fechas del API (ISO o legacy "Fri Jul 10") para FullCalendar. */
+export function normalizeCalendarDateKey(
+  raw: string,
+  month: number,
+  year: number,
+): string {
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    return raw.slice(0, 10);
+  }
+
+  const legacy = raw.match(/(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\w{3})\s+(\d{1,2})/i);
+  if (legacy) {
+    const m = MONTH_ABBR[legacy[1]];
+    const d = Number(legacy[2]);
+    if (m) {
+      return `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return `${year}-${String(month).padStart(2, '0')}-01`;
+}
+
+function normalizeDaySummary(
+  day: CalendarDaySummary,
+  month: number,
+  year: number,
+): CalendarDaySummary {
+  return {
+    ...day,
+    date: normalizeCalendarDateKey(day.date, month, year),
+  };
+}
+
 function collectInboxItems(data: PublicationInboxData): PublicationInboxItem[] {
   return [
     ...data.readyToPublish,
@@ -97,7 +150,8 @@ export function mergeSohoCalendarMonth(
   const merged = new Map<string, CalendarDaySummary>();
 
   for (const day of apiMonth?.days ?? []) {
-    merged.set(day.date, day);
+    const normalized = normalizeDaySummary(day, month, year);
+    merged.set(normalized.date, normalized);
   }
 
   const inboxDays = inbox ? buildSohoMonthFromInbox(inbox, month, year) : [];

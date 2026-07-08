@@ -12,6 +12,7 @@ import {
   CalendarDaySummaryDto,
   CalendarMonthResponseDto,
 } from './dto/calendar.response.dto';
+import { toDateKey } from '../../shared/domain/date-key.util';
 
 interface ContentCalendarRow {
   id: string;
@@ -137,11 +138,12 @@ export class CalendarService {
   }
 
   private effectiveDate(row: ContentCalendarRow): string {
-    if (row.scheduledDate) {
-      return String(row.scheduledDate).slice(0, 10);
+    const scheduled = toDateKey(row.scheduledDate);
+    if (scheduled) {
+      return scheduled;
     }
     const created = row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt);
-    return created.toISOString().slice(0, 10);
+    return toDateKey(created) ?? created.toISOString().slice(0, 10);
   }
 
   private dominantStatus(byStatus: Record<string, number>): ContentStatus | 'mixed' {

@@ -19,6 +19,7 @@ import {
   PublicationInboxItemDto,
   PublicationInboxResponseDto,
 } from './dto/publication-inbox.dto';
+import { toDateKey } from '../../shared/domain/date-key.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { AgencyNotificationEntity } from './infrastructure/typeorm/agency-notification.entity';
 
@@ -357,11 +358,12 @@ export class PublicationInboxService {
   }
 
   private effectiveDate(row: InboxRow): string {
-    if (row.scheduledDate) {
-      return String(row.scheduledDate).slice(0, 10);
+    const scheduled = toDateKey(row.scheduledDate);
+    if (scheduled) {
+      return scheduled;
     }
     const created = row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt);
-    return created.toISOString().slice(0, 10);
+    return toDateKey(created) ?? created.toISOString().slice(0, 10);
   }
 
   private todayKey(): string {
