@@ -95,9 +95,13 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           />
           <PipelineRow
             icon={UserCircle2}
-            label="CM virtual (retrato + lip-sync)"
+            label="CMs virtuales"
             done={status.cmCharacterReady}
-            detail={status.cmCharacterStatus}
+            detail={
+              status.cmCharactersTotalCount > 0
+                ? `${status.cmCharactersReadyCount}/${status.cmCharactersTotalCount} listas`
+                : status.cmCharacterStatus
+            }
           />
           <PipelineRow
             icon={Users}
@@ -148,7 +152,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
       </div>
     </Card>
 
-    {!status.cmCharacterReady && status.onboardingCompleted && (
+    {status.onboardingCompleted && (
       <CmCharacterSetupPanel productId={productId ?? status.productId} />
     )}
     </div>

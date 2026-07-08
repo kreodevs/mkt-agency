@@ -88,6 +88,7 @@ export const tenantSohoNavigation = [
     title: 'Copiloto',
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
+      { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       { label: 'Mi producto', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
     ],

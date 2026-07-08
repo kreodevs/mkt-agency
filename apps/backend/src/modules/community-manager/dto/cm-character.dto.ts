@@ -1,5 +1,6 @@
 import {
   IsIn,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -41,9 +42,33 @@ export class UpdateCmCharacterAppearanceDto {
   @IsString()
   @MaxLength(80)
   voiceName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+}
+
+export class CreateCmCharacterDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  name!: string;
+}
+
+export class SetDefaultCmCharacterDto {
+  @IsUUID()
+  characterId!: string;
+}
+
+export class SelectCmPortraitDto {
+  @IsUUID()
+  assetId!: string;
 }
 
 export class CmCharacterStatusResponseDto {
+  characterId!: string;
+  name!: string;
   productId!: string;
   ready!: boolean;
   status!: string;
@@ -53,9 +78,18 @@ export class CmCharacterStatusResponseDto {
   voiceId!: string | null;
   voiceName!: string | null;
   errorMessage!: string | null;
+  isDefault!: boolean;
+}
+
+export class CmCharactersLibraryResponseDto {
+  productId!: string;
+  defaultCharacterId!: string | null;
+  readyCount!: number;
+  characters!: CmCharacterStatusResponseDto[];
 }
 
 export class CmCharacterGenerateResponseDto {
+  characterId!: string;
   portraitAssetId?: string;
   previewVideoAssetId?: string;
   status!: string;

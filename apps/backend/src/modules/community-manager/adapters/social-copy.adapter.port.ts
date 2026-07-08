@@ -1,4 +1,5 @@
 import type { ContentVisualFormat } from '../../content/domain/content.constants';
+import type { CmCharacterLlmOption } from '../domain/cm-character.constants';
 
 export interface SocialCopyPost {
   id: string;
@@ -14,6 +15,8 @@ export interface SocialCopyPost {
   callToAction: string;
   tone: string;
   contentId?: string;
+  /** CM virtual elegida por el LLM para talking-head (debe existir en la biblioteca). */
+  cmCharacterId?: string;
 }
 
 export interface SocialCopyBatch {
@@ -47,8 +50,10 @@ export interface SocialCopyContext {
     label: string | null;
     assetType: 'image' | 'video';
   }>;
-  /** CM virtual configurada (retrato + preview) — habilita visualFormat talking-head en TikTok. */
+  /** Al menos una CM virtual lista — habilita visualFormat talking-head en TikTok. */
   cmCharacterReady?: boolean;
+  /** CMs listas que el LLM puede elegir por post. */
+  cmCharacters?: CmCharacterLlmOption[];
 }
 
 export interface SocialCopyAdapterPort {

@@ -92,7 +92,14 @@ export function normalizeSocialCopyBatch(
       ]);
       const visualDescription = sanitizeVisualPromptForArt(rawVisualDescription, body);
 
-      return {
+      const cmCharacterId = pickString(row, [
+        'cmCharacterId',
+        'cm_character_id',
+        'cmId',
+        'presentadoraId',
+      ]);
+
+      const post: SocialCopyPost = {
         id: pickString(row, ['id']) || `post-${index + 1}`,
         platform: normalizePlatform(row.platform ?? row.plataforma, context.platforms, index),
         title: pickString(row, ['title', 'titulo', 'headline']) || `Publicación ${index + 1}`,
@@ -110,7 +117,13 @@ export function normalizeSocialCopyBatch(
           pickString(row, ['targetAudience', 'target_audience', 'audiencia']) || 'Audiencia del producto',
         callToAction: pickString(row, ['callToAction', 'call_to_action', 'cta']) || 'Conoce más',
         tone: pickString(row, ['tone', 'tono']) || 'profesional',
-      } satisfies SocialCopyPost;
+      };
+
+      if (cmCharacterId) {
+        post.cmCharacterId = cmCharacterId;
+      }
+
+      return post;
     })
     .filter((post): post is SocialCopyPost => Boolean(post));
 

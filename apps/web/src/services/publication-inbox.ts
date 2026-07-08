@@ -30,8 +30,18 @@ export function getSohoSummary(productId?: string): Promise<SohoSummary> {
   return apiFetch<SohoSummary>(`/dashboard/soho-summary${query}`);
 }
 
-export function regenerateInboxContent(contentId: string): Promise<{ contentId: string; title: string; regenerated: true }> {
-  return apiFetch(`/publication-inbox/regenerate/${contentId}`, { method: 'POST' });
+export function regenerateInboxContent(
+  contentId: string,
+  options?: { feedback?: string; visualFormat?: string },
+): Promise<{ contentId: string; title: string; regenerated: true }> {
+  return apiFetch(`/publication-inbox/regenerate/${contentId}`, {
+    method: 'POST',
+    body: JSON.stringify(options ?? {}),
+  });
+}
+
+export function dismissInboxContent(contentId: string): Promise<{ contentId: string; dismissed: true }> {
+  return apiFetch(`/publication-inbox/dismiss/${contentId}`, { method: 'POST' });
 }
 
 export function requestInboxChanges(

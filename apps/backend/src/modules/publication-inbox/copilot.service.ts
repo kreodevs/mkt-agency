@@ -26,11 +26,11 @@ export class CopilotService {
     const product = await this.resolveProduct(tenantId, productId);
     const onboardingCompleted = isProductOnboardingCompleted(product);
 
-    const [competitors, latestAnalysis, inbox, cmCharacter] = await Promise.all([
+    const [competitors, latestAnalysis, inbox, cmLibrary] = await Promise.all([
       this.competitorService.list(tenantId),
       this.competitorIntel.getLatestCompletedAnalysis(tenantId),
       this.inboxService.getInbox(tenantId, product.id),
-      this.cmCharacter.getStatus(tenantId, product.id),
+      this.cmCharacter.listLibrary(tenantId, product.id),
     ]);
 
     const pendingAnalysis = await this.competitorIntel.listAnalyses(tenantId);
@@ -50,8 +50,8 @@ export class CopilotService {
     if (!onboardingCompleted) {
       nextStep = 'Completa el onboarding de tu producto';
       canPrepareWeek = false;
-    } else if (!cmCharacter.ready) {
-      nextStep = 'Configura tu CM virtual (retrato + vista previa)';
+    } else if (cmLibrary.readyCount === 0) {
+      nextStep = 'Configura al menos una CM virtual en tu biblioteca (retrato + vista previa)';
     } else if (inbox.stats.readyCount > 0) {
       nextStep = `Copia y pega ${inbox.stats.readyCount} publicación(es) listas`;
     } else if (inbox.stats.pendingCount > 0) {
@@ -74,8 +74,15 @@ export class CopilotService {
       inbox: inbox.stats,
       nextStep,
       canPrepareWeek,
-      cmCharacterReady: cmCharacter.ready,
-      cmCharacterStatus: cmCharacter.status,
+      cmCharacterReady: cmLibrary.readyCount > 0,
+      cmCharacterStatus:
+        cmLibrary.readyCount > 0
+          ? `${cmLibrary.readyCount}/${cmLibrary.characters.length} listas`
+          : cmLibrary.characters.length > 0
+            ? 'pendiente'
+            : 'sin configurar',
+      cmCharactersReadyCount: cmLibrary.readyCount,
+      cmCharactersTotalCount: cmLibrary.characters.length,
       prepareBlockedReason: onboardingCompleted
         ? null
         : 'Termina el wizard de producto (descripción, audiencia y tags SEO).',

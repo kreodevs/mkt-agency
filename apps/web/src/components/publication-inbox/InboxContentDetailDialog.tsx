@@ -7,8 +7,10 @@ import { Button } from '@/components/atoms/Button';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
+import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
+import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
@@ -43,6 +45,7 @@ interface InboxContentDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   sohoMode?: boolean;
   showApproval?: boolean;
+  onRejected?: (context: InboxRejectFollowUpContext) => void;
 }
 
 export function InboxContentDetailDialog({
@@ -51,12 +54,14 @@ export function InboxContentDetailDialog({
   onOpenChange,
   sohoMode = false,
   showApproval = false,
+  onRejected,
 }: InboxContentDetailDialogProps) {
   if (!item) {
     return null;
   }
 
   const displayBody = sanitizePublishableCopy(item.body);
+  const isRejected = item.status === 'rejected';
 
   return (
     <Dialog
@@ -103,24 +108,32 @@ export function InboxContentDetailDialog({
 
         <InboxQuickPublishActions item={item} />
 
-        {showApproval && item.versionId && !item.signatureHash && (
-          <ApprovalActions
-            contentId={item.contentId}
-            version={{
-              id: item.versionId,
-              versionNumber: item.versionNumber ?? 1,
-              title: item.title,
-              body: item.body,
-              signatureHash: item.signatureHash,
-              signedAt: null,
-              authorId: '',
-              assets: item.assets,
-              reason: null,
-              changeSummary: null,
-              createdAt: '',
-            }}
-            sohoMode={sohoMode}
-          />
+        {isRejected ? (
+          <RejectedInboxActions item={item} />
+        ) : (
+          showApproval &&
+          item.versionId &&
+          !item.signatureHash && (
+            <ApprovalActions
+              contentId={item.contentId}
+              version={{
+                id: item.versionId,
+                versionNumber: item.versionNumber ?? 1,
+                title: item.title,
+                body: item.body,
+                signatureHash: item.signatureHash,
+                signedAt: null,
+                authorId: '',
+                assets: item.assets,
+                reason: null,
+                changeSummary: null,
+                createdAt: '',
+              }}
+              sohoMode={sohoMode}
+              visualFormat={item.visualFormat}
+              onRejected={onRejected}
+            />
+          )
         )}
       </div>
     </Dialog>

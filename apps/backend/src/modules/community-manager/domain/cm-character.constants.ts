@@ -1,4 +1,5 @@
 export const CM_CHARACTER_METADATA_KEY = 'cmCharacter';
+export const CM_CHARACTERS_LIBRARY_KEY = 'cmCharacters';
 
 export type CmCharacterStatus =
   | 'pending'
@@ -24,6 +25,22 @@ export interface CmCharacterConfig {
   readyAt?: string | null;
   status?: CmCharacterStatus;
   errorMessage?: string | null;
+}
+
+export interface CmCharacterEntry extends CmCharacterConfig {
+  id: string;
+  name: string;
+}
+
+export interface CmCharactersLibrary {
+  characters: CmCharacterEntry[];
+  defaultCharacterId: string | null;
+}
+
+export interface CmCharacterLlmOption {
+  id: string;
+  name: string;
+  summary: string;
 }
 
 /** Voz ElevenLabs multilingüe con buen español (Matilda). */

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
@@ -60,15 +60,20 @@ export class PublicationInboxService {
     const pendingApproval: PublicationInboxItemDto[] = [];
     const readyToPublish: PublicationInboxItemDto[] = [];
     const upcoming: PublicationInboxItemDto[] = [];
+    const rejected: PublicationInboxItemDto[] = [];
 
     for (const row of rows) {
       const item = this.toInboxItem(row);
       const isApproved = row.status === 'approved' && Boolean(row.signatureHash);
+      const isRejected = row.status === 'rejected';
       const isPending =
         !isApproved &&
-        ['draft', 'in_review', 'in_changes', 'rejected'].includes(row.status);
+        !isRejected &&
+        ['draft', 'in_review', 'in_changes'].includes(row.status);
 
-      if (isPending) {
+      if (isRejected) {
+        rejected.push(item);
+      } else if (isPending) {
         pendingApproval.push(item);
       } else if (isApproved && item.scheduledDate <= today) {
         readyToPublish.push(item);
@@ -83,6 +88,7 @@ export class PublicationInboxService {
     pendingApproval.sort(sortByDate);
     readyToPublish.sort(sortByDate);
     upcoming.sort(sortByDate);
+    rejected.sort(sortByDate);
 
     const notificationRows = await this.notifications.find({
       where: { tenantId, readAt: IsNull() },
@@ -96,14 +102,35 @@ export class PublicationInboxService {
       pendingApproval,
       readyToPublish,
       upcoming,
+      rejected,
       notifications,
       stats: {
         pendingCount: pendingApproval.length,
         readyCount: readyToPublish.length,
         upcomingCount: upcoming.length,
+        rejectedCount: rejected.length,
         unreadNotifications: notifications.length,
       },
     };
+  }
+
+  async dismissRejected(
+    tenantId: string,
+    contentId: string,
+  ): Promise<{ contentId: string; dismissed: true }> {
+    const content = await this.contents.findOne({ where: { id: contentId, tenantId } });
+    if (!content) {
+      throw new NotFoundException({ error: 'Contenido no encontrado', code: 'NOT_FOUND' });
+    }
+    if (content.status !== 'rejected') {
+      throw new BadRequestException({
+        error: 'Solo se pueden archivar piezas rechazadas',
+        code: 'INVALID_STATUS',
+      });
+    }
+
+    await this.contentService.remove(tenantId, contentId);
+    return { contentId, dismissed: true };
   }
 
   async bulkApprove(
@@ -210,8 +237,11 @@ export class PublicationInboxService {
     const rows = await this.fetchInboxRows(tenantId);
     return rows.filter((row) => {
       const effectiveDate = this.effectiveDate(row);
+      const isApproved = row.status === 'approved' && Boolean(row.signatureHash);
       const isPending =
-        row.status !== 'approved' || !row.signatureHash;
+        !isApproved &&
+        row.status !== 'rejected' &&
+        ['draft', 'in_review', 'in_changes'].includes(row.status);
       return isPending && effectiveDate >= today && effectiveDate <= reminderEnd;
     });
   }

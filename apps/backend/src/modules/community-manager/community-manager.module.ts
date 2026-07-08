@@ -25,6 +25,7 @@ import { TonePresetEntity } from './infrastructure/typeorm/tone-preset.entity';
 import { AgentImageGenerationEntity } from '../agents/domain/agent-image-generation.entity';
 import { ContentVisualComposerService } from './content-visual-composer.service';
 import { CmCharacterController } from './cm-character.controller';
+import { CmCharactersController } from './cm-characters.controller';
 import { CmCharacterService } from './cm-character.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
 import { CommunityManagerController } from './community-manager.controller';
@@ -52,7 +53,12 @@ import { TonePresetController } from './tone-preset.controller';
     LlmModule,
     ContentModule,
   ],
-  controllers: [CommunityManagerController, TonePresetController, CmCharacterController],
+  controllers: [
+    CommunityManagerController,
+    TonePresetController,
+    CmCharacterController,
+    CmCharactersController,
+  ],
   providers: [
     CommunityManagerService,
     ContentVisualComposerService,

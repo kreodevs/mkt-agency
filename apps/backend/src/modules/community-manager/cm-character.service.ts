@@ -14,22 +14,32 @@ import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
 import {
+  CM_CHARACTERS_LIBRARY_KEY,
   CM_CHARACTER_METADATA_KEY,
   CM_PORTRAIT_SIZE,
   CM_PREVIEW_SCRIPT,
   DEFAULT_CM_VOICE_ID,
   DEFAULT_CM_VOICE_NAME,
-  type CmCharacterConfig,
+  type CmCharacterEntry,
+  type CmCharacterLlmOption,
+  type CmCharactersLibrary,
 } from './domain/cm-character.constants';
 import {
   buildCmPortraitPrompt,
-  isCmCharacterReady,
-  mergeCmCharacterConfig,
-  parseCmCharacterConfig,
+  createCmCharacterEntry,
+  entryToLegacyConfig,
+  getCharacterById,
+  getDefaultCharacter,
+  isCmCharacterEntryReady,
+  listReadyCharacters,
+  mergeCmCharacterEntry,
+  parseCmCharactersLibrary,
+  summarizeCharacterForLlm,
 } from './domain/cm-character.util';
 import type {
   CmCharacterGenerateResponseDto,
   CmCharacterStatusResponseDto,
+  CmCharactersLibraryResponseDto,
   UpdateCmCharacterAppearanceDto,
 } from './dto/cm-character.dto';
 
@@ -49,66 +59,192 @@ export class CmCharacterService {
     private readonly imageAdapter: ImageGenerationAdapterPort,
   ) {}
 
-  async getStatus(tenantId: string, productId: string): Promise<CmCharacterStatusResponseDto> {
+  async listLibrary(tenantId: string, productId: string): Promise<CmCharactersLibraryResponseDto> {
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const config = parseCmCharacterConfig(product.metadata);
+    const library = await this.loadLibrary(product);
 
     return {
       productId: product.id,
-      ready: isCmCharacterReady(config),
-      status: config?.status ?? 'pending',
-      portraitAssetId: config?.portraitAssetId ?? null,
-      previewVideoAssetId: config?.previewVideoAssetId ?? null,
-      appearance: config?.appearance ?? null,
-      voiceId: config?.voiceId ?? DEFAULT_CM_VOICE_ID,
-      voiceName: config?.voiceName ?? DEFAULT_CM_VOICE_NAME,
-      errorMessage: config?.errorMessage ?? null,
+      defaultCharacterId: library.defaultCharacterId,
+      readyCount: listReadyCharacters(library).length,
+      characters: library.characters.map((entry) =>
+        this.toStatusResponse(product.id, entry, library.defaultCharacterId),
+      ),
     };
+  }
+
+  async createCharacter(
+    tenantId: string,
+    productId: string,
+    name: string,
+  ): Promise<CmCharacterStatusResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = createCmCharacterEntry(name);
+    library.characters.push(entry);
+    if (!library.defaultCharacterId) {
+      library.defaultCharacterId = entry.id;
+    }
+    await this.saveLibrary(product, library);
+    return this.toStatusResponse(product.id, entry, library.defaultCharacterId);
+  }
+
+  async deleteCharacter(
+    tenantId: string,
+    productId: string,
+    characterId: string,
+  ): Promise<CmCharactersLibraryResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const index = library.characters.findIndex((c) => c.id === characterId);
+    if (index < 0) {
+      throw new NotFoundException({ error: 'CM no encontrada', code: 'NOT_FOUND' });
+    }
+
+    library.characters.splice(index, 1);
+    if (library.defaultCharacterId === characterId) {
+      library.defaultCharacterId =
+        listReadyCharacters(library)[0]?.id ?? library.characters[0]?.id ?? null;
+    }
+
+    await this.saveLibrary(product, library);
+    return this.listLibrary(tenantId, productId);
+  }
+
+  async setDefaultCharacter(
+    tenantId: string,
+    productId: string,
+    characterId: string,
+  ): Promise<CmCharacterStatusResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = getCharacterById(library, characterId);
+    if (!entry) {
+      throw new NotFoundException({ error: 'CM no encontrada', code: 'NOT_FOUND' });
+    }
+    library.defaultCharacterId = characterId;
+    await this.saveLibrary(product, library);
+    return this.toStatusResponse(product.id, entry, library.defaultCharacterId);
+  }
+
+  async getStatus(
+    tenantId: string,
+    productId: string,
+    characterId?: string,
+  ): Promise<CmCharacterStatusResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = characterId
+      ? getCharacterById(library, characterId)
+      : getDefaultCharacter(library);
+    if (!entry) {
+      throw new NotFoundException({
+        error: 'No hay CM virtual configurada. Crea una en la biblioteca.',
+        code: 'CM_CHARACTER_NOT_FOUND',
+      });
+    }
+    return this.toStatusResponse(product.id, entry, library.defaultCharacterId);
   }
 
   async updateAppearance(
     tenantId: string,
     productId: string,
     dto: UpdateCmCharacterAppearanceDto,
+    characterId?: string,
   ): Promise<CmCharacterStatusResponseDto> {
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const current = parseCmCharacterConfig(product.metadata);
+    const library = await this.loadLibrary(product);
+    const entry = characterId
+      ? getCharacterById(library, characterId)
+      : getDefaultCharacter(library);
+    if (!entry) {
+      throw new NotFoundException({ error: 'CM no encontrada', code: 'NOT_FOUND' });
+    }
 
-    const next = mergeCmCharacterConfig(current, {
+    const next = mergeCmCharacterEntry(entry, {
+      name: dto.name?.trim() || entry.name,
       appearance: {
-        ...current?.appearance,
-        gender: dto.gender ?? current?.appearance?.gender,
-        ageRange: dto.ageRange ?? current?.appearance?.ageRange,
-        style: dto.style ?? current?.appearance?.style,
-        background: dto.background ?? current?.appearance?.background,
-        notes: dto.notes ?? current?.appearance?.notes,
+        ...entry.appearance,
+        gender: dto.gender ?? entry.appearance?.gender,
+        ageRange: dto.ageRange ?? entry.appearance?.ageRange,
+        style: dto.style ?? entry.appearance?.style,
+        background: dto.background ?? entry.appearance?.background,
+        notes: dto.notes ?? entry.appearance?.notes,
       },
-      voiceId: dto.voiceId?.trim() || current?.voiceId || DEFAULT_CM_VOICE_ID,
-      voiceName: dto.voiceName?.trim() || current?.voiceName || DEFAULT_CM_VOICE_NAME,
-      status: current?.status === 'ready' ? 'ready' : 'pending',
+      voiceId: dto.voiceId?.trim() || entry.voiceId || DEFAULT_CM_VOICE_ID,
+      voiceName: dto.voiceName?.trim() || entry.voiceName || DEFAULT_CM_VOICE_NAME,
+      status: entry.status === 'ready' ? 'ready' : 'pending',
       errorMessage: null,
     });
 
-    await this.saveConfig(product, next);
-    return this.getStatus(tenantId, productId);
+    this.replaceEntry(library, next);
+    await this.saveLibrary(product, library);
+    return this.toStatusResponse(product.id, next, library.defaultCharacterId);
+  }
+
+  async selectPortrait(
+    tenantId: string,
+    productId: string,
+    characterId: string,
+    assetId: string,
+  ): Promise<CmCharacterGenerateResponseDto> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = getCharacterById(library, characterId);
+    if (!entry) {
+      throw new NotFoundException({ error: 'CM no encontrada', code: 'NOT_FOUND' });
+    }
+
+    const asset = await this.assetService.findOne(tenantId, assetId);
+    if (asset.type !== 'image') {
+      throw new BadRequestException({
+        error: 'El retrato debe ser una imagen de la biblioteca',
+        code: 'INVALID_ASSET_TYPE',
+      });
+    }
+
+    const next = mergeCmCharacterEntry(entry, {
+      portraitAssetId: asset.id,
+      status: entry.status === 'ready' ? 'ready' : 'pending',
+      errorMessage: null,
+    });
+    this.replaceEntry(library, next);
+    await this.saveLibrary(product, library);
+
+    return {
+      characterId: next.id,
+      portraitAssetId: asset.id,
+      status: next.status ?? 'pending',
+      message: entry.status === 'ready'
+        ? 'Retrato actualizado desde la biblioteca.'
+        : 'Retrato asignado. Genera la vista previa para activar esta CM.',
+    };
   }
 
   async generatePortrait(
     tenantId: string,
     userId: string,
     productId: string,
+    characterId?: string,
   ): Promise<CmCharacterGenerateResponseDto> {
     void userId;
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const current = parseCmCharacterConfig(product.metadata) ?? { status: 'pending' as const };
+    const library = await this.loadLibrary(product);
+    let entry = characterId
+      ? getCharacterById(library, characterId)
+      : getDefaultCharacter(library);
+    if (!entry) {
+      entry = createCmCharacterEntry('CM principal');
+      library.characters.push(entry);
+      library.defaultCharacterId = entry.id;
+    }
 
-    await this.saveConfig(
-      product,
-      mergeCmCharacterConfig(current, {
-        status: 'generating_portrait',
-        errorMessage: null,
-      }),
+    const current = entry;
+    this.replaceEntry(
+      library,
+      mergeCmCharacterEntry(current, { status: 'generating_portrait', errorMessage: null }),
     );
+    await this.saveLibrary(product, library);
 
     try {
       const profile = await this.profiles.findOne({ where: { tenantId } });
@@ -142,7 +278,7 @@ export class CmCharacterService {
       const extension = mimeType.split('/').pop() || 'png';
       const fakeFile: Express.Multer.File = {
         buffer,
-        originalname: `cm-retrato-${product.id.slice(0, 8)}.${extension}`,
+        originalname: `cm-retrato-${current.id.slice(0, 8)}.${extension}`,
         mimetype: mimeType,
         size: buffer.length,
         fieldname: 'file',
@@ -157,32 +293,32 @@ export class CmCharacterService {
         source: 'cm-character',
         kind: 'portrait',
         productId: product.id,
+        cmCharacterId: current.id,
+        cmCharacterName: current.name,
       });
 
-      await this.saveConfig(
-        product,
-        mergeCmCharacterConfig(current, {
-          portraitAssetId: asset.id,
-          status: 'pending',
-          errorMessage: null,
-        }),
-      );
-
-      return {
+      const updated = mergeCmCharacterEntry(current, {
         portraitAssetId: asset.id,
         status: 'pending',
-        message: 'Retrato generado. Genera la vista previa para activar la CM virtual.',
+        errorMessage: null,
+      });
+      this.replaceEntry(library, updated);
+      await this.saveLibrary(product, library);
+
+      return {
+        characterId: current.id,
+        portraitAssetId: asset.id,
+        status: 'pending',
+        message: 'Retrato generado. Genera la vista previa para activar esta CM.',
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al generar retrato';
       this.logger.error(`CM portrait failed for product ${productId}`, error);
-      await this.saveConfig(
-        product,
-        mergeCmCharacterConfig(current, {
-          status: 'failed',
-          errorMessage: message,
-        }),
+      this.replaceEntry(
+        library,
+        mergeCmCharacterEntry(current, { status: 'failed', errorMessage: message }),
       );
+      await this.saveLibrary(product, library);
       throw new BadRequestException({ error: message, code: 'CM_PORTRAIT_FAILED' });
     }
   }
@@ -191,83 +327,153 @@ export class CmCharacterService {
     tenantId: string,
     userId: string,
     productId: string,
+    characterId?: string,
   ): Promise<CmCharacterGenerateResponseDto> {
     void userId;
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const current = parseCmCharacterConfig(product.metadata);
-
-    if (!current?.portraitAssetId) {
+    const library = await this.loadLibrary(product);
+    const entry = characterId
+      ? getCharacterById(library, characterId)
+      : getDefaultCharacter(library);
+    if (!entry?.portraitAssetId) {
       throw new BadRequestException({
-        error: 'Genera primero el retrato de la CM virtual',
+        error: 'Asigna o genera primero el retrato de la CM',
         code: 'CM_PORTRAIT_MISSING',
       });
     }
 
-    await this.saveConfig(
-      product,
-      mergeCmCharacterConfig(current, {
-        status: 'generating_preview',
-        errorMessage: null,
-      }),
+    this.replaceEntry(
+      library,
+      mergeCmCharacterEntry(entry, { status: 'generating_preview', errorMessage: null }),
     );
+    await this.saveLibrary(product, library);
 
     try {
       const composed = await this.talkingHeadComposer.compose({
         tenantId,
         productId: product.id,
-        portraitAssetId: current.portraitAssetId,
+        portraitAssetId: entry.portraitAssetId,
         script: CM_PREVIEW_SCRIPT,
-        voiceId: current.voiceId ?? DEFAULT_CM_VOICE_ID,
-        metadata: { phase: 'preview' },
+        voiceId: entry.voiceId ?? DEFAULT_CM_VOICE_ID,
+        metadata: { phase: 'preview', cmCharacterId: entry.id, cmCharacterName: entry.name },
       });
 
-      await this.saveConfig(
-        product,
-        mergeCmCharacterConfig(current, {
-          previewVideoAssetId: composed.videoAssetId,
-          status: 'ready',
-          readyAt: new Date().toISOString(),
-          errorMessage: null,
-        }),
-      );
+      const updated = mergeCmCharacterEntry(entry, {
+        previewVideoAssetId: composed.videoAssetId,
+        status: 'ready',
+        readyAt: new Date().toISOString(),
+        errorMessage: null,
+      });
+      this.replaceEntry(library, updated);
+      await this.saveLibrary(product, library);
 
       return {
+        characterId: entry.id,
         previewVideoAssetId: composed.videoAssetId,
-        portraitAssetId: current.portraitAssetId,
+        portraitAssetId: entry.portraitAssetId,
         status: 'ready',
-        message: 'CM virtual lista. Los reels de TikTok usarán este retrato.',
+        message: `${entry.name} lista. El copiloto elegirá entre tus CMs según el post.`,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al generar vista previa';
       this.logger.error(`CM preview failed for product ${productId}`, error);
-      await this.saveConfig(
-        product,
-        mergeCmCharacterConfig(current, {
-          status: 'failed',
-          errorMessage: message,
-        }),
+      this.replaceEntry(
+        library,
+        mergeCmCharacterEntry(entry, { status: 'failed', errorMessage: message }),
       );
+      await this.saveLibrary(product, library);
       throw new BadRequestException({ error: message, code: 'CM_PREVIEW_FAILED' });
     }
   }
 
-  async assertReadyForTalkingHead(tenantId: string, productId: string): Promise<CmCharacterConfig> {
+  async hasAnyReadyCharacter(tenantId: string, productId: string): Promise<boolean> {
     const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const config = parseCmCharacterConfig(product.metadata);
-    if (!isCmCharacterReady(config) || !config?.portraitAssetId) {
+    const library = await this.loadLibrary(product);
+    return listReadyCharacters(library).length > 0;
+  }
+
+  async listReadyForLlm(tenantId: string, productId: string): Promise<CmCharacterLlmOption[]> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    return listReadyCharacters(library).map(summarizeCharacterForLlm);
+  }
+
+  async assertReadyForTalkingHead(
+    tenantId: string,
+    productId: string,
+    characterId?: string,
+  ): Promise<CmCharacterEntry> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = characterId
+      ? getCharacterById(library, characterId)
+      : getDefaultCharacter(library);
+
+    if (!entry || !isCmCharacterEntryReady(entry) || !entry.portraitAssetId) {
       throw new NotFoundException({
-        error: 'La CM virtual no está configurada. Completa la actividad inicial.',
+        error: 'No hay CM virtual lista para este post. Configura la biblioteca de CMs.',
         code: 'CM_CHARACTER_NOT_READY',
       });
     }
-    return config;
+
+    if (characterId && !isCmCharacterEntryReady(entry)) {
+      throw new NotFoundException({
+        error: 'La CM seleccionada no está lista',
+        code: 'CM_CHARACTER_NOT_READY',
+      });
+    }
+
+    return entry;
   }
 
-  private async saveConfig(product: ProductEntity, config: CmCharacterConfig): Promise<void> {
+  private async loadLibrary(product: ProductEntity): Promise<CmCharactersLibrary> {
+    const library = parseCmCharactersLibrary(product.metadata);
+    const shouldPersist =
+      !product.metadata?.[CM_CHARACTERS_LIBRARY_KEY] &&
+      Boolean(product.metadata?.[CM_CHARACTER_METADATA_KEY]);
+    if (shouldPersist) {
+      await this.saveLibrary(product, library);
+    }
+    return library;
+  }
+
+  private replaceEntry(library: CmCharactersLibrary, entry: CmCharacterEntry): void {
+    const index = library.characters.findIndex((c) => c.id === entry.id);
+    if (index >= 0) {
+      library.characters[index] = entry;
+    } else {
+      library.characters.push(entry);
+    }
+  }
+
+  private async saveLibrary(product: ProductEntity, library: CmCharactersLibrary): Promise<void> {
+    const defaultEntry = getDefaultCharacter(library);
     product.metadata = {
       ...(product.metadata ?? {}),
-      [CM_CHARACTER_METADATA_KEY]: config,
+      [CM_CHARACTERS_LIBRARY_KEY]: library,
+      [CM_CHARACTER_METADATA_KEY]: defaultEntry ? entryToLegacyConfig(defaultEntry) : null,
     };
     await this.products.save(product);
+  }
+
+  private toStatusResponse(
+    productId: string,
+    entry: CmCharacterEntry,
+    defaultCharacterId: string | null,
+  ): CmCharacterStatusResponseDto {
+    return {
+      characterId: entry.id,
+      name: entry.name,
+      productId,
+      ready: isCmCharacterEntryReady(entry),
+      status: entry.status ?? 'pending',
+      portraitAssetId: entry.portraitAssetId ?? null,
+      previewVideoAssetId: entry.previewVideoAssetId ?? null,
+      appearance: entry.appearance ?? null,
+      voiceId: entry.voiceId ?? DEFAULT_CM_VOICE_ID,
+      voiceName: entry.voiceName ?? DEFAULT_CM_VOICE_NAME,
+      errorMessage: entry.errorMessage ?? null,
+      isDefault: entry.id === defaultCharacterId,
+    };
   }
 }

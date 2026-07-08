@@ -320,9 +320,12 @@ export class CommunityManagerService {
       const kit = effectiveProductId
         ? await this.mediaKitService.listEntitiesForProduct(tenantId, effectiveProductId)
         : [];
-      const cmCharacterStatus = effectiveProductId
-        ? await this.cmCharacter.getStatus(tenantId, effectiveProductId)
-        : null;
+      const cmCharacters = effectiveProductId
+        ? await this.cmCharacter.listReadyForLlm(tenantId, effectiveProductId)
+        : [];
+      const cmCharacterReady = effectiveProductId
+        ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
+        : false;
 
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await runWithLlmUsageContext(
@@ -340,7 +343,8 @@ export class CommunityManagerService {
             productContext: productContext as unknown as Record<string, unknown>,
             focusProductName: productContext?.name ?? null,
             competitorIntelBrief,
-            cmCharacterReady: cmCharacterStatus?.ready === true,
+            cmCharacterReady,
+            cmCharacters: cmCharacters.length > 0 ? cmCharacters : undefined,
             mediaKit: kit.map((item) => ({
               role: item.role,
               label: item.label,
@@ -516,7 +520,7 @@ export class CommunityManagerService {
     tenantId: string,
     userId: string,
     contentId: string,
-    options?: { feedback?: string; versionId?: string },
+    options?: { feedback?: string; versionId?: string; visualFormat?: string },
   ): Promise<{ contentId: string; title: string; regenerated: true }> {
     const content = await this.contents.findOne({ where: { id: contentId, tenantId } });
     if (!content) {
@@ -524,6 +528,9 @@ export class CommunityManagerService {
     }
 
     const feedback = options?.feedback?.trim();
+    const forcedVisualFormat = options?.visualFormat
+      ? normalizeContentVisualFormat(options.visualFormat)
+      : null;
     const fullContent = await this.contentService.findOne(tenantId, contentId);
     const currentVersion = fullContent.currentVersion ?? null;
 
@@ -543,6 +550,12 @@ export class CommunityManagerService {
       );
     }
 
+    let revisionBrief = feedback;
+    if (forcedVisualFormat) {
+      const formatHint = `Regenera el post con formato visual "${forcedVisualFormat}" (adapta copy y escena visual al nuevo formato).`;
+      revisionBrief = feedback ? `${feedback}\n\n${formatHint}` : formatHint;
+    }
+
     const platform = this.normalizePlatforms(
       content.platform ? [content.platform] : undefined,
     )[0];
@@ -558,6 +571,13 @@ export class CommunityManagerService {
     const kit = content.productId
       ? await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId)
       : [];
+    const effectiveProductId = productContext?.id ?? content.productId ?? undefined;
+    const cmCharacters = effectiveProductId
+      ? await this.cmCharacter.listReadyForLlm(tenantId, effectiveProductId)
+      : [];
+    const cmCharacterReady = effectiveProductId
+      ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
+      : false;
 
     const result = await runWithLlmUsageContext({ tenantId, userId }, () =>
       this.adapter.generate({
@@ -565,12 +585,14 @@ export class CommunityManagerService {
         platforms: [platform],
         count: 1,
         campaignId: content.campaignId ?? undefined,
-        productId: productContext?.id ?? content.productId ?? undefined,
+        productId: effectiveProductId,
         brandBrief,
         productContext: productContext as unknown as Record<string, unknown>,
         focusProductName: productContext?.name ?? null,
         competitorIntelBrief,
-        revisionBrief: feedback,
+        revisionBrief,
+        cmCharacterReady,
+        cmCharacters: cmCharacters.length > 0 ? cmCharacters : undefined,
         previousPost: currentVersion
           ? {
               title: currentVersion.title,
@@ -592,6 +614,10 @@ export class CommunityManagerService {
         error: 'No se pudo regenerar el post',
         code: 'GENERATION_FAILED',
       });
+    }
+
+    if (forcedVisualFormat) {
+      post.visualFormat = forcedVisualFormat;
     }
 
     await this.contentService.update(tenantId, userId, contentId, {

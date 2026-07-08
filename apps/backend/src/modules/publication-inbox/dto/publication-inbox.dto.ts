@@ -49,11 +49,13 @@ export class PublicationInboxResponseDto {
   pendingApproval!: PublicationInboxItemDto[];
   readyToPublish!: PublicationInboxItemDto[];
   upcoming!: PublicationInboxItemDto[];
+  rejected!: PublicationInboxItemDto[];
   notifications!: AgencyNotificationDto[];
   stats!: {
     pendingCount: number;
     readyCount: number;
     upcomingCount: number;
+    rejectedCount: number;
     unreadNotifications: number;
   };
 }
@@ -80,12 +82,15 @@ export class CopilotStatusResponseDto {
     pendingCount: number;
     readyCount: number;
     upcomingCount: number;
+    rejectedCount: number;
     unreadNotifications: number;
   };
   nextStep!: string;
   canPrepareWeek!: boolean;
   cmCharacterReady!: boolean;
   cmCharacterStatus!: string;
+  cmCharactersReadyCount!: number;
+  cmCharactersTotalCount!: number;
   prepareBlockedReason!: string | null;
 }
 
@@ -127,4 +132,21 @@ export class RequestInboxChangesResponseDto {
   contentId!: string;
   title!: string;
   regenerated!: true;
+}
+
+export class RegenerateInboxContentDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  feedback?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  visualFormat?: string;
+}
+
+export class DismissInboxContentResponseDto {
+  contentId!: string;
+  dismissed!: true;
 }

@@ -17,11 +17,13 @@ import {
   BulkApproveDto,
   BulkApproveResponseDto,
   CopilotStatusResponseDto,
+  DismissInboxContentResponseDto,
   PrepareWeekDto,
   PrepareWeekJobStartedDto,
   PrepareWeekJobStatusDto,
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
+  RegenerateInboxContentDto,
   RequestInboxChangesDto,
   RequestInboxChangesResponseDto,
 } from './dto/publication-inbox.dto';
@@ -107,12 +109,25 @@ export class PublicationInboxController {
   regenerateContent(
     @CurrentUser() user: AuthenticatedUser,
     @Param('contentId') contentId: string,
+    @Body() body: RegenerateInboxContentDto,
   ) {
     return this.communityManager.regeneratePostForContent(
       user.tenantId!,
       user.id,
       contentId,
+      {
+        feedback: body.feedback,
+        visualFormat: body.visualFormat,
+      },
     );
+  }
+
+  @Post('dismiss/:contentId')
+  dismissRejected(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ): Promise<DismissInboxContentResponseDto> {
+    return this.inboxService.dismissRejected(user.tenantId!, contentId);
   }
 
   @Post('request-changes/:contentId')

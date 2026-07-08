@@ -3,15 +3,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
   CalendarClock,
+  CalendarDays,
   CheckCheck,
   ClipboardCheck,
   PartyPopper,
   Send,
   Users,
+  XCircle,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CopilotStatusPanel } from '@/components/copilot/CopilotStatusPanel';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
+import {
+  InboxRejectFollowUpDialog,
+  type InboxRejectFollowUpContext,
+} from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 import { InboxKitPanel } from '@/components/publication-inbox/InboxKitPanel';
 import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
 import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPanel';
@@ -41,6 +47,7 @@ export default function PublicationInboxPage() {
   const activeProductId = useActiveProductStore((s) => s.productId);
   const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [rejectFollowUp, setRejectFollowUp] = useState<InboxRejectFollowUpContext | null>(null);
   const welcome = searchParams.get('welcome') === '1';
   const urlProductId = searchParams.get('productId');
 
@@ -86,7 +93,12 @@ export default function PublicationInboxPage() {
   const pending = data?.pendingApproval ?? [];
   const ready = data?.readyToPublish ?? [];
   const upcoming = data?.upcoming ?? [];
+  const rejected = data?.rejected ?? [];
   const notifications = data?.notifications ?? [];
+
+  const handleRejected = (context: InboxRejectFollowUpContext) => {
+    setRejectFollowUp(context);
+  };
 
   useSohoBrowserNotifications(notifications, sohoMode);
 
@@ -144,6 +156,16 @@ export default function PublicationInboxPage() {
           advancedNav
             ? 'La agencia sugiere — tú apruebas y publicas manualmente'
             : 'Preparar · Revisar · Publicar — el copiloto hace el resto'
+        }
+        actions={
+          sohoMode ? (
+            <Link to="/calendario">
+              <Button type="button" variant="outline" size="sm" className="gap-1.5">
+                <CalendarDays className="h-4 w-4" />
+                Calendario
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
 
@@ -218,10 +240,16 @@ export default function PublicationInboxPage() {
           iconTone="success"
         />
         <StatsCard
-          title="Próximas"
-          value={data?.stats.upcomingCount ?? 0}
-          icon={<CalendarClock className="h-5 w-5" aria-hidden />}
-          iconTone="accent"
+          title={sohoMode ? 'Rechazadas' : 'Próximas'}
+          value={sohoMode ? (data?.stats.rejectedCount ?? 0) : (data?.stats.upcomingCount ?? 0)}
+          icon={
+            sohoMode ? (
+              <XCircle className="h-5 w-5" aria-hidden />
+            ) : (
+              <CalendarClock className="h-5 w-5" aria-hidden />
+            )
+          }
+          iconTone={sohoMode ? 'warning' : 'accent'}
         />
         <StatsCard
           title={sohoMode ? 'Contactos hoy' : 'Leads hoy'}
@@ -289,11 +317,30 @@ export default function PublicationInboxPage() {
                     showApproval
                     primaryAction={primaryAction}
                     sohoMode={sohoMode}
+                    onRejected={sohoMode ? handleRejected : undefined}
                   />
                 ))}
               </div>
             )}
           </Card>
+
+          {rejected.length > 0 && (
+            <Card
+              title="Rechazadas"
+              subtitle={`${rejected.length} pieza(s) — prueba otro formato o archívalas`}
+            >
+              <div className="space-y-[var(--spacing-md)]">
+                {rejected.map((item) => (
+                  <InboxItemCard
+                    key={item.contentId}
+                    item={item}
+                    primaryAction={primaryAction}
+                    sohoMode={sohoMode}
+                  />
+                ))}
+              </div>
+            </Card>
+          )}
 
           {!sohoMode && (
             <Card title="Próximas" subtitle="Programadas a futuro">
@@ -344,6 +391,11 @@ export default function PublicationInboxPage() {
           )}
         </div>
       </div>
+
+      <InboxRejectFollowUpDialog
+        context={rejectFollowUp}
+        onClose={() => setRejectFollowUp(null)}
+      />
     </DashboardShell>
   );
 }

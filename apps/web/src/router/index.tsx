@@ -45,6 +45,9 @@ const AgencyHomePage = lazy(() => import('@/pages/home/AgencyHomePage'));
 const PublicationInboxPage = lazy(
   () => import('@/pages/publication-inbox/PublicationInboxPage'),
 );
+const PublicationCalendarPage = lazy(
+  () => import('@/pages/publication-inbox/PublicationCalendarPage'),
+);
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
 const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
@@ -77,6 +80,7 @@ export function AppRouter() {
 
         <Route element={<AuthGuard />}>
           <Route path="/" element={<PublicationInboxPage />} />
+          <Route path="/calendario" element={<PublicationCalendarPage />} />
           <Route path="/agency-overview" element={<AgencyHomePage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />

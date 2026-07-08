@@ -26,14 +26,18 @@ export class TalkingHeadPostComposerService {
     tenantId: string,
     userId: string,
     contentId: string,
-    post: Pick<SocialCopyPost, 'body' | 'visualFormat'>,
+    post: Pick<SocialCopyPost, 'body' | 'visualFormat' | 'cmCharacterId'>,
     productId: string,
   ): Promise<boolean> {
     if (normalizeContentVisualFormat(post.visualFormat) !== 'talking-head') {
       return false;
     }
 
-    const config = await this.cmCharacter.assertReadyForTalkingHead(tenantId, productId);
+    const config = await this.cmCharacter.assertReadyForTalkingHead(
+      tenantId,
+      productId,
+      post.cmCharacterId,
+    );
     const content = await this.contentService.findOne(tenantId, contentId);
     const script = sanitizePublishableCopy(post.body || content.currentVersion?.body || '');
     if (!script.trim()) {
@@ -64,7 +68,12 @@ export class TalkingHeadPostComposerService {
         portraitAssetId: config.portraitAssetId!,
         script,
         voiceId: config.voiceId ?? DEFAULT_CM_VOICE_ID,
-        metadata: { source: 'copilot-week', generationId: record.id },
+        metadata: {
+          source: 'copilot-week',
+          generationId: record.id,
+          cmCharacterId: config.id,
+          cmCharacterName: config.name,
+        },
       });
 
       record.status = 'completed';

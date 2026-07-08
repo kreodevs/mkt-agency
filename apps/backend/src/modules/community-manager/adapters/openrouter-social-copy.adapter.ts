@@ -72,14 +72,23 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ].join('\n')
       : '';
 
-    const cmCharacterGuide = context.cmCharacterReady
-      ? [
-          'La marca tiene CM virtual configurada (retrato + lip-sync en español).',
-          'Para TikTok asigna visualFormat: talking-head (la CM hablará el body del post).',
-          'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM.',
-          'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
-        ].join('\n')
-      : 'No hay CM virtual: NO uses visualFormat talking-head. TikTok→image vertical.';
+    const cmCharacterGuide =
+      context.cmCharacterReady && context.cmCharacters?.length
+        ? [
+            `Biblioteca de CMs virtuales listas (${context.cmCharacters.length}): ${JSON.stringify(context.cmCharacters)}`,
+            'Para TikTok con visualFormat talking-head elige cmCharacterId de la biblioteca según tono del post (ej. más formal → CM ejecutiva, más cercana → CM juvenil).',
+            'Si ninguna CM encaja, usa la de nombre más genérico o la primera de la lista.',
+            'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM elegida.',
+            'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
+          ].join('\n')
+        : context.cmCharacterReady
+          ? [
+              'La marca tiene al menos una CM virtual lista (retrato + lip-sync en español).',
+              'Para TikTok asigna visualFormat: talking-head (la CM hablará el body del post).',
+              'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM.',
+              'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
+            ].join('\n')
+          : 'No hay CM virtual lista: NO uses visualFormat talking-head. TikTok→image vertical.';
 
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
@@ -102,6 +111,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             targetAudience: 'audiencia objetivo de este post específico',
             callToAction: 'llamado a la acción claro',
             tone: 'tono usado en este post',
+            cmCharacterId:
+              'uuid de la CM virtual (solo si visualFormat=talking-head y hay biblioteca)',
           },
         ],
         publishingGuide:
@@ -123,7 +134,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       cmCharacterGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
       context.cmCharacterReady
-        ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head; resto→image.'
+        ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head con cmCharacterId; resto→image.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
       'visualDescription = brief de arte para generador de imágenes (escena, luz, encuadre, estilo). NUNCA copies el body, hashtags ni CTA.',
       'body = copy publicable listo para publicar en la red. Son campos independientes.',

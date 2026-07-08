@@ -8,8 +8,10 @@ import { StatusPill } from '@/components/atoms/StatusPill';
 import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxContentDetailDialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
+import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
+import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
@@ -46,6 +48,7 @@ interface InboxItemCardProps {
   showApproval?: boolean;
   primaryAction?: 'copy' | 'edit';
   sohoMode?: boolean;
+  onRejected?: (context: InboxRejectFollowUpContext) => void;
 }
 
 export function InboxItemCard({
@@ -56,11 +59,13 @@ export function InboxItemCard({
   showApproval = false,
   primaryAction = 'copy',
   sohoMode = false,
+  onRejected,
 }: InboxItemCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const formattedDate = formatScheduledDate(item.scheduledDate);
   const displayBody = sanitizePublishableCopy(item.body);
   const showBodyClamp = displayBody.length > 320;
+  const isRejected = item.status === 'rejected';
 
   return (
     <article className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]/40">
@@ -160,29 +165,38 @@ export function InboxItemCard({
             open={detailOpen}
             onOpenChange={setDetailOpen}
             sohoMode={sohoMode}
-            showApproval={showApproval}
+            showApproval={showApproval && !isRejected}
+            onRejected={onRejected}
           />
 
-          {showApproval && item.versionId && !item.signatureHash && (
-            <div className="mt-[var(--spacing-md)] border-t border-[var(--border)] pt-[var(--spacing-md)]">
-              <ApprovalActions
-                contentId={item.contentId}
-                version={{
-                  id: item.versionId,
-                  versionNumber: item.versionNumber ?? 1,
-                  title: item.title,
-                  body: item.body,
-                  signatureHash: item.signatureHash,
-                  signedAt: null,
-                  authorId: '',
-                  assets: item.assets,
-                  reason: null,
-                  changeSummary: null,
-                  createdAt: '',
-                }}
-                sohoMode={sohoMode}
-              />
-            </div>
+          {isRejected ? (
+            <RejectedInboxActions item={item} />
+          ) : (
+            showApproval &&
+            item.versionId &&
+            !item.signatureHash && (
+              <div className="mt-[var(--spacing-md)] border-t border-[var(--border)] pt-[var(--spacing-md)]">
+                <ApprovalActions
+                  contentId={item.contentId}
+                  version={{
+                    id: item.versionId,
+                    versionNumber: item.versionNumber ?? 1,
+                    title: item.title,
+                    body: item.body,
+                    signatureHash: item.signatureHash,
+                    signedAt: null,
+                    authorId: '',
+                    assets: item.assets,
+                    reason: null,
+                    changeSummary: null,
+                    createdAt: '',
+                  }}
+                  sohoMode={sohoMode}
+                  visualFormat={item.visualFormat}
+                  onRejected={onRejected}
+                />
+              </div>
+            )
           )}
         </div>
       </div>

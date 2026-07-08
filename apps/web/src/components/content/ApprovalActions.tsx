@@ -12,15 +12,25 @@ import {
 } from '@/services/content';
 import { requestInboxChanges } from '@/services/publication-inbox';
 import type { ContentVersion } from '@/types/content';
+import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 
 interface ApprovalActionsProps {
   contentId: string;
   version: ContentVersion;
   disabled?: boolean;
   sohoMode?: boolean;
+  visualFormat?: string;
+  onRejected?: (context: InboxRejectFollowUpContext) => void;
 }
 
-export function ApprovalActions({ contentId, version, disabled, sohoMode }: ApprovalActionsProps) {
+export function ApprovalActions({
+  contentId,
+  version,
+  disabled,
+  sohoMode,
+  visualFormat = 'image',
+  onRejected,
+}: ApprovalActionsProps) {
   const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState('');
 
@@ -48,7 +58,15 @@ export function ApprovalActions({ contentId, version, disabled, sohoMode }: Appr
     mutationFn: () => rejectContentVersion(contentId, version.id, feedback || undefined),
     onSuccess: () => {
       invalidate();
-      toast.message('Versión rechazada');
+      if (sohoMode && onRejected) {
+        onRejected({
+          contentId,
+          title: version.title,
+          visualFormat,
+        });
+      } else {
+        toast.message('Versión rechazada');
+      }
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo rechazar');

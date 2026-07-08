@@ -21,14 +21,29 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 
 ## CM virtual (talking-head)
 
-Actividad inicial idempotente en el copiloto:
+Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más adecuada por post TikTok.
 
-1. **Retrato** — tarea `cm_portrait_generation` (OpenRouter Flux 9:16).
-2. **Vista previa** — TTS (`tts_generation`, ElevenLabs) + lip-sync (`talking_head_generation`, Replicate `prunaai/p-video-avatar`).
-3. Posts TikTok con `visualFormat: talking-head` cuando `cmCharacter.readyAt` está definido.
+1. **Biblioteca** — varias CMs en `product.metadata.cmCharacters` (migración automática desde `cmCharacter` legacy).
+2. **Retrato** — IA (`cm_portrait_generation`) o selección desde biblioteca de assets.
+3. **Vista previa** — TTS + lip-sync para marcar la CM como `ready`.
+4. Posts TikTok `talking-head` incluyen `cmCharacterId` elegido por el LLM.
 
-API: `GET/PATCH /api/v1/products/:id/cm-character`, `POST .../generate-portrait`, `POST .../generate-preview`.
+### API biblioteca
 
-Metadata en `product.metadata.cmCharacter`.
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/products/:id/cm-characters` | Lista biblioteca + `readyCount` |
+| POST | `/api/v1/products/:id/cm-characters` | Crear CM `{ name }` |
+| PATCH | `/api/v1/products/:id/cm-characters/default` | Fijar CM por defecto |
+| GET/PATCH/DELETE | `/api/v1/products/:id/cm-characters/:characterId` | Detalle, apariencia, eliminar |
+| POST | `.../:characterId/generate-portrait` | Retrato IA |
+| POST | `.../:characterId/select-portrait` | Retrato desde asset `{ assetId }` |
+| POST | `.../:characterId/generate-preview` | Vista previa lip-sync |
+
+### API legacy (CM por defecto)
+
+`GET/PATCH /api/v1/products/:id/cm-character`, `POST .../generate-portrait`, `POST .../generate-preview`.
+
+Metadata: `product.metadata.cmCharacters` (biblioteca) + `cmCharacter` (espejo de la CM por defecto).
 
 Preferencias en `tenants.settings.communityManager` (JSONB, sin migración). Tamaños de imagen: `shared/social/image-destination-formats.util.ts` (TikTok vertical 9:16, resto feed 1:1 por defecto).

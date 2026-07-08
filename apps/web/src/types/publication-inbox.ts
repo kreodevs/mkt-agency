@@ -33,11 +33,13 @@ export interface PublicationInboxData {
   pendingApproval: PublicationInboxItem[];
   readyToPublish: PublicationInboxItem[];
   upcoming: PublicationInboxItem[];
+  rejected: PublicationInboxItem[];
   notifications: AgencyNotification[];
   stats: {
     pendingCount: number;
     readyCount: number;
     upcomingCount: number;
+    rejectedCount: number;
     unreadNotifications: number;
   };
 }
@@ -59,6 +61,8 @@ export interface CopilotStatus {
   canPrepareWeek: boolean;
   cmCharacterReady: boolean;
   cmCharacterStatus: string;
+  cmCharactersReadyCount: number;
+  cmCharactersTotalCount: number;
   prepareBlockedReason: string | null;
 }
 

@@ -6,12 +6,13 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas + notificaciones (incl. `assets`, `platform`, `visualFormat`) |
+| GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas, **rechazadas** + notificaciones |
 | GET | `/publication-inbox/copilot-status?productId=` | Estado del copiloto (producto, competidores, análisis, bandeja) |
 | POST | `/publication-inbox/prepare-week` | Encola orquestación (competidores → intel → estrategia → CM); responde `202` + `jobId` |
 | GET | `/publication-inbox/prepare-week/jobs/:jobId` | Estado del job (`processing` / `completed` / `failed`) |
-| POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual («Otra versión» siempre refresca imagen) |
+| POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual; body opcional `{ visualFormat?, feedback? }` |
 | POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }` |
+| POST | `/publication-inbox/dismiss/:contentId` | Archiva pieza **rechazada** (elimina de la bandeja) |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |
 | PATCH | `/publication-inbox/notifications/read-all` | Marca todas leídas |
