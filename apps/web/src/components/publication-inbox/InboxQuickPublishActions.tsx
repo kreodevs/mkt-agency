@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, ExternalLink, Link2, MessageCircle, RefreshCw } from 'lucide-react';
+import { Check, Copy, ExternalLink, Link2, MessageCircle, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import {
@@ -10,19 +10,73 @@ import {
 import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
+import { approveContentVersion, rejectContentVersion } from '@/services/content';
 import { regenerateInboxContent } from '@/services/publication-inbox';
+import { ApiError } from '@/services/api';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
+import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 
 interface InboxQuickPublishActionsProps {
   item: PublicationInboxItem;
   showRegenerate?: boolean;
+  showApproval?: boolean;
+  onRejected?: (context: InboxRejectFollowUpContext) => void;
+}
+
+function needsApproval(item: PublicationInboxItem): boolean {
+  return Boolean(item.versionId && !item.signatureHash && item.status !== 'rejected');
 }
 
 export function InboxQuickPublishActions({
   item,
   showRegenerate = true,
+  showApproval = false,
+  onRejected,
 }: InboxQuickPublishActionsProps) {
   const queryClient = useQueryClient();
+  const canApprove = showApproval && needsApproval(item);
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+    void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+    void queryClient.invalidateQueries({ queryKey: ['calendar-day'] });
+    void queryClient.invalidateQueries({
+      queryKey: ['image-generation-by-content', item.contentId],
+    });
+    void queryClient.invalidateQueries({ queryKey: ['content', item.contentId] });
+  };
+
+  const approveMutation = useMutation({
+    mutationFn: () => approveContentVersion(item.contentId, item.versionId!),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Publicación aprobada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo aprobar');
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: () => rejectContentVersion(item.contentId, item.versionId!),
+    onSuccess: () => {
+      invalidate();
+      if (onRejected) {
+        onRejected({
+          contentId: item.contentId,
+          title: item.title,
+          visualFormat: item.visualFormat,
+        });
+      } else {
+        toast.message('Versión rechazada');
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo rechazar');
+    },
+  });
+
+  const approvalBusy = approveMutation.isPending || rejectMutation.isPending;
 
   const captureFormQuery = useQuery({
     queryKey: ['capture-form', item.productId],
@@ -83,6 +137,31 @@ export function InboxQuickPublishActions({
 
   return (
     <div className="mt-[var(--spacing-md)] flex flex-wrap gap-[var(--spacing-sm)]">
+      {canApprove && (
+        <>
+          <Button
+            type="button"
+            size="sm"
+            loading={approveMutation.isPending}
+            disabled={approvalBusy}
+            onClick={() => approveMutation.mutate()}
+          >
+            <Check className="mr-1 h-3.5 w-3.5" />
+            Aprobar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            loading={rejectMutation.isPending}
+            disabled={approvalBusy}
+            onClick={() => rejectMutation.mutate()}
+          >
+            <X className="mr-1 h-3.5 w-3.5" />
+            Rechazar
+          </Button>
+        </>
+      )}
       <Button type="button" size="sm" onClick={() => void copyAll()}>
         <Copy className="mr-1 h-3.5 w-3.5" />
         Copiar texto

@@ -106,7 +106,7 @@ export function InboxContentDetailDialog({
           <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{displayBody}</p>
         </div>
 
-        <InboxQuickPublishActions item={item} />
+        <InboxQuickPublishActions item={item} showApproval={showApproval && !isRejected} onRejected={onRejected} />
 
         {isRejected ? (
           <RejectedInboxActions item={item} />

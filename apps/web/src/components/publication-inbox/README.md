@@ -9,7 +9,7 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; hace polling mientras regenera |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
-| `SohoCalendarDayPanel.tsx` | Publicaciones de un día (inbox: listas, pendientes, próximas, **rechazadas** + `/calendar/:date`) |
+| `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
 | `InboxQuickPublishActions.tsx` | Copiar, abrir red, WhatsApp, link captura, **Otra versión** (copy + imagen) |

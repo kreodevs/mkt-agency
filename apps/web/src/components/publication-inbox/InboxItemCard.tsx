@@ -119,7 +119,11 @@ export function InboxItemCard({
 
           {sohoMode ? (
             <div className="mt-[var(--spacing-md)] space-y-[var(--spacing-sm)]">
-              <InboxQuickPublishActions item={item} />
+              <InboxQuickPublishActions
+                item={item}
+                showApproval={showApproval && !isRejected}
+                onRejected={onRejected}
+              />
               <Button
                 type="button"
                 variant="outline"
