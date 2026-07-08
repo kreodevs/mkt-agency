@@ -38,6 +38,7 @@ import {
   markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
+import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
 
 export default function PublicationInboxPage() {
@@ -363,7 +364,7 @@ export default function PublicationInboxPage() {
             subtitle="Sube logos, fotos y material para tus publicaciones"
           >
             <Link
-              to="/assets"
+              to={LIBRARY_ROUTE}
               className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] text-sm transition-colors hover:border-[var(--primary)]"
             >
               <FolderOpen className="h-4 w-4 shrink-0 text-[var(--primary)]" />

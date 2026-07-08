@@ -24,6 +24,9 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+/** Ruta SPA de la librería (no usar `/assets`: colisiona con chunks de Vite en nginx). */
+export const LIBRARY_ROUTE = '/libreria';
+
 export const superadminNavigation = [
   {
     title: 'Administración',
@@ -54,7 +57,7 @@ export const tenantAdvancedNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-      { label: 'Librería', href: '/assets', icon: FolderOpen },
+      { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },
     ],
   },
   {
@@ -103,7 +106,7 @@ export const tenantSohoNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-      { label: 'Librería', href: '/assets', icon: FolderOpen },
+      { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },
       { label: 'Mi producto', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
     ],

@@ -168,7 +168,8 @@ export function AppRouter() {
             />
             <Route path="/forms" element={<FormListPage />} />
             <Route path="/leads" element={<LeadPipelinePage />} />
-            <Route path="/assets" element={<AssetLibraryPage />} />
+            <Route path="/libreria" element={<AssetLibraryPage />} />
+            <Route path="/assets" element={<Navigate to="/libreria" replace />} />
             <Route path="/proposals" element={<ProposalListPage />} />
             <Route path="/proposals/:id" element={<ProposalDetailPage />} />
             <Route path="/reports" element={<ReportListPage />} />

@@ -12,6 +12,7 @@ import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
+import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import type { ProductCategory, UpdateProductPayload } from '@/types/product';
 
 const selectClass =
@@ -134,7 +135,7 @@ export default function ProductDetailPage() {
                 Kit de medios
               </Button>
             </Link>
-            <Link to="/assets">
+            <Link to={LIBRARY_ROUTE}>
               <Button variant="outline" className="gap-2">
                 <FolderOpen className="h-4 w-4" />
                 Librería

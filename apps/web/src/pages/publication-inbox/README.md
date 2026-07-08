@@ -11,7 +11,7 @@ Página principal del tenant en `/`. En **modo copiloto** (default SOHO) el usua
 
 **Vista completa (avanzado):** flujo diario igual que copiloto en Inicio (preparar · aprobar · copiar). Menú extra para KPIs, métricas y herramientas manuales.
 
-`/assets` y `/calendario` en ambos modos. Toggle sidebar: «Ver todas las herramientas» / «Vista simple (copiloto)».
+`/libreria` y `/calendario` en ambos modos. Toggle sidebar: «Ver todas las herramientas» / «Vista simple (copiloto)».
 
 ## Archivos
 

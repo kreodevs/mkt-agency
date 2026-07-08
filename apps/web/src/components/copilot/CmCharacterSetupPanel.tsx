@@ -20,6 +20,7 @@ import { toast } from '@/components/molecules/Sonner';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { ApiError } from '@/services/api';
+import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import { listAssets, resolveAssetPreviewUrl } from '@/services/assets';
 import {
   createCmCharacter,
@@ -613,7 +614,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         size="xl"
         footer={
           <Link
-            to="/assets"
+            to={LIBRARY_ROUTE}
             className="text-sm font-medium text-[var(--primary)] hover:underline"
             onClick={() => setPortraitPickerOpen(false)}
           >
@@ -665,7 +666,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
               No hay imágenes en la biblioteca. Sube material en la librería o genera un retrato con
               IA.
             </p>
-            <Link to="/assets" onClick={() => setPortraitPickerOpen(false)}>
+            <Link to={LIBRARY_ROUTE} onClick={() => setPortraitPickerOpen(false)}>
               <Button type="button" variant="secondary" size="sm">
                 <ImageIcon className="mr-2 h-4 w-4" />
                 Ir a librería multimedia

@@ -1,15 +1,18 @@
 # Librería multimedia
 
-Página tenant en `/assets`: carpetas anidadas, listado, filtros, subida y acciones (mover, descargar, duplicar, eliminar).
+Página tenant en `/libreria`: carpetas anidadas, listado, filtros, subida y acciones (mover, descargar, duplicar, eliminar).
 
 ## Carpetas
 
-- **Árbol lateral:** crear, renombrar y eliminar carpetas (vacías). Soporta subcarpetas (ej. `Capturas / iOS`).
+- **Selector:** desplegable con rutas (`Capturas / iOS`) + botón **Organizar** (árbol en diálogo).
 - **Filtros:** Todas, Sin carpeta, o una carpeta concreta.
 - **Dispositivos:** nombra carpetas `PC`, `iPad` o `iOS` para que el copiloto CM infiera el tipo de captura.
 - **Mover:** selección múltiple → «Mover a…» → carpeta destino.
 
-## UX grid
+## Layout
+
+- **Barra superior fija al scroll:** selector de carpeta + «Organizar» (árbol en diálogo), filtros y subida.
+- **Contenido:** grid o tabla a ancho completo (sin columna lateral permanente).
 
 - **Vista previa:** click en la miniatura abre diálogo amplio (imagen, video con controles, audio, PDF embebido).
 - **Multi-selección:** checkbox por tarjeta + «Seleccionar todos» por sección; barra de eliminación masiva (omite activos en uso).
@@ -26,7 +29,7 @@ Página tenant en `/assets`: carpetas anidadas, listado, filtros, subida y accio
 | Archivo | Rol |
 |---------|-----|
 | `AssetLibraryPage.tsx` | Página principal |
-| `AssetFolderTree.tsx` | Árbol de carpetas |
+| `AssetFolderTree.tsx` | Árbol de carpetas (diálogo Organizar en librería; lateral en picker) |
 | `AssetLibraryPickerDialog.tsx` | Selector modal (kit de medios, etc.) |
 | `AssetGridCard.tsx`, `AssetUploader.tsx`, … | Grid y subida |
 

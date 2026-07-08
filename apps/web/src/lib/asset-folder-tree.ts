@@ -54,3 +54,14 @@ export function resolveFolderPath(
 
   return segments.length ? segments.join(' / ') : null;
 }
+
+export function listFoldersByPath(
+  folders: AssetFolder[],
+): Array<{ id: string; path: string }> {
+  return folders
+    .map((folder) => ({
+      id: folder.id,
+      path: resolveFolderPath(folders, folder.id) ?? folder.name,
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path, 'es'));
+}

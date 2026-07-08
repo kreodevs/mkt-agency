@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Eye, FolderInput, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, FolderInput, FolderTree, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
 import { AssetGridCard } from '@/components/assets/AssetGridCard';
@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/atoms/Checkbox';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { Dialog } from '@/components/molecules/Dialog';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -26,7 +27,7 @@ import {
   updateAsset,
   updateAssetFolder,
 } from '@/services/assets';
-import { resolveFolderPath } from '@/lib/asset-folder-tree';
+import { listFoldersByPath, resolveFolderPath } from '@/lib/asset-folder-tree';
 import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
 
 type ViewMode = 'grid' | 'table';
@@ -124,7 +125,7 @@ function AssetSection({
           label="Seleccionar todos"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {assets.map((asset) => (
           <AssetGridCard
             key={asset.id}
@@ -153,6 +154,7 @@ export default function AssetLibraryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
   const [moveTargetFolder, setMoveTargetFolder] = useState<string>('');
+  const [folderOrganizerOpen, setFolderOrganizerOpen] = useState(false);
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -290,6 +292,7 @@ export default function AssetLibraryPage() {
     deleteFolderMutation.isPending;
 
   const folders = foldersQuery.data?.items ?? [];
+  const folderOptions = useMemo(() => listFoldersByPath(folders), [folders]);
   const items = assetsQuery.data?.items ?? [];
   const imagesOnly = items.filter((a) => a.type === 'image');
   const otherAssets = items.filter((a) => a.type !== 'image');
@@ -422,6 +425,11 @@ export default function AssetLibraryPage() {
   const uploadFolderId =
     folderFilter && folderFilter !== '__unfiled__' ? folderFilter : undefined;
 
+  const handleFolderSelect = (folderId: FolderSelection) => {
+    setFolderFilter(folderId);
+    setFolderOrganizerOpen(false);
+  };
+
   return (
     <DashboardShell>
       <PageHeader
@@ -429,26 +437,39 @@ export default function AssetLibraryPage() {
         description="Organiza capturas y medios en carpetas. El copiloto CM usa PC / iPad / iOS al generar posts."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <Card className="h-fit lg:sticky lg:top-4">
-          <AssetFolderTree
-            folders={folders}
-            selectedId={folderFilter}
-            onSelect={setFolderFilter}
-            onCreate={(name, parentId) => createFolderMutation.mutate({ name, parentId })}
-            onRename={(id, name) => renameFolderMutation.mutate({ id, name })}
-            onDelete={handleDeleteFolder}
-            isBusy={folderMutationsBusy}
-          />
-        </Card>
-
-        <div className="min-w-0 space-y-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
+      <div className="space-y-6">
+        <div className="sticky top-0 z-20 -mx-[var(--spacing-md)] border-b border-[var(--border)] bg-[var(--background)]/95 px-[var(--spacing-md)] py-3 backdrop-blur-sm lg:-mx-0 lg:rounded-[var(--radius-lg)] lg:border lg:px-0 lg:py-0 lg:backdrop-blur-none">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <Card className="border-0 shadow-none lg:border lg:shadow-sm">
               <div className="flex flex-wrap items-end gap-3">
-                <div className="flex min-w-[140px] flex-col gap-1">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Ubicación</label>
-                  <p className="text-sm font-medium text-[var(--foreground)]">{currentFolderLabel}</p>
+                <div className="flex min-w-[200px] flex-1 flex-col gap-1">
+                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Carpeta</label>
+                  <div className="flex gap-2">
+                    <select
+                      className={`${filterSelectClass} min-w-0 flex-1`}
+                      value={folderFilter}
+                      onChange={(e) => setFolderFilter(e.target.value as FolderSelection)}
+                      aria-label="Carpeta activa"
+                    >
+                      <option value="">Todas las carpetas</option>
+                      <option value="__unfiled__">Sin carpeta</option>
+                      {folderOptions.map((folder) => (
+                        <option key={folder.id} value={folder.id}>
+                          {folder.path}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1.5"
+                      onClick={() => setFolderOrganizerOpen(true)}
+                    >
+                      <FolderTree className="h-4 w-4" />
+                      Organizar
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -499,7 +520,7 @@ export default function AssetLibraryPage() {
               </div>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-none lg:border lg:shadow-sm">
               <AssetUploader
                 folderId={uploadFolderId}
                 onUploaded={() => {
@@ -508,8 +529,9 @@ export default function AssetLibraryPage() {
               />
             </Card>
           </div>
+        </div>
 
-          {selectedIds.size > 0 && (
+        {selectedIds.size > 0 && (
             <Card className="border-[var(--primary)]/40 bg-[var(--primary)]/5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-[var(--foreground)]">
@@ -610,8 +632,25 @@ export default function AssetLibraryPage() {
               />
             </Card>
           )}
-        </div>
       </div>
+
+      <Dialog
+        visible={folderOrganizerOpen}
+        onHide={() => setFolderOrganizerOpen(false)}
+        title="Organizar carpetas"
+        description="Crea subcarpetas PC, iPad o iOS. Al elegir una, vuelves a la librería filtrada."
+        size="md"
+      >
+        <AssetFolderTree
+          folders={folders}
+          selectedId={folderFilter}
+          onSelect={handleFolderSelect}
+          onCreate={(name, parentId) => createFolderMutation.mutate({ name, parentId })}
+          onRename={(id, name) => renameFolderMutation.mutate({ id, name })}
+          onDelete={handleDeleteFolder}
+          isBusy={folderMutationsBusy}
+        />
+      </Dialog>
 
       <AssetPreviewDialog
         asset={previewAsset}
