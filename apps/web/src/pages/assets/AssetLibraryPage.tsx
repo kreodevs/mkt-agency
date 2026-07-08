@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Eye, FolderInput, FolderTree, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, FolderTree, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { AssetBulkSelectionBar } from '@/components/assets/AssetBulkSelectionBar';
 import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
 import { AssetGridCard } from '@/components/assets/AssetGridCard';
 import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
@@ -28,7 +29,7 @@ import {
   updateAssetFolder,
 } from '@/services/assets';
 import { listFoldersByPath, resolveFolderPath } from '@/lib/asset-folder-tree';
-import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
+import { ASSET_TYPE_LABELS, type Asset, type AssetFolder, type AssetType } from '@/types/assets';
 
 type ViewMode = 'grid' | 'table';
 
@@ -101,6 +102,13 @@ type AssetSectionProps = {
   onDownload: (asset: Asset) => void;
   onDuplicate: (assetId: string) => void;
   onDelete: (assetId: string) => void;
+  folders: AssetFolder[];
+  moveTargetFolder: string;
+  onMoveTargetChange: (value: string) => void;
+  onMoveSelected: () => void;
+  onBulkDelete: () => void;
+  movePending?: boolean;
+  deletePending?: boolean;
 };
 
 function AssetSection({
@@ -113,17 +121,44 @@ function AssetSection({
   onDownload,
   onDuplicate,
   onDelete,
+  folders,
+  moveTargetFolder,
+  onMoveTargetChange,
+  onMoveSelected,
+  onBulkDelete,
+  movePending,
+  deletePending,
 }: AssetSectionProps) {
   const sectionState = sectionSelectionState(selectedIds, assets);
+  const sectionSelected = assets.filter((asset) => selectedIds.has(asset.id));
+  const sectionDeletable = sectionSelected.filter((asset) => !isAssetLocked(asset));
+  const sectionLocked = sectionSelected.length - sectionDeletable.length;
 
   return (
     <Card title={title} subtitle={subtitle}>
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 space-y-3">
         <Checkbox
           checked={sectionState}
           onChange={(checked) => onSelectionChange(toggleSectionSelection(selectedIds, assets, checked))}
           label="Seleccionar todos"
         />
+        {sectionSelected.length > 0 && (
+          <AssetBulkSelectionBar
+            selectedCount={sectionSelected.length}
+            deletableCount={sectionDeletable.length}
+            lockedCount={sectionLocked}
+            folders={folders}
+            moveTargetFolder={moveTargetFolder}
+            onMoveTargetChange={onMoveTargetChange}
+            onMove={onMoveSelected}
+            onDelete={onBulkDelete}
+            onClear={() =>
+              onSelectionChange(toggleSectionSelection(selectedIds, assets, false))
+            }
+            movePending={movePending}
+            deletePending={deletePending}
+          />
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {assets.map((asset) => (
@@ -430,6 +465,14 @@ export default function AssetLibraryPage() {
     setFolderOrganizerOpen(false);
   };
 
+  const bulkSelectionProps = {
+    folders,
+    moveTargetFolder,
+    onMoveTargetChange: setMoveTargetFolder,
+    movePending: moveMutation.isPending,
+    deletePending: bulkDeleteMutation.isPending,
+  };
+
   return (
     <DashboardShell>
       <PageHeader
@@ -437,7 +480,7 @@ export default function AssetLibraryPage() {
         description="Organiza capturas y medios en carpetas. El copiloto CM usa PC / iPad / iOS al generar posts."
       />
 
-      <div className="space-y-6">
+      <div className={`space-y-6 ${selectedIds.size > 0 ? 'pb-28' : ''}`}>
         <div className="sticky top-0 z-20 -mx-[var(--spacing-md)] border-b border-[var(--border)] bg-[var(--background)]/95 px-[var(--spacing-md)] py-3 backdrop-blur-sm lg:-mx-0 lg:rounded-[var(--radius-lg)] lg:border lg:px-0 lg:py-0 lg:backdrop-blur-none">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
             <Card className="border-0 shadow-none lg:border lg:shadow-sm">
@@ -531,57 +574,6 @@ export default function AssetLibraryPage() {
           </div>
         </div>
 
-        {selectedIds.size > 0 && (
-            <Card className="border-[var(--primary)]/40 bg-[var(--primary)]/5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {selectedIds.size} seleccionado(s)
-                  {lockedSelectedCount > 0 &&
-                    ` · ${lockedSelectedCount} en uso (no se eliminarán)`}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    className={filterSelectClass}
-                    value={moveTargetFolder}
-                    onChange={(event) => setMoveTargetFolder(event.target.value)}
-                    aria-label="Mover a carpeta"
-                  >
-                    <option value="">Mover a…</option>
-                    <option value="__root__">Sin carpeta</option>
-                    {folders.map((folder) => (
-                      <option key={folder.id} value={folder.id}>
-                        {resolveFolderPath(folders, folder.id)}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="gap-2"
-                    disabled={!moveTargetFolder || moveMutation.isPending}
-                    onClick={handleMoveSelected}
-                  >
-                    <FolderInput className="h-4 w-4" />
-                    Mover
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-                    Deseleccionar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="gap-2"
-                    disabled={deletableSelected.length === 0 || bulkDeleteMutation.isPending}
-                    onClick={handleBulkDelete}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Eliminar ({deletableSelected.length})
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
-
           {viewMode === 'grid' ? (
             assetsQuery.isLoading ? (
               <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
@@ -602,6 +594,22 @@ export default function AssetLibraryPage() {
                     onDownload={(asset) => void handleDownload(asset)}
                     onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
                     onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                    {...bulkSelectionProps}
+                    onMoveSelected={() => {
+                      const ids = imagesOnly
+                        .filter((asset) => selectedIds.has(asset.id))
+                        .map((asset) => asset.id);
+                      if (!ids.length || !moveTargetFolder) return;
+                      const folderId =
+                        moveTargetFolder === '__root__' ? null : moveTargetFolder;
+                      moveMutation.mutate({ ids, folderId });
+                    }}
+                    onBulkDelete={() => {
+                      const ids = imagesOnly
+                        .filter((asset) => selectedIds.has(asset.id) && !isAssetLocked(asset))
+                        .map((asset) => asset.id);
+                      if (ids.length) bulkDeleteMutation.mutate(ids);
+                    }}
                   />
                 )}
 
@@ -616,6 +624,22 @@ export default function AssetLibraryPage() {
                     onDownload={(asset) => void handleDownload(asset)}
                     onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
                     onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                    {...bulkSelectionProps}
+                    onMoveSelected={() => {
+                      const ids = otherAssets
+                        .filter((asset) => selectedIds.has(asset.id))
+                        .map((asset) => asset.id);
+                      if (!ids.length || !moveTargetFolder) return;
+                      const folderId =
+                        moveTargetFolder === '__root__' ? null : moveTargetFolder;
+                      moveMutation.mutate({ ids, folderId });
+                    }}
+                    onBulkDelete={() => {
+                      const ids = otherAssets
+                        .filter((asset) => selectedIds.has(asset.id) && !isAssetLocked(asset))
+                        .map((asset) => asset.id);
+                      if (ids.length) bulkDeleteMutation.mutate(ids);
+                    }}
                   />
                 )}
               </div>
@@ -633,6 +657,21 @@ export default function AssetLibraryPage() {
             </Card>
           )}
       </div>
+
+      <AssetBulkSelectionBar
+        fixed
+        selectedCount={selectedIds.size}
+        deletableCount={deletableSelected.length}
+        lockedCount={lockedSelectedCount}
+        folders={folders}
+        moveTargetFolder={moveTargetFolder}
+        onMoveTargetChange={setMoveTargetFolder}
+        onMove={handleMoveSelected}
+        onDelete={handleBulkDelete}
+        onClear={() => setSelectedIds(new Set())}
+        movePending={moveMutation.isPending}
+        deletePending={bulkDeleteMutation.isPending}
+      />
 
       <Dialog
         visible={folderOrganizerOpen}

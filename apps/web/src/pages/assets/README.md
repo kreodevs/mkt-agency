@@ -15,7 +15,7 @@ Página tenant en `/libreria`: carpetas anidadas, listado, filtros, subida y acc
 - **Contenido:** grid o tabla a ancho completo (sin columna lateral permanente).
 
 - **Vista previa:** click en la miniatura abre diálogo amplio (imagen, video con controles, audio, PDF embebido).
-- **Multi-selección:** checkbox por tarjeta + «Seleccionar todos» por sección; barra de eliminación masiva (omite activos en uso).
+- **Multi-selección:** checkbox por tarjeta + «Seleccionar todos» por sección; barra **Mover / Eliminar** en la sección y barra fija inferior al scroll.
 - **Miniaturas:** videos con frame de metadata; audio/documento con icono tipado.
 
 ## Integración CM
@@ -31,6 +31,7 @@ Página tenant en `/libreria`: carpetas anidadas, listado, filtros, subida y acc
 | `AssetLibraryPage.tsx` | Página principal |
 | `AssetFolderTree.tsx` | Árbol de carpetas (diálogo Organizar en librería; lateral en picker) |
 | `AssetLibraryPickerDialog.tsx` | Selector modal (kit de medios, etc.) |
+| `AssetBulkSelectionBar.tsx` | Mover / eliminar selección (inline en sección + barra fija inferior) |
 | `AssetGridCard.tsx`, `AssetUploader.tsx`, … | Grid y subida |
 
 ## Acceso
