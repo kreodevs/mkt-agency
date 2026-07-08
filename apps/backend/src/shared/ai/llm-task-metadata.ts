@@ -1,3 +1,4 @@
+import { OPENROUTER_FLUX_2_PRO_MODEL } from '../social/openrouter-image-model.util';
 import type { LlmTaskType } from './llm-task-types';
 
 export interface LlmTaskMetadata {
@@ -59,7 +60,7 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
   image_generation: {
     label: 'Generación de imágenes',
     description: 'Imágenes estáticas vía OpenRouter Image API',
-    defaultModel: 'black-forest-labs/flux-2-pro',
+    defaultModel: OPENROUTER_FLUX_2_PRO_MODEL,
     temperature: '0',
   },
   video_generation: {
@@ -83,7 +84,7 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
   cm_portrait_generation: {
     label: 'Retrato CM virtual',
     description: 'Retrato vertical 9:16 de la community manager para lip-sync',
-    defaultModel: 'black-forest-labs/flux-2-pro',
+    defaultModel: OPENROUTER_FLUX_2_PRO_MODEL,
     temperature: '0',
   },
   strategy_adjustment: {

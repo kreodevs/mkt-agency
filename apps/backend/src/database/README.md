@@ -48,6 +48,7 @@ yarn migration:run:prod     # compilado (dist/*.js)
 | `1730000000030-ExpandImageGenerationPrompt.ts` | Amplía `prompt` en `agent_image_generations` |
 | `1730000000031-AddVisualFormatToContents.ts` | Columna `visual_format` en `contents` |
 | `1730000000032-ClearGeneratedContentsAndCompetitorAnalyses.ts` | **One-shot:** borra contenidos generados, análisis y competidores descubiertos; conserva tenants, productos y keywords SEO. Omitir: `SKIP_GENERATED_CONTENT_RESET=true` |
+| `1730000000036-FixFluxImageModelSlugs.ts` | Corrige `black-forest-labs/flux-2-pro` → `flux.2-pro` en `llm_task_configs` (OpenRouter Image API) |
 
 Si existe una tabla legacy `products` sin `tenant_id`, la migración 0018 la renombra a `products_legacy` antes de crear el catálogo tenant-scoped.
 

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LlmConfigService } from '../../../shared/ai/llm-config.service';
 import type { LlmTaskType } from '../../../shared/ai/llm-task-types';
 import { normalizeImageGenerationSize } from '../../../shared/social/image-generation-size.util';
+import { normalizeOpenRouterImageModel } from '../../../shared/social/openrouter-image-model.util';
 import {
   ImageGenerationAdapterPort,
   ImageGenerationResult,
@@ -22,7 +23,7 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
     const taskType = options?.taskType ?? 'image_generation';
     const resolved = await this.llmConfig.resolve(taskType);
 
-    const model = resolved.model?.trim() || 'black-forest-labs/flux-2-pro';
+    const model = normalizeOpenRouterImageModel(resolved.model);
     const size = normalizeImageGenerationSize(options?.size || '1920x1920');
 
     const body = {

@@ -1,4 +1,4 @@
-/** Mínimo de píxeles exigido por modelos recientes (p. ej. flux-2-pro vía OpenRouter). */
+/** Mínimo de píxeles exigido por modelos recientes (p. ej. flux.2-pro vía OpenRouter). */
 export const MIN_IMAGE_GENERATION_PIXELS = 3_686_400;
 
 const LEGACY_SIZE_UPSCALE: Record<string, string> = {

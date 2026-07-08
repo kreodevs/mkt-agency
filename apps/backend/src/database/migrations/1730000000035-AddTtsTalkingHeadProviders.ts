@@ -58,7 +58,7 @@ export class AddTtsTalkingHeadProviders1730000000035 implements MigrationInterfa
         'cm_portrait_generation',
         'Retrato CM virtual',
         'Genera el retrato vertical de la community manager para animar con lip-sync',
-        'black-forest-labs/flux-2-pro',
+        'black-forest-labs/flux.2-pro',
         0,
         p.id
       FROM llm_providers p

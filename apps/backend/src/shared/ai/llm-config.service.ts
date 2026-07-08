@@ -15,6 +15,7 @@ import {
   type ResolvedLlmExecutionConfig,
 } from './llm-task-types';
 import { LLM_TASK_METADATA } from './llm-task-metadata';
+import { normalizeOpenRouterImageModel } from '../social/openrouter-image-model.util';
 
 @Injectable()
 export class LlmConfigService {
@@ -86,8 +87,16 @@ export class LlmConfigService {
       const needsModel =
         taskType === 'video_generation' &&
         row.model === 'deepseek/deepseek-v4-flash';
+      const normalizedImageModel = normalizeOpenRouterImageModel(row.model);
+      const normalizedFallback = row.fallbackModel
+        ? normalizeOpenRouterImageModel(row.fallbackModel)
+        : null;
+      const needsFluxSlug =
+        (taskType === 'image_generation' || taskType === 'cm_portrait_generation') &&
+        (normalizedImageModel !== row.model ||
+          (row.fallbackModel && normalizedFallback !== row.fallbackModel));
 
-      if (!needsLabel && !needsModel) {
+      if (!needsLabel && !needsModel && !needsFluxSlug) {
         continue;
       }
 
@@ -98,6 +107,12 @@ export class LlmConfigService {
       if (needsModel) {
         row.model = meta.defaultModel;
         row.temperature = meta.temperature;
+      }
+      if (needsFluxSlug) {
+        row.model = normalizedImageModel;
+        if (row.fallbackModel && normalizedFallback) {
+          row.fallbackModel = normalizedFallback;
+        }
       }
       updates.push(row);
     }
@@ -252,13 +267,19 @@ export class LlmConfigService {
       });
     }
 
-    const model = row.model?.trim() || provider.defaultModel?.trim();
-    if (!model) {
+    const rawModel = row.model?.trim() || provider.defaultModel?.trim();
+    if (!rawModel) {
       throw new BadRequestException({
         error: `LLM task ${row.taskType} has no model configured`,
         code: 'LLM_MODEL_MISSING',
       });
     }
+
+    const taskType = row.taskType as LlmTaskType;
+    const model =
+      taskType === 'image_generation' || taskType === 'cm_portrait_generation'
+        ? normalizeOpenRouterImageModel(rawModel)
+        : rawModel;
 
     return {
       ...this.toResponse(row),
