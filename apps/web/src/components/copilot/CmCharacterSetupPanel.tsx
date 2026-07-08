@@ -367,8 +367,10 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                     </div>
                   )}
 
-                  {!selected.ready && draft && (
-                    <>
+                  {draft && (
+                    <div className="space-y-3 rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+                      <p className="text-sm font-medium text-[var(--foreground)]">Apariencia</p>
+
                       <InputText
                         label="Nombre"
                         value={draft.name}
@@ -465,7 +467,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                           }
                         />
                       </label>
-                    </>
+                    </div>
                   )}
 
                   {selected.errorMessage && (
@@ -473,7 +475,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    {!selected.ready && draft && (
+                    {draft && (
                       <Button
                         type="button"
                         variant="secondary"

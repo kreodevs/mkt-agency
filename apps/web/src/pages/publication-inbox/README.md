@@ -18,7 +18,7 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 | Archivo | Rol |
 |---------|-----|
 | `pages/publication-inbox/PublicationInboxPage.tsx` | Vista hub + `CopilotStatusPanel` |
-| `pages/publication-inbox/PublicationCalendarPage.tsx` | Calendario SOHO en `/calendario` |
+| `pages/publication-inbox/PublicationCalendarPage.tsx` | Calendario SOHO en `/calendario` (`useSohoCalendarMonth`) |
 | `components/publication-inbox/SohoCalendarDayPanel.tsx` | Detalle del día con `InboxItemCard` |
 | `components/publication-inbox/SohoCalendarLegend.tsx` | Leyenda de colores del calendario |
 | `components/publication-inbox/InboxItemCard.tsx` | CTA «Copiar y publicar» + preview visual |

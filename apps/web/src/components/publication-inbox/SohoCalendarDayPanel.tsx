@@ -49,6 +49,7 @@ export function SohoCalendarDayPanel({ date, productId, onClose }: SohoCalendarD
       ...inboxQuery.data.readyToPublish,
       ...inboxQuery.data.pendingApproval,
       ...inboxQuery.data.upcoming,
+      ...inboxQuery.data.rejected,
     ];
     return sortByPublishPriority(all.filter((item) => isSameDay(item, date)));
   }, [inboxQuery.data, date]);

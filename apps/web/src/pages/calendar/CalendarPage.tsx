@@ -80,6 +80,8 @@ export default function CalendarPage() {
           <CalendarView
             data={monthQuery.data}
             loading={monthQuery.isLoading}
+            month={month}
+            year={year}
             onMonthChange={(m, y) => {
               setMonth(m);
               setYear(y);

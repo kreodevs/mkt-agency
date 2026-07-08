@@ -8,8 +8,8 @@ import { SohoCalendarLegend } from '@/components/publication-inbox/SohoCalendarL
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
-import { useCalendarMonth } from '@/hooks/useCalendar';
-import { useActiveProductStore } from '@/store/active-product';
+import { useSohoCalendarMonth } from '@/hooks/useSohoCalendar';
+import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 function currentMonthYear() {
   const now = new Date();
@@ -21,9 +21,9 @@ export default function PublicationCalendarPage() {
   const [month, setMonth] = useState(initial.month);
   const [year, setYear] = useState(initial.year);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const activeProductId = useActiveProductStore((s) => s.productId) ?? undefined;
+  const productId = useResolvedProductId();
 
-  const monthQuery = useCalendarMonth(month, year, activeProductId);
+  const monthQuery = useSohoCalendarMonth(month, year, productId);
 
   return (
     <DashboardShell>
@@ -43,7 +43,17 @@ export default function PublicationCalendarPage() {
       <SohoCalendarLegend />
 
       <div className="grid gap-6 lg:grid-cols-5">
-        {!monthQuery.isLoading && (monthQuery.data?.days.length ?? 0) === 0 && (
+        {monthQuery.isError && (
+          <Card className="border-dashed lg:col-span-5">
+            <p className="text-sm text-[var(--foreground)]">
+              No pudimos cargar el calendario. Revisa tu conexión e inténtalo de nuevo.
+            </p>
+          </Card>
+        )}
+
+        {!monthQuery.isLoading &&
+          !monthQuery.isError &&
+          (monthQuery.data?.days.length ?? 0) === 0 && (
           <Card className="border-dashed lg:col-span-5">
             <p className="text-sm text-[var(--foreground)]">
               Aún no hay publicaciones programadas en{' '}
@@ -68,6 +78,8 @@ export default function PublicationCalendarPage() {
           <CalendarView
             data={monthQuery.data}
             loading={monthQuery.isLoading}
+            month={month}
+            year={year}
             onMonthChange={(m, y) => {
               setMonth(m);
               setYear(y);
@@ -80,7 +92,7 @@ export default function PublicationCalendarPage() {
           {selectedDate ? (
             <SohoCalendarDayPanel
               date={selectedDate}
-              productId={activeProductId}
+              productId={productId}
               onClose={() => setSelectedDate(null)}
             />
           ) : (

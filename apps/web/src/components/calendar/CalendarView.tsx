@@ -12,18 +12,30 @@ import './calendar.css';
 interface CalendarViewProps {
   data?: CalendarMonthResponse;
   loading?: boolean;
+  month: number;
+  year: number;
   onMonthChange: (month: number, year: number) => void;
   onSelectDate: (date: string) => void;
 }
 
-export function CalendarView({ data, loading, onMonthChange, onSelectDate }: CalendarViewProps) {
+export function CalendarView({
+  data,
+  loading,
+  month,
+  year,
+  onMonthChange,
+  onSelectDate,
+}: CalendarViewProps) {
+  const initialDate = `${year}-${String(month).padStart(2, '0')}-01`;
+
   const events = useMemo(() => {
     if (!data?.days.length) return [];
 
     return data.days.map((day) => ({
       id: day.date,
       title: day.total === 1 ? '1 pieza' : `${day.total} piezas`,
-      date: day.date,
+      start: day.date,
+      allDay: true,
       backgroundColor: calendarStatusColor(day.dominantStatus),
       borderColor: calendarStatusColor(day.dominantStatus),
       textColor: '#ffffff',
@@ -32,7 +44,7 @@ export function CalendarView({ data, loading, onMonthChange, onSelectDate }: Cal
   }, [data?.days]);
 
   const handleDatesSet = (arg: DatesSetArg) => {
-    const pivot = arg.view.currentStart;
+    const pivot = arg.view.calendar.getDate();
     onMonthChange(pivot.getMonth() + 1, pivot.getFullYear());
   };
 
@@ -50,8 +62,10 @@ export function CalendarView({ data, loading, onMonthChange, onSelectDate }: Cal
       )}
 
       <FullCalendar
+        key={`${initialDate}-${loading ? 'loading' : events.length}`}
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        initialDate={initialDate}
         locale="es"
         height="auto"
         headerToolbar={{
