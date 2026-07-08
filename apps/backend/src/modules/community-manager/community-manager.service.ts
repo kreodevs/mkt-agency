@@ -27,6 +27,7 @@ import {
 } from '../product/domain/product-context.util';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
+import { ProductMediaKitService } from '../product/product-media-kit.service';
 import { AssetFolderService } from '../assets/asset-folder.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { ContentVisualComposerService } from './content-visual-composer.service';
