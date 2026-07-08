@@ -15,6 +15,7 @@ export class AssetResponseDto {
   fileKey!: string;
   fileSize!: number;
   url!: string | null;
+  thumbnailUrl!: string | null;
   metadata!: Record<string, unknown>;
   referenceCount!: number;
   isInUse!: boolean;

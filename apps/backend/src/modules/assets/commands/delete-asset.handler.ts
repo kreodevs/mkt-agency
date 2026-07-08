@@ -8,6 +8,7 @@ import {
 import { AssetTagAssignmentEntity } from '../infrastructure/typeorm/asset-tag-assignment.entity';
 import { AssetEntity } from '../infrastructure/typeorm/asset.entity';
 import { DeleteAssetCommand } from './delete-asset.command';
+import { readThumbnailFileKey } from '../domain/asset-thumbnail.util';
 
 @Injectable()
 export class DeleteAssetHandler {
@@ -40,12 +41,16 @@ export class DeleteAssetHandler {
     }
 
     const fileKey = asset.fileKey;
+    const thumbnailFileKey = readThumbnailFileKey(asset.metadata);
     await this.tagAssignments.delete({ assetId: asset.id });
     await this.assets.remove(asset);
 
     const remaining = await this.assets.count({ where: { fileKey } });
     if (remaining === 0) {
       await this.storage.deleteObject(fileKey).catch(() => undefined);
+      if (thumbnailFileKey) {
+        await this.storage.deleteObject(thumbnailFileKey).catch(() => undefined);
+      }
     }
   }
 }

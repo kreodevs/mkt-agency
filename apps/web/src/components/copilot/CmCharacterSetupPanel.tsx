@@ -495,6 +495,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                       <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
                         <AuthenticatedAssetImage
                           assetId={activeCharacter.portraitAssetId}
+                          variant="full"
                           title="Retrato"
                           className="aspect-[9/16] w-full object-cover"
                         />
@@ -588,6 +589,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                     <div className="max-w-xs overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
                       <AuthenticatedAssetImage
                         assetId={activeCharacter.portraitAssetId}
+                        variant="full"
                         title="Retrato"
                         className="aspect-[9/16] w-full object-cover"
                       />
@@ -629,7 +631,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         ) : imageAssetsQuery.data?.items.length ? (
           <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4">
             {imageAssetsQuery.data.items.map((asset) => {
-              const preview = resolveAssetPreviewUrl(asset);
+              const preview = resolveAssetPreviewUrl(asset, { variant: 'thumb' });
               return (
                 <button
                   key={asset.id}

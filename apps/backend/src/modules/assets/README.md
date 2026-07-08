@@ -7,6 +7,8 @@ Librería multimedia por tenant con almacenamiento S3-compatible (MinIO en local
 | Método | Ruta |
 |--------|------|
 | GET/POST upload/PATCH/DELETE | `/api/v1/assets` |
+| GET | `/api/v1/assets/:id/file` (original) |
+| GET | `/api/v1/assets/:id/thumbnail` (WebP ≤480px para cards) |
 | GET | `/api/v1/asset-folders` |
 | GET/POST | `/api/v1/asset-tags` |
 
@@ -22,6 +24,8 @@ Los visuales del copiloto (semana CM) se suben vía Image Generator con `metadat
 - Los ítems del kit de medios incluyen `folderPath` y `device` cuando el asset está en una carpeta.
 
 Las URLs públicas de assets devuelven `/api/v1/assets/:id/file` (stream autenticado). MinIO/S3 solo se usa en red interna; el navegador no debe recibir `http://minio:9000/...`.
+
+En cada subida de **imagen**, el backend genera un thumbnail WebP (máx. 480px) en el mismo prefijo S3 (`thumb.webp`) y lo expone en `/api/v1/assets/:id/thumbnail`. La publicación y descargas usan el archivo original.
 
 Al arrancar, `S3StorageAdapter` crea el bucket si no existe (MinIO). En Dokploy el servicio `minio-init` también ejecuta `mc mb` con `S3_BUCKET` (default `mkt-agency-assets`).
 

@@ -72,6 +72,18 @@ export class AssetController {
     });
   }
 
+  @Get(':id/thumbnail')
+  async serveThumbnail(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StreamableFile> {
+    const file = await this.assetService.readThumbnail(user.tenantId!, id);
+    return new StreamableFile(file.buffer, {
+      type: file.mimeType,
+      disposition: `inline; filename="${file.fileName.replace(/"/g, '')}"`,
+    });
+  }
+
   @Post(':id/duplicate')
   @HttpCode(HttpStatus.CREATED)
   duplicate(

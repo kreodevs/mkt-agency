@@ -1,8 +1,11 @@
-import { resolveAssetPreviewUrl } from '@/services/assets';
+import { getAssetFileUrl, resolveAssetPreviewUrl } from '@/services/assets';
+import type { AssetUrlVariant } from '@/types/assets';
 
 interface AuthenticatedAssetImageProps {
   assetId: string;
   fallbackUrl?: string | null;
+  thumbnailUrl?: string | null;
+  variant?: AssetUrlVariant;
   alt?: string;
   title?: string;
   className?: string;
@@ -12,14 +15,19 @@ interface AuthenticatedAssetImageProps {
 export function AuthenticatedAssetImage({
   assetId,
   fallbackUrl,
+  thumbnailUrl,
+  variant = 'thumb',
   alt = '',
   title,
   className,
   onError,
 }: AuthenticatedAssetImageProps) {
   const src =
-    resolveAssetPreviewUrl({ id: assetId, url: fallbackUrl }) ??
-    (fallbackUrl?.startsWith('http') ? fallbackUrl : null);
+    resolveAssetPreviewUrl(
+      { id: assetId, url: fallbackUrl, thumbnailUrl },
+      { variant },
+    ) ??
+    (variant === 'full' && fallbackUrl?.startsWith('http') ? fallbackUrl : null);
 
   if (!src) {
     return null;
@@ -35,4 +43,11 @@ export function AuthenticatedAssetImage({
       onError={onError}
     />
   );
+}
+
+export function getAuthenticatedAssetImageSrc(
+  assetId: string,
+  variant: AssetUrlVariant = 'thumb',
+): string | null {
+  return getAssetFileUrl(assetId, variant);
 }

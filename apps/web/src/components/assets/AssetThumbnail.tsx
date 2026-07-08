@@ -16,6 +16,7 @@ export function AssetThumbnail({ asset }: { asset: Asset }) {
         <AuthenticatedAssetImage
           assetId={asset.id}
           fallbackUrl={asset.url}
+          thumbnailUrl={asset.thumbnailUrl}
           title={asset.name}
           className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />

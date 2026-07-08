@@ -290,7 +290,7 @@ export function ProductMediaKitPanel({
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
-              const previewUrl = getAssetFileUrl(item.assetId);
+              const previewUrl = getAssetFileUrl(item.assetId, 'thumb');
               const isVideo = isVideoMime(item.mimeType);
 
               return (

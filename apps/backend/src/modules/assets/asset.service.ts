@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   PayloadTooLargeException,
 } from '@nestjs/common';
@@ -15,6 +16,15 @@ import {
   inferAssetType,
   MAX_ASSET_FILE_SIZE,
 } from './domain/asset.constants';
+import {
+  ASSET_METADATA_THUMBNAIL_FILE_KEY,
+  ASSET_METADATA_THUMBNAIL_FILE_SIZE,
+  ASSET_METADATA_THUMBNAIL_MIME_TYPE,
+  ASSET_THUMBNAIL_MIME_TYPE,
+  buildThumbnailFileKey,
+  generateImageThumbnail,
+  readThumbnailFileKey,
+} from './domain/asset-thumbnail.util';
 import { TenantLimitsService } from '../packages/services/tenant-limits.service';
 import { ListAssetsQueryDto, UpdateAssetDto } from './dto/asset.request.dto';
 import {
@@ -35,6 +45,8 @@ const DOWNLOAD_URL_TTL_SECONDS = 3600;
 
 @Injectable()
 export class AssetService {
+  private readonly logger = new Logger(AssetService.name);
+
   constructor(
     @InjectRepository(AssetEntity)
     private readonly assets: Repository<AssetEntity>,
@@ -127,17 +139,25 @@ export class AssetService {
       contentType: mimeType,
     });
 
+    const assetType = inferAssetType(mimeType);
+    const enrichedMetadata = await this.attachImageThumbnailMetadata(
+      assetType,
+      fileKey,
+      file.buffer,
+      { source: 'upload', ...metadata },
+    );
+
     const saved = await this.assets.save(
       this.assets.create({
         tenantId,
         folderId: folderId ?? null,
         name: file.originalname,
-        type: inferAssetType(mimeType),
+        type: assetType,
         mimeType,
         fileKey,
         fileSize: String(file.size),
         url: '',
-        metadata: { source: 'upload', ...metadata },
+        metadata: enrichedMetadata,
         referenceCount: 0,
         isInUse: false,
       }),
@@ -184,17 +204,25 @@ export class AssetService {
       contentType: mimeType,
     });
 
+    const assetType = inferAssetType(mimeType);
+    const enrichedMetadata = await this.attachImageThumbnailMetadata(
+      assetType,
+      fileKey,
+      buffer,
+      { source: 'kit-compose' },
+    );
+
     const saved = await this.assets.save(
       this.assets.create({
         tenantId,
         folderId: null,
         name: filename,
-        type: inferAssetType(mimeType),
+        type: assetType,
         mimeType,
         fileKey,
         fileSize: String(buffer.length),
         url: '',
-        metadata: { source: 'kit-compose' },
+        metadata: enrichedMetadata,
         referenceCount: 0,
         isInUse: false,
       }),
@@ -278,6 +306,30 @@ export class AssetService {
     };
   }
 
+  async readThumbnail(
+    tenantId: string,
+    id: string,
+  ): Promise<{ buffer: Buffer; mimeType: string; fileName: string }> {
+    const asset = await this.findOwnedAsset(tenantId, id);
+    const thumbnailFileKey = readThumbnailFileKey(asset.metadata);
+
+    if (thumbnailFileKey) {
+      const buffer = await this.storage.readObject(thumbnailFileKey);
+      const mimeType =
+        typeof asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] === 'string'
+          ? (asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] as string)
+          : ASSET_THUMBNAIL_MIME_TYPE;
+
+      return {
+        buffer,
+        mimeType,
+        fileName: `thumb-${asset.name.replace(/\.[^.]+$/, '')}.webp`,
+      };
+    }
+
+    return this.readFile(tenantId, id);
+  }
+
   async duplicate(tenantId: string, id: string): Promise<AssetResponseDto> {
     const source = await this.findOwnedAsset(tenantId, id);
 
@@ -314,6 +366,48 @@ export class AssetService {
 
   private buildApiFileUrl(assetId: string): string {
     return `/api/v1/assets/${assetId}/file`;
+  }
+
+  private buildApiThumbnailUrl(assetId: string): string {
+    return `/api/v1/assets/${assetId}/thumbnail`;
+  }
+
+  private async attachImageThumbnailMetadata(
+    assetType: ReturnType<typeof inferAssetType>,
+    fileKey: string,
+    buffer: Buffer,
+    metadata: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    if (assetType !== 'image') {
+      return metadata;
+    }
+
+    const thumbnailBuffer = await generateImageThumbnail(buffer);
+    if (!thumbnailBuffer) {
+      return metadata;
+    }
+
+    const thumbnailFileKey = buildThumbnailFileKey(fileKey);
+
+    try {
+      await this.storage.upload({
+        key: thumbnailFileKey,
+        body: thumbnailBuffer,
+        contentType: ASSET_THUMBNAIL_MIME_TYPE,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Thumbnail upload failed for ${fileKey}: ${error instanceof Error ? error.message : error}`,
+      );
+      return metadata;
+    }
+
+    return {
+      ...metadata,
+      [ASSET_METADATA_THUMBNAIL_FILE_KEY]: thumbnailFileKey,
+      [ASSET_METADATA_THUMBNAIL_MIME_TYPE]: ASSET_THUMBNAIL_MIME_TYPE,
+      [ASSET_METADATA_THUMBNAIL_FILE_SIZE]: thumbnailBuffer.length,
+    };
   }
 
   private async findOwnedAsset(tenantId: string, id: string): Promise<AssetEntity> {
@@ -373,6 +467,8 @@ export class AssetService {
         ? await this.tags.find({ where: { id: In(tagIds) } })
         : [];
 
+    const hasThumbnail = readThumbnailFileKey(asset.metadata) !== null;
+
     return {
       id: asset.id,
       tenantId: asset.tenantId,
@@ -383,6 +479,7 @@ export class AssetService {
       fileKey: asset.fileKey,
       fileSize: Number(asset.fileSize),
       url: this.buildApiFileUrl(asset.id),
+      thumbnailUrl: hasThumbnail ? this.buildApiThumbnailUrl(asset.id) : null,
       metadata: asset.metadata,
       referenceCount: asset.referenceCount,
       isInUse: asset.isInUse,

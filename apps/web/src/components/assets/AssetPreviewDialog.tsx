@@ -48,6 +48,8 @@ export function AssetPreviewDialog({ asset, onClose, onDownload }: AssetPreviewD
             <AuthenticatedAssetImage
               assetId={asset.id}
               fallbackUrl={asset.url}
+              thumbnailUrl={asset.thumbnailUrl}
+              variant="full"
               title={asset.name}
               className="max-h-[75vh] max-w-full object-contain"
             />

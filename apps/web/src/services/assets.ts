@@ -5,6 +5,7 @@ import type {
   AssetDownloadUrlResponse,
   AssetFolder,
   AssetTag,
+  AssetUrlVariant,
   ListAssetsParams,
   PaginatedAssetsResponse,
   UpdateAssetPayload,
@@ -13,22 +14,35 @@ import type {
 
 const API_BASE = '/api/v1';
 
-export function getAssetFileUrl(assetId: string): string | null {
+export function getAssetFileUrl(
+  assetId: string,
+  variant: AssetUrlVariant = 'full',
+): string | null {
   const token = getAccessToken();
   if (!token || !assetId) {
     return null;
   }
 
-  return `${API_BASE}/assets/${assetId}/file?access_token=${encodeURIComponent(token)}`;
+  const segment = variant === 'thumb' ? 'thumbnail' : 'file';
+  return `${API_BASE}/assets/${assetId}/${segment}?access_token=${encodeURIComponent(token)}`;
 }
 
-export function resolveAssetPreviewUrl(asset: {
-  id: string;
-  url?: string | null;
-}): string | null {
-  const authenticated = getAssetFileUrl(asset.id);
+export function resolveAssetPreviewUrl(
+  asset: {
+    id: string;
+    url?: string | null;
+    thumbnailUrl?: string | null;
+  },
+  options: { variant?: AssetUrlVariant } = {},
+): string | null {
+  const variant = options.variant ?? 'thumb';
+  const authenticated = getAssetFileUrl(asset.id, variant);
   if (authenticated) {
     return authenticated;
+  }
+
+  if (variant === 'thumb' && asset.thumbnailUrl?.startsWith('http')) {
+    return asset.thumbnailUrl;
   }
 
   if (asset.url?.startsWith('http')) {

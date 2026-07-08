@@ -257,6 +257,7 @@ export default function ImageGeneratorDetailPage() {
             <div className="flex min-h-[50vh] items-center justify-center bg-[var(--background-secondary)] p-4">
               <AuthenticatedAssetImage
                 assetId={previewFrame.assetId}
+                variant="full"
                 title={`Frame ${previewFrame.index + 1}`}
                 className="max-h-[80vh] w-full object-contain"
               />

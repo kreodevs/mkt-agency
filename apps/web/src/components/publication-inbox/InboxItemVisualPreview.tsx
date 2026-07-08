@@ -118,6 +118,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                 ) : (
                   <AuthenticatedAssetImage
                     assetId={assetId}
+                    variant={isDetail ? 'full' : 'thumb'}
                     alt={item.title}
                     title={item.title}
                     className="h-full w-full object-cover"

@@ -1,5 +1,7 @@
 export type AssetType = 'image' | 'video' | 'audio' | 'document' | 'other';
 
+export type AssetUrlVariant = 'full' | 'thumb';
+
 export interface AssetTag {
   id: string;
   name: string;
@@ -15,6 +17,7 @@ export interface Asset {
   fileKey: string;
   fileSize: number;
   url: string | null;
+  thumbnailUrl: string | null;
   metadata: Record<string, unknown>;
   referenceCount: number;
   isInUse: boolean;
