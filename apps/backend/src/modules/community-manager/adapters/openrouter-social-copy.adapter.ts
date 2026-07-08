@@ -72,6 +72,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ].join('\n')
       : '';
 
+    const cmCharacterGuide = context.cmCharacterReady
+      ? [
+          'La marca tiene CM virtual configurada (retrato + lip-sync en español).',
+          'Para TikTok asigna visualFormat: talking-head (la CM hablará el body del post).',
+          'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM.',
+          'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
+        ].join('\n')
+      : 'No hay CM virtual: NO uses visualFormat talking-head. TikTok→image vertical.';
+
     const systemPrompt =
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
@@ -88,7 +97,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             hashtags: ['hashtag1', 'hashtag2'],
             visualDescription: 'escena visual para IA: composición, sujetos, ambiente y estilo — SIN repetir el body ni hashtags',
             visualFormat:
-              'image | carousel — image=post estático, carousel=3 slides (no video IA)',
+              'image | carousel | talking-head — talking-head=solo TikTok si hay CM virtual; image=estático; carousel=3 slides',
             bestTime: 'mejor hora para publicar según la plataforma',
             targetAudience: 'audiencia objetivo de este post específico',
             callToAction: 'llamado a la acción claro',
@@ -111,8 +120,11 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       competitorIntelGuide,
       revisionGuide,
       mediaKitGuide,
+      cmCharacterGuide,
       `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
-      'Para cada post asigna visualFormat: carruseles educativos→carousel; el resto→image (TikTok incluido: imagen vertical, sin video IA).',
+      context.cmCharacterReady
+        ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head; resto→image.'
+        : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
       'visualDescription = brief de arte para generador de imágenes (escena, luz, encuadre, estilo). NUNCA copies el body, hashtags ni CTA.',
       'body = copy publicable listo para publicar en la red. Son campos independientes.',
     ]

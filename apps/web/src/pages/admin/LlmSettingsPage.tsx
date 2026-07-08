@@ -142,7 +142,7 @@ export default function LlmSettingsPage() {
       <Card className="mt-6">
         <DataTable
           columns={columns}
-          data={(tasksQuery.data ?? []).filter((task) => task.taskType !== 'video_generation')}
+          data={tasksQuery.data ?? []}
           loading={tasksQuery.isLoading}
         />
       </Card>
@@ -265,9 +265,11 @@ export default function LlmSettingsPage() {
             Tarea habilitada
           </label>
           <p className="text-xs text-[var(--foreground-muted)]">
-            Busca en el catálogo de OpenRouter o escribe el slug del modelo. Para visuales del
-            copiloto usa la tarea <strong>Generación de imágenes</strong> (no hay generación de video
-            por IA). Configura proveedores en{' '}
+            Busca en el catálogo de OpenRouter o escribe el slug del modelo. Tareas clave:{' '}
+            <strong>Retrato CM</strong> y <strong>Generación de imágenes</strong> (OpenRouter),{' '}
+            <strong>Síntesis de voz</strong> (ElevenLabs; fallback Kokoro en modelo secundario),{' '}
+            <strong>Avatar hablante</strong> (Replicate <code>prunaai/p-video-avatar</code>).{' '}
+            <strong>Generación de video</strong> está deshabilitada en producto. Configura proveedores en{' '}
             <a href="/admin/llm-providers" className="text-[var(--primary)] underline">
               Proveedores LLM
             </a>

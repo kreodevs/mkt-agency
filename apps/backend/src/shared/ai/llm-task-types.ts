@@ -9,6 +9,9 @@ export const LLM_TASK_TYPES = [
   'competitor_discovery',
   'image_generation',
   'video_generation',
+  'tts_generation',
+  'talking_head_generation',
+  'cm_portrait_generation',
   'strategy_adjustment',
   'social_copy',
 ] as const;

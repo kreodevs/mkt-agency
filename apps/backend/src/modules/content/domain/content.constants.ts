@@ -12,8 +12,8 @@ export const CONTENT_TYPES = ['ad', 'social', 'email', 'blog', 'landing'] as con
 
 export type ContentType = (typeof CONTENT_TYPES)[number];
 
-/** Formato visual que debe generar Image Generator (sin video IA). */
-export const CONTENT_VISUAL_FORMATS = ['image', 'carousel'] as const;
+/** Formato visual: image | carousel | talking-head (retrato CM + lip-sync). */
+export const CONTENT_VISUAL_FORMATS = ['image', 'carousel', 'talking-head'] as const;
 
 export type ContentVisualFormat = (typeof CONTENT_VISUAL_FORMATS)[number];
 

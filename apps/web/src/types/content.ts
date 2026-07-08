@@ -2,7 +2,7 @@ export type ContentStatus = 'draft' | 'in_review' | 'in_changes' | 'approved' | 
 
 export type ContentType = 'ad' | 'social' | 'email' | 'blog' | 'landing';
 
-export type ContentVisualFormat = 'image' | 'carousel';
+export type ContentVisualFormat = 'image' | 'carousel' | 'talking-head';
 
 export interface ContentVersion {
   id: string;

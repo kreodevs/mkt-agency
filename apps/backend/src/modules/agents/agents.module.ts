@@ -26,6 +26,19 @@ import { IMAGE_GENERATION_ADAPTER, ImageGenerationAdapterPort } from './adapters
 import { OpenRouterVideoGenerationAdapter } from './adapters/openrouter-video-generation.adapter';
 import { StubVideoGenerationAdapter } from './adapters/stub-video-generation.adapter';
 import { VIDEO_GENERATION_ADAPTER, VideoGenerationAdapterPort } from './adapters/video-generation.adapter.port';
+import {
+  ElevenLabsTtsAdapter,
+  OpenRouterTtsAdapter,
+  StubTtsAdapter,
+} from './adapters/tts-generation.adapters';
+import { TTS_GENERATION_ADAPTER } from './adapters/tts-generation.adapter.port';
+import {
+  ReplicateTalkingHeadAdapter,
+  StubTalkingHeadAdapter,
+} from './adapters/replicate-talking-head.adapter';
+import { TALKING_HEAD_ADAPTER } from './adapters/talking-head.adapter.port';
+import { TtsGenerationService } from './tts-generation.service';
+import { TalkingHeadComposerService } from './talking-head-composer.service';
 import { AgentInterviewController } from './agent-interview.controller';
 import { AgentInterviewService } from './agent-interview.service';
 import { AgentInterviewEntity } from './domain/agent-interview.entity';
@@ -85,6 +98,13 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     OpenRouterImageGenerationAdapter,
     StubVideoGenerationAdapter,
     OpenRouterVideoGenerationAdapter,
+    ElevenLabsTtsAdapter,
+    OpenRouterTtsAdapter,
+    StubTtsAdapter,
+    ReplicateTalkingHeadAdapter,
+    StubTalkingHeadAdapter,
+    TtsGenerationService,
+    TalkingHeadComposerService,
     StubWebsiteAnalyzerAdapter,
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
@@ -176,7 +196,22 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
       }),
       inject: [StubVideoGenerationAdapter, OpenRouterVideoGenerationAdapter, LlmProviderService],
     },
+    {
+      provide: TTS_GENERATION_ADAPTER,
+      useClass: StubTtsAdapter,
+    },
+    {
+      provide: TALKING_HEAD_ADAPTER,
+      useClass: StubTalkingHeadAdapter,
+    },
   ],
-  exports: [AgentInterviewService, CompetitorIntelService, ImageGenerationService],
+  exports: [
+    AgentInterviewService,
+    CompetitorIntelService,
+    ImageGenerationService,
+    TalkingHeadComposerService,
+    TtsGenerationService,
+    IMAGE_GENERATION_ADAPTER,
+  ],
 })
 export class AgentsModule {}

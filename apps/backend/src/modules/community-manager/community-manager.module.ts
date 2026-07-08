@@ -22,7 +22,11 @@ import {
 } from './adapters/social-copy.adapter.port';
 import { CommunityManagerBatchEntity } from './infrastructure/typeorm/community-manager-batch.entity';
 import { TonePresetEntity } from './infrastructure/typeorm/tone-preset.entity';
+import { AgentImageGenerationEntity } from '../agents/domain/agent-image-generation.entity';
 import { ContentVisualComposerService } from './content-visual-composer.service';
+import { CmCharacterController } from './cm-character.controller';
+import { CmCharacterService } from './cm-character.service';
+import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
 import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
 import { TonePresetController } from './tone-preset.controller';
@@ -38,6 +42,7 @@ import { TonePresetController } from './tone-preset.controller';
       ProductEntity,
       CampaignEntity,
       ContentEntity,
+      AgentImageGenerationEntity,
     ]),
     CompanyProfileModule,
     ProductModule,
@@ -47,10 +52,12 @@ import { TonePresetController } from './tone-preset.controller';
     LlmModule,
     ContentModule,
   ],
-  controllers: [CommunityManagerController, TonePresetController],
+  controllers: [CommunityManagerController, TonePresetController, CmCharacterController],
   providers: [
     CommunityManagerService,
     ContentVisualComposerService,
+    CmCharacterService,
+    TalkingHeadPostComposerService,
     StubSocialCopyAdapter,
     OpenRouterSocialCopyAdapter,
     {
@@ -70,6 +77,6 @@ import { TonePresetController } from './tone-preset.controller';
       inject: [StubSocialCopyAdapter, OpenRouterSocialCopyAdapter, LlmProviderService],
     },
   ],
-  exports: [CommunityManagerService],
+  exports: [CommunityManagerService, CmCharacterService],
 })
 export class CommunityManagerModule {}

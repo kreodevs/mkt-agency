@@ -1,9 +1,11 @@
+import type { ContentVisualFormat } from '../../content/domain/content.constants';
+
 export interface BrandedImagePromptInput {
   productName: string;
   title?: string;
   visualDescription?: string;
   hasLogo: boolean;
-  visualFormat?: 'image' | 'carousel';
+  visualFormat?: ContentVisualFormat;
 }
 
 export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string {

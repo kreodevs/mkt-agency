@@ -57,6 +57,8 @@ export interface CopilotStatus {
   inbox: PublicationInboxData['stats'];
   nextStep: string;
   canPrepareWeek: boolean;
+  cmCharacterReady: boolean;
+  cmCharacterStatus: string;
   prepareBlockedReason: string | null;
 }
 

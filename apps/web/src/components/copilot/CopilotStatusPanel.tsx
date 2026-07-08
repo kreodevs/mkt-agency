@@ -4,6 +4,7 @@ import {
   Loader2,
   Sparkles,
   Target,
+  UserCircle2,
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -12,6 +13,7 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
+import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPanel';
 
 interface CopilotStatusPanelProps {
   productId?: string;
@@ -71,6 +73,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   if (!status) return null;
 
   return (
+    <div className="space-y-[var(--spacing-md)]">
     <Card
       title="Tu copiloto"
       subtitle={`Producto: ${status.productName}`}
@@ -89,6 +92,12 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             label="Producto listo"
             done={status.onboardingCompleted}
             href="/products"
+          />
+          <PipelineRow
+            icon={UserCircle2}
+            label="CM virtual (retrato + lip-sync)"
+            done={status.cmCharacterReady}
+            detail={status.cmCharacterStatus}
           />
           <PipelineRow
             icon={Users}
@@ -138,6 +147,11 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
         </p>
       </div>
     </Card>
+
+    {!status.cmCharacterReady && status.onboardingCompleted && (
+      <CmCharacterSetupPanel productId={productId ?? status.productId} />
+    )}
+    </div>
   );
 }
 
@@ -148,7 +162,7 @@ function PipelineRow({
   href,
   detail,
 }: {
-  icon: React.FC<{ className?: string }>;
+  icon?: React.FC<{ className?: string }>;
   label: string;
   done: boolean;
   href?: string;
@@ -156,9 +170,11 @@ function PipelineRow({
 }) {
   const content = (
     <span className="flex items-center gap-2">
-      <Icon
-        className={`h-4 w-4 ${done ? 'text-[var(--success)]' : 'text-[var(--foreground-muted)]'}`}
-      />
+      {Icon ? (
+        <Icon
+          className={`h-4 w-4 ${done ? 'text-[var(--success)]' : 'text-[var(--foreground-muted)]'}`}
+        />
+      ) : null}
       <span className={done ? 'text-[var(--foreground)]' : 'text-[var(--foreground-muted)]'}>
         {label}
       </span>

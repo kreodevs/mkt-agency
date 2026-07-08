@@ -33,7 +33,7 @@ export class StubSocialCopyAdapter implements SocialCopyAdapterPort {
           `#MarketingDigital #Tips #Estrategia`,
         hashtags: ['MarketingDigital', 'Tips', 'Estrategia', 'RedesSociales'],
         visualDescription: `Infografía con 3 tips de marketing digital en colores corporativos para ${platformLabels[platform] ?? platform}`,
-        visualFormat: 'image',
+        visualFormat: 'image' as const,
         bestTime: '10:00 AM - 12:00 PM hora local',
         targetAudience: 'Dueños de negocio y profesionales de marketing',
         callToAction: 'Comparte tu experiencia en los comentarios',

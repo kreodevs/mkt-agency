@@ -47,6 +47,8 @@ export interface SocialCopyContext {
     label: string | null;
     assetType: 'image' | 'video';
   }>;
+  /** CM virtual configurada (retrato + preview) — habilita visualFormat talking-head en TikTok. */
+  cmCharacterReady?: boolean;
 }
 
 export interface SocialCopyAdapterPort {

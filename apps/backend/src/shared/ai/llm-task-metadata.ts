@@ -68,6 +68,24 @@ export const LLM_TASK_METADATA: Record<LlmTaskType, LlmTaskMetadata> = {
     defaultModel: 'bytedance/seedance-2.0-fast',
     temperature: '0',
   },
+  tts_generation: {
+    label: 'Síntesis de voz (TTS)',
+    description: 'Narración en español para reels de la CM virtual',
+    defaultModel: 'eleven_multilingual_v2',
+    temperature: '0',
+  },
+  talking_head_generation: {
+    label: 'Avatar hablante (lip-sync)',
+    description: 'Anima el retrato de la CM con audio TTS (Replicate p-video-avatar)',
+    defaultModel: 'prunaai/p-video-avatar',
+    temperature: '0',
+  },
+  cm_portrait_generation: {
+    label: 'Retrato CM virtual',
+    description: 'Retrato vertical 9:16 de la community manager para lip-sync',
+    defaultModel: 'black-forest-labs/flux-2-pro',
+    temperature: '0',
+  },
   strategy_adjustment: {
     label: 'Ajuste de estrategia',
     description: 'Recomendaciones de ajuste según métricas',

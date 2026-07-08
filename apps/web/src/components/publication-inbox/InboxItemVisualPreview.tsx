@@ -60,7 +60,11 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
   const isDetail = variant === 'detail';
   const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : 'max-h-56';
   const processingLabel =
-    visualFormat === 'carousel' ? 'Generando carrusel…' : 'Generando imagen…';
+    visualFormat === 'talking-head'
+      ? 'Generando reel CM…'
+      : visualFormat === 'carousel'
+        ? 'Generando carrusel…'
+        : 'Generando imagen…';
 
   if (generationQuery.isLoading && assetIds.length === 0) {
     return (

@@ -85,9 +85,11 @@ export function ContentVisualPanel({
   const isFailed = generation?.status === 'failed' || isStaleProcessing;
   const isCompleted = generation?.status === 'completed' && hasVisual;
   const processingLabel =
-    visualFormat === 'carousel'
-      ? 'Generando carrusel con IA…'
-      : 'Generando imagen con IA…';
+    visualFormat === 'talking-head'
+      ? 'Generando reel con CM virtual…'
+      : visualFormat === 'carousel'
+        ? 'Generando carrusel con IA…'
+        : 'Generando imagen con IA…';
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });

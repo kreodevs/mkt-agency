@@ -19,6 +19,16 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 1. **Post estático / carrusel** — imágenes del kit por rol (`product-screenshot` > `event-photo` > …).
 2. **Video IA** — deshabilitado. Futuro: reel con FFmpeg y material del kit.
 
-El LLM devuelve `body` (copy publicable) y `visualDescription` (brief de arte) por separado. Al guardar contenido, `visualDescription` se persiste en `contents.visual_prompt`; Image Generator **no** usa el body del post como prompt de imagen.
+## CM virtual (talking-head)
+
+Actividad inicial idempotente en el copiloto:
+
+1. **Retrato** — tarea `cm_portrait_generation` (OpenRouter Flux 9:16).
+2. **Vista previa** — TTS (`tts_generation`, ElevenLabs) + lip-sync (`talking_head_generation`, Replicate `prunaai/p-video-avatar`).
+3. Posts TikTok con `visualFormat: talking-head` cuando `cmCharacter.readyAt` está definido.
+
+API: `GET/PATCH /api/v1/products/:id/cm-character`, `POST .../generate-portrait`, `POST .../generate-preview`.
+
+Metadata en `product.metadata.cmCharacter`.
 
 Preferencias en `tenants.settings.communityManager` (JSONB, sin migración). Tamaños de imagen: `shared/social/image-destination-formats.util.ts` (TikTok vertical 9:16, resto feed 1:1 por defecto).

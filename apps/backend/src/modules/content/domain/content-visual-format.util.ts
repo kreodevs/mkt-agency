@@ -37,8 +37,11 @@ export function inferContentVisualFormat(
   return DEFAULT_CONTENT_VISUAL_FORMAT;
 }
 
-/** Generación IA de video deshabilitada; solo imágenes y carruseles. */
-export function visualFormatToMediaType(_format: ContentVisualFormat): 'image' {
+/** Generación IA de video generativo deshabilitada; talking-head usa lip-sync sobre retrato. */
+export function visualFormatToMediaType(format: ContentVisualFormat): 'image' | 'video' {
+  if (format === 'talking-head') {
+    return 'video';
+  }
   return 'image';
 }
 
@@ -54,6 +57,8 @@ export function buildVisualFormatSceneHint(format: ContentVisualFormat): string 
   switch (format) {
     case 'carousel':
       return `Formato visual: carrusel de ${CAROUSEL_FRAME_COUNT} imágenes relacionadas para redes sociales.`;
+    case 'talking-head':
+      return 'Formato visual: reel vertical con la CM virtual hablando el copy del post (retrato + lip-sync).';
     default:
       return 'Formato visual: imagen estática para feed o post en redes sociales.';
   }
@@ -62,4 +67,5 @@ export function buildVisualFormatSceneHint(format: ContentVisualFormat): string 
 export const CONTENT_VISUAL_FORMAT_LABELS: Record<ContentVisualFormat, string> = {
   image: 'Imagen',
   carousel: 'Carrusel',
+  'talking-head': 'CM hablando',
 };

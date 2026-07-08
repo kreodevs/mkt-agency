@@ -30,6 +30,9 @@ import { ProductService } from '../product/product.service';
 import { ProductMediaKitService } from '../product/product-media-kit.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { ContentVisualComposerService } from './content-visual-composer.service';
+import { CmCharacterService } from './cm-character.service';
+import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
+import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -88,6 +91,8 @@ export class CommunityManagerService {
     private readonly competitorService: CompetitorService,
     private readonly mediaKitService: ProductMediaKitService,
     private readonly visualComposer: ContentVisualComposerService,
+    private readonly cmCharacter: CmCharacterService,
+    private readonly talkingHeadComposer: TalkingHeadPostComposerService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -315,6 +320,9 @@ export class CommunityManagerService {
       const kit = effectiveProductId
         ? await this.mediaKitService.listEntitiesForProduct(tenantId, effectiveProductId)
         : [];
+      const cmCharacterStatus = effectiveProductId
+        ? await this.cmCharacter.getStatus(tenantId, effectiveProductId)
+        : null;
 
       this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
       const result = await runWithLlmUsageContext(
@@ -332,6 +340,7 @@ export class CommunityManagerService {
             productContext: productContext as unknown as Record<string, unknown>,
             focusProductName: productContext?.name ?? null,
             competitorIntelBrief,
+            cmCharacterReady: cmCharacterStatus?.ready === true,
             mediaKit: kit.map((item) => ({
               role: item.role,
               label: item.label,
@@ -649,6 +658,18 @@ export class CommunityManagerService {
     kit: Awaited<ReturnType<ProductMediaKitService['listEntitiesForProduct']>>,
     postIndex: number,
   ): Promise<boolean> {
+    const visualFormat = normalizeContentVisualFormat(post.visualFormat);
+
+    if (visualFormat === 'talking-head' && productId) {
+      return this.talkingHeadComposer.attachToContent(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+      );
+    }
+
     if (productId && kit.length) {
       const composed = await this.visualComposer.tryComposeFromKit(
         tenantId,

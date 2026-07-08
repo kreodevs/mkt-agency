@@ -84,6 +84,8 @@ export class CopilotStatusResponseDto {
   };
   nextStep!: string;
   canPrepareWeek!: boolean;
+  cmCharacterReady!: boolean;
+  cmCharacterStatus!: string;
   prepareBlockedReason!: string | null;
 }
 

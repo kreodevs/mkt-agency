@@ -19,6 +19,7 @@ import {
 } from './dto/product-media-kit.dto';
 import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-media-kit-item.entity';
 import { ProductService } from './product.service';
+import type { ContentVisualFormat } from '../content/domain/content.constants';
 
 @Injectable()
 export class ProductMediaKitService {
@@ -146,8 +147,6 @@ export class ProductMediaKitService {
     }
     return demoItems[postIndex % demoItems.length].assetId;
   }
-
-import type { ContentVisualFormat } from '../content/domain/content.constants';
 
   async pickImageAssetIdsForCompose(
     tenantId: string,
