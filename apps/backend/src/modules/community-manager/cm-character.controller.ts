@@ -57,6 +57,6 @@ export class CmCharacterController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('productId', ParseUUIDPipe) productId: string,
   ): Promise<CmCharacterGenerateResponseDto> {
-    return this.cmCharacter.generatePreview(user.tenantId!, user.id, productId);
+    return this.cmCharacter.generatePreview(user.tenantId!, user, productId);
   }
 }

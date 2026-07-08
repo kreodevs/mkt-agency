@@ -15,21 +15,33 @@ import type { StorageAdapterPort, StorageUploadInput } from './storage.adapter.p
 export class S3StorageAdapter implements StorageAdapterPort, OnModuleInit {
   private readonly logger = new Logger(S3StorageAdapter.name);
   private readonly client: S3Client;
+  private readonly signingClient: S3Client;
   private readonly bucket: string;
 
   constructor(private readonly config: ConfigService) {
     const endpoint = config.get<string>('S3_ENDPOINT');
     const region = config.get<string>('S3_REGION', 'us-east-1');
+    const credentials = {
+      accessKeyId: config.get<string>('S3_ACCESS_KEY', ''),
+      secretAccessKey: config.get<string>('S3_SECRET_KEY', ''),
+    };
 
     this.client = new S3Client({
       region,
       endpoint: endpoint || undefined,
       forcePathStyle: !!endpoint,
-      credentials: {
-        accessKeyId: config.get<string>('S3_ACCESS_KEY', ''),
-        secretAccessKey: config.get<string>('S3_SECRET_KEY', ''),
-      },
+      credentials,
     });
+
+    const publicEndpoint = config.get<string>('S3_PUBLIC_ENDPOINT');
+    this.signingClient = publicEndpoint
+      ? new S3Client({
+          region,
+          endpoint: publicEndpoint,
+          forcePathStyle: true,
+          credentials,
+        })
+      : this.client;
 
     this.bucket = config.get<string>('S3_BUCKET', 'mkt-agency-assets');
   }
@@ -100,7 +112,7 @@ export class S3StorageAdapter implements StorageAdapterPort, OnModuleInit {
 
   async getSignedDownloadUrl(key: string, expiresInSeconds: number): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+    return getSignedUrl(this.signingClient, command, { expiresIn: expiresInSeconds });
   }
 
   async deleteObject(key: string): Promise<void> {

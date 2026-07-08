@@ -21,6 +21,7 @@ export interface ComposeTalkingHeadOptions {
   voiceId?: string;
   tenantId: string;
   userId?: string;
+  accessUser?: { id: string; tenantId: string; email?: string; role?: string };
   contentId?: string;
   productId?: string;
   metadata?: Record<string, unknown>;
@@ -53,7 +54,7 @@ export class TalkingHeadComposerService {
     }
 
     const [portraitUrl, ttsResult] = await Promise.all([
-      this.resolveAssetUrl(options.tenantId, options.portraitAssetId),
+      this.resolveAssetUrl(options.tenantId, options.portraitAssetId, options.accessUser),
       this.tts.synthesize({ text: script, voiceId: options.voiceId }),
     ]);
 
@@ -73,7 +74,11 @@ export class TalkingHeadComposerService {
       },
     );
 
-    const audioUrl = await this.resolveAssetUrl(options.tenantId, audioAsset.id);
+    const audioUrl = await this.resolveAssetUrl(
+      options.tenantId,
+      audioAsset.id,
+      options.accessUser,
+    );
     const talkingHead = await this.generateTalkingHead({
       imageUrl: portraitUrl,
       audioUrl,
@@ -125,7 +130,14 @@ export class TalkingHeadComposerService {
     return this.stub.generate(input);
   }
 
-  private async resolveAssetUrl(tenantId: string, assetId: string): Promise<string> {
+  private async resolveAssetUrl(
+    tenantId: string,
+    assetId: string,
+    accessUser?: ComposeTalkingHeadOptions['accessUser'],
+  ): Promise<string> {
+    if (accessUser) {
+      return this.assetService.getExternalFileUrl(tenantId, assetId, accessUser);
+    }
     const signed = await this.assetService.getDownloadUrl(tenantId, assetId);
     return signed.url;
   }

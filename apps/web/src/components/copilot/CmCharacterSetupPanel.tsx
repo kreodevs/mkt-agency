@@ -517,8 +517,10 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
                   <AppearanceForm draft={editDraft} onChange={setEditDraft} />
                 </div>
 
-                {activeCharacter.errorMessage && (
-                  <p className="text-sm text-destructive">{activeCharacter.errorMessage}</p>
+                {activeCharacter.status === 'failed' && activeCharacter.errorMessage && (
+                  <p className="text-sm text-destructive">
+                    Error al generar vista previa: {activeCharacter.errorMessage}
+                  </p>
                 )}
 
                 <div className="flex flex-wrap gap-2">

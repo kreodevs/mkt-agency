@@ -68,6 +68,7 @@ export class TalkingHeadPostComposerService {
         portraitAssetId: config.portraitAssetId!,
         script,
         voiceId: config.voiceId ?? DEFAULT_CM_VOICE_ID,
+        accessUser: { id: userId, tenantId },
         metadata: {
           source: 'copilot-week',
           generationId: record.id,

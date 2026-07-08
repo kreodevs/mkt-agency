@@ -13,6 +13,7 @@ import { AssetService } from '../assets/asset.service';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { ProductService } from '../product/product.service';
+import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import {
   CM_CHARACTERS_LIBRARY_KEY,
   CM_CHARACTER_METADATA_KEY,
@@ -325,11 +326,10 @@ export class CmCharacterService {
 
   async generatePreview(
     tenantId: string,
-    userId: string,
+    user: AuthenticatedUser,
     productId: string,
     characterId?: string,
   ): Promise<CmCharacterGenerateResponseDto> {
-    void userId;
     const product = await this.productService.findOwnedEntity(tenantId, productId);
     const library = await this.loadLibrary(product);
     const entry = characterId
@@ -355,6 +355,12 @@ export class CmCharacterService {
         portraitAssetId: entry.portraitAssetId,
         script: CM_PREVIEW_SCRIPT,
         voiceId: entry.voiceId ?? DEFAULT_CM_VOICE_ID,
+        accessUser: {
+          id: user.id,
+          tenantId: user.tenantId!,
+          email: user.email,
+          role: user.role,
+        },
         metadata: { phase: 'preview', cmCharacterId: entry.id, cmCharacterName: entry.name },
       });
 

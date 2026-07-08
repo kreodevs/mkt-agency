@@ -103,7 +103,7 @@ export class CmCharactersController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @Param('characterId', ParseUUIDPipe) characterId: string,
   ): Promise<CmCharacterGenerateResponseDto> {
-    return this.cmCharacter.generatePreview(user.tenantId!, user.id, productId, characterId);
+    return this.cmCharacter.generatePreview(user.tenantId!, user, productId, characterId);
   }
 
   @Post(':characterId/select-portrait')

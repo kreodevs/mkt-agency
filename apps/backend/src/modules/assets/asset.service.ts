@@ -5,6 +5,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { In, Repository } from 'typeorm';
@@ -28,6 +29,7 @@ import {
 import { AssetTagAssignmentEntity } from './infrastructure/typeorm/asset-tag-assignment.entity';
 import { AssetTagEntity } from './infrastructure/typeorm/asset-tag.entity';
 import { AssetEntity } from './infrastructure/typeorm/asset.entity';
+import { JwtTokenService } from '../../shared/auth/jwt-token.service';
 
 const DOWNLOAD_URL_TTL_SECONDS = 3600;
 
@@ -44,6 +46,8 @@ export class AssetService {
     private readonly storage: StorageAdapterPort,
     private readonly deleteAssetHandler: DeleteAssetHandler,
     private readonly tenantLimitsService: TenantLimitsService,
+    private readonly config: ConfigService,
+    private readonly jwtTokenService: JwtTokenService,
   ) {}
 
   async list(tenantId: string, query: ListAssetsQueryDto): Promise<PaginatedAssetsResponseDto> {
@@ -236,6 +240,28 @@ export class AssetService {
     );
 
     return { url, expiresIn: DOWNLOAD_URL_TTL_SECONDS };
+  }
+
+  async getExternalFileUrl(
+    tenantId: string,
+    assetId: string,
+    user: { id: string; tenantId: string; email?: string; role?: string },
+  ): Promise<string> {
+    await this.findOwnedAsset(tenantId, assetId);
+
+    const { accessToken } = this.jwtTokenService.signAccessToken({
+      sub: user.id,
+      email: user.email ?? 'asset-access@internal',
+      role: user.role ?? 'member',
+      isSuperadmin: false,
+      tenantId: user.tenantId,
+    });
+
+    const apiBase = this.config.get<string>(
+      'API_PUBLIC_URL',
+      'http://localhost:3000/api/v1',
+    );
+    return `${apiBase.replace(/\/$/, '')}/assets/${assetId}/file?access_token=${accessToken}`;
   }
 
   async readFile(
