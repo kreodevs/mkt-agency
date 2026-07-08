@@ -10,4 +10,4 @@ Componentes UI reutilizables del eje producto-first. Tokens Kreo y moléculas `C
 | `ProductKeywordSuggestion` | Paso tags: regenerar keywords desde URL |
 | `ProductKeywordTagsInput` | Editor de tags (mín. 3) en wizard de producto |
 | `ProductLogoPanel` | Logo del producto: extraer de web, subir manual, usado en generación IA |
-| `ProductMediaKitPanel` | Kit de medios reales (capturas, eventos, demos) — usado en `/products/:id/media-kit` |
+| `ProductMediaKitPanel` | Kit de medios reales (capturas, eventos, demos) — subida directa o **Desde librería** (carpetas PC/iPad/iOS) en `/products/:id/media-kit` |

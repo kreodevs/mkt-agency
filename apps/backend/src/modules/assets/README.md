@@ -14,6 +14,13 @@ Storage: `S3StorageAdapter` si hay `S3_ACCESS_KEY`, `S3_SECRET_KEY` y `S3_BUCKET
 
 Los visuales del copiloto (semana CM) se suben vía Image Generator con `metadata.source = copilot-week`, `contentId`, `productId` y `generationId` para localizarlos en la librería.
 
+## Carpetas y CM
+
+- `asset_folders` soporta árbol anidado (`parent_id`).
+- Nombres como `PC`, `iPad`, `iOS` se infieren como `device` en el prompt del Community Manager.
+- `AssetFolderService.buildLibrarySummaryForLlm` expone conteos por carpeta al generar copy.
+- Los ítems del kit de medios incluyen `folderPath` y `device` cuando el asset está en una carpeta.
+
 Las URLs públicas de assets devuelven `/api/v1/assets/:id/file` (stream autenticado). MinIO/S3 solo se usa en red interna; el navegador no debe recibir `http://minio:9000/...`.
 
 Al arrancar, `S3StorageAdapter` crea el bucket si no existe (MinIO). En Dokploy el servicio `minio-init` también ejecuta `mc mb` con `S3_BUCKET` (default `mkt-agency-assets`).
