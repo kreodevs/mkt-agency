@@ -70,10 +70,10 @@ export const tenantAdvancedNavigation = [
     items: [
       { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Contenidos', href: '/contents', icon: FileText },
+      { label: 'Librería', href: '/assets', icon: FolderOpen },
       { label: 'Calendario', href: '/calendar', icon: CalendarDays },
       { label: 'Formularios', href: '/forms', icon: FileInput },
       { label: 'Leads', href: '/leads', icon: Users },
-      { label: 'Activos', href: '/assets', icon: FolderOpen },
       { label: 'Propuestas', href: '/proposals', icon: FileSignature },
       { label: 'Reportes', href: '/reports', icon: BarChart3 },
       { label: 'Dominio', href: '/settings/domain', icon: Globe },
@@ -89,6 +89,7 @@ export const tenantSohoNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+      { label: 'Librería', href: '/assets', icon: FolderOpen },
       { label: 'Mi producto', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
     ],

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ClipboardList, Images, Megaphone } from 'lucide-react';
+import { ClipboardList, FolderOpen, Images, Megaphone } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
@@ -132,6 +132,12 @@ export default function ProductDetailPage() {
               <Button variant="outline" className="gap-2">
                 <Images className="h-4 w-4" />
                 Kit de medios
+              </Button>
+            </Link>
+            <Link to="/assets">
+              <Button variant="outline" className="gap-2">
+                <FolderOpen className="h-4 w-4" />
+                Librería
               </Button>
             </Link>
             <Link to={`/campaigns/new?productId=${id}`}>

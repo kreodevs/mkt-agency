@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCheck,
   ClipboardCheck,
+  FolderOpen,
   PartyPopper,
   Send,
   Users,
@@ -364,6 +365,21 @@ export default function PublicationInboxPage() {
         <div className="space-y-[var(--spacing-lg)]">
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
           <InboxKitPanel items={ready} />
+
+          {sohoMode && (
+            <Card
+              title="Librería multimedia"
+              subtitle="Sube logos, fotos y material para tus publicaciones"
+            >
+              <Link
+                to="/assets"
+                className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] text-sm transition-colors hover:border-[var(--primary)]"
+              >
+                <FolderOpen className="h-4 w-4 shrink-0 text-[var(--primary)]" />
+                Abrir librería de assets
+              </Link>
+            </Card>
+          )}
 
           {advancedNav && (
             <Card title="Acciones de la agencia" subtitle="Generar más contenido">

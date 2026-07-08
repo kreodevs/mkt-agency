@@ -10,6 +10,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Textarea } from '@/components/atoms/Textarea';
@@ -610,6 +611,15 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         title="Elegir retrato desde biblioteca"
         description="Selecciona una imagen vertical 9:16 de tus assets."
         size="xl"
+        footer={
+          <Link
+            to="/assets"
+            className="text-sm font-medium text-[var(--primary)] hover:underline"
+            onClick={() => setPortraitPickerOpen(false)}
+          >
+            Abrir librería completa →
+          </Link>
+        }
       >
         {imageAssetsQuery.isLoading ? (
           <p className="text-sm text-[var(--foreground-muted)]">Cargando imágenes...</p>
@@ -650,9 +660,18 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
             })}
           </div>
         ) : (
-          <p className="text-sm text-[var(--foreground-muted)]">
-            No hay imágenes en la biblioteca. Sube assets o genera un retrato con IA.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-[var(--foreground-muted)]">
+              No hay imágenes en la biblioteca. Sube material en la librería o genera un retrato con
+              IA.
+            </p>
+            <Link to="/assets" onClick={() => setPortraitPickerOpen(false)}>
+              <Button type="button" variant="secondary" size="sm">
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Ir a librería multimedia
+              </Button>
+            </Link>
+          </div>
         )}
       </Dialog>
     </>
