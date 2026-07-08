@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Grid3X3, ImageIcon, LayoutList, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { AssetGridCard } from '@/components/assets/AssetGridCard';
+import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
 import { AssetUploader } from '@/components/assets/AssetUploader';
-import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
+import { Button } from '@/components/atoms/Button';
+import { Checkbox } from '@/components/atoms/Checkbox';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -31,27 +34,98 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function AssetThumbnail({ asset }: { asset: Asset }) {
-  if (asset.type === 'image') {
-    return (
-      <div className="aspect-square overflow-hidden rounded-lg bg-[var(--background-secondary)]">
-        <AuthenticatedAssetImage
-          assetId={asset.id}
-          fallbackUrl={asset.url}
-          title={asset.name}
-          className="h-full w-full object-cover transition-transform hover:scale-105"
-        />
-      </div>
-    );
+function isAssetLocked(asset: Asset) {
+  return asset.isInUse || asset.referenceCount > 0;
+}
+
+function toggleSelection(ids: Set<string>, assetId: string, checked: boolean): Set<string> {
+  const next = new Set(ids);
+  if (checked) {
+    next.add(assetId);
+  } else {
+    next.delete(assetId);
   }
+  return next;
+}
+
+function toggleSectionSelection(ids: Set<string>, assets: Asset[], checked: boolean): Set<string> {
+  const next = new Set(ids);
+  for (const asset of assets) {
+    if (checked) {
+      next.add(asset.id);
+    } else {
+      next.delete(asset.id);
+    }
+  }
+  return next;
+}
+
+function sectionSelectionState(ids: Set<string>, assets: Asset[]) {
+  if (assets.length === 0) {
+    return false;
+  }
+  const selectedCount = assets.filter((asset) => ids.has(asset.id)).length;
+  if (selectedCount === 0) {
+    return false;
+  }
+  if (selectedCount === assets.length) {
+    return true;
+  }
+  return 'indeterminate' as const;
+}
+
+type AssetSectionProps = {
+  title: string;
+  subtitle: string;
+  assets: Asset[];
+  selectedIds: Set<string>;
+  onSelectionChange: (next: Set<string>) => void;
+  onPreview: (asset: Asset) => void;
+  onDownload: (asset: Asset) => void;
+  onDuplicate: (assetId: string) => void;
+  onDelete: (assetId: string) => void;
+};
+
+function AssetSection({
+  title,
+  subtitle,
+  assets,
+  selectedIds,
+  onSelectionChange,
+  onPreview,
+  onDownload,
+  onDuplicate,
+  onDelete,
+}: AssetSectionProps) {
+  const sectionState = sectionSelectionState(selectedIds, assets);
 
   return (
-    <div className="flex aspect-square items-center justify-center rounded-lg bg-[var(--background-secondary)]">
-      <div className="flex flex-col items-center gap-1 text-[var(--foreground-muted)]">
-        <ImageIcon className="h-8 w-8" />
-        <span className="text-[10px] font-medium">{ASSET_TYPE_LABELS[asset.type]}</span>
+    <Card title={title} subtitle={subtitle}>
+      <div className="mb-3 flex items-center gap-2">
+        <Checkbox
+          checked={sectionState}
+          onChange={(checked) => onSelectionChange(toggleSectionSelection(selectedIds, assets, checked))}
+          label="Seleccionar todos"
+        />
       </div>
-    </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {assets.map((asset) => (
+          <AssetGridCard
+            key={asset.id}
+            asset={asset}
+            selected={selectedIds.has(asset.id)}
+            locked={isAssetLocked(asset)}
+            onSelectToggle={(checked) =>
+              onSelectionChange(toggleSelection(selectedIds, asset.id, checked))
+            }
+            onOpenPreview={() => onPreview(asset)}
+            onDownload={() => onDownload(asset)}
+            onDuplicate={() => onDuplicate(asset.id)}
+            onDelete={() => onDelete(asset.id)}
+          />
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -60,6 +134,12 @@ export default function AssetLibraryPage() {
   const [folderFilter, setFolderFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [folderFilter, typeFilter]);
 
   const foldersQuery = useQuery({
     queryKey: ['asset-folders'],
@@ -77,10 +157,14 @@ export default function AssetLibraryPage() {
       }),
   });
 
+  const invalidateAssets = () => {
+    void queryClient.invalidateQueries({ queryKey: ['assets'] });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: deleteAsset,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['assets'] });
+      invalidateAssets();
       toast.message('Activo eliminado');
     },
     onError: (error) => {
@@ -88,10 +172,34 @@ export default function AssetLibraryPage() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => deleteAsset(id)));
+      const failed = results.filter((result) => result.status === 'rejected').length;
+      if (failed > 0) {
+        throw new Error(`No se pudieron eliminar ${failed} archivo(s)`);
+      }
+    },
+    onSuccess: (_data, ids) => {
+      invalidateAssets();
+      setSelectedIds((current) => {
+        const next = new Set(current);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+      toast.message(ids.length === 1 ? 'Activo eliminado' : `${ids.length} activos eliminados`);
+    },
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : error instanceof Error ? error.message : 'No se pudo eliminar la selección';
+      toast.error(message);
+      invalidateAssets();
+    },
+  });
+
   const duplicateMutation = useMutation({
     mutationFn: duplicateAsset,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['assets'] });
+      invalidateAssets();
       toast.success('Activo duplicado');
     },
     onError: (error) => {
@@ -101,6 +209,24 @@ export default function AssetLibraryPage() {
 
   const items = assetsQuery.data?.items ?? [];
   const imagesOnly = items.filter((a) => a.type === 'image');
+  const otherAssets = items.filter((a) => a.type !== 'image');
+
+  const selectedAssets = items.filter((asset) => selectedIds.has(asset.id));
+  const deletableSelected = selectedAssets.filter((asset) => !isAssetLocked(asset));
+  const lockedSelectedCount = selectedAssets.length - deletableSelected.length;
+
+  const handleDownload = async (asset: Asset) => {
+    const { url } = await getAssetDownloadUrl(asset.id);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleBulkDelete = () => {
+    if (deletableSelected.length === 0) {
+      toast.error('Los activos seleccionados están en uso y no se pueden eliminar');
+      return;
+    }
+    bulkDeleteMutation.mutate(deletableSelected.map((asset) => asset.id));
+  };
 
   const columns: DataTableColumn[] = useMemo(
     () => [
@@ -125,7 +251,7 @@ export default function AssetLibraryPage() {
         header: 'Estado',
         body: (row) => {
           const asset = row as Asset;
-          if (asset.isInUse || asset.referenceCount > 0) {
+          if (isAssetLocked(asset)) {
             return (
               <StatusPill status="warning" size="sm">
                 En uso
@@ -144,16 +270,20 @@ export default function AssetLibraryPage() {
         header: '',
         body: (row) => {
           const asset = row as Asset;
-          const locked = asset.isInUse || asset.referenceCount > 0;
+          const locked = isAssetLocked(asset);
           return (
             <div className={ACTION_BUTTON_GROUP_CLASS}>
               <IconButton
                 type="button"
+                label="Ver"
+                onClick={() => setPreviewAsset(asset)}
+              >
+                <Eye />
+              </IconButton>
+              <IconButton
+                type="button"
                 label="Descargar"
-                onClick={async () => {
-                  const { url } = await getAssetDownloadUrl(asset.id);
-                  window.open(url, '_blank', 'noopener,noreferrer');
-                }}
+                onClick={() => void handleDownload(asset)}
               >
                 <Download />
               </IconButton>
@@ -260,12 +390,40 @@ export default function AssetLibraryPage() {
         <Card>
           <AssetUploader
             folderId={folderFilter || undefined}
-            onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['assets'] })}
+            onUploaded={() => {
+              invalidateAssets();
+            }}
           />
         </Card>
       </div>
 
-      {/* Grid view */}
+      {selectedIds.size > 0 && (
+        <Card className="mb-4 border-[var(--primary)]/40 bg-[var(--primary)]/5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-[var(--foreground)]">
+              {selectedIds.size} seleccionado(s)
+              {lockedSelectedCount > 0 &&
+                ` · ${lockedSelectedCount} en uso (no se eliminarán)`}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                Deseleccionar
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="gap-2"
+                disabled={deletableSelected.length === 0 || bulkDeleteMutation.isPending}
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="h-4 w-4" />
+                Eliminar ({deletableSelected.length})
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {viewMode === 'grid' ? (
         assetsQuery.isLoading ? (
           <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
@@ -275,53 +433,36 @@ export default function AssetLibraryPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Images grid */}
             {imagesOnly.length > 0 && (
-              <Card title="Imágenes" subtitle={`${imagesOnly.length} archivos`}>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {imagesOnly.map((asset) => (
-                    <AssetGridCard
-                      key={asset.id}
-                      asset={asset}
-                      onDownload={async () => {
-                        const { url } = await getAssetDownloadUrl(asset.id);
-                        window.open(url, '_blank', 'noopener,noreferrer');
-                      }}
-                      onDuplicate={() => duplicateMutation.mutate(asset.id)}
-                      onDelete={() => deleteMutation.mutate(asset.id)}
-                      locked={asset.isInUse || asset.referenceCount > 0}
-                    />
-                  ))}
-                </div>
-              </Card>
+              <AssetSection
+                title="Imágenes"
+                subtitle={`${imagesOnly.length} archivos`}
+                assets={imagesOnly}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onPreview={setPreviewAsset}
+                onDownload={(asset) => void handleDownload(asset)}
+                onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                onDelete={(assetId) => deleteMutation.mutate(assetId)}
+              />
             )}
 
-            {/* Other assets */}
-            {items.filter((a) => a.type !== 'image').length > 0 && (
-              <Card title="Otros activos" subtitle="Documentos, videos, audio">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {items
-                    .filter((a) => a.type !== 'image')
-                    .map((asset) => (
-                      <AssetGridCard
-                        key={asset.id}
-                        asset={asset}
-                        onDownload={async () => {
-                          const { url } = await getAssetDownloadUrl(asset.id);
-                          window.open(url, '_blank', 'noopener,noreferrer');
-                        }}
-                        onDuplicate={() => duplicateMutation.mutate(asset.id)}
-                        onDelete={() => deleteMutation.mutate(asset.id)}
-                        locked={asset.isInUse || asset.referenceCount > 0}
-                      />
-                    ))}
-                </div>
-              </Card>
+            {otherAssets.length > 0 && (
+              <AssetSection
+                title="Otros activos"
+                subtitle="Documentos, videos, audio"
+                assets={otherAssets}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onPreview={setPreviewAsset}
+                onDownload={(asset) => void handleDownload(asset)}
+                onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                onDelete={(assetId) => deleteMutation.mutate(assetId)}
+              />
             )}
           </div>
         )
       ) : (
-        /* Table view */
         <Card>
           <DataTable
             data={items}
@@ -333,64 +474,12 @@ export default function AssetLibraryPage() {
           />
         </Card>
       )}
+
+      <AssetPreviewDialog
+        asset={previewAsset}
+        onClose={() => setPreviewAsset(null)}
+        onDownload={(asset) => void handleDownload(asset)}
+      />
     </DashboardShell>
-  );
-}
-
-function AssetGridCard({
-  asset,
-  onDownload,
-  onDuplicate,
-  onDelete,
-  locked,
-}: {
-  asset: Asset;
-  onDownload: () => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-  locked: boolean;
-}) {
-  return (
-    <div className="group relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition-all hover:shadow-md">
-      <AssetThumbnail asset={asset} />
-
-      {/* Actions overlay on hover */}
-      <div className={`absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 ${ACTION_BUTTON_GROUP_CLASS}`}>
-        <IconButton type="button" label="Descargar" onClick={onDownload}>
-          <Download />
-        </IconButton>
-        <IconButton type="button" label="Duplicar" onClick={onDuplicate}>
-          <Copy />
-        </IconButton>
-        <IconButton type="button" tone="destructive" label="Eliminar" disabled={locked} onClick={onDelete}>
-          <Trash2 />
-        </IconButton>
-      </div>
-
-      <div className="border-t border-[var(--border)] p-2.5">
-        <p className="truncate text-xs font-medium text-[var(--foreground)]">{asset.name}</p>
-        <p className="text-[10px] text-[var(--foreground-subtle)]">
-          {formatSize(asset.fileSize)}
-          {asset.referenceCount > 0 && ` · ${asset.referenceCount} refs`}
-        </p>
-        {asset.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {asset.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag.id}
-                className="rounded-full bg-[var(--secondary)] px-1.5 py-0.5 text-[9px] text-[var(--foreground-muted)]"
-              >
-                {tag.name}
-              </span>
-            ))}
-            {asset.tags.length > 2 && (
-              <span className="text-[9px] text-[var(--foreground-subtle)]">
-                +{asset.tags.length - 2}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

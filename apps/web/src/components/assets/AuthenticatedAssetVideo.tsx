@@ -9,6 +9,7 @@ interface AuthenticatedAssetVideoProps {
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
+  preload?: 'none' | 'metadata' | 'auto';
 }
 
 export function AuthenticatedAssetVideo({
@@ -20,6 +21,7 @@ export function AuthenticatedAssetVideo({
   autoPlay = false,
   loop = false,
   muted = false,
+  preload = 'metadata',
 }: AuthenticatedAssetVideoProps) {
   const src =
     getAssetFileUrl(assetId) ??
@@ -39,7 +41,7 @@ export function AuthenticatedAssetVideo({
       loop={loop}
       muted={muted}
       playsInline
-      preload="metadata"
+      preload={preload}
     />
   );
 }
