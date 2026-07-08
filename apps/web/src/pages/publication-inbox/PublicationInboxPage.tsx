@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
-  CalendarClock,
   CalendarDays,
   CheckCheck,
   ClipboardCheck,
   FolderOpen,
+  Layers,
   PartyPopper,
   Send,
   Users,
@@ -38,11 +38,13 @@ import {
   markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
-import { useAdvancedNav } from '@/store/copilot-ui';
+import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
 
 export default function PublicationInboxPage() {
   const queryClient = useQueryClient();
   const advancedNav = useAdvancedNav();
+  const advancedGuideDismissed = useCopilotUiStore((s) => s.advancedGuideDismissed);
+  const dismissAdvancedGuide = useCopilotUiStore((s) => s.dismissAdvancedGuide);
   const sohoMode = !advancedNav;
   const [searchParams, setSearchParams] = useSearchParams();
   const activeProductId = useActiveProductStore((s) => s.productId);
@@ -66,7 +68,6 @@ export default function PublicationInboxPage() {
   const sohoSummaryQuery = useQuery({
     queryKey: ['soho-summary', activeProductId],
     queryFn: () => getSohoSummary(activeProductId ?? undefined),
-    enabled: sohoMode,
   });
 
   const bulkApproveMutation = useMutation({
@@ -147,30 +148,40 @@ export default function PublicationInboxPage() {
   }
 
   const summary = sohoSummaryQuery.data;
-  const primaryAction = advancedNav ? 'edit' : 'copy';
 
   return (
     <DashboardShell>
       <PageHeader
-        title={sohoMode ? 'Tu copiloto de marketing' : 'Bandeja de publicación'}
-        description={
-          advancedNav
-            ? 'La agencia sugiere — tú apruebas y publicas manualmente'
-            : 'Preparar · Revisar · Publicar — el copiloto hace el resto'
-        }
+        title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
+        description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
         actions={
-          sohoMode ? (
-            <Link to="/calendario">
-              <Button type="button" variant="outline" size="sm" className="gap-1.5">
-                <CalendarDays className="h-4 w-4" />
-                Calendario
-              </Button>
-            </Link>
-          ) : undefined
+          <Link to="/calendario">
+            <Button type="button" variant="outline" size="sm" className="gap-1.5">
+              <CalendarDays className="h-4 w-4" />
+              Calendario
+            </Button>
+          </Link>
         }
       />
 
-      {sohoMode && summary && (
+      {advancedNav && !advancedGuideDismissed && (
+        <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-[var(--spacing-md)]">
+          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]" aria-hidden />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-[var(--foreground)]">Vista completa activada</p>
+            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
+              Tu flujo diario sigue en <strong>Inicio</strong>: prepara la semana, aprueba y copia
+              para publicar. <strong>Resumen</strong> muestra KPIs; el resto son herramientas cuando
+              las necesites.
+            </p>
+          </div>
+          <Button type="button" size="sm" variant="outline" onClick={dismissAdvancedGuide}>
+            Entendido
+          </Button>
+        </div>
+      )}
+
+      {summary && (
         <SohoResultsBanner
           leadsToday={summary.leadsToday}
           leadsThisWeek={summary.leadsThisWeek}
@@ -241,23 +252,15 @@ export default function PublicationInboxPage() {
           iconTone="success"
         />
         <StatsCard
-          title={sohoMode ? 'Rechazadas' : 'Próximas'}
-          value={sohoMode ? (data?.stats.rejectedCount ?? 0) : (data?.stats.upcomingCount ?? 0)}
-          icon={
-            sohoMode ? (
-              <XCircle className="h-5 w-5" aria-hidden />
-            ) : (
-              <CalendarClock className="h-5 w-5" aria-hidden />
-            )
-          }
-          iconTone={sohoMode ? 'warning' : 'accent'}
+          title="Rechazadas"
+          value={data?.stats.rejectedCount ?? 0}
+          icon={<XCircle className="h-5 w-5" aria-hidden />}
+          iconTone="warning"
         />
         <StatsCard
-          title={sohoMode ? 'Contactos hoy' : 'Leads hoy'}
+          title="Contactos hoy"
           value={summary?.leadsToday ?? 0}
-          description={
-            sohoMode && summary ? `${summary.leadsThisWeek} esta semana` : undefined
-          }
+          description={summary ? `${summary.leadsThisWeek} esta semana` : undefined}
           icon={<Users className="h-5 w-5" aria-hidden />}
           iconTone="primary"
         />
@@ -265,14 +268,11 @@ export default function PublicationInboxPage() {
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
         <div className="space-y-[var(--spacing-lg)] lg:col-span-2">
-          {sohoMode && (
-            <TodayPublishPanel
-              pending={pending}
-              ready={ready}
-              strategyFocus={summary?.strategyFocus}
-              primaryAction={primaryAction}
-            />
-          )}
+          <TodayPublishPanel
+            pending={pending}
+            ready={ready}
+            strategyFocus={summary?.strategyFocus}
+          />
 
           <Card
             title="Por aprobar"
@@ -316,9 +316,9 @@ export default function PublicationInboxPage() {
                     selected={selectedIds.has(item.contentId)}
                     onToggleSelect={toggleSelect}
                     showApproval
-                    primaryAction={primaryAction}
-                    sohoMode={sohoMode}
-                    onRejected={sohoMode ? handleRejected : undefined}
+                    showEditorLink={advancedNav}
+                    sohoMode
+                    onRejected={handleRejected}
                   />
                 ))}
               </div>
@@ -335,29 +335,21 @@ export default function PublicationInboxPage() {
                   <InboxItemCard
                     key={item.contentId}
                     item={item}
-                    primaryAction={primaryAction}
-                    sohoMode={sohoMode}
+                    sohoMode
+                    onRejected={handleRejected}
                   />
                 ))}
               </div>
             </Card>
           )}
 
-          {!sohoMode && (
+          {upcoming.length > 0 && (
             <Card title="Próximas" subtitle="Programadas a futuro">
-              {upcoming.length === 0 ? (
-                <EmptyState
-                  compact
-                  title="Sin programación"
-                  description="Sin publicaciones futuras en el calendario."
-                />
-              ) : (
-                <div className="space-y-[var(--spacing-md)]">
-                  {upcoming.map((item) => (
-                    <InboxItemCard key={item.contentId} item={item} primaryAction={primaryAction} />
-                  ))}
-                </div>
-              )}
+              <div className="space-y-[var(--spacing-md)]">
+                {upcoming.map((item) => (
+                  <InboxItemCard key={item.contentId} item={item} sohoMode />
+                ))}
+              </div>
             </Card>
           )}
         </div>
@@ -366,41 +358,39 @@ export default function PublicationInboxPage() {
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
           <InboxKitPanel items={ready} />
 
-          {sohoMode && (
-            <Card
-              title="Librería multimedia"
-              subtitle="Sube logos, fotos y material para tus publicaciones"
+          <Card
+            title="Librería multimedia"
+            subtitle="Sube logos, fotos y material para tus publicaciones"
+          >
+            <Link
+              to="/assets"
+              className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] text-sm transition-colors hover:border-[var(--primary)]"
             >
-              <Link
-                to="/assets"
-                className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] text-sm transition-colors hover:border-[var(--primary)]"
-              >
-                <FolderOpen className="h-4 w-4 shrink-0 text-[var(--primary)]" />
-                Abrir librería de assets
-              </Link>
-            </Card>
-          )}
+              <FolderOpen className="h-4 w-4 shrink-0 text-[var(--primary)]" />
+              Abrir librería de assets
+            </Link>
+          </Card>
 
           {advancedNav && (
-            <Card title="Acciones de la agencia" subtitle="Generar más contenido">
+            <Card title="Más herramientas" subtitle="Cuando necesites ir más allá del flujo diario">
               <div className="space-y-[var(--spacing-sm)] text-sm">
+                <Link
+                  to="/agency-overview"
+                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
+                >
+                  Resumen y KPIs
+                </Link>
                 <Link
                   to={`/community${activeProductId ? `?productId=${activeProductId}` : ''}`}
                   className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >
-                  Generar más copy (Community Manager)
+                  Generar copy manual (Community Manager)
                 </Link>
                 <Link
                   to="/calendar"
                   className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >
-                  Ver calendario completo
-                </Link>
-                <Link
-                  to="/agency-overview"
-                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
-                >
-                  Resumen de agencia (KPIs)
+                  Calendario editorial
                 </Link>
               </div>
             </Card>

@@ -47,37 +47,51 @@ export const superadminNavigation = [
   },
 ];
 
+/** Menú agencia: agrupado por hábito diario → negocio → IA → herramientas → configuración. */
 export const tenantAdvancedNavigation = [
   {
-    title: 'Mi negocio',
+    title: 'Hoy',
     items: [
-      { label: 'Bandeja', href: '/', icon: Inbox },
-      { label: 'Mis productos', href: '/products', icon: Package },
-      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-      { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
+      { label: 'Inicio', href: '/', icon: Inbox },
+      { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+      { label: 'Librería', href: '/assets', icon: FolderOpen },
     ],
   },
   {
-    title: 'Agentes',
+    title: 'Mi negocio',
     items: [
-      { label: 'Brand Analyst', href: '/agents', icon: Bot },
+      { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
+      { label: 'Mis productos', href: '/products', icon: Package },
+      { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
+    ],
+  },
+  {
+    title: 'Crear con IA',
+    items: [
+      { label: 'Agentes IA', href: '/agents', icon: Bot },
       { label: 'Community Manager', href: '/community', icon: MessageSquare },
+      { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Estrategia', href: '/strategy', icon: Lightbulb },
     ],
   },
   {
-    title: 'Marketing',
+    title: 'Herramientas',
     items: [
-      { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Contenidos', href: '/contents', icon: FileText },
-      { label: 'Librería', href: '/assets', icon: FolderOpen },
-      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
-      { label: 'Formularios', href: '/forms', icon: FileInput },
+      { label: 'Métricas', href: '/dashboard', icon: BarChart3 },
       { label: 'Leads', href: '/leads', icon: Users },
-      { label: 'Propuestas', href: '/proposals', icon: FileSignature },
+      { label: 'Formularios', href: '/forms', icon: FileInput },
       { label: 'Reportes', href: '/reports', icon: BarChart3 },
-      { label: 'Dominio', href: '/settings/domain', icon: Globe },
+      { label: 'Propuestas', href: '/proposals', icon: FileSignature },
+    ],
+  },
+  {
+    title: 'Configuración',
+    items: [
+      { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
       { label: 'Competidores', href: '/settings/competitors', icon: Target },
+      { label: 'Dominio', href: '/settings/domain', icon: Globe },
+      { label: 'Calendario editorial', href: '/calendar', icon: CalendarDays },
     ],
   },
 ];

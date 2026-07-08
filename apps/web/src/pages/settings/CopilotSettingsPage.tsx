@@ -140,10 +140,10 @@ export default function CopilotSettingsPage() {
           </Button>
         </Card>
 
-        <Card title="Modo avanzado" subtitle="Muestra el menú completo de agencia">
+        <Card title="Vista completa" subtitle="Herramientas de agencia sin perder el flujo copiloto">
           <p className="text-sm text-[var(--foreground-muted)]">
-            Actívalo si quieres acceder a Community Manager, Estrategia, Calendario, Campañas y el
-            resto de herramientas.
+            Actívala para ver Resumen, Métricas, Campañas y más. Tu día a día sigue en Inicio:
+            preparar, aprobar y copiar para publicar.
           </p>
           <label className="mt-4 flex cursor-pointer items-center gap-3">
             <input
@@ -153,7 +153,7 @@ export default function CopilotSettingsPage() {
               className="h-4 w-4 rounded border-[var(--border)]"
             />
             <span className="text-sm font-medium text-[var(--foreground)]">
-              Mostrar menú avanzado de agencia
+              Ver todas las herramientas
             </span>
           </label>
         </Card>

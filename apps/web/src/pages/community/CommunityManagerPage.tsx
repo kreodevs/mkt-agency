@@ -266,8 +266,25 @@ export default function CommunityManagerPage() {
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
         title="Community Manager"
-        description="Genera copy para promocionar un producto concreto en redes sociales"
+        description="Genera copy manual por red y formato. Para la semana completa, usa Inicio → Preparar mi semana."
       />
+
+      <Card className="mb-6 border-[var(--primary)]/30 bg-[var(--primary)]/5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-[var(--foreground)]">Recomendado</p>
+            <p className="text-sm text-[var(--foreground-muted)]">
+              Deja que el copiloto prepare competidores, estrategia y posts en un solo paso.
+            </p>
+          </div>
+          <Link to="/">
+            <Button type="button" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Ir a Preparar mi semana
+            </Button>
+          </Link>
+        </div>
+      </Card>
 
       {productId && (
         <ProductContextBanner

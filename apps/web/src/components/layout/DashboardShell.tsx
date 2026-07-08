@@ -84,7 +84,7 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
             onClick={toggleAdvancedNav}
           >
             <Layers className="mr-2 h-3.5 w-3.5" />
-            {advancedNav ? 'Modo copiloto (simple)' : 'Modo agencia (avanzado)'}
+            {advancedNav ? 'Vista simple (copiloto)' : 'Ver todas las herramientas'}
           </Button>
         ) : undefined
       }

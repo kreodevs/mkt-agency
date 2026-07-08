@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, Copy, Maximize2 } from 'lucide-react';
-import { ApprovalActions } from '@/components/content/ApprovalActions';
+import { CalendarDays, Maximize2 } from 'lucide-react';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -46,7 +45,7 @@ interface InboxItemCardProps {
   selected?: boolean;
   onToggleSelect?: (contentId: string) => void;
   showApproval?: boolean;
-  primaryAction?: 'copy' | 'edit';
+  showEditorLink?: boolean;
   sohoMode?: boolean;
   onRejected?: (context: InboxRejectFollowUpContext) => void;
 }
@@ -57,7 +56,7 @@ export function InboxItemCard({
   selected = false,
   onToggleSelect,
   showApproval = false,
-  primaryAction = 'copy',
+  showEditorLink = false,
   sohoMode = false,
   onRejected,
 }: InboxItemCardProps) {
@@ -117,52 +116,32 @@ export function InboxItemCard({
             </p>
           )}
 
-          {sohoMode ? (
-            <div className="mt-[var(--spacing-md)] space-y-[var(--spacing-sm)]">
+          <div className="mt-[var(--spacing-md)] space-y-[var(--spacing-sm)]">
+            {!isRejected && (
               <InboxQuickPublishActions
                 item={item}
-                showApproval={showApproval && !isRejected}
+                showApproval={showApproval}
                 onRejected={onRejected}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setDetailOpen(true)}
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-                Ver ficha completa
-              </Button>
-            </div>
-          ) : (
-            <div className="mt-[var(--spacing-md)] flex flex-wrap items-center gap-[var(--spacing-sm)]">
-              {primaryAction === 'copy' ? (
-                <Link to={`/contents/${item.contentId}`}>
-                  <Button type="button" size="sm" className="gap-[var(--spacing-xs)]">
-                    <Copy className="h-3.5 w-3.5" />
-                    Copiar y publicar
-                  </Button>
-                </Link>
-              ) : (
-                <Link to={`/contents/${item.contentId}`}>
-                  <Button type="button" size="sm" variant="link">
-                    Editar contenido
-                  </Button>
-                </Link>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setDetailOpen(true)}
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-                Ver ficha completa
-              </Button>
-            </div>
-          )}
+            )}
+            {showEditorLink && !isRejected && (
+              <Link to={`/contents/${item.contentId}`}>
+                <Button type="button" size="sm" variant="ghost">
+                  Editar en detalle
+                </Button>
+              </Link>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setDetailOpen(true)}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              Ver ficha completa
+            </Button>
+          </div>
 
           <InboxContentDetailDialog
             item={item}
@@ -175,33 +154,7 @@ export function InboxItemCard({
 
           {isRejected ? (
             <RejectedInboxActions item={item} />
-          ) : (
-            showApproval &&
-            item.versionId &&
-            !item.signatureHash && (
-              <div className="mt-[var(--spacing-md)] border-t border-[var(--border)] pt-[var(--spacing-md)]">
-                <ApprovalActions
-                  contentId={item.contentId}
-                  version={{
-                    id: item.versionId,
-                    versionNumber: item.versionNumber ?? 1,
-                    title: item.title,
-                    body: item.body,
-                    signatureHash: item.signatureHash,
-                    signedAt: null,
-                    authorId: '',
-                    assets: item.assets,
-                    reason: null,
-                    changeSummary: null,
-                    createdAt: '',
-                  }}
-                  sohoMode={sohoMode}
-                  visualFormat={item.visualFormat}
-                  onRejected={onRejected}
-                />
-              </div>
-            )
-          )}
+          ) : null}
         </div>
       </div>
     </article>

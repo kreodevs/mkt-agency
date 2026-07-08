@@ -7,11 +7,11 @@ Página principal del tenant en `/`. En **modo copiloto** (default SOHO) el usua
 | Modo | Menú | Rutas legacy |
 |------|------|----------------|
 | Copiloto (default) | Inicio, **Calendario**, **Librería**, Mi producto, Ajustes | `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → `/` |
-| Agencia avanzado | Menú completo (17 ítems) | Rutas accesibles |
+| Vista completa | 5 grupos: **Hoy**, Mi negocio, Crear con IA, Herramientas, Configuración | Rutas accesibles |
 
-`/assets` está disponible en ambos modos. En copiloto: sidebar **Librería**, tarjeta en bandeja y enlaces desde CM / producto.
+**Vista completa (avanzado):** flujo diario igual que copiloto en Inicio (preparar · aprobar · copiar). Menú extra para KPIs, métricas y herramientas manuales.
 
-Toggle: sidebar «Modo agencia (avanzado)» o `/settings/copilot`.
+`/assets` y `/calendario` en ambos modos. Toggle sidebar: «Ver todas las herramientas» / «Vista simple (copiloto)».
 
 ## Archivos
 

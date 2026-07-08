@@ -110,7 +110,6 @@ export function SohoCalendarDayPanel({ date, productId, onClose }: SohoCalendarD
                 key={item.contentId}
                 item={item}
                 showApproval={needsApproval(item)}
-                primaryAction="copy"
                 sohoMode
                 onRejected={setRejectFollowUp}
               />

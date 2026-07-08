@@ -16,14 +16,12 @@ interface TodayPublishPanelProps {
   pending: PublicationInboxItem[];
   ready: PublicationInboxItem[];
   strategyFocus?: string | null;
-  primaryAction?: 'copy' | 'edit';
 }
 
 export function TodayPublishPanel({
   pending,
   ready,
   strategyFocus,
-  primaryAction = 'copy',
 }: TodayPublishPanelProps) {
   const todayItems = useMemo(() => {
     const pendingToday = pending.filter(isToday);
@@ -67,7 +65,6 @@ export function TodayPublishPanel({
             key={item.contentId}
             item={item}
             showApproval={item.status !== 'approved' || !item.signatureHash}
-            primaryAction={primaryAction}
             sohoMode
           />
         ))}
