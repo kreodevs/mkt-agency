@@ -149,6 +149,8 @@ export class SocialInboxService {
           score: 0,
           metadata: {
             source: 'social',
+            firstTouchSource: 'social',
+            lastTouchSource: 'social',
             platform: interaction.platform,
             channel: interaction.channel,
             interactionId: interaction.id,

@@ -4,9 +4,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SocialInboxModule } from './modules/social-inbox/social-inbox.module';
 import { SocialInteractionEntity } from './modules/social-inbox/infrastructure/typeorm/social-interaction.entity';
+import { PaidMediaModule } from './modules/paid-media/paid-media.module';
+import { MediaCampaignIntentEntity } from './modules/paid-media/infrastructure/typeorm/media-campaign-intent.entity';
 import { AgencyAgentsModule } from './modules/agency-agents/agency-agents.module';
 import { AgentEventLogEntity } from './modules/agency-agents/infrastructure/typeorm/agent-event-log.entity';
 import { AgentPlanEntity } from './modules/agency-agents/infrastructure/typeorm/agent-plan.entity';
+import { CreativePackEntity } from './modules/agency-agents/infrastructure/typeorm/creative-pack.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { SessionEntity } from './modules/auth/infrastructure/typeorm/session.entity';
 import { SecurityModule } from './modules/security/security.module';
@@ -166,6 +169,8 @@ import {
           AgencyNotificationEntity,
           AgentEventLogEntity,
           AgentPlanEntity,
+          CreativePackEntity,
+          MediaCampaignIntentEntity,
           SocialInteractionEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
@@ -176,6 +181,7 @@ import {
     SetupModule,
     PackageModule,
     AgencyAgentsModule,
+    PaidMediaModule,
     SocialInboxModule,
     TenantModule,
     CompanyProfileModule,

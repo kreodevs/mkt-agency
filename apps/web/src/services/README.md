@@ -2,6 +2,8 @@
 
 | Archivo | Descripción |
 |---------|-------------|
-| `operating-profile.ts` | API perfil SOHO/Growth, eventos de agentes, planes estrategia |
+| `operating-profile.ts` | Perfil SOHO/Growth, eventos, planes, atribución, webhook info |
+| `paid-media.ts` | Intents de pauta manual (Growth paid) |
+| `social-inbox.ts` | Bandeja social |
 
-Endpoints: `GET/PATCH /tenant/operating-profile`, `/agency/events`, `/agency/plans`, `/agency/performance`.
+Endpoints principales: `/tenant/operating-profile`, `/agency/events`, `/agency/plans`, `/agency/performance`, `/agency/attribution`, `/agency/media-intents`, `/tenant/webhook-info`.

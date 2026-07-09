@@ -13,6 +13,7 @@ export const AGENT_EVENT_TYPES = [
   'WeeklyBalance',
   'SohoWeekPrepared',
   'StrategistPlanDraft',
+  'BudgetReallocated',
 ] as const;
 
 export type AgentEventType = (typeof AGENT_EVENT_TYPES)[number];

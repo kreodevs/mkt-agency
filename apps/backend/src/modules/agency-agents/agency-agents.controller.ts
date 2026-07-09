@@ -30,6 +30,7 @@ import { GrowthProfileGuard } from './guards/growth-profile.guard';
 import { AgentActivationService } from './services/agent-activation.service';
 import { AgentEventService } from './services/agent-event.service';
 import { AnalyticsAgentService } from './services/analytics-agent.service';
+import { CreativeAgentService } from './services/creative-agent.service';
 import { OperatingProfileService } from './services/operating-profile.service';
 import { StrategistAgentService } from './services/strategist-agent.service';
 
@@ -67,6 +68,7 @@ export class AgencyAgentsController {
     private readonly strategist: StrategistAgentService,
     private readonly agentEvents: AgentEventService,
     private readonly analytics: AnalyticsAgentService,
+    private readonly creative: CreativeAgentService,
   ) {}
 
   @Get('performance')
@@ -83,6 +85,26 @@ export class AgencyAgentsController {
     @Query('productId') productId?: string,
   ) {
     return this.analytics.detectAnomalies(user.tenantId!, productId);
+  }
+
+  @Get('attribution')
+  getAttribution(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('model') model?: 'first_touch' | 'last_touch',
+    @Query('productId') productId?: string,
+    @Query('periodDays') periodDays?: string,
+  ) {
+    return this.analytics.getAttributionReport(
+      user.tenantId!,
+      model === 'first_touch' ? 'first_touch' : 'last_touch',
+      productId,
+      periodDays ? parseInt(periodDays, 10) : 30,
+    );
+  }
+
+  @Get('creative-packs')
+  listCreativePacks(@CurrentUser() user: AuthenticatedUser) {
+    return this.creative.listPacks(user.tenantId!);
   }
 
   @Get('events')

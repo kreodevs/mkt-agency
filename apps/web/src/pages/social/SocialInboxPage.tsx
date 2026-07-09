@@ -12,6 +12,7 @@ import {
   listSocialInteractions,
   markSocialInteractionReplied,
 } from '@/services/social-inbox';
+import { getTenantWebhookInfo } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 
 const INTENT_LABELS: Record<string, string> = {
@@ -31,6 +32,11 @@ export default function SocialInboxPage() {
   const inboxQuery = useQuery({
     queryKey: ['social-inbox'],
     queryFn: () => listSocialInteractions(),
+  });
+
+  const webhookQuery = useQuery({
+    queryKey: ['tenant-webhook-info'],
+    queryFn: getTenantWebhookInfo,
   });
 
   const ingestMutation = useMutation({
@@ -96,6 +102,27 @@ export default function SocialInboxPage() {
           >
             Clasificar
           </Button>
+        </Card>
+
+        <Card title="Webhook genérico" subtitle="POST con header X-Webhook-Secret (sin OAuth Meta)">
+          {webhookQuery.isLoading && (
+            <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+          )}
+          {webhookQuery.data && (
+            <div className="space-y-2 text-xs font-mono">
+              <p>
+                <span className="text-[var(--foreground-muted)]">URL:</span>{' '}
+                {webhookQuery.data.webhookUrl}
+              </p>
+              <p className="break-all">
+                <span className="text-[var(--foreground-muted)]">Secret:</span>{' '}
+                {webhookQuery.data.secret}
+              </p>
+              <p className="text-[var(--foreground-muted)]">
+                Header: {webhookQuery.data.header}
+              </p>
+            </div>
+          )}
         </Card>
 
         <Card title="Bandeja">

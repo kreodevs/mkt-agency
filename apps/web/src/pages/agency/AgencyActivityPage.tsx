@@ -1,15 +1,24 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { StatusPill } from '@/components/atoms/StatusPill';
-import { listAgentEvents, getAgencyPerformance, getAgencyAnomalies } from '@/services/operating-profile';
+import {
+  listAgentEvents,
+  getAgencyPerformance,
+  getAgencyAnomalies,
+  getAgencyAttribution,
+} from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
 export default function AgencyActivityPage() {
   const productId = useResolvedProductId();
   const { isSoho } = useOperatingProfile();
+  const [attributionModel, setAttributionModel] = useState<'first_touch' | 'last_touch'>(
+    'last_touch',
+  );
 
   const eventsQuery = useQuery({
     queryKey: ['agency-events', productId],
@@ -24,6 +33,15 @@ export default function AgencyActivityPage() {
   const anomaliesQuery = useQuery({
     queryKey: ['agency-anomalies', productId],
     queryFn: () => getAgencyAnomalies(productId ?? undefined),
+  });
+
+  const attributionQuery = useQuery({
+    queryKey: ['agency-attribution', productId, attributionModel],
+    queryFn: () =>
+      getAgencyAttribution({
+        productId: productId ?? undefined,
+        model: attributionModel,
+      }),
   });
 
   return (
@@ -112,6 +130,43 @@ export default function AgencyActivityPage() {
               </li>
             ))}
           </ul>
+        </Card>
+
+        <Card title="Atribución MTA lite" subtitle="Últimos 30 días">
+          <div className="mb-3 flex gap-2 text-xs">
+            <button
+              type="button"
+              className={`rounded px-2 py-1 ${attributionModel === 'last_touch' ? 'bg-[var(--primary)] text-white' : 'border border-[var(--border)]'}`}
+              onClick={() => setAttributionModel('last_touch')}
+            >
+              Last touch
+            </button>
+            <button
+              type="button"
+              className={`rounded px-2 py-1 ${attributionModel === 'first_touch' ? 'bg-[var(--primary)] text-white' : 'border border-[var(--border)]'}`}
+              onClick={() => setAttributionModel('first_touch')}
+            >
+              First touch
+            </button>
+          </div>
+          {attributionQuery.isLoading && (
+            <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+          )}
+          {attributionQuery.data && (
+            <ul className="space-y-1 text-sm">
+              {attributionQuery.data.byChannel.map((row) => (
+                <li key={row.channel} className="flex justify-between">
+                  <span>{row.channel}</span>
+                  <span>
+                    {row.count} ({row.share}%)
+                  </span>
+                </li>
+              ))}
+              {attributionQuery.data.byChannel.length === 0 && (
+                <p className="text-[var(--foreground-muted)]">Sin leads en el periodo.</p>
+              )}
+            </ul>
+          )}
         </Card>
       </div>
     </DashboardShell>

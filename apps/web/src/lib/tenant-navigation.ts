@@ -76,6 +76,7 @@ export const tenantAdvancedNavigation = [
     items: [
       { label: 'Agentes IA', href: '/agents', icon: Bot },
       { label: 'Estrategia comercial', href: '/agency/strategy', icon: Lightbulb },
+      { label: 'Pauta (manual)', href: '/agency/media-intents', icon: Coins },
       { label: 'Community Manager', href: '/community', icon: MessageSquare },
       { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Estrategia', href: '/strategy', icon: Lightbulb },

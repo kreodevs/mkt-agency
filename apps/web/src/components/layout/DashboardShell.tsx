@@ -31,8 +31,16 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isGrowth, updateProfile } = useOperatingProfile();
+  const { isGrowth, isPaid, updateProfile } = useOperatingProfile();
   const advancedNav = isGrowth;
+
+  const filterPaidNav = (groups: typeof tenantAdvancedNavigation) =>
+    groups.map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => item.href !== '/agency/media-intents' || isPaid,
+      ),
+    }));
 
   const handleNavModeToggle = async () => {
     await updateProfile({ profile: isGrowth ? 'soho' : 'growth' });
@@ -42,13 +50,13 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     navigationOverride ??
     (user?.impersonating && user.tenantId
       ? advancedNav
-        ? tenantAdvancedNavigation
+        ? filterPaidNav(tenantAdvancedNavigation)
         : tenantSohoNavigation
       : user?.isSuperadmin
         ? superadminNavigation
         : user?.tenantId
           ? advancedNav
-            ? tenantAdvancedNavigation
+            ? filterPaidNav(tenantAdvancedNavigation)
             : tenantSohoNavigation
           : []);
 

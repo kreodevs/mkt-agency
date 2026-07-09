@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { SohoLegacyRedirect } from '@/components/copilot/SohoLegacyRedirect';
+import { PaidProfileRedirect } from '@/components/copilot/PaidProfileRedirect';
 import { AuthGuard, GuestGuard, SuperadminGuard, TenantGuard } from '@/guards/AuthGuard';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
@@ -59,6 +60,7 @@ const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManag
 const SocialInboxPage = lazy(() => import('@/pages/social/SocialInboxPage'));
 const AgencyStrategyPage = lazy(() => import('@/pages/agency/AgencyStrategyPage'));
 const AgencyActivityPage = lazy(() => import('@/pages/agency/AgencyActivityPage'));
+const AgencyMediaIntentsPage = lazy(() => import('@/pages/agency/AgencyMediaIntentsPage'));
 const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
 const PublicCapturePage = lazy(() => import('@/pages/capture/PublicCapturePage'));
 
@@ -148,6 +150,16 @@ export function AppRouter() {
               element={
                 <SohoLegacyRedirect>
                   <AgencyStrategyPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/agency/media-intents"
+              element={
+                <SohoLegacyRedirect>
+                  <PaidProfileRedirect>
+                    <AgencyMediaIntentsPage />
+                  </PaidProfileRedirect>
                 </SohoLegacyRedirect>
               }
             />

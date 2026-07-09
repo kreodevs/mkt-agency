@@ -58,3 +58,30 @@ export async function getAgencyAnomalies(productId?: string) {
     `/agency/anomalies${q}`,
   );
 }
+
+export interface AttributionReport {
+  model: 'first_touch' | 'last_touch';
+  periodDays: number;
+  totalLeads: number;
+  byChannel: Array<{ channel: string; count: number; share: number }>;
+}
+
+export async function getAgencyAttribution(params?: {
+  model?: 'first_touch' | 'last_touch';
+  productId?: string;
+}): Promise<AttributionReport> {
+  const search = new URLSearchParams();
+  if (params?.model) search.set('model', params.model);
+  if (params?.productId) search.set('productId', params.productId);
+  const q = search.toString();
+  return apiFetch<AttributionReport>(`/agency/attribution${q ? `?${q}` : ''}`);
+}
+
+export async function getTenantWebhookInfo(): Promise<{
+  webhookUrl: string;
+  secret: string;
+  header: string;
+  exampleBody: Record<string, unknown>;
+}> {
+  return apiFetch('/tenant/webhook-info');
+}

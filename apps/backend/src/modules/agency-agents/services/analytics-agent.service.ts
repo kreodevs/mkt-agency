@@ -20,6 +20,15 @@ export interface AnomalyAlert {
   recommendation: string;
 }
 
+export type AttributionModel = 'first_touch' | 'last_touch';
+
+export interface AttributionReport {
+  model: AttributionModel;
+  periodDays: number;
+  totalLeads: number;
+  byChannel: Array<{ channel: string; count: number; share: number }>;
+}
+
 @Injectable()
 export class AnalyticsAgentService {
   constructor(
@@ -127,6 +136,65 @@ export class AnalyticsAgentService {
     }
 
     return alerts;
+  }
+
+  async getAttributionReport(
+    tenantId: string,
+    model: AttributionModel = 'last_touch',
+    productId?: string,
+    periodDays = 30,
+  ): Promise<AttributionReport> {
+    const since = new Date();
+    since.setDate(since.getDate() - periodDays);
+
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :since', { since });
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    const rows = await qb.getMany();
+    const counts = new Map<string, number>();
+
+    for (const lead of rows) {
+      const metadata = lead.metadata as Record<string, unknown> | null;
+      const channel = this.resolveAttributionChannel(metadata, model);
+      counts.set(channel, (counts.get(channel) ?? 0) + 1);
+    }
+
+    const totalLeads = rows.length;
+    const byChannel = [...counts.entries()]
+      .map(([channel, count]) => ({
+        channel,
+        count,
+        share: totalLeads > 0 ? Math.round((count / totalLeads) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return { model, periodDays, totalLeads, byChannel };
+  }
+
+  private resolveAttributionChannel(
+    metadata: Record<string, unknown> | null,
+    model: AttributionModel,
+  ): string {
+    if (!metadata) return 'direct';
+
+    if (model === 'first_touch') {
+      if (typeof metadata.firstTouchSource === 'string') return metadata.firstTouchSource;
+      if (typeof metadata.firstTouch === 'string') return metadata.firstTouch;
+    } else {
+      if (typeof metadata.lastTouchSource === 'string') return metadata.lastTouchSource;
+      if (typeof metadata.lastTouch === 'string') return metadata.lastTouch;
+      if (typeof metadata.utmSource === 'string') return metadata.utmSource;
+    }
+
+    if (typeof metadata.source === 'string') return metadata.source;
+    if (typeof metadata.platform === 'string') return metadata.platform;
+    return 'direct';
   }
 
   private async countLeadsInWindow(

@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { QueueModule } from '../../shared/queue/queue.module';
+import { PaidMediaModule } from '../paid-media/paid-media.module';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { PackageEntity } from '../packages/infrastructure/typeorm/package.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
@@ -15,6 +16,7 @@ import { GrowthProfileGuard } from './guards/growth-profile.guard';
 import { PaidBudgetGuard } from './guards/paid-budget.guard';
 import { AgentEventLogEntity } from './infrastructure/typeorm/agent-event-log.entity';
 import { AgentPlanEntity } from './infrastructure/typeorm/agent-plan.entity';
+import { CreativePackEntity } from './infrastructure/typeorm/creative-pack.entity';
 import { AgentActivationService } from './services/agent-activation.service';
 import { AgentEventService } from './services/agent-event.service';
 import { AnalyticsAgentService } from './services/analytics-agent.service';
@@ -30,6 +32,7 @@ import { WeeklyBalanceWorkerService } from './workers/weekly-balance.worker';
     AuthSharedModule,
     LlmModule,
     QueueModule,
+    forwardRef(() => PaidMediaModule),
     TypeOrmModule.forFeature([
       TenantEntity,
       PackageEntity,
@@ -37,6 +40,7 @@ import { WeeklyBalanceWorkerService } from './workers/weekly-balance.worker';
       LeadEntity,
       AgentEventLogEntity,
       AgentPlanEntity,
+      CreativePackEntity,
     ]),
   ],
   controllers: [TenantOperatingProfileController, AgencyAgentsController],
