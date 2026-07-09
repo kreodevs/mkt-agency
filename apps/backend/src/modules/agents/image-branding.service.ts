@@ -26,7 +26,7 @@ export class ImageBrandingService {
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
-        const composited = await this.compositeLogoPlate(
+        const composited = await this.compositeLogo(
           base,
           width,
           height,
@@ -57,7 +57,7 @@ export class ImageBrandingService {
     throw new Error(`Logo overlay failed for asset ${logoAssetId}`);
   }
 
-  private async compositeLogoPlate(
+  private async compositeLogo(
     base: Sharp,
     width: number,
     height: number,
@@ -71,35 +71,17 @@ export class ImageBrandingService {
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
-    const platePad = Math.max(8, Math.round(Math.min(logoW, logoH) * 0.12));
-    const plateW = logoW + platePad * 2;
-    const plateH = logoH + platePad * 2;
+    const left = Math.max(padding, width - logoW - padding);
+    const top = padding;
 
-    const left = Math.max(padding, width - plateW - padding);
-    const top = Math.max(padding, height - plateH - padding);
-
-    if (top + plateH > height || left + plateW > width) {
+    if (top + logoH > height || left + logoW > width) {
       throw new Error(
-        `Logo plate exceeds image bounds (${width}x${height}, plate ${plateW}x${plateH})`,
+        `Logo exceeds image bounds (${width}x${height}, logo ${logoW}x${logoH})`,
       );
     }
 
-    const plate = await sharp({
-      create: {
-        width: plateW,
-        height: plateH,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 0.9 },
-      },
-    })
-      .png()
-      .toBuffer();
-
     return base
-      .composite([
-        { input: plate, top, left },
-        { input: rasterizedLogo, top: top + platePad, left: left + platePad },
-      ])
+      .composite([{ input: rasterizedLogo, top, left }])
       .png()
       .toBuffer();
   }
