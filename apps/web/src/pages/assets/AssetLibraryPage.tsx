@@ -5,6 +5,10 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetBulkSelectionBar } from '@/components/assets/AssetBulkSelectionBar';
 import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
 import { AssetGridCard } from '@/components/assets/AssetGridCard';
+import {
+  ASSETS_PAGE_SIZE,
+  AssetLibraryPagination,
+} from '@/components/assets/AssetLibraryPagination';
 import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
 import { AssetUploader } from '@/components/assets/AssetUploader';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
@@ -185,6 +189,7 @@ export default function AssetLibraryPage() {
   const queryClient = useQueryClient();
   const [folderFilter, setFolderFilter] = useState<FolderSelection>('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
+  const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
@@ -193,6 +198,7 @@ export default function AssetLibraryPage() {
 
   useEffect(() => {
     setSelectedIds(new Set());
+    setPage(1);
   }, [folderFilter, typeFilter]);
 
   const foldersQuery = useQuery({
@@ -201,11 +207,11 @@ export default function AssetLibraryPage() {
   });
 
   const assetsQuery = useQuery({
-    queryKey: ['assets', { folderFilter, typeFilter }],
+    queryKey: ['assets', { folderFilter, typeFilter, page }],
     queryFn: () =>
       listAssets({
-        page: 1,
-        limit: 100,
+        page,
+        limit: ASSETS_PAGE_SIZE,
         type: typeFilter || undefined,
         ...folderQueryParams(folderFilter),
       }),
@@ -329,6 +335,7 @@ export default function AssetLibraryPage() {
   const folders = foldersQuery.data?.items ?? [];
   const folderOptions = useMemo(() => listFoldersByPath(folders), [folders]);
   const items = assetsQuery.data?.items ?? [];
+  const totalAssets = assetsQuery.data?.total ?? 0;
   const imagesOnly = items.filter((a) => a.type === 'image');
   const otherAssets = items.filter((a) => a.type !== 'image');
   const currentFolderLabel =
@@ -586,7 +593,7 @@ export default function AssetLibraryPage() {
                 {imagesOnly.length > 0 && (
                   <AssetSection
                     title="Imágenes"
-                    subtitle={`${imagesOnly.length} archivos`}
+                    subtitle={`${imagesOnly.length} en esta página${totalAssets > ASSETS_PAGE_SIZE ? ` · ${totalAssets} en total` : ''}`}
                     assets={imagesOnly}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
@@ -642,6 +649,13 @@ export default function AssetLibraryPage() {
                     }}
                   />
                 )}
+
+                <AssetLibraryPagination
+                  page={page}
+                  limit={ASSETS_PAGE_SIZE}
+                  total={totalAssets}
+                  onPageChange={setPage}
+                />
               </div>
             )
           ) : (
@@ -651,9 +665,19 @@ export default function AssetLibraryPage() {
                 columns={columns}
                 loading={assetsQuery.isLoading}
                 emptyMessage="No hay activos en la librería"
-                paginator
-                rows={20}
+                paginator={false}
+                globalFilterEnabled={false}
               />
+              {!assetsQuery.isLoading && totalAssets > 0 && (
+                <div className="mt-4">
+                  <AssetLibraryPagination
+                    page={page}
+                    limit={ASSETS_PAGE_SIZE}
+                    total={totalAssets}
+                    onPageChange={setPage}
+                  />
+                </div>
+              )}
             </Card>
           )}
       </div>
