@@ -14,6 +14,7 @@
 
 ### Changed
 
+- **Librería multimedia (`/libreria`)**: paginación server-side de **20 activos por página** en vista grid y tabla; el picker «Desde librería» usa el mismo tamaño de página.
 - Navegación tenant extraída a `lib/tenant-navigation.ts`; toggle «Modo agencia (avanzado)» en sidebar.
 
 ### Added (video)

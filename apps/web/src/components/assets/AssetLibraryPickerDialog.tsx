@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageIcon } from 'lucide-react';
 import { Dialog } from '@/components/molecules/Dialog';
+import {
+  ASSETS_PAGE_SIZE,
+  AssetLibraryPagination,
+} from '@/components/assets/AssetLibraryPagination';
 import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
 import { listAssetFolders, listAssets, resolveAssetPreviewUrl } from '@/services/assets';
 import type { Asset, AssetType } from '@/types/assets';
@@ -27,6 +31,7 @@ export function AssetLibraryPickerDialog({
   isPending,
 }: AssetLibraryPickerDialogProps) {
   const [folderId, setFolderId] = useState<FolderSelection>('');
+  const [page, setPage] = useState(1);
 
   const foldersQuery = useQuery({
     queryKey: ['asset-folders'],
@@ -35,11 +40,11 @@ export function AssetLibraryPickerDialog({
   });
 
   const assetsQuery = useQuery({
-    queryKey: ['assets-picker', { folderId, typeFilter }],
+    queryKey: ['assets-picker', { folderId, typeFilter, page }],
     queryFn: () =>
       listAssets({
-        page: 1,
-        limit: 48,
+        page,
+        limit: ASSETS_PAGE_SIZE,
         type: typeFilter,
         folderId: folderId && folderId !== '__unfiled__' ? folderId : undefined,
         unfiled: folderId === '__unfiled__' ? true : undefined,
@@ -49,6 +54,12 @@ export function AssetLibraryPickerDialog({
 
   const folders = foldersQuery.data?.items ?? [];
   const items = assetsQuery.data?.items ?? [];
+  const totalAssets = assetsQuery.data?.total ?? 0;
+
+  const handleFolderSelect = (next: FolderSelection) => {
+    setFolderId(next);
+    setPage(1);
+  };
 
   return (
     <Dialog visible={visible} onHide={onClose} title={title} description={description} size="xl">
@@ -57,7 +68,7 @@ export function AssetLibraryPickerDialog({
           <AssetFolderTree
             folders={folders}
             selectedId={folderId}
-            onSelect={setFolderId}
+            onSelect={handleFolderSelect}
             onCreate={() => {}}
             onRename={() => {}}
             onDelete={() => {}}
@@ -65,12 +76,13 @@ export function AssetLibraryPickerDialog({
           />
         </div>
 
-        <div>
+        <div className="flex min-h-0 flex-col gap-3">
           {assetsQuery.isLoading ? (
             <p className="text-sm text-[var(--foreground-muted)]">Cargando archivos...</p>
           ) : items.length ? (
-            <div className="grid max-h-[55vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
-              {items.map((asset) => {
+            <>
+              <div className="grid max-h-[55vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
+                {items.map((asset) => {
                 const preview = resolveAssetPreviewUrl(asset);
                 const folderPath = resolveFolderPath(folders, asset.folderId);
                 return (
@@ -105,7 +117,14 @@ export function AssetLibraryPickerDialog({
                   </button>
                 );
               })}
-            </div>
+              </div>
+              <AssetLibraryPagination
+                page={page}
+                limit={ASSETS_PAGE_SIZE}
+                total={totalAssets}
+                onPageChange={setPage}
+              />
+            </>
           ) : (
             <p className="text-sm text-[var(--foreground-muted)]">
               No hay archivos en esta carpeta. Sube capturas en Librería → PC / iPad / iOS.
