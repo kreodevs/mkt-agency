@@ -620,6 +620,13 @@ export default function AssetLibraryPage() {
                   />
                 )}
 
+                <AssetLibraryPagination
+                  page={page}
+                  limit={ASSETS_PAGE_SIZE}
+                  total={totalAssets}
+                  onPageChange={setPage}
+                />
+
                 {otherAssets.length > 0 && (
                   <AssetSection
                     title="Otros activos"
@@ -649,13 +656,6 @@ export default function AssetLibraryPage() {
                     }}
                   />
                 )}
-
-                <AssetLibraryPagination
-                  page={page}
-                  limit={ASSETS_PAGE_SIZE}
-                  total={totalAssets}
-                  onPageChange={setPage}
-                />
               </div>
             )
           ) : (
