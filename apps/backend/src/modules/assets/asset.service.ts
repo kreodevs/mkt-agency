@@ -311,23 +311,35 @@ export class AssetService {
     id: string,
   ): Promise<{ buffer: Buffer; mimeType: string; fileName: string }> {
     const asset = await this.findOwnedAsset(tenantId, id);
-    const thumbnailFileKey = readThumbnailFileKey(asset.metadata);
 
-    if (thumbnailFileKey) {
-      const buffer = await this.storage.readObject(thumbnailFileKey);
-      const mimeType =
-        typeof asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] === 'string'
-          ? (asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] as string)
-          : ASSET_THUMBNAIL_MIME_TYPE;
-
-      return {
-        buffer,
-        mimeType,
-        fileName: `thumb-${asset.name.replace(/\.[^.]+$/, '')}.webp`,
-      };
+    if (asset.type !== 'image') {
+      return this.readFile(tenantId, id);
     }
 
-    return this.readFile(tenantId, id);
+    const thumbnailFileKey = readThumbnailFileKey(asset.metadata);
+    if (thumbnailFileKey) {
+      try {
+        const buffer = await this.storage.readObject(thumbnailFileKey);
+        const mimeType =
+          typeof asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] === 'string'
+            ? (asset.metadata[ASSET_METADATA_THUMBNAIL_MIME_TYPE] as string)
+            : ASSET_THUMBNAIL_MIME_TYPE;
+
+        return {
+          buffer,
+          mimeType,
+          fileName: this.buildThumbnailFileName(asset.name),
+        };
+      } catch (error) {
+        this.logger.warn(
+          `Stored thumbnail missing for asset ${asset.id}, regenerating: ${
+            error instanceof Error ? error.message : error
+          }`,
+        );
+      }
+    }
+
+    return this.ensureImageThumbnail(asset);
   }
 
   async duplicate(tenantId: string, id: string): Promise<AssetResponseDto> {
@@ -387,6 +399,18 @@ export class AssetService {
       return metadata;
     }
 
+    return this.persistImageThumbnailMetadata(fileKey, thumbnailBuffer, metadata);
+  }
+
+  private buildThumbnailFileName(originalName: string): string {
+    return `thumb-${originalName.replace(/\.[^.]+$/, '')}.webp`;
+  }
+
+  private async persistImageThumbnailMetadata(
+    fileKey: string,
+    thumbnailBuffer: Buffer,
+    metadata: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
     const thumbnailFileKey = buildThumbnailFileKey(fileKey);
 
     try {
@@ -407,6 +431,35 @@ export class AssetService {
       [ASSET_METADATA_THUMBNAIL_FILE_KEY]: thumbnailFileKey,
       [ASSET_METADATA_THUMBNAIL_MIME_TYPE]: ASSET_THUMBNAIL_MIME_TYPE,
       [ASSET_METADATA_THUMBNAIL_FILE_SIZE]: thumbnailBuffer.length,
+    };
+  }
+
+  private async ensureImageThumbnail(
+    asset: AssetEntity,
+  ): Promise<{ buffer: Buffer; mimeType: string; fileName: string }> {
+    const originalBuffer = await this.storage.readObject(asset.fileKey);
+    const thumbnailBuffer = await generateImageThumbnail(originalBuffer);
+
+    if (!thumbnailBuffer) {
+      this.logger.warn(`Could not generate thumbnail for asset ${asset.id}`);
+      return {
+        buffer: originalBuffer,
+        mimeType: asset.mimeType ?? 'application/octet-stream',
+        fileName: asset.name,
+      };
+    }
+
+    asset.metadata = await this.persistImageThumbnailMetadata(
+      asset.fileKey,
+      thumbnailBuffer,
+      asset.metadata,
+    );
+    await this.assets.save(asset);
+
+    return {
+      buffer: thumbnailBuffer,
+      mimeType: ASSET_THUMBNAIL_MIME_TYPE,
+      fileName: this.buildThumbnailFileName(asset.name),
     };
   }
 
@@ -467,8 +520,6 @@ export class AssetService {
         ? await this.tags.find({ where: { id: In(tagIds) } })
         : [];
 
-    const hasThumbnail = readThumbnailFileKey(asset.metadata) !== null;
-
     return {
       id: asset.id,
       tenantId: asset.tenantId,
@@ -479,7 +530,8 @@ export class AssetService {
       fileKey: asset.fileKey,
       fileSize: Number(asset.fileSize),
       url: this.buildApiFileUrl(asset.id),
-      thumbnailUrl: hasThumbnail ? this.buildApiThumbnailUrl(asset.id) : null,
+      thumbnailUrl:
+        asset.type === 'image' ? this.buildApiThumbnailUrl(asset.id) : null,
       metadata: asset.metadata,
       referenceCount: asset.referenceCount,
       isInUse: asset.isInUse,

@@ -27,6 +27,8 @@ Las URLs públicas de assets devuelven `/api/v1/assets/:id/file` (stream autenti
 
 En cada subida de **imagen**, el backend genera un thumbnail WebP (máx. 480px) en el mismo prefijo S3 (`thumb.webp`) y lo expone en `/api/v1/assets/:id/thumbnail`. La publicación y descargas usan el archivo original.
 
+Imágenes legacy sin thumbnail en metadata se regeneran **lazy** en la primera petición a `/thumbnail` (Sharp → S3 → metadata) y las siguientes sirven el WebP almacenado.
+
 Al arrancar, `S3StorageAdapter` crea el bucket si no existe (MinIO). En Dokploy el servicio `minio-init` también ejecuta `mc mb` con `S3_BUCKET` (default `mkt-agency-assets`).
 
 Variable opcional: `STORAGE_LOCAL_PUBLIC_BASE` (default `http://localhost:3000/uploads`).

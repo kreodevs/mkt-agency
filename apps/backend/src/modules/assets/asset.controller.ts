@@ -81,6 +81,7 @@ export class AssetController {
     return new StreamableFile(file.buffer, {
       type: file.mimeType,
       disposition: `inline; filename="${file.fileName.replace(/"/g, '')}"`,
+      length: file.buffer.length,
     });
   }
 
