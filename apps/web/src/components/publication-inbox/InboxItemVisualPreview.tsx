@@ -58,7 +58,12 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
   }, [generation?.status, queryClient]);
 
   const isDetail = variant === 'detail';
-  const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : 'max-h-56';
+  const imageMaxClass = isDetail ? 'max-h-[min(70vh,32rem)]' : '';
+  const previewFrameClass = isDetail
+    ? 'mx-auto w-full max-w-2xl'
+    : visualFormat === 'talking-head'
+      ? 'mx-auto w-full max-w-[12.5rem]'
+      : 'mx-auto w-full max-w-[17.5rem]';
   const processingLabel =
     visualFormat === 'talking-head'
       ? 'Generando reel CM…'
@@ -87,13 +92,13 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
   if (assetIds.length > 0) {
     const previewIds = assetIds.slice(0, visualFormat === 'carousel' ? 3 : 1);
     const singleImageContainerClass = isDetail
-      ? `flex items-center justify-center bg-[var(--background-secondary)] ${imageMaxClass}`
+      ? `flex min-h-48 items-center justify-center overflow-hidden rounded-[var(--radius-sm)] bg-[var(--background-secondary)] ${imageMaxClass}`
       : visualFormat === 'talking-head'
-        ? `aspect-[9/16] ${imageMaxClass} bg-[var(--background-secondary)]`
-        : `aspect-square ${imageMaxClass} bg-[var(--background-secondary)]`;
+        ? 'aspect-[9/16] overflow-hidden rounded-[var(--radius-sm)] bg-[var(--background-secondary)]'
+        : 'aspect-square overflow-hidden rounded-[var(--radius-sm)] bg-[var(--background-secondary)]';
     const singleImageClass = isDetail
       ? `max-h-[min(70vh,32rem)] w-full object-contain`
-      : 'h-full w-full object-cover';
+      : 'h-full w-full object-contain';
 
     return (
       <div className="mt-[var(--spacing-md)]">
@@ -103,8 +108,8 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
               previewIds.length > 1
                 ? 'grid grid-cols-3 gap-2'
                 : isVideo
-                  ? ''
-                  : singleImageContainerClass
+                  ? previewFrameClass
+                  : `${previewFrameClass} ${singleImageContainerClass}`
             }
           >
             {previewIds.map((assetId, index) => (
@@ -112,9 +117,9 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                 key={assetId}
                 className={
                   previewIds.length > 1
-                    ? 'aspect-square overflow-hidden rounded-[var(--radius-sm)]'
-                    : isDetail && !isVideo
-                      ? 'w-full'
+                    ? 'aspect-square overflow-hidden rounded-[var(--radius-sm)] bg-[var(--background-secondary)]'
+                    : isVideo
+                      ? 'overflow-hidden rounded-[var(--radius-sm)]'
                       : 'h-full w-full'
                 }
               >
@@ -122,7 +127,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                   <AuthenticatedAssetVideo
                     assetId={assetId}
                     title={item.title}
-                    className={`${imageMaxClass} w-full rounded-[var(--radius-md)]`}
+                    className={`${isDetail ? imageMaxClass : 'max-h-56'} w-full rounded-[var(--radius-sm)] object-contain`}
                     controls
                   />
                 ) : (

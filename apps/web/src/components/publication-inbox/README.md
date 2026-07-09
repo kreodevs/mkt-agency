@@ -6,7 +6,7 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 |---------|-----|
 | `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
 | `InboxContentDetailDialog.tsx` | Ficha completa en modal ancho con scroll y acciones de aprobación |
-| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; en modal (`detail`) usa `object-contain` para no recortar textos del creative; cards usan `aspect-square` |
+| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; marco centrado (`max-w` + `mx-auto`), `object-contain` sin recortar textos del creative |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
