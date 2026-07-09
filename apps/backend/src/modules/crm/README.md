@@ -7,6 +7,7 @@ Pipeline de leads con scoring IA (Strategy: stub o OpenRouter si `AI_API_KEY`).
 | Método | Ruta |
 |--------|------|
 | GET | `/api/v1/leads` |
+| POST | `/api/v1/leads` |
 | GET | `/api/v1/leads/:id` |
 | PATCH | `/api/v1/leads/:id` |
 | PATCH | `/api/v1/leads/:id/stage` |

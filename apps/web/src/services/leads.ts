@@ -1,6 +1,7 @@
 import { apiFetch } from '@/services/api';
 import type {
   ChangeLeadStagePayload,
+  CreateLeadPayload,
   Lead,
   LeadInteractionsListResponse,
   ListLeadsParams,
@@ -22,6 +23,13 @@ function buildQuery(params: ListLeadsParams): string {
 
 export async function listLeads(params: ListLeadsParams = {}): Promise<PaginatedLeadsResponse> {
   return apiFetch<PaginatedLeadsResponse>(`/leads${buildQuery(params)}`);
+}
+
+export async function createLead(payload: CreateLeadPayload): Promise<Lead> {
+  return apiFetch<Lead>('/leads', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getLead(id: string): Promise<Lead> {

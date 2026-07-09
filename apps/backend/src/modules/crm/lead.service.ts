@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { DeleteLeadHandler } from './commands/delete-lead.handler';
 import type { LeadStage } from './domain/lead.constants';
 import {
   ChangeLeadStageDto,
+  CreateLeadDto,
   ListLeadsQueryDto,
   UpdateLeadDto,
 } from './dto/lead.request.dto';
@@ -76,6 +78,47 @@ export class LeadService {
       page,
       limit,
     };
+  }
+
+  async create(tenantId: string, dto: CreateLeadDto): Promise<LeadResponseDto> {
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.leads.findOne({ where: { tenantId, email } });
+    if (existing) {
+      throw new ConflictException({
+        error: 'Ya existe un lead con este email',
+        code: 'CONFLICT',
+      });
+    }
+
+    const lead = await this.leads.save(
+      this.leads.create({
+        tenantId,
+        email,
+        name: dto.name?.trim() || null,
+        phone: dto.phone?.trim() || null,
+        company: dto.company?.trim() || null,
+        productId: dto.productId ?? null,
+        stage: 'prospect',
+        score: 0,
+        metadata: {
+          source: 'manual',
+          firstTouchSource: 'manual',
+          lastTouchSource: 'manual',
+        },
+      }),
+    );
+
+    await this.addInteractionHandler.execute(
+      new AddInteractionCommand(
+        tenantId,
+        lead.id,
+        'manual_entry',
+        dto.note?.trim() || 'Lead creado manualmente',
+        { source: 'manual' },
+      ),
+    );
+
+    return this.findOne(tenantId, lead.id);
   }
 
   async findOne(tenantId: string, id: string): Promise<LeadResponseDto> {

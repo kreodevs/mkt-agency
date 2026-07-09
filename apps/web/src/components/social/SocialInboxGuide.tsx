@@ -48,8 +48,9 @@ export function SocialInboxGuide({ variant }: SocialInboxGuideProps) {
             <ul className="mt-2 list-inside list-disc space-y-1 text-[var(--foreground-muted)]">
               <li>No perder consultas de precio o “me interesa” entre comentarios.</li>
               <li>Ver historial y sugerencia de respuesta en un solo lugar.</li>
-              <li>Conectar con <Link to="/leads" className="text-[var(--primary)] underline">Leads</Link>{' '}
-                y con la actividad de agentes en{' '}
+              <li>Conectar con{' '}
+                <Link to="/leads" className="text-[var(--primary)] underline">Leads</Link>{' '}
+                en el menú del copiloto y con la actividad de agentes en{' '}
                 <Link to="/agency/activity" className="text-[var(--primary)] underline">
                   Actividad agentes
                 </Link>
@@ -113,7 +114,7 @@ export function SocialInboxGuide({ variant }: SocialInboxGuideProps) {
                     Leads
                   </Link>
                   {' — '}
-                  prospectos creados automáticamente desde mensajes clasificados.
+                  visible en el menú SOHO; prospectos automáticos desde inbox y alta manual.
                 </span>
               </li>
             </ul>

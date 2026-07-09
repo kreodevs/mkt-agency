@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Pipeline CRM en menú SOHO** (`/leads`) y botón **Agregar lead** con `POST /api/v1/leads` para alta manual.
 - **Modo copiloto SOHO** (UX por defecto para tenants): menú reducido (Inicio, Mi producto, Ajustes), panel de estado del pipeline en bandeja y botón **Preparar mi semana**.
 - **API copiloto**: `GET /publication-inbox/copilot-status` y `POST /publication-inbox/prepare-week` (descubre competidores, Competitor Intel, estrategia + CM bajo demanda).
 - **Página Ajustes** (`/settings/copilot`): redes sociales, volumen semanal y toggle menú avanzado (`mkt-advanced-nav` en localStorage).

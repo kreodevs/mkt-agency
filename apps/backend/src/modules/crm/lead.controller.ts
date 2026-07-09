@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import {
   ChangeLeadStageDto,
+  CreateLeadDto,
   ListLeadsQueryDto,
   UpdateLeadDto,
 } from './dto/lead.request.dto';
@@ -37,6 +39,15 @@ export class LeadController {
     @Query() query: ListLeadsQueryDto,
   ): Promise<PaginatedLeadsResponseDto> {
     return this.leadService.list(user.tenantId!, query);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: CreateLeadDto,
+  ): Promise<LeadResponseDto> {
+    return this.leadService.create(user.tenantId!, body);
   }
 
   @Get(':id/interactions')

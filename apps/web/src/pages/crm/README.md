@@ -1,8 +1,10 @@
 # Pipeline CRM
 
-Página tenant en `/leads`: Kanban de etapas + panel de detalle.
+Página tenant en `/leads`: Kanban de etapas + panel de detalle + alta manual.
 
-- Filtro por **producto** (`?productId=` en API).
-- Badge de producto en tarjetas Kanban y detalle del lead.
+## SOHO
 
-Servicio: `src/services/leads.ts`.
+- Entrada en menú copiloto: **Leads** (entre Inbox social y Librería).
+- Prospectos desde inbox social, formularios o botón **Agregar lead**.
+
+Servicio: `src/services/leads.ts` (`createLead`, `listLeads`, …).

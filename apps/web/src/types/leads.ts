@@ -61,6 +61,15 @@ export interface ChangeLeadStagePayload {
   note?: string;
 }
 
+export interface CreateLeadPayload {
+  email: string;
+  name?: string;
+  phone?: string;
+  company?: string;
+  productId?: string;
+  note?: string;
+}
+
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   prospect: 'Prospecto',
   qualified: 'Calificado',
