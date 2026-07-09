@@ -13,6 +13,7 @@ import {
   QUEUE_APPROVAL_REMINDER,
   QUEUE_COPILOT_PREPARE_WEEK,
   QUEUE_COMPETITOR_DISCOVERY,
+  QUEUE_WEEKLY_BALANCE,
 } from './queue.constants';
 
 @Module({
@@ -38,6 +39,7 @@ import {
       { name: QUEUE_APPROVAL_REMINDER },
       { name: QUEUE_COPILOT_PREPARE_WEEK },
       { name: QUEUE_COMPETITOR_DISCOVERY },
+      { name: QUEUE_WEEKLY_BALANCE },
     ),
   ],
   exports: [BullModule],

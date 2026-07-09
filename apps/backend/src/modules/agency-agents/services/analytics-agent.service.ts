@@ -13,6 +13,13 @@ export interface LeadPerformanceSummary {
   byStage: Array<{ stage: string; count: number }>;
 }
 
+export interface AnomalyAlert {
+  type: 'conversion_drop' | 'lead_spike' | 'source_gap';
+  severity: 'warning' | 'critical';
+  evidence: Record<string, number>;
+  recommendation: string;
+}
+
 @Injectable()
 export class AnalyticsAgentService {
   constructor(
@@ -82,5 +89,88 @@ export class AnalyticsAgentService {
     }
 
     return summary;
+  }
+
+  async detectAnomalies(tenantId: string, productId?: string): Promise<AnomalyAlert[]> {
+    const current = await this.countLeadsInWindow(tenantId, productId, 7, 0);
+    const previous = await this.countLeadsInWindow(tenantId, productId, 7, 7);
+
+    const alerts: AnomalyAlert[] = [];
+
+    if (previous > 0 && current < previous * 0.5) {
+      alerts.push({
+        type: 'conversion_drop',
+        severity: current === 0 ? 'critical' : 'warning',
+        evidence: { currentWeek: current, previousWeek: previous },
+        recommendation: 'investigate',
+      });
+    }
+
+    if (previous > 0 && current > previous * 2) {
+      alerts.push({
+        type: 'lead_spike',
+        severity: 'warning',
+        evidence: { currentWeek: current, previousWeek: previous },
+        recommendation: 'reallocate',
+      });
+    }
+
+    const socialCurrent = await this.countLeadsBySource(tenantId, productId, 'social', 7);
+    const formCurrent = await this.countLeadsBySource(tenantId, productId, 'direct', 7);
+    if (socialCurrent > 0 && formCurrent === 0 && current > 3) {
+      alerts.push({
+        type: 'source_gap',
+        severity: 'warning',
+        evidence: { socialLeads: socialCurrent, formLeads: formCurrent },
+        recommendation: 'investigate',
+      });
+    }
+
+    return alerts;
+  }
+
+  private async countLeadsInWindow(
+    tenantId: string,
+    productId: string | undefined,
+    days: number,
+    offsetDays: number,
+  ): Promise<number> {
+    const end = new Date();
+    end.setDate(end.getDate() - offsetDays);
+    const start = new Date(end);
+    start.setDate(start.getDate() - days);
+
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :start AND l.created_at < :end', { start, end });
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    return qb.getCount();
+  }
+
+  private async countLeadsBySource(
+    tenantId: string,
+    productId: string | undefined,
+    source: string,
+    days: number,
+  ): Promise<number> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :since', { since })
+      .andWhere(`l.metadata->>'source' = :source`, { source });
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    return qb.getCount();
   }
 }

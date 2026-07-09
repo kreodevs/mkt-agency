@@ -8,9 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmClient } from '../../../shared/ai/llm.client';
 import type { StrategistPlanPayload } from '../domain/handoff/strategist-plan.types';
+import type { ContentBriefPayload } from '../domain/handoff/creative-pack.types';
 import { AgentPlanEntity } from '../infrastructure/typeorm/agent-plan.entity';
 import { AgentEventService } from './agent-event.service';
 import { AgentRole } from '../domain/agent-role.enum';
+import { CreativeAgentService } from './creative-agent.service';
 import { OperatingProfileService } from './operating-profile.service';
 import type { CreateAgencyPlanDto } from '../dto/agency-plan.request.dto';
 
@@ -22,6 +24,7 @@ export class StrategistAgentService {
     private readonly operatingProfile: OperatingProfileService,
     private readonly agentEvents: AgentEventService,
     private readonly llm: LlmClient,
+    private readonly creativeAgent: CreativeAgentService,
   ) {}
 
   async createPlan(
@@ -89,6 +92,7 @@ export class StrategistAgentService {
       correlationId: plan.id,
     });
 
+    const brief = this.extractCreativeBrief(saved.strategistOutput);
     await this.agentEvents.log({
       tenantId,
       productId: plan.productId,
@@ -97,10 +101,14 @@ export class StrategistAgentService {
       eventType: 'CreativeBrief',
       payload: {
         planId: plan.id,
-        brief: this.extractCreativeBrief(saved.strategistOutput),
+        brief,
       },
       correlationId: plan.id,
     });
+
+    void this.creativeAgent
+      .generateFromBrief(tenantId, plan.id, brief, plan.productId)
+      .catch(() => undefined);
 
     const profile = await this.operatingProfile.getProfile(tenantId);
     if (this.operatingProfile.isPaidCapable(profile)) {
@@ -220,7 +228,7 @@ export class StrategistAgentService {
     };
   }
 
-  private extractCreativeBrief(output: Record<string, unknown>): Record<string, unknown> {
+  private extractCreativeBrief(output: Record<string, unknown>): ContentBriefPayload {
     const stages = output.funnelStages;
     const channels = Array.isArray(stages)
       ? [...new Set((stages as Array<{ channels?: string[] }>).flatMap((s) => s.channels ?? []))]

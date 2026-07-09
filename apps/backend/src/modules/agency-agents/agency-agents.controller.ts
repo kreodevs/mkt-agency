@@ -77,6 +77,14 @@ export class AgencyAgentsController {
     return this.analytics.getLeadPerformanceSummary(user.tenantId!, productId);
   }
 
+  @Get('anomalies')
+  getAnomalies(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+  ) {
+    return this.analytics.detectAnomalies(user.tenantId!, productId);
+  }
+
   @Get('events')
   listEvents(
     @CurrentUser() user: AuthenticatedUser,

@@ -3,7 +3,7 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { StatusPill } from '@/components/atoms/StatusPill';
-import { listAgentEvents, getAgencyPerformance } from '@/services/operating-profile';
+import { listAgentEvents, getAgencyPerformance, getAgencyAnomalies } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
@@ -19,6 +19,11 @@ export default function AgencyActivityPage() {
   const performanceQuery = useQuery({
     queryKey: ['agency-performance', productId],
     queryFn: () => getAgencyPerformance(productId ?? undefined),
+  });
+
+  const anomaliesQuery = useQuery({
+    queryKey: ['agency-anomalies', productId],
+    queryFn: () => getAgencyAnomalies(productId ?? undefined),
   });
 
   return (
@@ -88,6 +93,25 @@ export default function AgencyActivityPage() {
               )}
             </div>
           )}
+        </Card>
+
+        <Card title="Alertas (Analytics)" subtitle="Comparativa semanal de leads">
+          {anomaliesQuery.isLoading && (
+            <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+          )}
+          {(anomaliesQuery.data ?? []).length === 0 && !anomaliesQuery.isLoading && (
+            <p className="text-sm text-[var(--foreground-muted)]">Sin anomalías detectadas.</p>
+          )}
+          <ul className="space-y-2 text-sm">
+            {(anomaliesQuery.data ?? []).map((alert, i) => (
+              <li key={i} className="rounded border border-[var(--border)] p-2">
+                <StatusPill status={alert.severity === 'critical' ? 'error' : 'warning'}>
+                  {alert.type}
+                </StatusPill>
+                <p className="mt-1 text-xs text-[var(--foreground-muted)]">{alert.recommendation}</p>
+              </li>
+            ))}
+          </ul>
         </Card>
       </div>
     </DashboardShell>

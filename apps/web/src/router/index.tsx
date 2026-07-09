@@ -56,6 +56,7 @@ const ImageGeneratorDetailPage = lazy(
 );
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
+const SocialInboxPage = lazy(() => import('@/pages/social/SocialInboxPage'));
 const AgencyStrategyPage = lazy(() => import('@/pages/agency/AgencyStrategyPage'));
 const AgencyActivityPage = lazy(() => import('@/pages/agency/AgencyActivityPage'));
 const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
@@ -141,6 +142,7 @@ export function AppRouter() {
             <Route path="/products/:id/media-kit" element={<ProductMediaKitPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/agency/activity" element={<AgencyActivityPage />} />
+            <Route path="/social/inbox" element={<SocialInboxPage />} />
             <Route
               path="/agency/strategy"
               element={

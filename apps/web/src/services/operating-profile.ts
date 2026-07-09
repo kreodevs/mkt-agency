@@ -51,3 +51,10 @@ export async function createAgencyPlan(payload: CreateAgencyPlanPayload): Promis
 export async function approveAgencyPlan(planId: string): Promise<AgencyPlan> {
   return apiFetch<AgencyPlan>(`/agency/plans/${planId}/approve`, { method: 'POST' });
 }
+
+export async function getAgencyAnomalies(productId?: string) {
+  const q = productId ? `?productId=${productId}` : '';
+  return apiFetch<Array<{ type: string; severity: string; recommendation: string }>>(
+    `/agency/anomalies${q}`,
+  );
+}

@@ -34,3 +34,14 @@ Capa modular de agentes de agencia con perfiles operativos **SOHO** vs **Growth*
 ## Integración SOHO
 
 `AgencyOrchestrationService` emite eventos `ContentPlanReady`, `ContentBrief`, `SohoWeekPrepared` en el pipeline semanal existente.
+
+## Cron
+
+| Cola | Horario | Acción |
+|------|---------|--------|
+| `weekly-balance` | Lunes 07:00 | Analytics → PerformanceReport + anomalías; Strategist → WeeklyBalance (Growth) |
+
+## Agentes adicionales
+
+- `CreativeAgentService` — genera `CreativePack` al aprobar plan estratégico
+- `AnalyticsAgentService.detectAnomalies` — caídas/spikes de leads sin APIs de ads

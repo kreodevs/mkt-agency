@@ -10,7 +10,7 @@ export const AGENT_ACTIVATION_BY_SUBPROFILE: Record<
     analytics: 'lite',
     media_buyer: 'off',
     creative: 'full',
-    community: 'off',
+    community: 'lite',
   },
   growth_organic: {
     strategist: 'standard',
