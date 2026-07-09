@@ -56,6 +56,8 @@ const ImageGeneratorDetailPage = lazy(
 );
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
+const AgencyStrategyPage = lazy(() => import('@/pages/agency/AgencyStrategyPage'));
+const AgencyActivityPage = lazy(() => import('@/pages/agency/AgencyActivityPage'));
 const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
 const PublicCapturePage = lazy(() => import('@/pages/capture/PublicCapturePage'));
 
@@ -138,9 +140,39 @@ export function AppRouter() {
             <Route path="/products/:id/onboarding" element={<ProductOnboardingWizardPage />} />
             <Route path="/products/:id/media-kit" element={<ProductMediaKitPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/campaigns" element={<CampaignListPage />} />
-            <Route path="/campaigns/new" element={<CampaignCreatePage />} />
-            <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
+            <Route path="/agency/activity" element={<AgencyActivityPage />} />
+            <Route
+              path="/agency/strategy"
+              element={
+                <SohoLegacyRedirect>
+                  <AgencyStrategyPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/campaigns"
+              element={
+                <SohoLegacyRedirect>
+                  <CampaignListPage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/campaigns/new"
+              element={
+                <SohoLegacyRedirect>
+                  <CampaignCreatePage />
+                </SohoLegacyRedirect>
+              }
+            />
+            <Route
+              path="/campaigns/:id"
+              element={
+                <SohoLegacyRedirect>
+                  <CampaignDetailPage />
+                </SohoLegacyRedirect>
+              }
+            />
             <Route
               path="/contents"
               element={

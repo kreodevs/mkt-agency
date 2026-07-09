@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { GrowthProfileGuard } from '../agency-agents/guards/growth-profile.guard';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { AudienceService } from './audience.service';
 import {
@@ -27,7 +28,7 @@ import {
 } from './dto/campaign.response.dto';
 
 @Controller('audiences')
-@UseGuards(TenantGuard)
+@UseGuards(TenantGuard, GrowthProfileGuard)
 export class AudienceController {
   constructor(private readonly audienceService: AudienceService) {}
 

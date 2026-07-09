@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Bot,
   Building2,
@@ -64,6 +65,7 @@ export const tenantAdvancedNavigation = [
     title: 'Mi negocio',
     items: [
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
+      { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
       { label: 'Mis productos', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
     ],
@@ -72,6 +74,7 @@ export const tenantAdvancedNavigation = [
     title: 'Crear con IA',
     items: [
       { label: 'Agentes IA', href: '/agents', icon: Bot },
+      { label: 'Estrategia comercial', href: '/agency/strategy', icon: Lightbulb },
       { label: 'Community Manager', href: '/community', icon: MessageSquare },
       { label: 'Campañas', href: '/campaigns', icon: Megaphone },
       { label: 'Estrategia', href: '/strategy', icon: Lightbulb },
@@ -99,13 +102,14 @@ export const tenantAdvancedNavigation = [
   },
 ];
 
-/** Navegación por defecto para SOHO: bandeja, producto y ajustes del copiloto. */
+/** Navegación SOHO: bandeja, actividad agentes, producto y ajustes. */
 export const tenantSohoNavigation = [
   {
     title: 'Copiloto',
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+      { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
       { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },
       { label: 'Mi producto', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },

@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { AgentRole } from '../agency-agents/domain/agent-role.enum';
+import { AgentEventService } from '../agency-agents/services/agent-event.service';
 import { DEFAULT_CM_PLATFORMS } from '../community-manager/domain/cm-platforms.constants';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
@@ -22,6 +24,7 @@ export class AgencyOrchestrationService {
   constructor(
     private readonly strategyService: StrategyService,
     private readonly communityManager: CommunityManagerService,
+    private readonly agentEvents: AgentEventService,
   ) {}
 
   async runWeeklyForProduct(
@@ -53,11 +56,36 @@ export class AgencyOrchestrationService {
           strategy.id,
         );
       }
+
+      await this.agentEvents.logIfAgentActive(AgentRole.STRATEGIST, {
+        tenantId,
+        productId: product.id,
+        sourceAgent: AgentRole.STRATEGIST,
+        eventType: 'ContentPlanReady',
+        payload: {
+          strategyId: strategy.id,
+          topics: result.topicsUsed,
+        },
+      });
     } catch (error) {
       this.logger.warn(`Strategy step failed for product ${product.id}`, error);
     }
 
     const prefs = await this.communityManager.getPreferences(tenantId);
+
+    if (result.topicsUsed.length > 0) {
+      await this.agentEvents.logIfAgentActive(AgentRole.STRATEGIST, {
+        tenantId,
+        productId: product.id,
+        sourceAgent: AgentRole.STRATEGIST,
+        targetAgent: AgentRole.CREATIVE,
+        eventType: 'ContentBrief',
+        payload: {
+          topics: result.topicsUsed,
+          platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
+        },
+      });
+    }
 
     try {
       const cmResult = await this.communityManager.generate(tenantId, userId, {
@@ -71,6 +99,17 @@ export class AgencyOrchestrationService {
       if (cmResult.status === 'completed') {
         result.postsGenerated = cmResult.postsGenerated ?? WEEKLY_CM_POST_COUNT;
         result.imagesAttached = cmResult.imagesAttached ?? 0;
+
+        await this.agentEvents.logIfAgentActive(AgentRole.CREATIVE, {
+          tenantId,
+          productId: product.id,
+          sourceAgent: AgentRole.CREATIVE,
+          eventType: 'SohoWeekPrepared',
+          payload: {
+            postsGenerated: result.postsGenerated,
+            imagesAttached: result.imagesAttached,
+          },
+        });
       }
     } catch (error) {
       this.logger.warn(`CM step failed for product ${product.id}`, error);

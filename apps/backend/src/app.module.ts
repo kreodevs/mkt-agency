@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AgencyAgentsModule } from './modules/agency-agents/agency-agents.module';
+import { AgentEventLogEntity } from './modules/agency-agents/infrastructure/typeorm/agent-event-log.entity';
+import { AgentPlanEntity } from './modules/agency-agents/infrastructure/typeorm/agent-plan.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { SessionEntity } from './modules/auth/infrastructure/typeorm/session.entity';
 import { SecurityModule } from './modules/security/security.module';
@@ -159,6 +162,8 @@ import {
           CommunityManagerBatchEntity,
           TonePresetEntity,
           AgencyNotificationEntity,
+          AgentEventLogEntity,
+          AgentPlanEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -167,6 +172,7 @@ import {
     AuthModule,
     SetupModule,
     PackageModule,
+    AgencyAgentsModule,
     TenantModule,
     CompanyProfileModule,
     ProductModule,

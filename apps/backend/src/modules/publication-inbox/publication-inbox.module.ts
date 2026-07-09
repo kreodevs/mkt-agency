@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { UserEntity } from '../../shared/infrastructure/typeorm/user.entity';
+import { AgencyAgentsModule } from '../agency-agents/agency-agents.module';
 import { AgentsModule } from '../agents/agents.module';
 import { CommunityManagerModule } from '../community-manager/community-manager.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
@@ -28,6 +29,7 @@ import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.
 @Module({
   imports: [
     AuthSharedModule,
+    AgencyAgentsModule,
     QueueModule,
     ContentModule,
     CommunityManagerModule,

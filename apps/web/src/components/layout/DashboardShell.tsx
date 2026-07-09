@@ -14,7 +14,7 @@ import {
   tenantAdvancedNavigation,
   tenantSohoNavigation,
 } from '@/lib/tenant-navigation';
-import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
 export {
   superadminNavigation,
@@ -31,8 +31,12 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
-  const advancedNav = useAdvancedNav();
-  const toggleAdvancedNav = useCopilotUiStore((s) => s.toggleAdvancedNav);
+  const { isGrowth, updateProfile } = useOperatingProfile();
+  const advancedNav = isGrowth;
+
+  const handleNavModeToggle = async () => {
+    await updateProfile({ profile: isGrowth ? 'soho' : 'growth' });
+  };
 
   const navigationGroups =
     navigationOverride ??
@@ -81,7 +85,7 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
             variant="ghost"
             size="sm"
             className="w-full justify-start text-xs text-[var(--foreground-muted)]"
-            onClick={toggleAdvancedNav}
+            onClick={() => void handleNavModeToggle()}
           >
             <Layers className="mr-2 h-3.5 w-3.5" />
             {advancedNav ? 'Vista simple (copiloto)' : 'Ver todas las herramientas'}

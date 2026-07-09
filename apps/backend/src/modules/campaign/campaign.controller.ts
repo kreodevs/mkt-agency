@@ -12,6 +12,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { GrowthProfileGuard } from '../agency-agents/guards/growth-profile.guard';
+import { PaidBudgetGuard } from '../agency-agents/guards/paid-budget.guard';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
@@ -43,7 +45,7 @@ import {
 } from './domain/campaign-execution-mode.constants';
 
 @Controller('campaigns')
-@UseGuards(TenantGuard)
+@UseGuards(TenantGuard, GrowthProfileGuard)
 export class CampaignController {
   constructor(
     private readonly campaignService: CampaignService,
@@ -120,6 +122,7 @@ export class CampaignController {
   }
 
   @Post(':id/generate-strategy')
+  @UseGuards(PaidBudgetGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   generateStrategy(
     @CurrentUser() user: AuthenticatedUser,
@@ -129,6 +132,7 @@ export class CampaignController {
   }
 
   @Get(':id/budgets')
+  @UseGuards(PaidBudgetGuard)
   listBudgets(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
@@ -137,6 +141,7 @@ export class CampaignController {
   }
 
   @Patch(':id/budgets/:budgetId')
+  @UseGuards(PaidBudgetGuard)
   updateBudget(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,

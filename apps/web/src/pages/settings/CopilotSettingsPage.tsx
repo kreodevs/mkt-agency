@@ -8,6 +8,7 @@ import {
   Twitter,
 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { OperatingProfileCard } from '@/components/agency/OperatingProfileCard';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
@@ -18,7 +19,7 @@ import {
   saveCommunityManagerPreferences,
   type CmPlatform,
 } from '@/services/community-manager';
-import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
 const PLATFORM_ICONS: Record<CmPlatform, React.FC<{ className?: string }>> = {
   instagram: Instagram,
@@ -40,8 +41,7 @@ const ALL_PLATFORMS = Object.keys(PLATFORM_LABELS) as CmPlatform[];
 
 export default function CopilotSettingsPage() {
   const queryClient = useQueryClient();
-  const advancedNav = useAdvancedNav();
-  const setAdvancedNav = useCopilotUiStore((s) => s.setAdvancedNav);
+  const { isGrowth } = useOperatingProfile();
   const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
   const [count, setCount] = useState(7);
   const [prefsReady, setPrefsReady] = useState(false);
@@ -140,23 +140,16 @@ export default function CopilotSettingsPage() {
           </Button>
         </Card>
 
-        <Card title="Vista completa" subtitle="Herramientas de agencia sin perder el flujo copiloto">
-          <p className="text-sm text-[var(--foreground-muted)]">
-            Actívala para ver Resumen, Métricas, Campañas y más. Tu día a día sigue en Inicio:
-            preparar, aprobar y copiar para publicar.
-          </p>
-          <label className="mt-4 flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={advancedNav}
-              onChange={(e) => setAdvancedNav(e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--border)]"
-            />
-            <span className="text-sm font-medium text-[var(--foreground)]">
-              Ver todas las herramientas
-            </span>
-          </label>
-        </Card>
+        <OperatingProfileCard />
+
+        {isGrowth && (
+          <Card title="Vista Growth" subtitle="Herramientas de agencia activas">
+            <p className="text-sm text-[var(--foreground-muted)]">
+              Tienes acceso a campañas, estrategia comercial y métricas avanzadas desde el menú
+              lateral.
+            </p>
+          </Card>
+        )}
       </div>
     </DashboardShell>
   );

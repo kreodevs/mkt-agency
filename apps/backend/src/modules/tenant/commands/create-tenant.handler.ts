@@ -8,6 +8,12 @@ import { rethrowKnownDatabaseError } from '../../../shared/database/postgres-err
 import { Password } from '../../../shared/domain/password.value-object';
 import { UserEntity } from '../../../shared/infrastructure/typeorm/user.entity';
 import { PackageService } from '../../packages/package.service';
+import {
+  DEFAULT_OPERATING_PROFILE,
+  SETTINGS_KEY_OPERATING_PROFILE,
+  type TenantOperatingProfile,
+} from '../../agency-agents/domain/operating-profile.types';
+import type { PackageAgencyFeatures } from '../../agency-agents/services/operating-profile.service';
 import { ALL_SECTION_KEYS } from '../../company-profile/domain/section-keys';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { CompanyProfileSectionEntity } from '../../company-profile/infrastructure/typeorm/company-profile-section.entity';
@@ -58,13 +64,18 @@ export class CreateTenantHandler
       const tenantRepo = queryRunner.manager.getRepository(TenantEntity);
       const userRepo = queryRunner.manager.getRepository(UserEntity);
 
+      const packageFeatures = (pkg.features ?? {}) as PackageAgencyFeatures;
+      const operatingProfile = buildDefaultOperatingProfile(packageFeatures);
+
       const tenantEntity = tenantRepo.create({
         name: command.name.trim(),
         slug: command.slug.trim().toLowerCase(),
         plan: pkg.slug,
         packageId: pkg.id,
         status: 'active',
-        settings: {},
+        settings: {
+          [SETTINGS_KEY_OPERATING_PROFILE]: operatingProfile,
+        },
         maxUsers: pkg.maxUsers,
         maxAssetsSize: pkg.maxAssetsSize,
         maxFileSize: pkg.maxFileSize,
@@ -131,4 +142,24 @@ export class CreateTenantHandler
       await queryRunner.release();
     }
   }
+}
+
+function buildDefaultOperatingProfile(features: PackageAgencyFeatures): TenantOperatingProfile {
+  const profile = features.profile ?? 'soho';
+  const adBudgetAllowed = features.adBudgetAllowed ?? false;
+
+  if (profile === 'growth') {
+    return {
+      profile: 'growth',
+      campaignExecutionMode: 'organic',
+      adBudget: {
+        enabled: false,
+        monthlyCap: null,
+        currency: 'MXN',
+        platforms: adBudgetAllowed ? ['meta'] : [],
+      },
+    };
+  }
+
+  return { ...DEFAULT_OPERATING_PROFILE };
 }

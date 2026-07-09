@@ -10,6 +10,8 @@ Campañas multicanal del tenant (US-009 backend).
 | Campañas | `/api/v1/campaigns` |
 | Audiencias | `/api/v1/audiences` |
 
+**Perfil SOHO:** rutas de campaña devuelven `403 SOHO_PROFILE` (`GrowthProfileGuard`).
+
 ## Orquestación desde agentes
 
 Dos modos de ejecución (`campaign.strategy.executionMode`):
