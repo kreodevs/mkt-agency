@@ -1,5 +1,11 @@
 import { getAccessToken, getRefreshToken, useAuthStore } from '@/store/auth';
-import { getPlatformAccessToken, restoreSuperadminOnExpiredImpersonation } from '@/lib/impersonation';
+import {
+  getPlatformAccessToken,
+  getPlatformRefreshToken,
+  readImpersonationContext,
+  restoreSuperadminOnExpiredImpersonation,
+  updatePlatformTokens,
+} from '@/lib/impersonation';
 
 export const API_BASE = '/api/v1';
 
@@ -149,14 +155,56 @@ export async function apiFetch<T>(
   return response.json() as Promise<T>;
 }
 
+async function refreshPlatformAccessToken(): Promise<string | null> {
+  const refreshToken =
+    getPlatformRefreshToken() ?? useAuthStore.getState().tokens?.refreshToken ?? null;
+  if (!refreshToken || !readImpersonationContext()) {
+    return null;
+  }
+
+  const response = await fetch(`${API_BASE}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as {
+    accessToken: string;
+    refreshToken: string;
+  };
+
+  updatePlatformTokens({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+  });
+
+  return data.accessToken;
+}
+
 export async function apiFetchAsPlatform<T>(
   path: string,
   init: RequestInit = {},
+  options: { retry?: boolean } = {},
 ): Promise<T> {
-  const platformToken = getPlatformAccessToken() ?? getAccessToken();
+  const retry = options.retry ?? true;
+  const platformToken = getPlatformAccessToken();
   if (!platformToken) {
     throw new ApiError('Sesión de plataforma no disponible', 401, 'UNAUTHORIZED');
   }
 
-  return apiFetch<T>(path, init, { accessToken: platformToken });
+  try {
+    return await apiFetch<T>(path, init, { accessToken: platformToken, retry: false });
+  } catch (error) {
+    if (retry && error instanceof ApiError && error.status === 401) {
+      const refreshed = await refreshPlatformAccessToken();
+      if (refreshed) {
+        return apiFetch<T>(path, init, { accessToken: refreshed, retry: false });
+      }
+    }
+    throw error;
+  }
 }

@@ -4,6 +4,7 @@ import {
   applyImpersonationSession,
   exitImpersonation,
   isImpersonating,
+  isImpersonatingSession,
 } from '@/lib/impersonation';
 import type { LlmUsageDashboardResponse } from '@/types/llm-usage';
 import type { ImpersonateResponse } from '@/types/impersonation';
@@ -182,7 +183,7 @@ export async function testTavilyIntegration(): Promise<{
 }
 
 export async function impersonateTenant(tenantId: string): Promise<ImpersonateResponse> {
-  const fetcher = isImpersonating() ? apiFetchAsPlatform : apiFetch;
+  const fetcher = isImpersonatingSession() ? apiFetchAsPlatform : apiFetch;
 
   const data = await fetcher<ImpersonateResponse>('/superadmin/impersonate', {
     method: 'POST',

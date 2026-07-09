@@ -42,6 +42,29 @@ export function getPlatformAccessToken(): string | null {
   return readImpersonationContext()?.platformTokens.accessToken ?? null;
 }
 
+export function getPlatformRefreshToken(): string | null {
+  return readImpersonationContext()?.platformTokens.refreshToken ?? null;
+}
+
+export function updatePlatformTokens(tokens: AuthTokens): void {
+  const ctx = readImpersonationContext();
+  if (!ctx) return;
+  saveImpersonationContext({ ...ctx, platformTokens: tokens });
+
+  const state = useAuthStore.getState();
+  if (state.user?.impersonating && state.tokens) {
+    useAuthStore.getState().setTokens({
+      accessToken: state.tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+  }
+}
+
+export function isImpersonatingSession(): boolean {
+  if (readImpersonationContext() !== null) return true;
+  return useAuthStore.getState().user?.impersonating === true;
+}
+
 export function applyImpersonationSession(data: ImpersonateResponse, tenantId: string): void {
   const state = useAuthStore.getState();
 
