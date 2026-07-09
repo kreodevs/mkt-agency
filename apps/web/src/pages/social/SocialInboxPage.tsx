@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { Copy, Check } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { SocialInboxGuide } from '@/components/social/SocialInboxGuide';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
@@ -14,6 +17,17 @@ import {
 } from '@/services/social-inbox';
 import { getTenantWebhookInfo } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+
+function resolveWebhookPublicUrl(relativePath: string): string {
+  if (typeof window === 'undefined') return relativePath;
+  return `${window.location.origin}${relativePath}`;
+}
+
+async function copyToClipboard(text: string, label: string) {
+  await navigator.clipboard.writeText(text);
+  toast.success(`${label} copiado`);
+}
 
 const INTENT_LABELS: Record<string, string> = {
   prospect: 'Prospecto',
@@ -25,9 +39,11 @@ const INTENT_LABELS: Record<string, string> = {
 
 export default function SocialInboxPage() {
   const productId = useResolvedProductId();
+  const { isSoho } = useOperatingProfile();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [authorHandle, setAuthorHandle] = useState('');
+  const [copiedField, setCopiedField] = useState<'url' | 'secret' | null>(null);
 
   const inboxQuery = useQuery({
     queryKey: ['social-inbox'],
@@ -76,11 +92,20 @@ export default function SocialInboxPage() {
     <DashboardShell>
       <PageHeader
         title="Inbox social"
-        description="Clasifica comentarios y DMs. Los prospectos van al CRM automáticamente."
+        description={
+          isSoho
+            ? 'Clasifica comentarios y DMs; los prospectos van al CRM automáticamente.'
+            : 'Clasifica comentarios y DMs. Los prospectos van al CRM automáticamente.'
+        }
       />
 
+      <SocialInboxGuide variant={isSoho ? 'soho' : 'growth'} />
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Registrar interacción" subtitle="Simula un comentario o DM hasta conectar redes">
+        <Card
+          title="Registrar interacción"
+          subtitle="Pega un comentario o DM que recibiste (modo manual hasta conectar OAuth)"
+        >
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -104,28 +129,97 @@ export default function SocialInboxPage() {
           </Button>
         </Card>
 
-        <Card title="Webhook genérico" subtitle="POST con header X-Webhook-Secret (sin OAuth Meta)">
+        <Card
+          title="Webhook genérico"
+          subtitle="Automatiza con Make, Zapier o n8n — POST + header X-Webhook-Secret"
+        >
           {webhookQuery.isLoading && (
             <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
           )}
           {webhookQuery.data && (
-            <div className="space-y-2 text-xs font-mono">
-              <p>
-                <span className="text-[var(--foreground-muted)]">URL:</span>{' '}
-                {webhookQuery.data.webhookUrl}
-              </p>
-              <p className="break-all">
-                <span className="text-[var(--foreground-muted)]">Secret:</span>{' '}
-                {webhookQuery.data.secret}
-              </p>
+            <div className="space-y-3 text-sm">
               <p className="text-[var(--foreground-muted)]">
-                Header: {webhookQuery.data.header}
+                Configura tu automatización para enviar cada mensaje entrante a esta URL. Ejemplo de
+                cuerpo:{' '}
+                <code className="text-xs">
+                  {`{ "message": "…", "platform": "instagram", "authorHandle": "@cliente" }`}
+                </code>
               </p>
+              <div className="space-y-2 rounded-md border border-[var(--border)] bg-[var(--background-muted)]/30 p-3 font-mono text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 break-all">
+                    <span className="text-[var(--foreground-muted)]">URL: </span>
+                    {resolveWebhookPublicUrl(webhookQuery.data.webhookUrl)}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="shrink-0 gap-1"
+                    onClick={() => {
+                      void copyToClipboard(
+                        resolveWebhookPublicUrl(webhookQuery.data!.webhookUrl),
+                        'URL',
+                      ).then(() => {
+                        setCopiedField('url');
+                        window.setTimeout(() => setCopiedField(null), 2000);
+                      });
+                    }}
+                  >
+                    {copiedField === 'url' ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 break-all">
+                    <span className="text-[var(--foreground-muted)]">Secret: </span>
+                    {webhookQuery.data.secret}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="shrink-0 gap-1"
+                    onClick={() => {
+                      void copyToClipboard(webhookQuery.data!.secret, 'Secret').then(() => {
+                        setCopiedField('secret');
+                        window.setTimeout(() => setCopiedField(null), 2000);
+                      });
+                    }}
+                  >
+                    {copiedField === 'secret' ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-[var(--foreground-muted)]">
+                  Header: {webhookQuery.data.header}
+                </p>
+              </div>
+              {isSoho && (
+                <p className="text-xs text-[var(--foreground-muted)]">
+                  ¿Solo publicas manualmente? Puedes ignorar el webhook y usar{' '}
+                  <strong>Registrar interacción</strong> arriba.{' '}
+                  <Link to="/settings/copilot" className="text-[var(--primary)] underline">
+                    Ajustes del copiloto
+                  </Link>{' '}
+                  es donde eliges tus redes para generar posts.
+                </p>
+              )}
             </div>
           )}
         </Card>
 
-        <Card title="Bandeja">
+        <Card
+          className="lg:col-span-2"
+          title="Bandeja"
+          subtitle="Interacciones clasificadas — marca respondido cuando contestes"
+        >
           {inboxQuery.isLoading && (
             <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
           )}
@@ -170,6 +264,13 @@ export default function SocialInboxPage() {
                 )}
               </li>
             ))}
+            {(inboxQuery.data?.items ?? []).length === 0 && !inboxQuery.isLoading && (
+              <p className="text-sm text-[var(--foreground-muted)]">
+                {isSoho
+                  ? 'Aún no hay mensajes. Pega un comentario o DM arriba para clasificarlo.'
+                  : 'Sin interacciones registradas.'}
+              </p>
+            )}
           </ul>
         </Card>
       </div>
