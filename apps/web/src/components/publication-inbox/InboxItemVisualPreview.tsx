@@ -86,6 +86,14 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
 
   if (assetIds.length > 0) {
     const previewIds = assetIds.slice(0, visualFormat === 'carousel' ? 3 : 1);
+    const singleImageContainerClass = isDetail
+      ? `flex items-center justify-center bg-[var(--background-secondary)] ${imageMaxClass}`
+      : visualFormat === 'talking-head'
+        ? `aspect-[9/16] ${imageMaxClass} bg-[var(--background-secondary)]`
+        : `aspect-square ${imageMaxClass} bg-[var(--background-secondary)]`;
+    const singleImageClass = isDetail
+      ? `max-h-[min(70vh,32rem)] w-full object-contain`
+      : 'h-full w-full object-cover';
 
     return (
       <div className="mt-[var(--spacing-md)]">
@@ -96,7 +104,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                 ? 'grid grid-cols-3 gap-2'
                 : isVideo
                   ? ''
-                  : `aspect-video ${imageMaxClass} bg-[var(--background-secondary)]`
+                  : singleImageContainerClass
             }
           >
             {previewIds.map((assetId, index) => (
@@ -105,7 +113,9 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                 className={
                   previewIds.length > 1
                     ? 'aspect-square overflow-hidden rounded-[var(--radius-sm)]'
-                    : 'h-full w-full'
+                    : isDetail && !isVideo
+                      ? 'w-full'
+                      : 'h-full w-full'
                 }
               >
                 {isVideo ? (
@@ -121,7 +131,7 @@ export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisu
                     variant={isDetail ? 'full' : 'thumb'}
                     alt={item.title}
                     title={item.title}
-                    className="h-full w-full object-cover"
+                    className={singleImageClass}
                   />
                 )}
                 {previewIds.length > 1 && (
