@@ -11,19 +11,6 @@ import {
 
 const METRICS = ['revenue', 'margin', 'roi', 'leads', 'awareness'] as const;
 
-export class UpdateOperatingProfileDto {
-  @IsOptional()
-  @IsIn(['soho', 'growth'])
-  profile?: 'soho' | 'growth';
-
-  @IsOptional()
-  @IsIn(['organic', 'paid'])
-  campaignExecutionMode?: 'organic' | 'paid';
-
-  @IsOptional()
-  adBudget?: UpdateAdBudgetDto;
-}
-
 export class UpdateAdBudgetDto {
   @IsOptional()
   enabled?: boolean;
@@ -42,6 +29,19 @@ export class UpdateAdBudgetDto {
   @IsArray()
   @IsIn(['meta', 'google', 'tiktok'], { each: true })
   platforms?: ('meta' | 'google' | 'tiktok')[];
+}
+
+export class UpdateOperatingProfileDto {
+  @IsOptional()
+  @IsIn(['soho', 'growth'])
+  profile?: 'soho' | 'growth';
+
+  @IsOptional()
+  @IsIn(['organic', 'paid'])
+  campaignExecutionMode?: 'organic' | 'paid';
+
+  @IsOptional()
+  adBudget?: UpdateAdBudgetDto;
 }
 
 export class CreateAgencyPlanDto {
