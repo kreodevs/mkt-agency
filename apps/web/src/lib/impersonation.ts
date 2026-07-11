@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import {
   useAuthStore,
   type AuthTokens,
@@ -80,22 +81,24 @@ export function applyImpersonationSession(data: ImpersonateResponse, tenantId: s
     readImpersonationContext()?.platformTokens.refreshToken ??
     '';
 
-  useAuthStore.getState().setImpersonationSession(
-    {
-      accessToken: data.impersonationToken,
-      refreshToken,
-    },
-    {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.name,
-      role: data.user.role,
-      isSuperadmin: false,
-      tenantId,
-      impersonating: true,
-    },
-    data.tenant.name,
-  );
+flushSync(() => {
+    useAuthStore.getState().setImpersonationSession(
+      {
+        accessToken: data.impersonationToken,
+        refreshToken,
+      },
+      {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+        isSuperadmin: false,
+        tenantId,
+        impersonating: true,
+      },
+      data.tenant.name,
+    );
+  });
 }
 
 export function exitImpersonation(): void {

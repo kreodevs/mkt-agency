@@ -38,7 +38,7 @@ export function TenantImpersonationSelect() {
         busy={busy}
         loading={tenantsQuery.isLoading || tenantsQuery.isFetching}
         error={loadError}
-        onSelect={(tenantId) => {
+onSelect={(tenantId) => {
           if (tenantId === IMPERSONATION_CONSOLE_VALUE) return;
 
           setBusy(true);
