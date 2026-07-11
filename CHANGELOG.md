@@ -15,6 +15,15 @@
   - **Loading spinner**: router fallback con spinner animado en vez de solo texto.
   - **Toast material**: Sonner toasts con `material-sheet` y close button `press-subtle`.
   - **Accesibilidad**: media queries para `prefers-reduced-motion` (cross-fades), `prefers-reduced-transparency` (fondos sólidos), `prefers-contrast` (bordes definidos).
+  - **Mobile/iPad optimizado**:
+    - **Safe area insets**: `env(safe-area-inset-*)` en header, drawer móvil y footer del dialog — notch/Dynamic Island/home indicator cubiertos.
+    - **Viewport fluido**: `h-[100dvh]` reemplaza `h-screen` para evitar overlap con barra del navegador móvil; `viewport-fit=cover` en meta tag.
+    - **Dialog como bottom sheet**: en pantallas `< 640px` el dialog se ancla al fondo con `rounded-t`, drag handle visual y swipe-down-to-dismiss (> 80px cierra).
+    - **Fluid typography**: `clamp()` en display-xl, display-serif y serif-accent — escala de 2rem a 6rem sin ruptura.
+    - **TouchSensor en KanbanBoard**: `delay: 250ms` + `tolerance: 5px` distingue scroll de drag en touch.
+    - **Swipe-to-open sidebar**: gesto swipe-right desde borde izquierdo (< 24px) abre el drawer; swipe-left lo cierra.
+    - **Materiales mobile-optimized**: `blur(12px)` en mobile vs `blur(20-32px)` en desktop para rendimiento.
+    - **Drawer accesible**: `aria-modal`, `role="dialog"`, `aria-label` en mobile sidebar.
 
 ### Changed
 

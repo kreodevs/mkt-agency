@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Menu as MenuIcon, Search } from 'lucide-react';
@@ -40,10 +40,25 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = useLocation();
     const hasSidebar = !!(sidebar || navigationGroups);
+    const touchStartX = useRef(0);
 
     useEffect(() => {
       setMobileMenuOpen(false);
     }, [location.pathname]);
+
+    /* Swipe-right from left edge to open sidebar on mobile */
+    const handleTouchStart = (e: React.TouchEvent) => {
+      if (e.touches[0].clientX < 24 && !mobileMenuOpen) {
+        touchStartX.current = e.touches[0].clientX;
+      }
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (!mobileMenuOpen || !hasSidebar) return;
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (dx < -60) {
+        setMobileMenuOpen(false);
+      }
+    };
 
     const sidebarNode =
       sidebar ??
@@ -63,7 +78,9 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex h-screen overflow-hidden bg-[var(--background)]', className)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={cn('flex h-[100dvh] overflow-hidden bg-[var(--background)]', className)}
       >
         {hasSidebar && (
           <div className="relative z-30 hidden h-full shrink-0 overflow-visible lg:block">
@@ -72,13 +89,13 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         )}
 
         {mobileMenuOpen && hasSidebar && (
-          <div className="fixed inset-0 z-[var(--z-modal)] flex lg:hidden">
+          <div className="fixed inset-0 z-[var(--z-modal)] flex lg:hidden" role="dialog" aria-modal="true" aria-label="Menú de navegación">
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
-              className="flex h-full w-sidebar max-w-[85vw] shrink-0 flex-col overflow-hidden shadow-xl"
+              className="flex h-full w-sidebar max-w-[85vw] shrink-0 flex-col overflow-hidden shadow-xl pb-[var(--safe-area-bottom)]"
             >
               {sidebarNode}
             </motion.div>
@@ -92,7 +109,7 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         )}
 
         <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="relative flex h-header shrink-0 items-center gap-3 border-b border-[var(--border)]/40 material-header scroll-edge-bottom px-4 md:px-6 lg:px-8">
+          <header className="relative flex h-header shrink-0 items-center gap-3 border-b border-[var(--border)]/40 material-header scroll-edge-bottom px-4 md:px-6 lg:px-8 pb-[var(--safe-area-bottom)]">
             <div className="flex shrink-0 items-center gap-[var(--spacing-md)]">
               {hasSidebar && (
                 <button
