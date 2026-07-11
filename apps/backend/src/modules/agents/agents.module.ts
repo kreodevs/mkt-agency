@@ -55,6 +55,7 @@ import { CompetitorIntelService } from './competitor-intel.service';
 import { CompetitorIntelController } from './competitor-intel.controller';
 import { ImageGenerationController } from './image-generation.controller';
 import { ImageGenerationService } from './image-generation.service';
+import { VideoGenerationService } from './video-generation.service';
 import { ImageBrandingService } from './image-branding.service';
 import { WebsiteAnalyzerService } from './website-analyzer.service';
 
@@ -109,6 +110,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,
     ImageGenerationService,
+    VideoGenerationService,
     ImageBrandingService,
     {
       provide: WEBSITE_ANALYZER_ADAPTER,

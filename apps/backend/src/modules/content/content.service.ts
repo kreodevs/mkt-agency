@@ -152,18 +152,22 @@ export class ContentService {
     id: string,
     dto: UpdateContentDto,
   ): Promise<ContentResponseDto> {
+    this.validateUpdateDto(dto);
+
+    if (this.isMetadataOnlyUpdate(dto)) {
+      return this.updateMetadataOnly(tenantId, id, dto);
+    }
+
+    return this.updateWithVersion(tenantId, authorId, id, dto);
+  }
+
+  private validateUpdateDto(dto: UpdateContentDto): void {
     const hasVersionFields =
-      dto.title !== undefined ||
-      dto.body !== undefined ||
-      dto.assets !== undefined ||
-      dto.reason !== undefined ||
-      dto.changeSummary !== undefined;
+      dto.title !== undefined || dto.body !== undefined ||
+      dto.assets !== undefined || dto.reason !== undefined || dto.changeSummary !== undefined;
     const hasMetadataOnly =
-      (dto.scheduledDate !== undefined ||
-        dto.visualFormat !== undefined ||
-        dto.platform !== undefined ||
-        dto.visualPrompt !== undefined) &&
-      !hasVersionFields;
+      (dto.scheduledDate !== undefined || dto.visualFormat !== undefined ||
+        dto.platform !== undefined || dto.visualPrompt !== undefined) && !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
       throw new BadRequestException({
@@ -171,32 +175,38 @@ export class ContentService {
         code: 'VALIDATION_ERROR',
       });
     }
+  }
 
-    if (hasMetadataOnly) {
-      const content = await this.findOwnedContent(tenantId, id);
-      if (dto.scheduledDate !== undefined) {
-        content.scheduledDate = dto.scheduledDate ?? null;
-      }
-      if (dto.visualFormat !== undefined) {
-        content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
-      }
-      if (dto.platform !== undefined) {
-        content.platform = dto.platform ?? null;
-      }
-      if (dto.visualPrompt !== undefined) {
-        content.visualPrompt = dto.visualPrompt ?? null;
-      }
-      const saved = await this.contents.save(content);
-      return this.toContentResponse(saved);
-    }
+  private isMetadataOnlyUpdate(dto: UpdateContentDto): boolean {
+    return (
+      dto.title === undefined && dto.body === undefined &&
+      dto.assets === undefined && dto.reason === undefined && dto.changeSummary === undefined
+    );
+  }
 
+  private async updateMetadataOnly(
+    tenantId: string, id: string, dto: UpdateContentDto,
+  ): Promise<ContentResponseDto> {
+    const content = await this.findOwnedContent(tenantId, id);
+
+    if (dto.scheduledDate !== undefined) content.scheduledDate = dto.scheduledDate ?? null;
+    if (dto.visualFormat !== undefined) content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
+    if (dto.platform !== undefined) content.platform = dto.platform ?? null;
+    if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
+
+    const saved = await this.contents.save(content);
+    return this.toContentResponse(saved);
+  }
+
+  private async updateWithVersion(
+    tenantId: string, authorId: string, id: string, dto: UpdateContentDto,
+  ): Promise<ContentResponseDto> {
     return this.dataSource.transaction(async (manager) => {
       const contentRepo = manager.getRepository(ContentEntity);
       const versionRepo = manager.getRepository(ContentVersionEntity);
 
       const content = await this.findOwnedContent(tenantId, id);
       const current = await this.getCurrentVersion(content);
-
       const wasApproved = content.status === 'approved';
       const nextNumber = await this.nextVersionNumber(versionRepo, content.id);
 
@@ -209,9 +219,7 @@ export class ContentService {
           body: dto.body ?? current.body,
           assets: dto.assets ?? current.assets,
           reason: dto.reason ?? null,
-          changeSummary:
-            dto.changeSummary ??
-            (wasApproved ? 'Nueva versión tras contenido aprobado' : 'Actualización de contenido'),
+          changeSummary: dto.changeSummary ?? (wasApproved ? 'Nueva versión tras contenido aprobado' : 'Actualización de contenido'),
           signatureHash: null,
           signedAt: null,
         }),
@@ -219,28 +227,10 @@ export class ContentService {
 
       content.currentVersionId = version.id;
       content.title = version.title;
-      if (wasApproved) {
-        content.status = 'in_changes';
-      } else if (content.status === 'rejected') {
-        content.status = 'draft';
-      }
+      if (wasApproved) content.status = 'in_changes';
+      else if (content.status === 'rejected') content.status = 'draft';
 
-      if (dto.scheduledDate !== undefined) {
-        content.scheduledDate = dto.scheduledDate ?? null;
-      }
-
-      if (dto.visualFormat !== undefined) {
-        content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
-      }
-
-      if (dto.platform !== undefined) {
-        content.platform = dto.platform ?? null;
-      }
-
-      if (dto.visualPrompt !== undefined) {
-        content.visualPrompt = dto.visualPrompt ?? null;
-      }
-
+      this.applyMetadataFields(content, dto);
       await contentRepo.save(content);
 
       await this.eventSourcing.append(manager, {
@@ -251,6 +241,13 @@ export class ContentService {
 
       return this.toContentResponse(content, version);
     });
+  }
+
+  private applyMetadataFields(content: ContentEntity, dto: UpdateContentDto): void {
+    if (dto.scheduledDate !== undefined) content.scheduledDate = dto.scheduledDate ?? null;
+    if (dto.visualFormat !== undefined) content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
+    if (dto.platform !== undefined) content.platform = dto.platform ?? null;
+    if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

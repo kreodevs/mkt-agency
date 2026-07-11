@@ -30,6 +30,7 @@ import { CmCharacterService } from './cm-character.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
 import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
+import { GenerationContextFacade } from './generation-context.facade';
 import { TonePresetController } from './tone-preset.controller';
 
 @Module({
@@ -61,6 +62,7 @@ import { TonePresetController } from './tone-preset.controller';
   ],
   providers: [
     CommunityManagerService,
+    GenerationContextFacade,
     ContentVisualComposerService,
     CmCharacterService,
     TalkingHeadPostComposerService,

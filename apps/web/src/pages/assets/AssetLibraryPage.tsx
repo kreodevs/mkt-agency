@@ -1,89 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Eye, FolderTree, Grid3X3, LayoutList, Trash2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetBulkSelectionBar } from '@/components/assets/AssetBulkSelectionBar';
 import { AssetFolderTree, type FolderSelection } from '@/components/assets/AssetFolderTree';
-import { AssetGridCard } from '@/components/assets/AssetGridCard';
 import {
   ASSETS_PAGE_SIZE,
   AssetLibraryPagination,
 } from '@/components/assets/AssetLibraryPagination';
 import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
-import { AssetUploader } from '@/components/assets/AssetUploader';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
-import { Button } from '@/components/atoms/Button';
-import { Checkbox } from '@/components/atoms/Checkbox';
-import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Dialog } from '@/components/molecules/Dialog';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
-import { ApiError } from '@/services/api';
-import {
-  createAssetFolder,
-  deleteAsset,
-  deleteAssetFolder,
-  duplicateAsset,
-  getAssetDownloadUrl,
-  listAssetFolders,
-  listAssets,
-  updateAsset,
-  updateAssetFolder,
-} from '@/services/assets';
-import { listFoldersByPath, resolveFolderPath } from '@/lib/asset-folder-tree';
-import { ASSET_TYPE_LABELS, type Asset, type AssetFolder, type AssetType } from '@/types/assets';
+import { listAssetFolders, listAssets, getAssetDownloadUrl } from '@/services/assets';
+import { resolveFolderPath } from '@/lib/asset-folder-tree';
+import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
+import { AssetSection, isAssetLocked } from './AssetSection';
+import { AssetFilterBar } from './AssetFilterBar';
+import { useAssetLibraryMutations } from './useAssetLibraryMutations';
 
 type ViewMode = 'grid' | 'table';
-
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function isAssetLocked(asset: Asset) {
-  return asset.isInUse || asset.referenceCount > 0;
-}
-
-function toggleSelection(ids: Set<string>, assetId: string, checked: boolean): Set<string> {
-  const next = new Set(ids);
-  if (checked) {
-    next.add(assetId);
-  } else {
-    next.delete(assetId);
-  }
-  return next;
-}
-
-function toggleSectionSelection(ids: Set<string>, assets: Asset[], checked: boolean): Set<string> {
-  const next = new Set(ids);
-  for (const asset of assets) {
-    if (checked) {
-      next.add(asset.id);
-    } else {
-      next.delete(asset.id);
-    }
-  }
-  return next;
-}
-
-function sectionSelectionState(ids: Set<string>, assets: Asset[]) {
-  if (assets.length === 0) {
-    return false;
-  }
-  const selectedCount = assets.filter((asset) => ids.has(asset.id)).length;
-  if (selectedCount === 0) {
-    return false;
-  }
-  if (selectedCount === assets.length) {
-    return true;
-  }
-  return 'indeterminate' as const;
 }
 
 function folderQueryParams(folderFilter: FolderSelection) {
@@ -94,95 +38,6 @@ function folderQueryParams(folderFilter: FolderSelection) {
     return { folderId: folderFilter };
   }
   return {};
-}
-
-type AssetSectionProps = {
-  title: string;
-  subtitle: string;
-  assets: Asset[];
-  selectedIds: Set<string>;
-  onSelectionChange: (next: Set<string>) => void;
-  onPreview: (asset: Asset) => void;
-  onDownload: (asset: Asset) => void;
-  onDuplicate: (assetId: string) => void;
-  onDelete: (assetId: string) => void;
-  folders: AssetFolder[];
-  moveTargetFolder: string;
-  onMoveTargetChange: (value: string) => void;
-  onMoveSelected: () => void;
-  onBulkDelete: () => void;
-  movePending?: boolean;
-  deletePending?: boolean;
-};
-
-function AssetSection({
-  title,
-  subtitle,
-  assets,
-  selectedIds,
-  onSelectionChange,
-  onPreview,
-  onDownload,
-  onDuplicate,
-  onDelete,
-  folders,
-  moveTargetFolder,
-  onMoveTargetChange,
-  onMoveSelected,
-  onBulkDelete,
-  movePending,
-  deletePending,
-}: AssetSectionProps) {
-  const sectionState = sectionSelectionState(selectedIds, assets);
-  const sectionSelected = assets.filter((asset) => selectedIds.has(asset.id));
-  const sectionDeletable = sectionSelected.filter((asset) => !isAssetLocked(asset));
-  const sectionLocked = sectionSelected.length - sectionDeletable.length;
-
-  return (
-    <Card title={title} subtitle={subtitle}>
-      <div className="mb-3 space-y-3">
-        <Checkbox
-          checked={sectionState}
-          onChange={(checked) => onSelectionChange(toggleSectionSelection(selectedIds, assets, checked))}
-          label="Seleccionar todos"
-        />
-        {sectionSelected.length > 0 && (
-          <AssetBulkSelectionBar
-            selectedCount={sectionSelected.length}
-            deletableCount={sectionDeletable.length}
-            lockedCount={sectionLocked}
-            folders={folders}
-            moveTargetFolder={moveTargetFolder}
-            onMoveTargetChange={onMoveTargetChange}
-            onMove={onMoveSelected}
-            onDelete={onBulkDelete}
-            onClear={() =>
-              onSelectionChange(toggleSectionSelection(selectedIds, assets, false))
-            }
-            movePending={movePending}
-            deletePending={deletePending}
-          />
-        )}
-      </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {assets.map((asset) => (
-          <AssetGridCard
-            key={asset.id}
-            asset={asset}
-            selected={selectedIds.has(asset.id)}
-            locked={isAssetLocked(asset)}
-            onSelectToggle={(checked) =>
-              onSelectionChange(toggleSelection(selectedIds, asset.id, checked))
-            }
-            onOpenPreview={() => onPreview(asset)}
-            onDownload={() => onDownload(asset)}
-            onDuplicate={() => onDuplicate(asset.id)}
-            onDelete={() => onDelete(asset.id)}
-          />
-        ))}
-      </div>
-    </Card>
-  );
 }
 
 export default function AssetLibraryPage() {
@@ -201,6 +56,32 @@ export default function AssetLibraryPage() {
     setPage(1);
   }, [folderFilter, typeFilter]);
 
+  const invalidateAssets = () => {
+    void queryClient.invalidateQueries({ queryKey: ['assets'] });
+  };
+
+  const invalidateFolders = () => {
+    void queryClient.invalidateQueries({ queryKey: ['asset-folders'] });
+  };
+
+  const handleClearSelection = () => setSelectedIds(new Set());
+
+  const {
+    createFolderMutation,
+    renameFolderMutation,
+    deleteFolderMutation,
+    deleteMutation,
+    bulkDeleteMutation,
+    moveMutation,
+    duplicateMutation,
+    folderMutationsBusy,
+  } = useAssetLibraryMutations({
+    onInvalidateAssets: invalidateAssets,
+    onInvalidateFolders: invalidateFolders,
+    onSetFolderFilter: setFolderFilter,
+    onClearSelection: handleClearSelection,
+  });
+
   const foldersQuery = useQuery({
     queryKey: ['asset-folders'],
     queryFn: listAssetFolders,
@@ -217,123 +98,7 @@ export default function AssetLibraryPage() {
       }),
   });
 
-  const invalidateAssets = () => {
-    void queryClient.invalidateQueries({ queryKey: ['assets'] });
-  };
-
-  const invalidateFolders = () => {
-    void queryClient.invalidateQueries({ queryKey: ['asset-folders'] });
-  };
-
-  const createFolderMutation = useMutation({
-    mutationFn: ({ name, parentId }: { name: string; parentId?: string }) =>
-      createAssetFolder(name, parentId),
-    onSuccess: (folder) => {
-      invalidateFolders();
-      setFolderFilter(folder.id);
-      toast.success('Carpeta creada');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo crear la carpeta');
-    },
-  });
-
-  const renameFolderMutation = useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) => updateAssetFolder(id, { name }),
-    onSuccess: () => {
-      invalidateFolders();
-      toast.message('Carpeta renombrada');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo renombrar');
-    },
-  });
-
-  const deleteFolderMutation = useMutation({
-    mutationFn: deleteAssetFolder,
-    onSuccess: () => {
-      invalidateFolders();
-      setFolderFilter('');
-      toast.message('Carpeta eliminada');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'La carpeta debe estar vacía');
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteAsset,
-    onSuccess: () => {
-      invalidateAssets();
-      toast.message('Activo eliminado');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo eliminar');
-    },
-  });
-
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteAsset(id)));
-      const failed = results.filter((result) => result.status === 'rejected').length;
-      if (failed > 0) {
-        throw new Error(`No se pudieron eliminar ${failed} archivo(s)`);
-      }
-    },
-    onSuccess: (_data, ids) => {
-      invalidateAssets();
-      setSelectedIds((current) => {
-        const next = new Set(current);
-        ids.forEach((id) => next.delete(id));
-        return next;
-      });
-      toast.message(ids.length === 1 ? 'Activo eliminado' : `${ids.length} activos eliminados`);
-    },
-    onError: (error) => {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : 'No se pudo eliminar la selección';
-      toast.error(message);
-      invalidateAssets();
-    },
-  });
-
-  const moveMutation = useMutation({
-    mutationFn: async ({ ids, folderId }: { ids: string[]; folderId: string | null }) => {
-      await Promise.all(ids.map((id) => updateAsset(id, { folderId })));
-    },
-    onSuccess: (_data, { ids }) => {
-      invalidateAssets();
-      setSelectedIds(new Set());
-      setMoveTargetFolder('');
-      toast.success(ids.length === 1 ? 'Activo movido' : `${ids.length} activos movidos`);
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo mover');
-    },
-  });
-
-  const duplicateMutation = useMutation({
-    mutationFn: duplicateAsset,
-    onSuccess: () => {
-      invalidateAssets();
-      toast.success('Activo duplicado');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo duplicar');
-    },
-  });
-
-  const folderMutationsBusy =
-    createFolderMutation.isPending ||
-    renameFolderMutation.isPending ||
-    deleteFolderMutation.isPending;
-
   const folders = foldersQuery.data?.items ?? [];
-  const folderOptions = useMemo(() => listFoldersByPath(folders), [folders]);
   const items = assetsQuery.data?.items ?? [];
   const totalAssets = assetsQuery.data?.total ?? 0;
   const imagesOnly = items.filter((a) => a.type === 'image');
@@ -363,9 +128,7 @@ export default function AssetLibraryPage() {
   };
 
   const handleMoveSelected = () => {
-    if (!selectedIds.size) {
-      return;
-    }
+    if (!selectedIds.size) return;
     const folderId = moveTargetFolder === '__root__' ? null : moveTargetFolder || null;
     moveMutation.mutate({ ids: [...selectedIds], folderId });
   };
@@ -376,6 +139,11 @@ export default function AssetLibraryPage() {
       return;
     }
     deleteFolderMutation.mutate(folderId);
+  };
+
+  const handleFolderSelect = (folderId: FolderSelection) => {
+    setFolderFilter(folderId);
+    setFolderOrganizerOpen(false);
   };
 
   const columns: DataTableColumn[] = useMemo(
@@ -406,17 +174,10 @@ export default function AssetLibraryPage() {
         header: 'Estado',
         body: (row) => {
           const asset = row as Asset;
-          if (isAssetLocked(asset)) {
-            return (
-              <StatusPill status="warning" size="sm">
-                En uso
-              </StatusPill>
-            );
-          }
-          return (
-            <StatusPill status="success" size="sm">
-              Libre
-            </StatusPill>
+          return isAssetLocked(asset) ? (
+            <StatusPill status="warning" size="sm">En uso</StatusPill>
+          ) : (
+            <StatusPill status="success" size="sm">Libre</StatusPill>
           );
         },
       },
@@ -429,14 +190,10 @@ export default function AssetLibraryPage() {
           return (
             <div className={ACTION_BUTTON_GROUP_CLASS}>
               <IconButton type="button" label="Ver" onClick={() => setPreviewAsset(asset)}>
-                <Eye />
+                <EyeIcon />
               </IconButton>
-              <IconButton
-                type="button"
-                label="Descargar"
-                onClick={() => void handleDownload(asset)}
-              >
-                <Download />
+              <IconButton type="button" label="Descargar" onClick={() => void handleDownload(asset)}>
+                <DownloadIcon />
               </IconButton>
               <IconButton
                 type="button"
@@ -444,7 +201,7 @@ export default function AssetLibraryPage() {
                 loading={duplicateMutation.isPending}
                 onClick={() => duplicateMutation.mutate(asset.id)}
               >
-                <Copy />
+                <CopyIcon />
               </IconButton>
               <IconButton
                 type="button"
@@ -454,7 +211,7 @@ export default function AssetLibraryPage() {
                 loading={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate(asset.id)}
               >
-                <Trash2 />
+                <TrashIcon />
               </IconButton>
             </div>
           );
@@ -464,13 +221,7 @@ export default function AssetLibraryPage() {
     [deleteMutation.isPending, duplicateMutation.isPending, folders],
   );
 
-  const uploadFolderId =
-    folderFilter && folderFilter !== '__unfiled__' ? folderFilter : undefined;
-
-  const handleFolderSelect = (folderId: FolderSelection) => {
-    setFolderFilter(folderId);
-    setFolderOrganizerOpen(false);
-  };
+  const uploadFolderId = folderFilter && folderFilter !== '__unfiled__' ? folderFilter : undefined;
 
   const bulkSelectionProps = {
     folders,
@@ -478,6 +229,22 @@ export default function AssetLibraryPage() {
     onMoveTargetChange: setMoveTargetFolder,
     movePending: moveMutation.isPending,
     deletePending: bulkDeleteMutation.isPending,
+  };
+
+  const handleSectionMove = (sectionAssets: Asset[]) => {
+    const ids = sectionAssets
+      .filter((asset) => selectedIds.has(asset.id))
+      .map((asset) => asset.id);
+    if (!ids.length || !moveTargetFolder) return;
+    const folderId = moveTargetFolder === '__root__' ? null : moveTargetFolder;
+    moveMutation.mutate({ ids, folderId });
+  };
+
+  const handleSectionBulkDelete = (sectionAssets: Asset[]) => {
+    const ids = sectionAssets
+      .filter((asset) => selectedIds.has(asset.id) && !isAssetLocked(asset))
+      .map((asset) => asset.id);
+    if (ids.length) bulkDeleteMutation.mutate(ids);
   };
 
   return (
@@ -488,198 +255,92 @@ export default function AssetLibraryPage() {
       />
 
       <div className={`space-y-6 ${selectedIds.size > 0 ? 'pb-28' : ''}`}>
-        <div className="sticky top-0 z-20 -mx-[var(--spacing-md)] border-b border-[var(--border)] bg-[var(--background)]/95 px-[var(--spacing-md)] py-3 backdrop-blur-sm lg:-mx-0 lg:rounded-[var(--radius-lg)] lg:border lg:px-0 lg:py-0 lg:backdrop-blur-none">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <Card className="border-0 shadow-none lg:border lg:shadow-sm">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="flex min-w-[200px] flex-1 flex-col gap-1">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Carpeta</label>
-                  <div className="flex gap-2">
-                    <select
-                      className={`${filterSelectClass} min-w-0 flex-1`}
-                      value={folderFilter}
-                      onChange={(e) => setFolderFilter(e.target.value as FolderSelection)}
-                      aria-label="Carpeta activa"
-                    >
-                      <option value="">Todas las carpetas</option>
-                      <option value="__unfiled__">Sin carpeta</option>
-                      {folderOptions.map((folder) => (
-                        <option key={folder.id} value={folder.id}>
-                          {folder.path}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 gap-1.5"
-                      onClick={() => setFolderOrganizerOpen(true)}
-                    >
-                      <FolderTree className="h-4 w-4" />
-                      Organizar
-                    </Button>
-                  </div>
-                </div>
+        <AssetFilterBar
+          folderFilter={folderFilter}
+          onFolderFilterChange={setFolderFilter}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          folders={folders}
+          uploadFolderId={uploadFolderId}
+          onUploaded={invalidateAssets}
+          onOrganizeOpen={() => setFolderOrganizerOpen(true)}
+        />
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Tipo</label>
-                  <select
-                    className={filterSelectClass}
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as '' | AssetType)}
-                  >
-                    <option value="">Todos</option>
-                    {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        {viewMode === 'grid' ? (
+          assetsQuery.isLoading ? (
+            <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
+          ) : items.length === 0 ? (
+            <div className="py-16 text-center text-[var(--foreground-muted)]">
+              No hay activos en {currentFolderLabel.toLowerCase()}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {imagesOnly.length > 0 && (
+                <AssetSection
+                  title="Imágenes"
+                  subtitle={`${imagesOnly.length} en esta página${totalAssets > ASSETS_PAGE_SIZE ? ` · ${totalAssets} en total` : ''}`}
+                  assets={imagesOnly}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onPreview={setPreviewAsset}
+                  onDownload={(asset) => void handleDownload(asset)}
+                  onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                  onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                  {...bulkSelectionProps}
+                  onMoveSelected={() => handleSectionMove(imagesOnly)}
+                  onBulkDelete={() => handleSectionBulkDelete(imagesOnly)}
+                />
+              )}
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className={`flex h-10 items-center gap-1 rounded-l-[var(--radius)] border px-3 text-sm transition-colors ${
-                        viewMode === 'grid'
-                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
-                          : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
-                      }`}
-                      onClick={() => setViewMode('grid')}
-                    >
-                      <Grid3X3 className="h-4 w-4" />
-                      Grid
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex h-10 items-center gap-1 rounded-r-[var(--radius)] border px-3 text-sm transition-colors ${
-                        viewMode === 'table'
-                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
-                          : 'border-[var(--border)] bg-[var(--input)] text-[var(--foreground-muted)]'
-                      }`}
-                      onClick={() => setViewMode('table')}
-                    >
-                      <LayoutList className="h-4 w-4" />
-                      Tabla
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="border-0 shadow-none lg:border lg:shadow-sm">
-              <AssetUploader
-                folderId={uploadFolderId}
-                onUploaded={() => {
-                  invalidateAssets();
-                }}
+              <AssetLibraryPagination
+                page={page}
+                limit={ASSETS_PAGE_SIZE}
+                total={totalAssets}
+                onPageChange={setPage}
               />
-            </Card>
-          </div>
-        </div>
 
-          {viewMode === 'grid' ? (
-            assetsQuery.isLoading ? (
-              <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
-            ) : items.length === 0 ? (
-              <div className="py-16 text-center text-[var(--foreground-muted)]">
-                No hay activos en {currentFolderLabel.toLowerCase()}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {imagesOnly.length > 0 && (
-                  <AssetSection
-                    title="Imágenes"
-                    subtitle={`${imagesOnly.length} en esta página${totalAssets > ASSETS_PAGE_SIZE ? ` · ${totalAssets} en total` : ''}`}
-                    assets={imagesOnly}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    onPreview={setPreviewAsset}
-                    onDownload={(asset) => void handleDownload(asset)}
-                    onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
-                    onDelete={(assetId) => deleteMutation.mutate(assetId)}
-                    {...bulkSelectionProps}
-                    onMoveSelected={() => {
-                      const ids = imagesOnly
-                        .filter((asset) => selectedIds.has(asset.id))
-                        .map((asset) => asset.id);
-                      if (!ids.length || !moveTargetFolder) return;
-                      const folderId =
-                        moveTargetFolder === '__root__' ? null : moveTargetFolder;
-                      moveMutation.mutate({ ids, folderId });
-                    }}
-                    onBulkDelete={() => {
-                      const ids = imagesOnly
-                        .filter((asset) => selectedIds.has(asset.id) && !isAssetLocked(asset))
-                        .map((asset) => asset.id);
-                      if (ids.length) bulkDeleteMutation.mutate(ids);
-                    }}
-                  />
-                )}
-
+              {otherAssets.length > 0 && (
+                <AssetSection
+                  title="Otros activos"
+                  subtitle="Documentos, videos, audio"
+                  assets={otherAssets}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onPreview={setPreviewAsset}
+                  onDownload={(asset) => void handleDownload(asset)}
+                  onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
+                  onDelete={(assetId) => deleteMutation.mutate(assetId)}
+                  {...bulkSelectionProps}
+                  onMoveSelected={() => handleSectionMove(otherAssets)}
+                  onBulkDelete={() => handleSectionBulkDelete(otherAssets)}
+                />
+              )}
+            </div>
+          )
+        ) : (
+          <Card>
+            <DataTable
+              data={items}
+              columns={columns}
+              loading={assetsQuery.isLoading}
+              emptyMessage="No hay activos en la librería"
+              paginator={false}
+              globalFilterEnabled={false}
+            />
+            {!assetsQuery.isLoading && totalAssets > 0 && (
+              <div className="mt-4">
                 <AssetLibraryPagination
                   page={page}
                   limit={ASSETS_PAGE_SIZE}
                   total={totalAssets}
                   onPageChange={setPage}
                 />
-
-                {otherAssets.length > 0 && (
-                  <AssetSection
-                    title="Otros activos"
-                    subtitle="Documentos, videos, audio"
-                    assets={otherAssets}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    onPreview={setPreviewAsset}
-                    onDownload={(asset) => void handleDownload(asset)}
-                    onDuplicate={(assetId) => duplicateMutation.mutate(assetId)}
-                    onDelete={(assetId) => deleteMutation.mutate(assetId)}
-                    {...bulkSelectionProps}
-                    onMoveSelected={() => {
-                      const ids = otherAssets
-                        .filter((asset) => selectedIds.has(asset.id))
-                        .map((asset) => asset.id);
-                      if (!ids.length || !moveTargetFolder) return;
-                      const folderId =
-                        moveTargetFolder === '__root__' ? null : moveTargetFolder;
-                      moveMutation.mutate({ ids, folderId });
-                    }}
-                    onBulkDelete={() => {
-                      const ids = otherAssets
-                        .filter((asset) => selectedIds.has(asset.id) && !isAssetLocked(asset))
-                        .map((asset) => asset.id);
-                      if (ids.length) bulkDeleteMutation.mutate(ids);
-                    }}
-                  />
-                )}
               </div>
-            )
-          ) : (
-            <Card>
-              <DataTable
-                data={items}
-                columns={columns}
-                loading={assetsQuery.isLoading}
-                emptyMessage="No hay activos en la librería"
-                paginator={false}
-                globalFilterEnabled={false}
-              />
-              {!assetsQuery.isLoading && totalAssets > 0 && (
-                <div className="mt-4">
-                  <AssetLibraryPagination
-                    page={page}
-                    limit={ASSETS_PAGE_SIZE}
-                    total={totalAssets}
-                    onPageChange={setPage}
-                  />
-                </div>
-              )}
-            </Card>
-          )}
+            )}
+          </Card>
+        )}
       </div>
 
       <AssetBulkSelectionBar
@@ -721,5 +382,42 @@ export default function AssetLibraryPage() {
         onDownload={(asset) => void handleDownload(asset)}
       />
     </DashboardShell>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
   );
 }

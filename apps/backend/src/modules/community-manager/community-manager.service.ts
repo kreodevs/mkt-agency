@@ -9,29 +9,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
-import { CompanyProfileModule } from '../company-profile/company-profile.module';
-import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
-import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
-import {
-  ProfileSectionSyncService,
-  ResolvedProfileValues,
-} from '../company-profile/services/profile-section-sync.service';
-import { ContentService } from '../content/content.service';
-import { CompetitorIntelService } from '../agents/competitor-intel.service';
-import { CompetitorService } from '../competitors/competitor.service';
-import { ImageGenerationService } from '../agents/image-generation.service';
-import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
-import {
-  mergeBrandAndProductBrief,
-  toProductContext,
-} from '../product/domain/product-context.util';
-import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
-import { ProductService } from '../product/product.service';
-import { ProductMediaKitService } from '../product/product-media-kit.service';
-import { AssetFolderService } from '../assets/asset-folder.service';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
+import { ContentService } from '../content/content.service';
+import { ImageGenerationService } from '../agents/image-generation.service';
 import { ContentVisualComposerService } from './content-visual-composer.service';
-import { CmCharacterService } from './cm-character.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
 import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
 import {
@@ -59,8 +40,11 @@ import {
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
-import { buildCompetitorIntelBriefForSocialCopy } from './domain/competitor-intel-brief.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
+import {
+  GenerationContextFacade,
+  type GenerationContext,
+} from './generation-context.facade';
 
 @Injectable()
 export class CommunityManagerService {
@@ -71,14 +55,6 @@ export class CommunityManagerService {
     private readonly batches: Repository<CommunityManagerBatchEntity>,
     @InjectRepository(TenantEntity)
     private readonly tenants: Repository<TenantEntity>,
-    @InjectRepository(CompanyProfileEntity)
-    private readonly profiles: Repository<CompanyProfileEntity>,
-    @InjectRepository(CompanyProfileSectionEntity)
-    private readonly profileSections: Repository<CompanyProfileSectionEntity>,
-    @InjectRepository(ProductEntity)
-    private readonly productEntities: Repository<ProductEntity>,
-    @InjectRepository(CampaignEntity)
-    private readonly campaigns: Repository<CampaignEntity>,
     @InjectRepository(ContentEntity)
     private readonly contents: Repository<ContentEntity>,
     @Inject(SOCIAL_COPY_ADAPTER)
@@ -86,15 +62,9 @@ export class CommunityManagerService {
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
     private readonly imageGeneration: ImageGenerationService,
-    private readonly productService: ProductService,
-    private readonly profileSectionSync: ProfileSectionSyncService,
-    private readonly competitorIntel: CompetitorIntelService,
-    private readonly competitorService: CompetitorService,
-    private readonly mediaKitService: ProductMediaKitService,
-    private readonly assetFolderService: AssetFolderService,
     private readonly visualComposer: ContentVisualComposerService,
-    private readonly cmCharacter: CmCharacterService,
     private readonly talkingHeadComposer: TalkingHeadPostComposerService,
+    private readonly contextFacade: GenerationContextFacade,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -135,18 +105,8 @@ export class CommunityManagerService {
   }
 
   async getReadiness(tenantId: string): Promise<CommunityManagerReadinessResponse> {
-    const profile = await this.profiles.findOne({ where: { tenantId } });
-    const sections = profile
-      ? await this.profileSections.find({ where: { profileId: profile.id } })
-      : [];
-    const values = this.profileSectionSync.resolveProfileValues(profile, sections);
-    const primaryProduct = await this.productService.findPrimary(tenantId);
-    const productReady =
-      !!primaryProduct &&
-      Boolean(
-        (primaryProduct.description?.trim() || primaryProduct.valueProposition?.trim()) &&
-          primaryProduct.targetAudience?.trim(),
-      );
+    const ctx = await this.contextFacade.buildGenerationContext(tenantId, {});
+    const productReady = this.isProductReadyForCM(ctx.productContext);
 
     const items = [
       {
@@ -160,35 +120,35 @@ export class CommunityManagerService {
         key: 'companyName',
         label: 'Nombre de empresa',
         description: 'Identidad básica para contextualizar el copy.',
-        complete: !!values.companyName?.trim(),
+        complete: !!ctx.resolvedProfile?.companyName?.trim(),
         href: '/onboarding',
       },
       {
         key: 'industry',
         label: 'Industria / sector',
         description: 'Ayuda a elegir temas y referencias del mercado.',
-        complete: !!values.industry?.trim(),
+        complete: !!ctx.resolvedProfile?.industry?.trim(),
         href: '/onboarding',
       },
       {
         key: 'brandVoice',
         label: 'Voz de marca',
         description: 'Define estilo, registro y personalidad del contenido.',
-        complete: !!values.brandVoice?.trim(),
+        complete: !!ctx.resolvedProfile?.brandVoice?.trim(),
         href: '/onboarding',
       },
       {
         key: 'targetAudienceDesc',
         label: 'Audiencia objetivo',
         description: 'Permite adaptar mensajes y CTAs por segmento.',
-        complete: !!values.targetAudienceDesc?.trim(),
+        complete: !!ctx.resolvedProfile?.targetAudienceDesc?.trim(),
         href: '/onboarding',
       },
       {
         key: 'objectives',
         label: 'Objetivos de marketing',
         description: 'Orienta la estrategia detrás de cada publicación (recomendado).',
-        complete: values.objectives.length > 0,
+        complete: (ctx.resolvedProfile?.objectives?.length ?? 0) > 0,
         href: '/onboarding',
       },
     ];
@@ -208,71 +168,96 @@ export class CommunityManagerService {
     return normalized.length > 0 ? normalized : [...DEFAULT_CM_PLATFORMS];
   }
 
-  private buildBrandBrief(
-    values: ResolvedProfileValues | null,
-    productContext: ReturnType<typeof toProductContext> | null,
-  ): Record<string, unknown> | null {
-    return mergeBrandAndProductBrief(values, productContext);
+  private isProductReadyForCM(
+    product: GenerationContext['productContext'],
+  ): boolean {
+    if (!product) return false;
+    const hasDescription = !!(product.description?.trim() || product.valueProposition?.trim());
+    const hasAudience = !!product.targetAudience?.trim();
+    return hasDescription && hasAudience;
   }
 
-  private async resolveCompetitorIntelBrief(
+  private async savePostsAsContent(
     tenantId: string,
-  ): Promise<Record<string, unknown> | null> {
-    const [latestAnalysis, competitorList] = await Promise.all([
-      this.competitorIntel.getLatestCompletedAnalysis(tenantId),
-      this.competitorService.list(tenantId),
-    ]);
+    userId: string,
+    posts: SocialCopyPost[],
+    dto: GenerateSocialCopyDto,
+    effectiveProductId: string | undefined,
+    kit: GenerationContext['kit'],
+  ): Promise<{ publishedPosts: string[]; imagesAttached: number }> {
+    const publishedPosts: string[] = [];
+    let imagesAttached = 0;
+    const today = new Date();
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
+      try {
+        const content = await this.saveSinglePost(
+          tenantId, userId, post, dto, effectiveProductId, today, i,
+        );
+        post.contentId = content.id;
+        publishedPosts.push(content.id);
 
-    const trackedCompetitorNames = competitorList.items.map((item) => item.name);
-    const brief = buildCompetitorIntelBriefForSocialCopy({
-      analysisId: latestAnalysis?.id ?? 'none',
-      generatedAt: latestAnalysis?.updatedAt.toISOString() ?? new Date().toISOString(),
-      analysis: latestAnalysis?.analysis ?? null,
-      trackedCompetitorNames,
-    });
-
-    if (brief) {
-      this.logger.log(
-        `Competitor intel wired into CM: analysis=${latestAnalysis?.id ?? 'names-only'} competitors=${brief.competitors.length}`,
-      );
-    }
-
-    return brief as unknown as Record<string, unknown> | null;
-  }
-
-  private async resolveProductForGeneration(
-    tenantId: string,
-    productId?: string,
-    campaignId?: string,
-  ): Promise<ReturnType<typeof toProductContext> | null> {
-    if (productId) {
-      const product = await this.productService.findOwnedEntity(tenantId, productId);
-      return toProductContext(product);
-    }
-
-    if (campaignId) {
-      const campaign = await this.campaigns.findOne({ where: { id: campaignId, tenantId } });
-      if (campaign?.productId) {
-        const product = await this.productEntities.findOne({
-          where: { id: campaign.productId, tenantId },
-        });
-        if (product) {
-          return toProductContext(product);
-        }
+        if (dto.attachImages === false) continue;
+        const attached = await this.attachVisualForPost(
+          tenantId, userId, content.id, post, effectiveProductId, kit, i,
+        );
+        if (attached) imagesAttached += 1;
+      } catch (err) {
+        this.logger.warn(`Failed to save post "${post.title}" as content: ${err}`);
       }
     }
-
-    const primary = await this.productService.findPrimary(tenantId);
-    return primary ? toProductContext(primary) : null;
+    return { publishedPosts, imagesAttached };
   }
 
-  private async loadResolvedProfile(tenantId: string): Promise<ResolvedProfileValues | null> {
-    const profile = await this.profiles.findOne({ where: { tenantId } });
-    if (!profile) {
-      return null;
+  private async saveSinglePost(
+    tenantId: string,
+    userId: string,
+    post: SocialCopyPost,
+    dto: GenerateSocialCopyDto,
+    effectiveProductId: string | undefined,
+    today: Date,
+    index: number,
+  ) {
+    const contentDto = new CreateContentDto();
+    contentDto.title = post.title;
+    contentDto.type = 'social';
+    contentDto.body = this.formatPostBody(post);
+    contentDto.campaignId = dto.campaignId;
+    contentDto.productId = effectiveProductId;
+    const scheduleDate = new Date(today);
+    scheduleDate.setDate(scheduleDate.getDate() + index + 1);
+    contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
+    contentDto.platform = post.platform;
+    contentDto.visualFormat = post.visualFormat;
+    contentDto.visualPrompt = sanitizeVisualPromptForArt(post.visualDescription, post.body) || null;
+    return this.contentService.create(tenantId, userId, contentDto);
+  }
+
+  private handleGenerationError(error: unknown, batch: CommunityManagerBatchEntity): never {
+    const message = this.extractErrorMessage(error);
+
+    this.logger.error(`Social copy generation failed: ${message}`);
+    batch.errorMessage = message;
+    this.batches.save(batch);
+
+    if (error instanceof BadRequestException) {
+      throw error;
     }
-    const sections = await this.profileSections.find({ where: { profileId: profile.id } });
-    return this.profileSectionSync.resolveProfileValues(profile, sections);
+
+    throw new BadRequestException({
+      error: `No se pudo generar copy: ${message}. Revisa Ajustes → Proveedores LLM.`,
+      code: 'CM_GENERATION_FAILED',
+    });
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof BadRequestException) {
+      return (error.getResponse() as { error?: string })?.error ?? error.message;
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Generation failed';
   }
 
   async list(tenantId: string): Promise<SocialCopyBatchResponse[]> {
@@ -289,12 +274,62 @@ export class CommunityManagerService {
     userId: string,
     dto: GenerateSocialCopyDto,
   ): Promise<GenerateResponse> {
-    if (!dto.platforms?.length) {
+    this.validatePlatforms(dto.platforms);
+    const batch = await this.createBatch(tenantId, dto);
+
+    try {
+      const ctx = await this.contextFacade.buildGenerationContext(tenantId, dto);
+      const result = await this.runAdapterGeneration(tenantId, userId, dto, ctx);
+      const { publishedPosts, imagesAttached } = await this.savePostsAsContent(
+        tenantId, userId, result.posts, dto, ctx.effectiveProductId, ctx.kit,
+      );
+      return await this.finalizeGenerationBatch(batch, result, publishedPosts, imagesAttached, dto, tenantId);
+    } catch (error) {
+      return this.handleGenerationError(error, batch);
+    }
+  }
+
+  private validatePlatforms(platforms?: string[]): void {
+    if (!platforms?.length) {
       throw new BadRequestException({ error: 'At least one platform is required', code: 'VALIDATION_ERROR' });
     }
+  }
 
-    // Create batch record
-    const batch = await this.batches.save(
+  private async runAdapterGeneration(
+    tenantId: string,
+    userId: string,
+    dto: GenerateSocialCopyDto,
+    ctx: GenerationContext,
+  ) {
+    this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
+    return runWithLlmUsageContext({ tenantId, userId }, () =>
+      this.adapter.generate({
+        tenantId,
+        platforms: dto.platforms,
+        count: dto.count,
+        campaignId: dto.campaignId,
+        productId: ctx.effectiveProductId,
+        tone: dto.tone,
+        topics: dto.topics,
+        brandBrief: ctx.brandBrief,
+        productContext: ctx.productContext as unknown as Record<string, unknown>,
+        focusProductName: ctx.productContext?.name ?? null,
+        competitorIntelBrief: ctx.competitorIntelBrief,
+        cmCharacterReady: ctx.cmCharacterReady,
+        cmCharacters: ctx.cmCharacters.length > 0 ? ctx.cmCharacters : undefined,
+        mediaKit: ctx.mediaKitContext,
+        libraryFolders: ctx.libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
+          path, device, imageCount, videoCount,
+        })),
+      }),
+    );
+  }
+
+  private async createBatch(
+    tenantId: string,
+    dto: GenerateSocialCopyDto,
+  ): Promise<CommunityManagerBatchEntity> {
+    return this.batches.save(
       this.batches.create({
         tenantId,
         data: {
@@ -308,182 +343,54 @@ export class CommunityManagerService {
         publishedPosts: [],
       }),
     );
+  }
 
-    try {
-      const resolvedProfile = await this.loadResolvedProfile(tenantId);
-      const productContext = await this.resolveProductForGeneration(
-        tenantId,
-        dto.productId,
-        dto.campaignId,
-      );
-      const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
-      const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
-      const effectiveProductId = productContext?.id ?? dto.productId;
-      const kit = effectiveProductId
-        ? await this.mediaKitService.listEntitiesForProduct(tenantId, effectiveProductId)
-        : [];
-      const cmCharacters = effectiveProductId
-        ? await this.cmCharacter.listReadyForLlm(tenantId, effectiveProductId)
-        : [];
-      const cmCharacterReady = effectiveProductId
-        ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
-        : false;
+  private async finalizeGenerationBatch(
+    batch: CommunityManagerBatchEntity,
+    result: { posts: SocialCopyPost[]; summary?: string; publishingGuide?: string; generatedAt?: string },
+    publishedPosts: string[],
+    imagesAttached: number,
+    dto: GenerateSocialCopyDto,
+    tenantId: string,
+  ): Promise<GenerateResponse> {
+    batch.data = {
+      ...batch.data,
+      summary: result.summary,
+      publishingGuide: result.publishingGuide,
+      generatedAt: result.generatedAt,
+    };
+    batch.posts = result.posts as unknown as Array<Record<string, unknown>>;
+    batch.publishedPosts = publishedPosts;
+    await this.batches.save(batch);
 
-      const libraryFolders = await this.assetFolderService.buildLibrarySummaryForLlm(tenantId);
-      const mediaKitContext = kit.length
-        ? await this.mediaKitService.buildMediaKitContextForLlm(tenantId, kit)
-        : [];
+    if (dto.campaignId && publishedPosts.length > 0) {
+      await this.refreshCampaignLinkedContent(tenantId, dto.campaignId);
+    }
 
-      this.logger.log(`Generating ${dto.count} posts for ${dto.platforms.join(', ')}`);
-      const result = await runWithLlmUsageContext(
-        { tenantId, userId },
-        () =>
-          this.adapter.generate({
-            tenantId,
-            platforms: dto.platforms,
-            count: dto.count,
-            campaignId: dto.campaignId,
-            productId: effectiveProductId,
-            tone: dto.tone,
-            topics: dto.topics,
-            brandBrief,
-            productContext: productContext as unknown as Record<string, unknown>,
-            focusProductName: productContext?.name ?? null,
-            competitorIntelBrief,
-            cmCharacterReady,
-            cmCharacters: cmCharacters.length > 0 ? cmCharacters : undefined,
-            mediaKit: mediaKitContext,
-            libraryFolders: libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
-              path,
-              device,
-              imageCount,
-              videoCount,
-            })),
-          }),
-      );
-
-      // Save each post as a Content item, spread across next days
-      const publishedPosts: string[] = [];
-      let imagesAttached = 0;
-      const today = new Date();
-      for (let i = 0; i < result.posts.length; i++) {
-        const post = result.posts[i];
-        try {
-          const contentDto = new CreateContentDto();
-          contentDto.title = post.title;
-          contentDto.type = 'social';
-          contentDto.body = this.formatPostBody(post);
-          contentDto.campaignId = dto.campaignId;
-          contentDto.productId = productContext?.id ?? dto.productId;
-          // Spread posts across next days (starting tomorrow)
-          const scheduleDate = new Date(today);
-          scheduleDate.setDate(scheduleDate.getDate() + i + 1);
-          contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
-          contentDto.platform = post.platform;
-          contentDto.visualFormat = post.visualFormat;
-          contentDto.visualPrompt = sanitizeVisualPromptForArt(
-            post.visualDescription,
-            post.body,
-          ) || null;
-
-          const content = await this.contentService.create(tenantId, userId, contentDto);
-
-          post.contentId = content.id;
-          publishedPosts.push(content.id);
-
-          if (dto.attachImages !== false) {
-            const attached = await this.attachVisualForPost(
-              tenantId,
-              userId,
-              content.id,
-              post,
-              effectiveProductId,
-              kit,
-              i,
-            );
-            if (attached) {
-              imagesAttached += 1;
-            }
-          }
-        } catch (err) {
-          this.logger.warn(`Failed to save post "${post.title}" as content: ${err}`);
-        }
-      }
-
-      // Update batch with results
-      batch.data = {
-        ...batch.data,
-        summary: result.summary,
-        publishingGuide: result.publishingGuide,
-        generatedAt: result.generatedAt,
-      };
-      batch.posts = result.posts as unknown as Array<Record<string, unknown>>;
-      batch.publishedPosts = publishedPosts;
-      await this.batches.save(batch);
-
-      if (dto.campaignId && publishedPosts.length > 0) {
-        await this.refreshCampaignLinkedContent(tenantId, dto.campaignId);
-      }
-
-      if (result.posts.length === 0) {
-        throw new BadRequestException({
-          error: 'La IA no devolvió publicaciones. Revisa la configuración LLM.',
-          code: 'CM_EMPTY_RESULT',
-        });
-      }
-
-      if (publishedPosts.length === 0) {
-        throw new BadRequestException({
-          error: 'Se generó copy pero no se pudo guardar en Contenidos. Revisa los logs del servidor.',
-          code: 'CM_CONTENT_SAVE_FAILED',
-        });
-      }
-
-      return {
-        id: batch.id,
-        status: 'completed',
-        postsGenerated: publishedPosts.length,
-        imagesAttached,
-      };
-    } catch (error) {
-      const message =
-        error instanceof BadRequestException
-          ? ((error.getResponse() as { error?: string })?.error ?? error.message)
-          : error instanceof Error
-            ? error.message
-            : 'Generation failed';
-
-      this.logger.error(`Social copy generation failed: ${message}`);
-      batch.errorMessage = message;
-      await this.batches.save(batch);
-
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-
+    if (result.posts.length === 0) {
       throw new BadRequestException({
-        error: `No se pudo generar copy: ${message}. Revisa Ajustes → Proveedores LLM.`,
-        code: 'CM_GENERATION_FAILED',
+        error: 'La IA no devolvió publicaciones. Revisa la configuración LLM.',
+        code: 'CM_EMPTY_RESULT',
       });
     }
+
+    if (publishedPosts.length === 0) {
+      throw new BadRequestException({
+        error: 'Se generó copy pero no se pudo guardar en Contenidos. Revisa los logs del servidor.',
+        code: 'CM_CONTENT_SAVE_FAILED',
+      });
+    }
+
+    return {
+      id: batch.id,
+      status: 'completed',
+      postsGenerated: publishedPosts.length,
+      imagesAttached,
+    };
   }
 
   private async refreshCampaignLinkedContent(tenantId: string, campaignId: string): Promise<void> {
-    const campaign = await this.campaigns.findOne({ where: { id: campaignId, tenantId } });
-    if (!campaign) {
-      return;
-    }
-
-    const linkedContentCount = await this.contents.count({
-      where: { tenantId, campaignId },
-    });
-    const strategy = { ...(campaign.strategy ?? {}) };
-    strategy.linkedContentCount = linkedContentCount;
-    if (linkedContentCount > 0) {
-      strategy.timeline = `${linkedContentCount} post${linkedContentCount === 1 ? '' : 's'} programado${linkedContentCount === 1 ? '' : 's'} — revisa en Calendario → Aprueba → Copia y publica en cada red`;
-    }
-    campaign.strategy = strategy;
-    await this.campaigns.save(campaign);
+    await this.contextFacade.refreshCampaignLinkedContent(tenantId, campaignId);
   }
 
   private formatPostBody(post: SocialCopyPost): string {
@@ -536,159 +443,160 @@ export class CommunityManagerService {
       throw new NotFoundException({ error: 'Contenido no encontrado', code: 'NOT_FOUND' });
     }
 
+    const { feedback, forcedVisualFormat, currentVersion } = await this.prepareRegeneration(
+      tenantId, userId, contentId, options,
+    );
+    const deps = await this.contextFacade.buildRegenerationContext(
+      tenantId, content, (platforms) => this.normalizePlatforms(platforms),
+    );
+    const result = await this.runRegenerationAdapter(tenantId, userId, content, deps, feedback, forcedVisualFormat, currentVersion);
+    const post = this.extractSinglePost(result);
+    if (forcedVisualFormat) post.visualFormat = forcedVisualFormat;
+
+    await this.updateContentWithRegeneratedPost(tenantId, userId, contentId, post, feedback);
+    await this.handlePostRegenerationVisual(
+      tenantId, userId, contentId, post, content, deps.productContext, deps.kit, currentVersion, feedback,
+    );
+
+    return { contentId, title: post.title, regenerated: true };
+  }
+
+  private async prepareRegeneration(
+    tenantId: string, userId: string, contentId: string,
+    options?: { feedback?: string; versionId?: string; visualFormat?: string },
+  ) {
     const feedback = options?.feedback?.trim();
-    const forcedVisualFormat = options?.visualFormat
-      ? normalizeContentVisualFormat(options.visualFormat)
-      : null;
+    const forcedVisualFormat = options?.visualFormat ? normalizeContentVisualFormat(options.visualFormat) : null;
     const fullContent = await this.contentService.findOne(tenantId, contentId);
     const currentVersion = fullContent.currentVersion ?? null;
 
+    if (feedback && !options?.versionId) {
+      throw new BadRequestException({ error: 'versionId is required when providing feedback', code: 'VALIDATION_ERROR' });
+    }
     if (feedback) {
-      if (!options?.versionId) {
-        throw new BadRequestException({
-          error: 'versionId is required when providing feedback',
-          code: 'VALIDATION_ERROR',
-        });
-      }
-      await this.contentService.recordChangesRequested(
-        tenantId,
-        userId,
-        contentId,
-        options.versionId,
-        feedback,
-      );
+      await this.contentService.recordChangesRequested(tenantId, userId, contentId, options!.versionId!, feedback);
     }
+    return { feedback, forcedVisualFormat, currentVersion };
+  }
 
-    let revisionBrief = feedback;
-    if (forcedVisualFormat) {
-      const formatHint = `Regenera el post con formato visual "${forcedVisualFormat}" (adapta copy y escena visual al nuevo formato).`;
-      revisionBrief = feedback ? `${feedback}\n\n${formatHint}` : formatHint;
-    }
-
-    const platform = this.normalizePlatforms(
-      content.platform ? [content.platform] : undefined,
-    )[0];
-
-    const resolvedProfile = await this.loadResolvedProfile(tenantId);
-    const productContext = await this.resolveProductForGeneration(
-      tenantId,
-      content.productId ?? undefined,
-      content.campaignId ?? undefined,
-    );
-    const brandBrief = this.buildBrandBrief(resolvedProfile, productContext);
-    const competitorIntelBrief = await this.resolveCompetitorIntelBrief(tenantId);
-    const kit = content.productId
-      ? await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId)
-      : [];
-    const effectiveProductId = productContext?.id ?? content.productId ?? undefined;
-    const cmCharacters = effectiveProductId
-      ? await this.cmCharacter.listReadyForLlm(tenantId, effectiveProductId)
-      : [];
-    const cmCharacterReady = effectiveProductId
-      ? await this.cmCharacter.hasAnyReadyCharacter(tenantId, effectiveProductId)
-      : false;
-
-    const libraryFolders = await this.assetFolderService.buildLibrarySummaryForLlm(tenantId);
-    const mediaKitContext = kit.length
-      ? await this.mediaKitService.buildMediaKitContextForLlm(tenantId, kit)
-      : [];
-
-    const result = await runWithLlmUsageContext({ tenantId, userId }, () =>
+  private async runRegenerationAdapter(
+    tenantId: string, userId: string, content: ContentEntity,
+    deps: GenerationContext & { platform: CmPlatform },
+    feedback: string | undefined, forcedVisualFormat: string | null,
+    currentVersion: { versionNumber?: number; title?: string; body?: string } | null,
+  ) {
+    const revisionBrief = this.buildRevisionBrief(feedback, forcedVisualFormat);
+    return runWithLlmUsageContext({ tenantId, userId }, () =>
       this.adapter.generate({
         tenantId,
-        platforms: [platform],
+        platforms: [deps.platform],
         count: 1,
         campaignId: content.campaignId ?? undefined,
-        productId: effectiveProductId,
-        brandBrief,
-        productContext: productContext as unknown as Record<string, unknown>,
-        focusProductName: productContext?.name ?? null,
-        competitorIntelBrief,
+        productId: deps.effectiveProductId,
+        brandBrief: deps.brandBrief,
+        productContext: deps.productContext as unknown as Record<string, unknown>,
+        focusProductName: deps.productContext?.name ?? null,
+        competitorIntelBrief: deps.competitorIntelBrief,
         revisionBrief,
-        cmCharacterReady,
-        cmCharacters: cmCharacters.length > 0 ? cmCharacters : undefined,
-        previousPost: currentVersion
-          ? {
-              title: currentVersion.title,
-              body: currentVersion.body,
-              platform: content.platform ?? undefined,
-            }
+        cmCharacterReady: deps.cmCharacterReady,
+        cmCharacters: deps.cmCharacters.length > 0 ? deps.cmCharacters : undefined,
+        previousPost: currentVersion?.title && currentVersion?.body
+          ? { title: currentVersion.title, body: currentVersion.body, platform: content.platform ?? undefined }
           : undefined,
-        mediaKit: mediaKitContext,
-        libraryFolders: libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
-          path,
-          device,
-          imageCount,
-          videoCount,
-        })),
+        mediaKit: deps.mediaKitContext,
+        libraryFolders: deps.libraryFolders.map(({ path, device, imageCount, videoCount }) => ({ path, device, imageCount, videoCount })),
       }),
     );
+  }
 
+  private extractSinglePost(result: { posts: SocialCopyPost[] }): SocialCopyPost {
     const post = result.posts[0];
     if (!post) {
-      throw new BadRequestException({
-        error: 'No se pudo regenerar el post',
-        code: 'GENERATION_FAILED',
-      });
+      throw new BadRequestException({ error: 'No se pudo regenerar el post', code: 'GENERATION_FAILED' });
     }
+    return post;
+  }
 
-    if (forcedVisualFormat) {
-      post.visualFormat = forcedVisualFormat;
-    }
-
+  private async updateContentWithRegeneratedPost(
+    tenantId: string, userId: string, contentId: string, post: SocialCopyPost, feedback: string | undefined,
+  ): Promise<void> {
     await this.contentService.update(tenantId, userId, contentId, {
       title: post.title,
       body: this.formatPostBody(post),
-      changeSummary: feedback
-        ? `Regenerado con feedback: ${feedback.slice(0, 120)}`
-        : 'Regenerado por el copiloto',
+      changeSummary: feedback ? `Regenerado con feedback: ${feedback.slice(0, 120)}` : 'Regenerado por el copiloto',
       visualFormat: post.visualFormat,
       platform: post.platform,
-      visualPrompt:
-        sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
+      visualPrompt: sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
     });
+  }
 
+  private buildRevisionBrief(
+    feedback: string | undefined,
+    forcedVisualFormat: string | null,
+  ): string | undefined {
+    if (!forcedVisualFormat) {
+      return feedback;
+    }
+    const formatHint = `Regenera el post con formato visual "${forcedVisualFormat}" (adapta copy y escena visual al nuevo formato).`;
+    return feedback ? `${feedback}\n\n${formatHint}` : formatHint;
+  }
+
+  private async handlePostRegenerationVisual(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+    post: SocialCopyPost,
+    content: ContentEntity,
+    productContext: GenerationContext['productContext'],
+    kit: GenerationContext['kit'],
+    currentVersion: { versionNumber?: number } | null,
+    feedback: string | undefined,
+  ): Promise<void> {
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
 
     if (!feedback) {
-      try {
-        if (post.visualDescription?.trim()) {
-          await this.imageGeneration.attachVisualToContent(
-            tenantId,
-            userId,
-            contentId,
-            post.visualDescription,
-            content.productId ?? productContext?.id ?? undefined,
-          );
-        } else {
-          await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
-        }
-      } catch (error) {
-        this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
-      }
-    } else {
-      const shouldRegenerateVisual = Boolean(feedback || post.visualDescription?.trim());
-      if (shouldRegenerateVisual) {
-        const composed = await this.attachVisualForPost(
-          tenantId,
-          userId,
-          contentId,
-          post,
-          content.productId ?? productContext?.id,
-          kit,
-          visualVariantIndex,
-        );
-        if (!composed) {
-          try {
-            await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
-          } catch (error) {
-            this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
-          }
-        }
-      }
+      await this.regenerateVisualWithoutFeedback(
+        tenantId, userId, contentId, post, productContext,
+      );
+      return;
     }
 
-    return { contentId, title: post.title, regenerated: true };
+    if (!post.visualDescription?.trim()) return;
+
+    const composed = await this.attachVisualForPost(
+      tenantId, userId, contentId, post,
+      content.productId ?? productContext?.id, kit, visualVariantIndex,
+    );
+    if (composed) return;
+
+    try {
+      await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+    } catch (error) {
+      this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+    }
+  }
+
+  private async regenerateVisualWithoutFeedback(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+    post: SocialCopyPost,
+    productContext: GenerationContext['productContext'],
+  ): Promise<void> {
+    try {
+      const productId = post.visualDescription?.trim()
+        ? (productContext?.id ?? undefined)
+        : undefined;
+      if (post.visualDescription?.trim()) {
+        await this.imageGeneration.attachVisualToContent(
+          tenantId, userId, contentId, post.visualDescription, productId,
+        );
+      } else {
+        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+      }
+    } catch (error) {
+      this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+    }
   }
 
   private async attachVisualForPost(
@@ -697,7 +605,7 @@ export class CommunityManagerService {
     contentId: string,
     post: SocialCopyPost,
     productId: string | null | undefined,
-    kit: Awaited<ReturnType<ProductMediaKitService['listEntitiesForProduct']>>,
+    kit: GenerationContext['kit'],
     postIndex: number,
   ): Promise<boolean> {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);

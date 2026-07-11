@@ -28,6 +28,36 @@
 - **FFmpeg error visibility**: Added stderr capture to surface FFmpeg failures instead of silent failures
 - **Job status synchronization**: Fixed job not updating to completed after video concatenation, resolving persistent spinner in UI
 
+### Added (refactor: Anti-Spaghetti & God-Killer)
+
+- **GenerationContextFacade** (`community-manager/generation-context.facade.ts`): encapsula `ProductService`, `CompanyProfileService`, `CompetitorIntelService`, `CompetitorService`, `ProductMediaKitService`, `AssetFolderService`, `CmCharacterService` + repos de `Campaign` y `Content`. Expone `buildGenerationContext()`, `buildRegenerationContext()` y `refreshCampaignLinkedContent()`.
+- **VideoGenerationService** (`agents/video-generation.service.ts`): separado de `ImageGenerationService` — contiene `runVideoGeneration`, `runSegmentedVideoGeneration`, `concatVideoClips`, `uploadGeneratedVideo`, `resolveVideoPayload`, `resolveClipBuffer`.
+- **Util-split — competitor-discovery-context**: `competitor-discovery-context.util.ts` (601 lns) → barrel re-export (37 lns) + `competitor-context.constants.ts`, `competitor-context.helpers.ts`, `competitor-search-queries.ts`, `competitor-filtering.ts`, `competitor-web-evidence.ts`.
+- **Util-split — image-generation-utils**: `image-generation.utils.ts` (437 lns) → barrel re-export (100 lns) + `generation-media-type.ts`, `video-duration-policy.ts`, `video-narration.utils.ts`, `image-frame.utils.ts`, `generation-error.utils.ts`.
+- **AssetLibraryPage split**: `AssetLibraryPage.tsx` (726→423 lns) → `AssetSection.tsx` (136 lns), `AssetFilterBar.tsx` (154 lns), `useAssetLibraryMutations.ts` (136 lns).
+- **CommunityManagerPage split**: `CommunityManagerPage.tsx` (688→339 lns) → `CmGeneratorForm.tsx` (217 lns), `CmPostCard.tsx` (166 lns), `community-manager.constants.ts` (30 lns), `community-manager.types.ts` (19 lns).
+- **CmCharacterSetupPanel split**: `CmCharacterSetupPanel.tsx` (684→561 lns) → `CmCharacterAppearanceForm.tsx` (123 lns), `PortraitPickerDialog.tsx` (93 lns).
+- **Tests de regresión**: Jest configurado para NestJS backend (`jest.config.ts`, `ts-jest`). 65 tests de caracterización en 6 suites:
+  - `generation-error.utils.spec.ts` — `formatGenerationError`, `isStaleProcessingGeneration`
+  - `image-generation.service.spec.ts` — `handleExistingGeneration`, `applyLogoOverlay`, `generationHasVisual`, `toResult`
+  - `video-generation.service.spec.ts` — `resolveClipBuffer`, `resolveVideoPayload`, `concatVideoClips`
+  - `content.service.spec.ts` — `validateUpdateDto`, `isMetadataOnlyUpdate`, routing metadata-only vs versionado
+  - `community-manager.service.spec.ts` — `isProductReadyForCM`, `extractErrorMessage`, `normalizePlatforms`
+  - `generation-context.facade.spec.ts` — `buildGenerationContext`, `refreshCampaignLinkedContent`, `buildRegenerationContext`
+- Scripts: `yarn test`, `yarn test:watch`, `yarn test:cov` en `@mkt-agency/backend`.
+
+### Changed (refactor: Anti-Spaghetti & God-Killer)
+
+- **`community-manager.service.ts`** (748→656 lns, 21→11 deps): métodos `generate()` y `regeneratePostForContent()` reducidos a ≤40 lns cada uno extrayendo `resolveGenerationContext()`, `savePostsAsContent()`, `handleGenerationError()`, `saveSinglePost()`, `extractErrorMessage()`, `isProductReadyForCM()`, `regenerateVisualWithoutFeedback()`. Anidamiento >2 niveles eliminado con early returns y guard clauses.
+- **`image-generation.service.ts`** (1173→920 lns): video delegado a `VideoGenerationService`; métodos extraídos `applyLogoOverlay()`, `handleExistingGeneration()`, `refreshBrandedPrompt()`; condicionales anidados reemplazados con early return y extracción a helper semántico.
+- **`content.service.ts`**: `update()` separado en `updateMetadataOnly()` y `updateWithVersion()`; DTO validation extraída a `validateUpdateDto()` e `isMetadataOnlyUpdate()`.
+- **`generation-context.facade.ts`**: `resolveProductForGeneration()` aplanado extrayendo `resolveProductFromCampaign()`.
+- **`video-generation.service.ts`**: nesting de 3 niveles en `runVideoGeneration()` (FFmpeg availability check) aplanado; `resolveClipBuffer()` extraído del ternario anidado en `concatVideoClips()`.
+
+### Fixed (refactor)
+
+- **Bug introducido en refactor**: `regenerateVisualWithoutFeedback()` referenciaba `content.productId` (variable inexistente) → corregido a `productContext?.id`.
+
 # Changelog
 
 ## [0.2.3] — 2026-07-03

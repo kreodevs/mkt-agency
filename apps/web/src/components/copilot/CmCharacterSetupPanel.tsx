@@ -10,18 +10,12 @@ import {
   Video,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
-import { InputText } from '@/components/atoms/InputText';
-import { Textarea } from '@/components/atoms/Textarea';
 import { Card } from '@/components/molecules/Card';
-import { Dialog } from '@/components/molecules/Dialog';
 import { toast } from '@/components/molecules/Sonner';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
 import { ApiError } from '@/services/api';
-import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
-import { listAssets, resolveAssetPreviewUrl } from '@/services/assets';
 import {
   createCmCharacter,
   deleteCmCharacter,
@@ -33,41 +27,20 @@ import {
   updateCmCharacterAppearance,
   type CmCharacterStatus,
 } from '@/services/cm-character';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+import {
+  AppearanceForm,
+  appearanceDraftFromCharacter,
+  emptyDraft,
+  type AppearanceDraft,
+} from './CmCharacterAppearanceForm';
+import { PortraitPickerDialog } from './PortraitPickerDialog';
 
 type CmCharacterSetupPanelProps = {
   productId: string;
 };
 
-type AppearanceDraft = {
-  name: string;
-  appearance: NonNullable<CmCharacterStatus['appearance']>;
-  voiceId: string | null;
-  voiceName: string | null;
-};
-
-function emptyDraft(): AppearanceDraft {
-  return {
-    name: '',
-    appearance: { gender: 'female' },
-    voiceId: null,
-    voiceName: null,
-  };
-}
-
 function characterIdOf(cm: CmCharacterStatus): string {
   return cm.characterId;
-}
-
-function appearanceDraftFromCharacter(character: CmCharacterStatus): AppearanceDraft {
-  return {
-    name: character.name,
-    appearance: { ...(character.appearance ?? { gender: 'female' }) },
-    voiceId: character.voiceId,
-    voiceName: character.voiceName,
-  };
 }
 
 function statusLabel(status: CmCharacterStatus): string {
@@ -77,98 +50,6 @@ function statusLabel(status: CmCharacterStatus): string {
   if (status.status === 'failed') return 'Error';
   if (status.portraitAssetId) return 'Retrato OK';
   return 'Pendiente';
-}
-
-function AppearanceForm({
-  draft,
-  onChange,
-}: {
-  draft: AppearanceDraft;
-  onChange: (next: AppearanceDraft) => void;
-}) {
-  const appearance = draft.appearance;
-
-  return (
-    <div className="space-y-3">
-      <InputText
-        label="Nombre"
-        value={draft.name}
-        placeholder="Ej. Ana — ejecutiva"
-        onChange={(e) => onChange({ ...draft, name: e.target.value })}
-      />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-sm">
-          <span className="text-[var(--foreground-muted)]">Género</span>
-          <select
-            className={selectClass}
-            value={appearance.gender ?? 'female'}
-            onChange={(e) =>
-              onChange({
-                ...draft,
-                appearance: {
-                  ...appearance,
-                  gender: e.target.value as 'female' | 'male' | 'neutral',
-                },
-              })
-            }
-          >
-            <option value="female">Mujer</option>
-            <option value="male">Hombre</option>
-            <option value="neutral">Neutral</option>
-          </select>
-        </label>
-        <InputText
-          label="Rango de edad"
-          value={appearance.ageRange ?? ''}
-          placeholder="Ej. 28-35 años"
-          onChange={(e) =>
-            onChange({
-              ...draft,
-              appearance: { ...appearance, ageRange: e.target.value },
-            })
-          }
-        />
-        <InputText
-          label="Estilo"
-          value={appearance.style ?? ''}
-          placeholder="Business casual, cercana..."
-          onChange={(e) =>
-            onChange({
-              ...draft,
-              appearance: { ...appearance, style: e.target.value },
-            })
-          }
-        />
-        <InputText
-          label="Fondo"
-          value={appearance.background ?? ''}
-          placeholder="Estudio suave, oficina moderna..."
-          onChange={(e) =>
-            onChange({
-              ...draft,
-              appearance: { ...appearance, background: e.target.value },
-            })
-          }
-        />
-      </div>
-
-      <label className="block space-y-1 text-sm">
-        <span className="text-[var(--foreground-muted)]">Notas adicionales</span>
-        <Textarea
-          value={appearance.notes ?? ''}
-          rows={2}
-          placeholder="Opcional: tono visual, accesorios, etc."
-          onChange={(e) =>
-            onChange({
-              ...draft,
-              appearance: { ...appearance, notes: e.target.value },
-            })
-          }
-        />
-      </label>
-    </div>
-  );
 }
 
 export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps) {
@@ -198,11 +79,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
       setSelectedId(null);
       return;
     }
-
-    if (isCreating) {
-      return;
-    }
-
+    if (isCreating) return;
     const stillValid = selectedId && characters.some((c) => characterIdOf(c) === selectedId);
     if (!stillValid) {
       const fallback =
@@ -338,12 +215,6 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
     },
   });
 
-  const imageAssetsQuery = useQuery({
-    queryKey: ['assets', 'image', 'cm-portrait-picker'],
-    queryFn: () => listAssets({ type: 'image', limit: 48, page: 1 }),
-    enabled: portraitPickerOpen,
-  });
-
   if (libraryQuery.isLoading) {
     return (
       <Card title="Biblioteca de CMs" subtitle="Presentadoras virtuales">
@@ -376,226 +247,46 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
             copiloto elegirá la CM más adecuada por post.
           </p>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsCreating(true);
-                setCreateDraft(emptyDraft());
-              }}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                isCreating
-                  ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--foreground)]'
-                  : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/50'
-              }`}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nueva CM
-            </button>
-
-            {characters.map((cm) => {
-              const id = characterIdOf(cm);
-              const active = !isCreating && selectedId === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    setIsCreating(false);
-                    setSelectedId(id);
-                  }}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    active
-                      ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--foreground)]'
-                      : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/50'
-                  }`}
-                >
-                  {cm.name}
-                  {cm.isDefault && (
-                    <Star className="h-3 w-3 fill-[var(--warning)] text-[var(--warning)]" />
-                  )}
-                  {cm.ready && <Check className="h-3 w-3 text-[var(--success)]" />}
-                </button>
-              );
-            })}
-          </div>
+          <CharacterTabs
+            characters={characters}
+            isCreating={isCreating}
+            selectedId={selectedId}
+            onSelect={(id) => { setIsCreating(false); setSelectedId(id); }}
+            onNew={() => { setIsCreating(true); setCreateDraft(emptyDraft()); }}
+          />
 
           <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
             {isCreating ? (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-[var(--foreground)]">Nueva CM</p>
-                  <p className="text-xs text-[var(--foreground-muted)]">
-                    Define nombre y apariencia antes de crearla.
-                  </p>
-                </div>
-
-                <AppearanceForm draft={createDraft} onChange={setCreateDraft} />
-
-                <Button
-                  type="button"
-                  disabled={!createDraft.name.trim() || createMutation.isPending}
-                  onClick={() => createMutation.mutate(createDraft)}
-                >
-                  {createMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="mr-2 h-4 w-4" />
-                  )}
-                  Añadir CM
-                </Button>
-              </div>
+              <CreateForm
+                draft={createDraft}
+                onChange={setCreateDraft}
+                onSubmit={() => createMutation.mutate(createDraft)}
+                isPending={createMutation.isPending}
+              />
             ) : activeCharacter && editDraft ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-medium text-[var(--foreground)]">
-                      Editando: {activeCharacter.name}
-                    </p>
-                    <p className="text-xs text-[var(--foreground-subtle)]">
-                      {statusLabel(activeCharacter)}
-                      {activeCharacter.isDefault ? ' · Por defecto' : ''}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {!activeCharacter.isDefault && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={defaultMutation.isPending}
-                        onClick={() => defaultMutation.mutate(activeCharacter.characterId)}
-                      >
-                        <Star className="mr-1 h-3 w-3" />
-                        Por defecto
-                      </Button>
-                    )}
-                    {characters.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={deleteMutation.isPending}
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar "${activeCharacter.name}"?`)) {
-                            deleteMutation.mutate(activeCharacter.characterId);
-                          }
-                        }}
-                      >
-                        <Trash2 className="mr-1 h-3 w-3" />
-                        Eliminar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {activeCharacter.ready && (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {activeCharacter.portraitAssetId && (
-                      <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
-                        <AuthenticatedAssetImage
-                          assetId={activeCharacter.portraitAssetId}
-                          variant="full"
-                          title="Retrato"
-                          className="aspect-[9/16] w-full object-cover"
-                        />
-                      </div>
-                    )}
-                    {activeCharacter.previewVideoAssetId && (
-                      <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
-                        <AuthenticatedAssetVideo
-                          assetId={activeCharacter.previewVideoAssetId}
-                          title="Vista previa"
-                          className="aspect-[9/16] w-full object-cover"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-3 border-t border-[var(--border)] pt-4">
-                  <p className="text-sm font-medium text-[var(--foreground)]">Apariencia</p>
-                  <AppearanceForm draft={editDraft} onChange={setEditDraft} />
-                </div>
-
-                {activeCharacter.status === 'failed' && activeCharacter.errorMessage && (
-                  <p className="text-sm text-destructive">
-                    Error al generar vista previa: {activeCharacter.errorMessage}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={saveMutation.isPending}
-                    onClick={() => saveMutation.mutate()}
-                  >
-                    Guardar apariencia
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={isBusy}
-                    onClick={() => setPortraitPickerOpen(true)}
-                  >
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Elegir de biblioteca
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isBusy}
-                    onClick={() => portraitMutation.mutate(activeCharacter.characterId)}
-                  >
-                    {portraitMutation.isPending ||
-                    activeCharacter.status === 'generating_portrait' ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generando retrato...
-                      </>
-                    ) : (
-                      <>
-                        <UserCircle2 className="mr-2 h-4 w-4" />
-                        Generar retrato IA
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isBusy || !activeCharacter.portraitAssetId}
-                    onClick={() => previewMutation.mutate(activeCharacter.characterId)}
-                  >
-                    {previewMutation.isPending ||
-                    activeCharacter.status === 'generating_preview' ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generando vista previa...
-                      </>
-                    ) : (
-                      <>
-                        <Video className="mr-2 h-4 w-4" />
-                        Probar voz y lip-sync
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {activeCharacter.portraitAssetId &&
-                  !activeCharacter.previewVideoAssetId &&
-                  !activeCharacter.ready && (
-                    <div className="max-w-xs overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
-                      <AuthenticatedAssetImage
-                        assetId={activeCharacter.portraitAssetId}
-                        variant="full"
-                        title="Retrato"
-                        className="aspect-[9/16] w-full object-cover"
-                      />
-                    </div>
-                  )}
-              </div>
+              <EditPanel
+                character={activeCharacter}
+                draft={editDraft}
+                onChange={setEditDraft}
+                isBusy={isBusy}
+                onSave={() => saveMutation.mutate()}
+                isSaving={saveMutation.isPending}
+                onSetDefault={() => defaultMutation.mutate(activeCharacter.characterId)}
+                isSettingDefault={defaultMutation.isPending}
+                onDelete={() => {
+                  if (window.confirm(`¿Eliminar "${activeCharacter.name}"?`)) {
+                    deleteMutation.mutate(activeCharacter.characterId);
+                  }
+                }}
+                isDeleting={deleteMutation.isPending}
+                onGeneratePortrait={() => portraitMutation.mutate(activeCharacter.characterId)}
+                isGeneratingPortrait={portraitMutation.isPending || activeCharacter.status === 'generating_portrait'}
+                onOpenPicker={() => setPortraitPickerOpen(true)}
+                onGeneratePreview={() => previewMutation.mutate(activeCharacter.characterId)}
+                isGeneratingPreview={previewMutation.isPending || activeCharacter.status === 'generating_preview'}
+                showDeleteButton={characters.length > 1}
+                showDefaultButton={!activeCharacter.isDefault}
+              />
             ) : (
               <p className="text-sm text-[var(--foreground-muted)]">
                 Selecciona una CM arriba o crea una nueva.
@@ -610,75 +301,261 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         </div>
       </Card>
 
-      <Dialog
-        visible={portraitPickerOpen}
-        onHide={() => setPortraitPickerOpen(false)}
-        title="Elegir retrato desde biblioteca"
-        description="Selecciona una imagen vertical 9:16 de tus assets."
-        size="xl"
-        footer={
-          <Link
-            to={LIBRARY_ROUTE}
-            className="text-sm font-medium text-[var(--primary)] hover:underline"
-            onClick={() => setPortraitPickerOpen(false)}
-          >
-            Abrir librería completa →
-          </Link>
-        }
-      >
-        {imageAssetsQuery.isLoading ? (
-          <p className="text-sm text-[var(--foreground-muted)]">Cargando imágenes...</p>
-        ) : imageAssetsQuery.data?.items.length ? (
-          <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4">
-            {imageAssetsQuery.data.items.map((asset) => {
-              const preview = resolveAssetPreviewUrl(asset, { variant: 'thumb' });
-              return (
-                <button
-                  key={asset.id}
-                  type="button"
-                  disabled={selectPortraitMutation.isPending || !activeCharacter}
-                  onClick={() =>
-                    activeCharacter &&
-                    selectPortraitMutation.mutate({
-                      characterId: activeCharacter.characterId,
-                      assetId: asset.id,
-                    })
-                  }
-                  className="group overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] text-left transition hover:border-[var(--primary)]"
-                >
-                  {preview ? (
-                    <img
-                      src={preview}
-                      alt={asset.name}
-                      className="aspect-[9/16] w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex aspect-[9/16] items-center justify-center bg-[var(--secondary)]">
-                      <ImageIcon className="h-8 w-8 text-[var(--foreground-muted)]" />
-                    </div>
-                  )}
-                  <p className="truncate px-2 py-1 text-xs text-[var(--foreground-muted)] group-hover:text-[var(--foreground)]">
-                    {asset.name}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-[var(--foreground-muted)]">
-              No hay imágenes en la biblioteca. Sube material en la librería o genera un retrato con
-              IA.
-            </p>
-            <Link to={LIBRARY_ROUTE} onClick={() => setPortraitPickerOpen(false)}>
-              <Button type="button" variant="secondary" size="sm">
-                <ImageIcon className="mr-2 h-4 w-4" />
-                Ir a librería multimedia
-              </Button>
-            </Link>
-          </div>
-        )}
-      </Dialog>
+      <PortraitPickerDialog
+        open={portraitPickerOpen}
+        onClose={() => setPortraitPickerOpen(false)}
+        onSelect={(assetId) => {
+          if (activeCharacter) {
+            selectPortraitMutation.mutate({ characterId: activeCharacter.characterId, assetId });
+          }
+        }}
+        isPending={selectPortraitMutation.isPending}
+      />
     </>
+  );
+}
+
+function CharacterTabs({
+  characters,
+  isCreating,
+  selectedId,
+  onSelect,
+  onNew,
+}: {
+  characters: CmCharacterStatus[];
+  isCreating: boolean;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onNew: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={onNew}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+          isCreating
+            ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--foreground)]'
+            : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/50'
+        }`}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Nueva CM
+      </button>
+
+      {characters.map((cm) => {
+        const id = characterIdOf(cm);
+        const active = !isCreating && selectedId === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onSelect(id)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              active
+                ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--foreground)]'
+                : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/50'
+            }`}
+          >
+            {cm.name}
+            {cm.isDefault && (
+              <Star className="h-3 w-3 fill-[var(--warning)] text-[var(--warning)]" />
+            )}
+            {cm.ready && <Check className="h-3 w-3 text-[var(--success)]" />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CreateForm({
+  draft,
+  onChange,
+  onSubmit,
+  isPending,
+}: {
+  draft: AppearanceDraft;
+  onChange: (draft: AppearanceDraft) => void;
+  onSubmit: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-medium text-[var(--foreground)]">Nueva CM</p>
+        <p className="text-xs text-[var(--foreground-muted)]">
+          Define nombre y apariencia antes de crearla.
+        </p>
+      </div>
+      <AppearanceForm draft={draft} onChange={onChange} />
+      <Button
+        type="button"
+        disabled={!draft.name.trim() || isPending}
+        onClick={onSubmit}
+      >
+        {isPending ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Plus className="mr-2 h-4 w-4" />
+        )}
+        Añadir CM
+      </Button>
+    </div>
+  );
+}
+
+function EditPanel({
+  character,
+  draft,
+  onChange,
+  isBusy,
+  onSave,
+  isSaving,
+  onSetDefault,
+  isSettingDefault,
+  onDelete,
+  isDeleting,
+  onGeneratePortrait,
+  isGeneratingPortrait,
+  onOpenPicker,
+  onGeneratePreview,
+  isGeneratingPreview,
+  showDeleteButton,
+  showDefaultButton,
+}: {
+  character: CmCharacterStatus;
+  draft: AppearanceDraft;
+  onChange: (draft: AppearanceDraft) => void;
+  isBusy: boolean;
+  onSave: () => void;
+  isSaving: boolean;
+  onSetDefault: () => void;
+  isSettingDefault: boolean;
+  onDelete: () => void;
+  isDeleting: boolean;
+  onGeneratePortrait: () => void;
+  isGeneratingPortrait: boolean;
+  onOpenPicker: () => void;
+  onGeneratePreview: () => void;
+  isGeneratingPreview: boolean;
+  showDeleteButton: boolean;
+  showDefaultButton: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            Editando: {character.name}
+          </p>
+          <p className="text-xs text-[var(--foreground-subtle)]">
+            {statusLabel(character)}
+            {character.isDefault ? ' · Por defecto' : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {showDefaultButton && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isSettingDefault}
+              onClick={onSetDefault}
+            >
+              <Star className="mr-1 h-3 w-3" />
+              Por defecto
+            </Button>
+          )}
+          {showDeleteButton && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isDeleting}
+              onClick={onDelete}
+            >
+              <Trash2 className="mr-1 h-3 w-3" />
+              Eliminar
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {character.ready && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {character.portraitAssetId && (
+            <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+              <AuthenticatedAssetImage
+                assetId={character.portraitAssetId}
+                variant="full"
+                title="Retrato"
+                className="aspect-[9/16] w-full object-cover"
+              />
+            </div>
+          )}
+          {character.previewVideoAssetId && (
+            <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+              <AuthenticatedAssetVideo
+                assetId={character.previewVideoAssetId}
+                title="Vista previa"
+                className="aspect-[9/16] w-full object-cover"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-3 border-t border-[var(--border)] pt-4">
+        <p className="text-sm font-medium text-[var(--foreground)]">Apariencia</p>
+        <AppearanceForm draft={draft} onChange={onChange} />
+      </div>
+
+      {character.status === 'failed' && character.errorMessage && (
+        <p className="text-sm text-destructive">
+          Error al generar vista previa: {character.errorMessage}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" disabled={isSaving} onClick={onSave}>
+          Guardar apariencia
+        </Button>
+        <Button type="button" variant="secondary" size="sm" disabled={isBusy} onClick={onOpenPicker}>
+          <ImageIcon className="mr-2 h-4 w-4" />
+          Elegir de biblioteca
+        </Button>
+        <Button type="button" size="sm" disabled={isBusy} onClick={onGeneratePortrait}>
+          {isGeneratingPortrait ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generando retrato...</>
+          ) : (
+            <><UserCircle2 className="mr-2 h-4 w-4" />Generar retrato IA</>
+          )}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={isBusy || !character.portraitAssetId}
+          onClick={onGeneratePreview}
+        >
+          {isGeneratingPreview ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generando vista previa...</>
+          ) : (
+            <><Video className="mr-2 h-4 w-4" />Probar voz y lip-sync</>
+          )}
+        </Button>
+      </div>
+
+      {character.portraitAssetId && !character.previewVideoAssetId && !character.ready && (
+        <div className="max-w-xs overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+          <AuthenticatedAssetImage
+            assetId={character.portraitAssetId}
+            variant="full"
+            title="Retrato"
+            className="aspect-[9/16] w-full object-cover"
+          />
+        </div>
+      )}
+    </div>
   );
 }

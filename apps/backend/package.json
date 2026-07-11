@@ -7,6 +7,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:run:prod": "typeorm migration:run -d dist/database/data-source.js",
     "clear-generated-contents:prod": "node dist/database/clear-generated-contents.cli.js",
@@ -44,10 +47,13 @@
     "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
     "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^2.1.0",
     "@types/node": "^22.10.2",
     "@types/passport-jwt": "^4.0.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
     "typescript": "^5.7.2"
   }
 }
