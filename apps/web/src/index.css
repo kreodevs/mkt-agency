@@ -102,6 +102,18 @@
   }
 }
 
+/* ── tailwindcss-animate fix: animation-fill-mode ── */
+/* Plugin v1.0.7 omits animation-fill-mode on animate-in/animate-out. */
+/* Without 'both', animations play but snap back to initial state. */
+.animate-in,
+[data-state="open"]:where(.animate-in, [class*="animate-in"]) {
+  animation-fill-mode: both;
+}
+.animate-out,
+[data-state="closed"]:where(.animate-out, [class*="animate-out"]) {
+  animation-fill-mode: both;
+}
+
 /* ── Apple Design: Spring-based page enter (replaces CSS keyframe) ── */
 /* Actual spring motion is handled by <motion.div> in components. */
 /* This is the CSS fallback for elements that can't use motion. */
