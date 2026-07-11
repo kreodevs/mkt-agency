@@ -2,7 +2,23 @@
 
 ### Added
 
-- **Pipeline CRM en menú SOHO** (`/leads`) y botón **Agregar lead** con `POST /api/v1/leads` para alta manual.
+- **Apple Design System**: Implementación completa de principios de diseño fluido (inspirado en WWDC *Designing Fluid Interfaces*).
+  - **Elevación con sombras**: eliminada la regla global `box-shadow: none !important`; sistema de 4 niveles de elevación (`--shadow-sm/md/lg/xl`) para codificar jerarquía visual.
+  - **Materiales translúcidos**: header y sidebar usan `backdrop-filter: blur() + saturate()` con fondos semitransparentes; el contenido scrollea debajo del chrome.
+  - **Scroll edge effect**: gradiente sutil debajo del header fijo en lugar de `border-bottom` sólido.
+  - **Pointer-down feedback**: `scale(0.97)` instantáneo (< 80ms) en botones, nav items, sidebar trigger y logout — sensación de "alive" al presionar.
+  - **Spring animations**: transiciones de ruta con `<motion.div>` (bounce: 0, response: 0.4s); Dialog con `material-sheet` + enter/exit animations (zoom + slide); mobile menu con spring slide.
+  - **Typography size-specific tracking**: display headings `-0.025em`, body `0`, detail-xs `0.02em` — cada tamaño tiene su letter-spacing óptimo.
+  - **Rubber-banding**: `overscroll-behavior: contain` en main scroll y KanbanBoard — resistencia suave en límites.
+  - **Kanban fluido**: card transitions con `cubic-bezier(0.22, 1, 0.36, 1)`; DragOverlay con spring easing; `press-subtle` en cards.
+  - **Componentes animados**: StatusPill, Stepper, Progress y EmptyState con transiciones Apple-like (easing + duration).
+  - **Loading spinner**: router fallback con spinner animado en vez de solo texto.
+  - **Toast material**: Sonner toasts con `material-sheet` y close button `press-subtle`.
+  - **Accesibilidad**: media queries para `prefers-reduced-motion` (cross-fades), `prefers-reduced-transparency` (fondos sólidos), `prefers-contrast` (bordes definidos).
+
+### Changed
+
+- Paquetes añadidos: `motion` (v12.42), `tailwindcss-animate` (v1.0.7).
 - **Modo copiloto SOHO** (UX por defecto para tenants): menú reducido (Inicio, Mi producto, Ajustes), panel de estado del pipeline en bandeja y botón **Preparar mi semana**.
 - **API copiloto**: `GET /publication-inbox/copilot-status` y `POST /publication-inbox/prepare-week` (descubre competidores, Competitor Intel, estrategia + CM bajo demanda).
 - **Página Ajustes** (`/settings/copilot`): redes sociales, volumen semanal y toggle menú avanzado (`mkt-advanced-nav` en localStorage).

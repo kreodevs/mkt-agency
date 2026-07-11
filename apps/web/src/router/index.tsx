@@ -66,8 +66,11 @@ const PublicCapturePage = lazy(() => import('@/pages/capture/PublicCapturePage')
 
 function Loading() {
   return (
-    <div className="flex min-h-screen items-center justify-center text-[var(--foreground-muted)]">
-      Cargando...
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--primary)]" />
+        <span className="text-sm font-medium text-[var(--foreground-muted)]">Cargando...</span>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Menu as MenuIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/atoms/Button';
@@ -72,9 +73,15 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
 
         {mobileMenuOpen && hasSidebar && (
           <div className="fixed inset-0 z-[var(--z-modal)] flex lg:hidden">
-            <div className="flex h-full w-sidebar max-w-[85vw] shrink-0 flex-col overflow-hidden shadow-xl">
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+              className="flex h-full w-sidebar max-w-[85vw] shrink-0 flex-col overflow-hidden shadow-xl"
+            >
               {sidebarNode}
-            </div>
+            </motion.div>
             <button
               type="button"
               className="min-w-0 flex-1 cursor-default bg-[var(--foreground)]/40 backdrop-blur-sm"
@@ -85,13 +92,13 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
         )}
 
         <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="relative flex h-header shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--card)] px-4 md:px-6 lg:px-8">
+          <header className="relative flex h-header shrink-0 items-center gap-3 border-b border-[var(--border)]/40 material-header scroll-edge-bottom px-4 md:px-6 lg:px-8">
             <div className="flex shrink-0 items-center gap-[var(--spacing-md)]">
               {hasSidebar && (
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(true)}
-                  className="rounded-[var(--radius)] p-[var(--spacing-sm)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)] lg:hidden"
+                  className="rounded-[var(--radius)] p-[var(--spacing-sm)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)] lg:hidden press-subtle"
                 >
                   <MenuIcon className="h-5 w-5" />
                 </button>
@@ -112,8 +119,20 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
               </Button>
             </div>
           </header>
-          <main className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
-            <div className="mx-auto max-w-[1600px] animate-fade-in">{children}</div>
+          <main className="custom-scrollbar rubber-band min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
+            <div className="mx-auto max-w-[1600px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </main>
         </div>
       </div>

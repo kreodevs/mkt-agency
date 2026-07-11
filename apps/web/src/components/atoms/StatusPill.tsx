@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 const statusPillVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[var(--spacing-xxs)] text-xs font-semibold transition-all duration-[var(--transition-base)]',
+  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[var(--spacing-xxs)] text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
   {
     variants: {
       status: {

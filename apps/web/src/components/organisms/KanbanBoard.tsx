@@ -87,14 +87,14 @@ const SortableCard = ({
   customRenderer,
   className,
 }: Omit<KanbanCardWrapperProps, 'isDragging'>) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: card.id,
     data: { type: 'card', card },
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? undefined : 'transform 250ms cubic-bezier(0.22, 1, 0.36, 1)',
   };
 
   return (
@@ -102,9 +102,9 @@ const SortableCard = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-sm transition-all',
+        'rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-sm transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] press-subtle',
         isDragging
-          ? 'z-50 opacity-40 shadow-lg ring-2 ring-[var(--primary)]'
+          ? 'z-50 opacity-40 shadow-xl ring-2 ring-[var(--primary)]'
           : 'hover:border-[var(--primary)]/40 hover:shadow-md active:border-[var(--primary)]',
         className,
       )}
@@ -138,8 +138,8 @@ const KanbanColumn = ({
   return (
     <div
       className={cn(
-        'flex w-[300px] min-w-[300px] flex-col rounded-xl transition-all duration-200',
-        'border border-[var(--border)] bg-[var(--secondary)] shadow-sm',
+        'flex w-[300px] min-w-[300px] flex-col rounded-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        'border border-[var(--border)]/60 bg-[var(--secondary)] shadow-sm',
         isOver && 'border-[var(--primary)]/30 ring-2 ring-[var(--primary)]/40',
       )}
     >
@@ -155,7 +155,7 @@ const KanbanColumn = ({
       </div>
 
       <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-        <div className="flex min-h-[80px] flex-1 flex-col gap-2.5 overflow-y-auto p-3">
+        <div className="custom-scrollbar flex min-h-[80px] flex-1 flex-col gap-2.5 overflow-y-auto p-3">
           {column.cards.length > 0 ? (
             column.cards.map((card) => (
               <SortableCard
@@ -397,7 +397,7 @@ export const KanbanBoard = ({
     >
       <div
         className={cn(
-          'scrollbar-thin scrollbar-thumb-[var(--border)] flex h-full gap-[var(--spacing-lg)] overflow-x-auto pb-[var(--spacing-md)]',
+          'scrollbar-thin scrollbar-thumb-[var(--border)] rubber-band flex h-full gap-[var(--spacing-lg)] overflow-x-auto pb-[var(--spacing-md)]',
           className,
         )}
       >
@@ -413,9 +413,12 @@ export const KanbanBoard = ({
         ))}
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={{
+        duration: 300,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      }}>
         {activeId && activeCard ? (
-          <div className="scale-105 rotate-2 rounded-lg border-2 border-[var(--primary)] bg-[var(--background)] opacity-90 shadow-xl">
+          <div className="scale-[1.03] rotate-1 rounded-lg border-2 border-[var(--primary)] bg-[var(--background)] opacity-95 shadow-xl transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]">
             <div className="p-3.5">
               {customCardRenderer ? (
                 customCardRenderer(activeCard.card)

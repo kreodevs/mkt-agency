@@ -213,7 +213,110 @@ h6 {
   letter-spacing: normal;
 }
 
-/* Flat elevation — design evidence: no shadows */
+/* ── Apple Design: Elevation system ── */
+/* Light surfaces: subtle shadow. Floating materials: stronger shadow. */
 * {
-  box-shadow: none !important;
+  --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.04), 0 1px 3px rgba(20, 20, 19, 0.06);
+  --shadow-md: 0 2px 6px rgba(20, 20, 19, 0.06), 0 4px 12px rgba(20, 20, 19, 0.08);
+  --shadow-lg: 0 4px 12px rgba(20, 20, 19, 0.08), 0 8px 24px rgba(20, 20, 19, 0.12);
+  --shadow-xl: 0 8px 24px rgba(20, 20, 19, 0.12), 0 16px 48px rgba(20, 20, 19, 0.16);
+}
+
+/* ── Apple Design: Translucent material tokens ── */
+.material-header {
+  background: rgba(250, 249, 245, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.material-sidebar {
+  background: rgba(250, 249, 245, 0.88);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+}
+
+.material-sheet {
+  background: rgba(250, 249, 245, 0.92);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+/* ── Apple Design: Scroll edge effect (replaces hard border-bottom) ── */
+.scroll-edge-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(to bottom, rgba(250, 249, 245, 0.85), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Apple Design: Rubber-banding on scroll containers ── */
+.rubber-band {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ── Apple Design: Pointer-down feedback (instant, no delay) ── */
+.pressable {
+  transition: transform 80ms ease-out;
+  will-change: transform;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+.press-subtle {
+  transition: transform 80ms ease-out;
+  will-change: transform;
+}
+.press-subtle:active {
+  transform: scale(0.985);
+}
+
+/* ── Apple Design: Accessibility media queries ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 200ms !important;
+    scroll-behavior: auto !important;
+  }
+  .material-header,
+  .material-sidebar,
+  .material-sheet {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--color-ivory-light);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material-header,
+  .material-sidebar,
+  .material-sheet {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--color-ivory-light);
+  }
+  .scroll-edge-bottom::after {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .material-header,
+  .material-sidebar,
+  .material-sheet {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--color-ivory-light);
+    border: 1px solid var(--border);
+  }
 }

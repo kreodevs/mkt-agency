@@ -5,66 +5,81 @@
 @tailwind utilities;
 
 @layer components {
+  /* ── Typography: tracking size-specific (Apple Design §15) ── */
+  /* Large display: negative tracking (letters read too far apart at large sizes) */
   .type-display-xl {
     font-family: var(--font-sans);
     font-size: var(--text-display-xl);
     font-weight: var(--weight-display-xl);
-    line-height: var(--leading-display-xl);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-optical-sizing: auto;
   }
 
   .type-display-serif {
     font-family: var(--font-serif);
     font-size: var(--text-display-serif);
     font-weight: var(--weight-display-serif);
-    line-height: var(--leading-display-serif);
-    letter-spacing: var(--tracking-display-serif);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-optical-sizing: auto;
   }
 
   .type-body-serif-m {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif-m);
     line-height: var(--leading-body-serif-m);
+    letter-spacing: 0;
   }
 
   .type-body-serif-s {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif-s);
     line-height: var(--leading-body-serif-s);
+    letter-spacing: 0;
   }
 
+  /* UI body: near-zero tracking */
   .type-ui-sans-m {
     font-family: var(--font-sans);
     font-size: var(--text-ui-sans-m);
     font-weight: var(--weight-ui-sans-m);
     line-height: var(--leading-ui-sans-m);
-    letter-spacing: var(--tracking-ui-sans-m);
+    letter-spacing: -0.005em;
   }
 
+  /* UI medium: slight negative tracking */
   .type-ui-sans-medium {
     font-family: var(--font-sans);
     font-size: var(--text-ui-sans-medium);
     font-weight: var(--weight-ui-sans-medium);
     line-height: var(--leading-ui-sans-medium);
+    letter-spacing: -0.01em;
   }
 
+  /* UI semibold (headings): tight tracking */
   .type-ui-sans-semibold {
     font-family: var(--font-sans);
     font-size: var(--text-ui-sans-semibold);
     font-weight: var(--weight-ui-sans-semibold);
     line-height: var(--leading-ui-sans-semibold);
+    letter-spacing: -0.015em;
   }
 
+  /* Small detail text: slightly positive tracking for legibility */
   .type-detail-xs {
     font-family: var(--font-sans);
     font-size: var(--text-detail-xs);
     line-height: var(--leading-detail-xs);
-    letter-spacing: var(--tracking-detail-xs);
+    letter-spacing: 0.02em;
+    font-optical-sizing: auto;
   }
 
   .type-serif-accent {
     font-family: var(--font-serif);
     font-size: var(--text-serif-accent);
     line-height: var(--leading-serif-accent);
+    letter-spacing: -0.01em;
   }
 
   .type-mono {
@@ -87,19 +102,39 @@
   }
 }
 
-@keyframes fade-in {
-  from {
+/* ── Apple Design: Spring-based page enter (replaces CSS keyframe) ── */
+/* Actual spring motion is handled by <motion.div> in components. */
+/* This is the CSS fallback for elements that can't use motion. */
+@keyframes spring-in {
+  0% {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(8px) scale(0.98);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-1px) scale(1.002);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: spring-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Scroll edge: gradient mask under sticky header ── */
+.scroll-edge-mask {
+  position: relative;
+}
+.scroll-edge-mask::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  display: block;
+  height: 0;
+  pointer-events: none;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

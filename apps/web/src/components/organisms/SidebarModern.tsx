@@ -69,12 +69,12 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
       <aside
         ref={ref}
         className={cn(
-          'relative flex h-full min-h-0 w-full shrink-0 flex-col overflow-visible border-r border-[var(--border)] bg-[var(--card)] transition-[width] duration-300 ease-in-out',
+          'relative flex h-full min-h-0 w-full shrink-0 flex-col overflow-visible border-r border-[var(--border)]/60 material-sidebar transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           collapsed ? 'lg:w-sidebar-collapsed' : 'lg:w-sidebar',
           className,
         )}
       >
-        <div className="relative flex h-header shrink-0 items-center overflow-visible border-b border-[var(--border)] px-[var(--spacing-lg)]">
+        <div className="relative flex h-header shrink-0 items-center overflow-visible border-b border-[var(--border)]/40 px-[var(--spacing-lg)]">
           <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
             {collapsed ? (
               <Tooltip content={`Mkt Agency · v${appVersion}`}>
@@ -105,7 +105,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
               type="button"
               data-collapse-trigger
               onClick={toggleCollapse}
-              className="absolute top-1/2 -right-3 z-50 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] lg:flex"
+              className="absolute top-1/2 -right-3 z-50 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] shadow-md transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] lg:flex press-subtle"
               aria-label={collapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
             >
               {collapsed ? (
@@ -133,7 +133,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                     const content = (
                       <div
                         className={cn(
-                          'group relative flex cursor-pointer items-center gap-[var(--spacing-md)] rounded-[var(--radius)] px-[var(--spacing-md)] py-2.5 transition-all duration-200',
+                          'group relative flex cursor-pointer items-center gap-[var(--spacing-md)] rounded-[var(--radius)] px-[var(--spacing-md)] py-2.5 transition-all duration-200 press-subtle',
                           isActive
                             ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md'
                             : 'text-[var(--foreground-muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]',
@@ -177,13 +177,13 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           </div>
 
           {sidebarFooter && !collapsed && (
-            <div className="shrink-0 border-t border-[var(--border)] px-[var(--spacing-md)] py-[var(--spacing-sm)]">
+            <div className="shrink-0 border-t border-[var(--border)]/40 px-[var(--spacing-md)] py-[var(--spacing-sm)]">
               {sidebarFooter}
             </div>
           )}
 
           {user && (
-            <div className="mt-auto shrink-0 border-t border-[var(--border)] p-[var(--spacing-md)]">
+            <div className="mt-auto shrink-0 border-t border-[var(--border)]/40 p-[var(--spacing-md)]">
               <div className="flex items-center gap-[var(--spacing-md)]">
                 <Avatar src={user.avatar} name={user.name} size="sm" />
                 {!collapsed && (
@@ -200,7 +200,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="flex items-center gap-1.5 rounded-[var(--radius)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+                    className="flex items-center gap-1.5 rounded-[var(--radius)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)] press-subtle"
                     aria-label="Cerrar sesión"
                   >
                     <LogOut className="h-3.5 w-3.5" />
@@ -211,7 +211,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="rounded-[var(--radius)] p-2 text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
+                    className="rounded-[var(--radius)] p-2 text-[var(--foreground-subtle)] transition-all hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)] press-subtle"
                     aria-label="Cerrar sesión"
                   >
                     <LogOut className="h-4 w-4" />
