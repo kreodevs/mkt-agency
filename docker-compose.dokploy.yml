@@ -103,6 +103,9 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       API_PUBLIC_URL: ${API_PUBLIC_URL}
       DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-dashboard.mktagency.app}
+      SKIP_OPERATIONAL_DATA_RESET: ${SKIP_OPERATIONAL_DATA_RESET:-true}
+      SKIP_GENERATED_CONTENT_RESET: ${SKIP_GENERATED_CONTENT_RESET:-false}
+      RUN_GENERATED_CONTENT_RESET: ${RUN_GENERATED_CONTENT_RESET:-false}
     depends_on:
       postgres:
         condition: service_healthy

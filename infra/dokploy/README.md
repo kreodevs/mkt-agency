@@ -67,6 +67,9 @@ Para vaciar contenidos al desplegar, en el servicio **`api`** (un solo deploy):
 |----------|--------|
 | `RUN_GENERATED_CONTENT_RESET` | `true` |
 | `SKIP_GENERATED_CONTENT_RESET` | `false` (o sin definir) |
+| `SKIP_OPERATIONAL_DATA_RESET` | `true` (protege productos) |
+
+Las tres deben estar en el servicio **`api`** (`docker-compose.dokploy.yml` las reenvía desde env de Dokploy).
 
 Redeploy → en logs del contenedor `api` busca:
 
