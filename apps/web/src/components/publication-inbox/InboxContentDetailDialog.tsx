@@ -79,6 +79,7 @@ export function InboxContentDetailDialog({
               showApproval={false}
               showRegenerate={!isRejected}
               onRejected={onRejected}
+              onDeleted={() => onOpenChange(false)}
               layout="footer"
             />
             <div className="flex flex-wrap justify-end gap-[var(--spacing-sm)]">

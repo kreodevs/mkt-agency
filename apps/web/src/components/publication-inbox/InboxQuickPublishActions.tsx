@@ -8,10 +8,12 @@ import {
   MessageCircle,
   MoreHorizontal,
   RefreshCw,
+  Trash2,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
+import { InboxContentDeleteDialog } from '@/components/publication-inbox/InboxContentDeleteDialog';
 import {
   buildPostCopyText,
   buildWhatsAppShareUrl,
@@ -21,7 +23,7 @@ import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
 import { approveContentVersion, rejectContentVersion } from '@/services/content';
-import { regenerateInboxContent } from '@/services/publication-inbox';
+import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
@@ -30,7 +32,9 @@ interface InboxQuickPublishActionsProps {
   item: PublicationInboxItem;
   showRegenerate?: boolean;
   showApproval?: boolean;
+  showDelete?: boolean;
   onRejected?: (context: InboxRejectFollowUpContext) => void;
+  onDeleted?: () => void;
   layout?: 'default' | 'footer';
 }
 
@@ -44,11 +48,14 @@ export function InboxQuickPublishActions({
   item,
   showRegenerate = true,
   showApproval = false,
+  showDelete = true,
   onRejected,
+  onDeleted,
   layout = 'default',
 }: InboxQuickPublishActionsProps) {
   const queryClient = useQueryClient();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const canApprove = showApproval && needsApproval(item);
 
   const invalidate = () => {
@@ -109,6 +116,20 @@ export function InboxQuickPublishActions({
       toast.success('Nueva versión en camino — texto actualizado e imagen regenerándose');
     },
     onError: () => toast.error('No se pudo regenerar'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteInboxContent(item.contentId),
+    onSuccess: async () => {
+      await invalidate();
+      setDeleteOpen(false);
+      setMoreOpen(false);
+      onDeleted?.();
+      toast.message('Publicación eliminada');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo eliminar');
+    },
   });
 
   const copyText = buildPostCopyText(item.title, sanitizePublishableCopy(item.body));
@@ -188,17 +209,33 @@ export function InboxQuickPublishActions({
           Otra versión
         </Button>
       ) : null}
+      {showDelete ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="w-full justify-start text-[var(--destructive)] hover:text-[var(--destructive)]"
+          onClick={() => {
+            setMoreOpen(false);
+            setDeleteOpen(true);
+          }}
+        >
+          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          Eliminar
+        </Button>
+      ) : null}
     </>
   );
 
   return (
-    <div
-      className={
-        layout === 'footer'
-          ? 'flex flex-wrap items-center justify-end gap-[var(--spacing-sm)]'
-          : 'mt-[var(--spacing-md)] flex flex-wrap gap-[var(--spacing-sm)]'
-      }
-    >
+    <>
+      <div
+        className={
+          layout === 'footer'
+            ? 'flex flex-wrap items-center justify-end gap-[var(--spacing-sm)]'
+            : 'mt-[var(--spacing-md)] flex flex-wrap gap-[var(--spacing-sm)]'
+        }
+      >
       {canApprove && (
         <>
           <Button
@@ -271,7 +308,16 @@ export function InboxQuickPublishActions({
           </>
         ) : null}
       </div>
-    </div>
+      </div>
+
+      <InboxContentDeleteDialog
+        open={deleteOpen}
+        description={`¿Eliminar «${item.title}»? Se borrarán todas las versiones (incluidas aprobadas).`}
+        loading={deleteMutation.isPending}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+      />
+    </>
   );
 }
 

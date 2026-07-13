@@ -16,8 +16,10 @@ import {
 import {
   AgencyNotificationDto,
   BulkApproveResponseDto,
+  BulkDeleteInboxResponseDto,
   PublicationInboxItemDto,
   PublicationInboxResponseDto,
+  type InboxPurgeScope,
 } from './dto/publication-inbox.dto';
 import { toDateKey } from '../../shared/domain/date-key.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
@@ -130,8 +132,53 @@ export class PublicationInboxService {
       });
     }
 
-    await this.contentService.remove(tenantId, contentId);
+    await this.contentService.forceRemove(tenantId, contentId);
     return { contentId, dismissed: true };
+  }
+
+  async deleteContent(
+    tenantId: string,
+    contentId: string,
+  ): Promise<{ contentId: string; deleted: true }> {
+    await this.contentService.forceRemove(tenantId, contentId);
+    return { contentId, deleted: true };
+  }
+
+  async bulkDelete(
+    tenantId: string,
+    contentIds: string[],
+  ): Promise<BulkDeleteInboxResponseDto> {
+    const result: BulkDeleteInboxResponseDto = { deleted: 0, failed: [] };
+
+    for (const contentId of contentIds) {
+      try {
+        await this.contentService.forceRemove(tenantId, contentId);
+        result.deleted += 1;
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'No se pudo eliminar';
+        result.failed.push({ contentId, reason });
+      }
+    }
+
+    return result;
+  }
+
+  async purgeInbox(
+    tenantId: string,
+    scope: InboxPurgeScope,
+    productId?: string,
+  ): Promise<BulkDeleteInboxResponseDto> {
+    const rows = await this.fetchInboxRows(tenantId, productId);
+    const today = this.todayKey();
+    const contentIds = rows
+      .filter((row) => scope === 'all' || this.classifyInboxRow(row, today) === scope)
+      .map((row) => row.id);
+
+    if (contentIds.length === 0) {
+      return { deleted: 0, failed: [] };
+    }
+
+    return this.bulkDelete(tenantId, contentIds);
   }
 
   async bulkApprove(
@@ -355,6 +402,24 @@ export class PublicationInboxService {
       readAt: row.readAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
     };
+  }
+
+  private classifyInboxRow(
+    row: InboxRow,
+    today: string,
+  ): 'pending' | 'ready' | 'upcoming' | 'rejected' {
+    const effectiveDate = this.effectiveDate(row);
+    const isApproved = row.status === 'approved' && Boolean(row.signatureHash);
+    const isRejected = row.status === 'rejected';
+    const isPending =
+      !isApproved &&
+      !isRejected &&
+      ['draft', 'in_review', 'in_changes'].includes(row.status);
+
+    if (isRejected) return 'rejected';
+    if (isPending) return 'pending';
+    if (isApproved && effectiveDate <= today) return 'ready';
+    return 'upcoming';
   }
 
   private effectiveDate(row: InboxRow): string {

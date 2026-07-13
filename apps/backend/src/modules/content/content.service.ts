@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Not, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { ProductService } from '../product/product.service';
@@ -265,6 +265,37 @@ export class ContentService {
     }
 
     await this.contents.remove(content);
+  }
+
+  /** Elimina la pieza y todo su historial (aprobaciones, versiones firmadas, eventos). */
+  async forceRemove(tenantId: string, id: string): Promise<void> {
+    await this.findOwnedContent(tenantId, id);
+
+    await this.dataSource.transaction(async (manager) => {
+      const contentRepo = manager.getRepository(ContentEntity);
+      const versionRepo = manager.getRepository(ContentVersionEntity);
+      const approvalRepo = manager.getRepository(ContentApprovalEntity);
+
+      const versions = await versionRepo.find({
+        where: { contentId: id },
+        select: ['id'],
+      });
+      const versionIds = versions.map((version) => version.id);
+
+      if (versionIds.length > 0) {
+        await approvalRepo.delete({ contentVersionId: In(versionIds) });
+      }
+
+      await manager.query(`DELETE FROM agent_image_generations WHERE content_id = $1`, [id]);
+      await manager.query(
+        `DELETE FROM events WHERE aggregate_type = 'content' AND aggregate_id = $1`,
+        [id],
+      );
+
+      await contentRepo.update({ id, tenantId }, { currentVersionId: null });
+      await versionRepo.delete({ contentId: id });
+      await contentRepo.delete({ id, tenantId });
+    });
   }
 
   async listVersions(tenantId: string, contentId: string): Promise<ContentVersionResponseDto[]> {

@@ -7,7 +7,9 @@ Versionado inmutable de piezas de campaña (US-010 + US-011).
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET/POST | `/api/v1/contents` | Listar / crear |
-| GET/PATCH/DELETE | `/api/v1/contents/:id` | Detalle / actualizar (nueva versión) / eliminar |
+| GET/PATCH/DELETE | `/api/v1/contents/:id` | Detalle / actualizar (nueva versión) / eliminar (solo sin versiones aprobadas) |
+
+`ContentService.forceRemove` — borrado completo (aprobaciones, versiones firmadas, eventos); usado por la bandeja.
 | GET | `/api/v1/contents/:id/versions` | Historial |
 | GET | `/api/v1/contents/:id/versions/:vid` | Versión específica |
 | POST | `/api/v1/contents/:id/revert/:vid` | Revertir (nueva versión) |

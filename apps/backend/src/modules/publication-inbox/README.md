@@ -12,7 +12,10 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | GET | `/publication-inbox/prepare-week/jobs/:jobId` | Estado del job (`processing` / `completed` / `failed`) |
 | POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual; body opcional `{ visualFormat?, feedback? }` |
 | POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }` |
-| POST | `/publication-inbox/dismiss/:contentId` | Archiva pieza **rechazada** (elimina de la bandeja) |
+| POST | `/publication-inbox/dismiss/:contentId` | Archiva pieza **rechazada** (alias de delete con validación de status) |
+| POST | `/publication-inbox/delete/:contentId` | Elimina pieza (cualquier status, incl. aprobada y multi-versión) |
+| POST | `/publication-inbox/bulk-delete` | Elimina múltiples `{ contentIds[] }` |
+| POST | `/publication-inbox/purge` | Limpia por alcance `{ scope, productId? }` — `all` \| `pending` \| `ready` \| `rejected` \| `upcoming` |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |
 | PATCH | `/publication-inbox/notifications/read-all` | Marca todas leídas |

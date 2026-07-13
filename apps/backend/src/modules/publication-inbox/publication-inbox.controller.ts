@@ -14,16 +14,21 @@ import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import {
+  AgencyNotificationDto,
   BulkApproveDto,
   BulkApproveResponseDto,
+  BulkDeleteInboxResponseDto,
   CopilotStatusResponseDto,
+  DeleteInboxContentResponseDto,
   DismissInboxContentResponseDto,
   PrepareWeekDto,
   PrepareWeekJobStartedDto,
   PrepareWeekJobStatusDto,
   PublicationInboxQueryDto,
   PublicationInboxResponseDto,
+  PurgeInboxDto,
   RegenerateInboxContentDto,
+  BulkDeleteInboxDto,
   RequestInboxChangesDto,
   RequestInboxChangesResponseDto,
 } from './dto/publication-inbox.dto';
@@ -128,6 +133,30 @@ export class PublicationInboxController {
     @Param('contentId') contentId: string,
   ): Promise<DismissInboxContentResponseDto> {
     return this.inboxService.dismissRejected(user.tenantId!, contentId);
+  }
+
+  @Post('delete/:contentId')
+  deleteContent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+  ): Promise<DeleteInboxContentResponseDto> {
+    return this.inboxService.deleteContent(user.tenantId!, contentId);
+  }
+
+  @Post('bulk-delete')
+  bulkDelete(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: BulkDeleteInboxDto,
+  ): Promise<BulkDeleteInboxResponseDto> {
+    return this.inboxService.bulkDelete(user.tenantId!, body.contentIds);
+  }
+
+  @Post('purge')
+  purgeInbox(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: PurgeInboxDto,
+  ): Promise<BulkDeleteInboxResponseDto> {
+    return this.inboxService.purgeInbox(user.tenantId!, body.scope, body.productId);
   }
 
   @Post('request-changes/:contentId')

@@ -9,7 +9,7 @@ import {
   normalizeContentVisualFormat,
   type ContentVisualFormat,
 } from '@/lib/visual-format';
-import { dismissInboxContent, regenerateInboxContent } from '@/services/publication-inbox';
+import { deleteInboxContent, regenerateInboxContent } from '@/services/publication-inbox';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
 interface RejectedInboxActionsProps {
@@ -41,12 +41,12 @@ export function RejectedInboxActions({ item }: RejectedInboxActionsProps) {
   });
 
   const dismissMutation = useMutation({
-    mutationFn: () => dismissInboxContent(item.contentId),
+    mutationFn: () => deleteInboxContent(item.contentId),
     onSuccess: async () => {
       await invalidate();
-      toast.message('Pieza archivada');
+      toast.message('Publicación eliminada');
     },
-    onError: () => toast.error('No se pudo archivar'),
+    onError: () => toast.error('No se pudo eliminar'),
   });
 
   const isBusy = regenerateMutation.isPending || dismissMutation.isPending;
@@ -74,7 +74,7 @@ export function RejectedInboxActions({ item }: RejectedInboxActionsProps) {
           onClick={() => dismissMutation.mutate()}
         >
           <Trash2 className="mr-1 h-3.5 w-3.5" />
-          Archivar
+          Eliminar
         </Button>
       </div>
 

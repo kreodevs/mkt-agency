@@ -1,4 +1,4 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class PublicationInboxQueryDto {
   @IsOptional()
@@ -149,4 +149,34 @@ export class RegenerateInboxContentDto {
 export class DismissInboxContentResponseDto {
   contentId!: string;
   dismissed!: true;
+}
+
+export const INBOX_PURGE_SCOPES = ['all', 'pending', 'ready', 'rejected', 'upcoming'] as const;
+export type InboxPurgeScope = (typeof INBOX_PURGE_SCOPES)[number];
+
+export class BulkDeleteInboxDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  @IsUUID('4', { each: true })
+  contentIds!: string[];
+}
+
+export class PurgeInboxDto {
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsIn(INBOX_PURGE_SCOPES)
+  scope!: InboxPurgeScope;
+}
+
+export class DeleteInboxContentResponseDto {
+  contentId!: string;
+  deleted!: true;
+}
+
+export class BulkDeleteInboxResponseDto {
+  deleted!: number;
+  failed!: Array<{ contentId: string; reason: string }>;
 }

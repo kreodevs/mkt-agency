@@ -9,6 +9,7 @@ import {
   Layers,
   PartyPopper,
   Send,
+  Trash2,
   Users,
   XCircle,
 } from 'lucide-react';
@@ -21,6 +22,8 @@ import {
 } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 import { InboxKitPanel } from '@/components/publication-inbox/InboxKitPanel';
 import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
+import { InboxPurgeDialog } from '@/components/publication-inbox/InboxPurgeDialog';
+import { InboxContentDeleteDialog } from '@/components/publication-inbox/InboxContentDeleteDialog';
 import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPanel';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
@@ -38,6 +41,7 @@ import {
 } from '@/lib/inbox-today.util';
 import {
   bulkApproveInbox,
+  bulkDeleteInboxContents,
   getPublicationInbox,
   getSohoSummary,
   markAllNotificationsRead,
@@ -58,6 +62,8 @@ export default function PublicationInboxPage() {
   const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rejectFollowUp, setRejectFollowUp] = useState<InboxRejectFollowUpContext | null>(null);
+  const [purgeOpen, setPurgeOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const welcome = searchParams.get('welcome') === '1';
   const urlProductId = searchParams.get('productId');
 
@@ -97,6 +103,23 @@ export default function PublicationInboxPage() {
       }
     },
     onError: () => toast.error('No se pudo aprobar en lote'),
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteInboxContents(ids),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+      if (result.deleted > 0) {
+        toast.success(`${result.deleted} publicación(es) eliminada(s)`);
+      }
+      if (result.failed.length > 0) {
+        toast.error(`${result.failed.length} no se pudieron eliminar`);
+      }
+    },
+    onError: () => toast.error('No se pudo eliminar en lote'),
   });
 
   const dismissWelcome = () => {
@@ -176,12 +199,24 @@ export default function PublicationInboxPage() {
         title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
         description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
         actions={
-          <Link to="/calendario">
-            <Button type="button" variant="outline" size="sm" className="gap-1.5">
-              <CalendarDays className="h-4 w-4" />
-              Calendario
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-[var(--destructive)] hover:text-[var(--destructive)]"
+              onClick={() => setPurgeOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Limpiar contenido
             </Button>
-          </Link>
+            <Link to="/calendario">
+              <Button type="button" variant="outline" size="sm" className="gap-1.5">
+                <CalendarDays className="h-4 w-4" />
+                Calendario
+              </Button>
+            </Link>
+          </div>
         }
       />
 
@@ -342,6 +377,16 @@ export default function PublicationInboxPage() {
                     >
                       Aprobar seleccionadas ({selectedIds.size})
                     </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="text-[var(--destructive)] hover:text-[var(--destructive)]"
+                      disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending}
+                      onClick={() => setBulkDeleteOpen(true)}
+                    >
+                      Eliminar seleccionadas ({selectedIds.size})
+                    </Button>
                   </div>
                 )}
 
@@ -438,6 +483,21 @@ export default function PublicationInboxPage() {
       <InboxRejectFollowUpDialog
         context={rejectFollowUp}
         onClose={() => setRejectFollowUp(null)}
+      />
+
+      <InboxPurgeDialog
+        open={purgeOpen}
+        productId={activeProductId}
+        onClose={() => setPurgeOpen(false)}
+      />
+
+      <InboxContentDeleteDialog
+        open={bulkDeleteOpen}
+        title="Eliminar seleccionadas"
+        description={`¿Eliminar ${selectedIds.size} publicación(es)? Incluye aprobadas y todas sus versiones.`}
+        loading={bulkDeleteMutation.isPending}
+        onClose={() => setBulkDeleteOpen(false)}
+        onConfirm={() => bulkDeleteMutation.mutate([...selectedIds])}
       />
     </DashboardShell>
   );

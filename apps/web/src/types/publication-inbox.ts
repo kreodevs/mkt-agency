@@ -49,6 +49,13 @@ export interface BulkApproveResult {
   failed: Array<{ contentId: string; reason: string }>;
 }
 
+export type InboxPurgeScope = 'all' | 'pending' | 'ready' | 'rejected' | 'upcoming';
+
+export interface BulkDeleteInboxResult {
+  deleted: number;
+  failed: Array<{ contentId: string; reason: string }>;
+}
+
 export interface CopilotStatus {
   productId: string;
   productName: string;

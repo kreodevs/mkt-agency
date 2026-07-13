@@ -1,7 +1,9 @@
 import { apiFetch, ApiError } from './api';
 import type {
   BulkApproveResult,
+  BulkDeleteInboxResult,
   CopilotStatus,
+  InboxPurgeScope,
   PrepareWeekJobStatus,
   PrepareWeekResult,
   PublicationInboxData,
@@ -42,6 +44,27 @@ export function regenerateInboxContent(
 
 export function dismissInboxContent(contentId: string): Promise<{ contentId: string; dismissed: true }> {
   return apiFetch(`/publication-inbox/dismiss/${contentId}`, { method: 'POST' });
+}
+
+export function deleteInboxContent(contentId: string): Promise<{ contentId: string; deleted: true }> {
+  return apiFetch(`/publication-inbox/delete/${contentId}`, { method: 'POST' });
+}
+
+export function bulkDeleteInboxContents(contentIds: string[]): Promise<BulkDeleteInboxResult> {
+  return apiFetch<BulkDeleteInboxResult>('/publication-inbox/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ contentIds }),
+  });
+}
+
+export function purgeInboxContents(
+  scope: InboxPurgeScope,
+  productId?: string,
+): Promise<BulkDeleteInboxResult> {
+  return apiFetch<BulkDeleteInboxResult>('/publication-inbox/purge', {
+    method: 'POST',
+    body: JSON.stringify(productId ? { scope, productId } : { scope }),
+  });
 }
 
 export function requestInboxChanges(
