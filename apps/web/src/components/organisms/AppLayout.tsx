@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Menu as MenuIcon, Search } from 'lucide-react';
+import { Bell, Menu as MenuIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/atoms/Button';
 import { SidebarModern, type SidebarGroup } from './SidebarModern';
@@ -13,11 +13,14 @@ export interface AppLayoutProps {
   activeHref?: string;
   user?: { name: string; email: string; avatar?: string };
   headerActions?: React.ReactNode;
+  banner?: React.ReactNode;
   brand?: React.ReactNode;
   className?: string;
   linkComponent?: React.ElementType;
   onLogout?: () => void;
   sidebarFooter?: React.ReactNode;
+  notificationCount?: number;
+  onNotificationsClick?: () => void;
 }
 
 export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
@@ -29,11 +32,14 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
       activeHref,
       user,
       headerActions,
+      banner,
       brand,
       linkComponent,
       className,
       onLogout,
       sidebarFooter,
+      notificationCount = 0,
+      onNotificationsClick,
     },
     ref,
   ) => {
@@ -41,21 +47,25 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
     const location = useLocation();
     const hasSidebar = !!(sidebar || navigationGroups);
     const touchStartX = useRef(0);
+    const touchFromEdge = useRef(false);
 
     useEffect(() => {
       setMobileMenuOpen(false);
     }, [location.pathname]);
 
-    /* Swipe-right from left edge to open sidebar on mobile */
     const handleTouchStart = (e: React.TouchEvent) => {
-      if (e.touches[0].clientX < 24 && !mobileMenuOpen) {
-        touchStartX.current = e.touches[0].clientX;
-      }
+      touchFromEdge.current = e.touches[0].clientX < 24;
+      touchStartX.current = e.touches[0].clientX;
     };
     const handleTouchEnd = (e: React.TouchEvent) => {
-      if (!mobileMenuOpen || !hasSidebar) return;
-      const dx = e.changedTouches[0].clientX - touchStartX.current;
-      if (dx < -60) {
+      if (!hasSidebar) return;
+      const endX = e.changedTouches[0].clientX;
+      const dx = endX - touchStartX.current;
+      if (!mobileMenuOpen && touchFromEdge.current && dx > 60) {
+        setMobileMenuOpen(true);
+        return;
+      }
+      if (mobileMenuOpen && dx < -60) {
         setMobileMenuOpen(false);
       }
     };
@@ -116,26 +126,37 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
                   type="button"
                   onClick={() => setMobileMenuOpen(true)}
                   className="rounded-[var(--radius)] p-[var(--spacing-sm)] text-[var(--foreground-muted)] hover:bg-[var(--secondary)] lg:hidden press-subtle"
+                  aria-label="Abrir menú de navegación"
                 >
                   <MenuIcon className="h-5 w-5" />
                 </button>
               )}
-              <div className="hidden w-search-bar items-center gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--background)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-[var(--foreground-subtle)] md:flex lg:w-search-bar-lg">
-                <Search className="h-4 w-4" />
-                <span className="text-sm font-medium">Buscar...</span>
-              </div>
             </div>
             <div className="relative z-30 flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-[var(--spacing-sm)]">
               {headerActions}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative shrink-0 text-[var(--foreground-muted)]"
-              >
-                <Bell className="h-5 w-5" />
-              </Button>
+              {onNotificationsClick ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative shrink-0 text-[var(--foreground-muted)]"
+                  aria-label={
+                    notificationCount > 0
+                      ? `${notificationCount} avisos sin leer`
+                      : 'Ver avisos'
+                  }
+                  onClick={onNotificationsClick}
+                >
+                  <Bell className="h-5 w-5" />
+                  {notificationCount > 0 ? (
+                    <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--destructive)] px-1 text-[10px] font-bold text-white">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  ) : null}
+                </Button>
+              ) : null}
             </div>
           </header>
+          {banner}
           <main className="custom-scrollbar rubber-band min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
             <div className="mx-auto max-w-[1600px]">
               <AnimatePresence mode="wait">

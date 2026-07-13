@@ -90,11 +90,14 @@ export function AssetFilterBar({
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="hidden flex-col gap-1 sm:flex">
               <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>
-              <div className="flex">
+              <div className="flex" role="radiogroup" aria-label="Modo de vista">
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={viewMode === 'grid'}
+                  aria-label="Vista en grid"
                   className={`flex h-10 items-center gap-1 rounded-l-[var(--radius)] border px-3 text-sm transition-colors ${
                     viewMode === 'grid'
                       ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
@@ -107,6 +110,9 @@ export function AssetFilterBar({
                 </button>
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={viewMode === 'table'}
+                  aria-label="Vista en tabla"
                   className={`flex h-10 items-center gap-1 rounded-r-[var(--radius)] border px-3 text-sm transition-colors ${
                     viewMode === 'table'
                       ? 'border-[var(--primary)] bg-[var(--primary)] text-white'

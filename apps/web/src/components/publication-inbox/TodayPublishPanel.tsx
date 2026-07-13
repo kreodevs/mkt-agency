@@ -2,15 +2,8 @@ import { useMemo } from 'react';
 import { CalendarCheck, Sparkles } from 'lucide-react';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
 import { Card } from '@/components/molecules/Card';
+import { isInboxItemToday } from '@/lib/inbox-today.util';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
-
-function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function isToday(item: PublicationInboxItem): boolean {
-  return item.scheduledDate.slice(0, 10) === todayKey();
-}
 
 interface TodayPublishPanelProps {
   pending: PublicationInboxItem[];
@@ -24,8 +17,8 @@ export function TodayPublishPanel({
   strategyFocus,
 }: TodayPublishPanelProps) {
   const todayItems = useMemo(() => {
-    const pendingToday = pending.filter(isToday);
-    const readyToday = ready.filter(isToday);
+    const pendingToday = pending.filter(isInboxItemToday);
+    const readyToday = ready.filter(isInboxItemToday);
     return [...readyToday, ...pendingToday];
   }, [pending, ready]);
 

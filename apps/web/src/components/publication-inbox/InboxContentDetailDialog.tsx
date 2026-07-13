@@ -62,6 +62,8 @@ export function InboxContentDetailDialog({
 
   const displayBody = sanitizePublishableCopy(item.body);
   const isRejected = item.status === 'rejected';
+  const showFormalApproval =
+    showApproval && !isRejected && item.versionId && !item.signatureHash;
 
   return (
     <Dialog
@@ -70,15 +72,28 @@ export function InboxContentDetailDialog({
       title={item.title}
       size="full"
       footer={
-        <div className="flex flex-wrap justify-end gap-[var(--spacing-sm)]">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-          <Link to={`/contents/${item.contentId}`} onClick={() => onOpenChange(false)}>
-            <Button type="button" variant="ghost">
-              Abrir editor completo
-            </Button>
-          </Link>
+        <div className="sticky bottom-0 -mx-[var(--spacing-md)] border-t border-[var(--border)] bg-[var(--card)] px-[var(--spacing-md)] py-[var(--spacing-sm)] sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+          <div className="flex flex-col gap-[var(--spacing-sm)] sm:flex-row sm:flex-wrap sm:justify-end">
+            <InboxQuickPublishActions
+              item={item}
+              showApproval={false}
+              showRegenerate={!isRejected}
+              onRejected={onRejected}
+              layout="footer"
+            />
+            <div className="flex flex-wrap justify-end gap-[var(--spacing-sm)]">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              {!sohoMode ? (
+                <Link to={`/contents/${item.contentId}`} onClick={() => onOpenChange(false)}>
+                  <Button type="button" variant="ghost">
+                    Abrir editor completo
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
+          </div>
         </div>
       }
     >
@@ -106,35 +121,29 @@ export function InboxContentDetailDialog({
           <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{displayBody}</p>
         </div>
 
-        <InboxQuickPublishActions item={item} showApproval={showApproval && !isRejected} onRejected={onRejected} />
-
         {isRejected ? (
           <RejectedInboxActions item={item} />
-        ) : (
-          showApproval &&
-          item.versionId &&
-          !item.signatureHash && (
-            <ApprovalActions
-              contentId={item.contentId}
-              version={{
-                id: item.versionId,
-                versionNumber: item.versionNumber ?? 1,
-                title: item.title,
-                body: item.body,
-                signatureHash: item.signatureHash,
-                signedAt: null,
-                authorId: '',
-                assets: item.assets,
-                reason: null,
-                changeSummary: null,
-                createdAt: '',
-              }}
-              sohoMode={sohoMode}
-              visualFormat={item.visualFormat}
-              onRejected={onRejected}
-            />
-          )
-        )}
+        ) : showFormalApproval ? (
+          <ApprovalActions
+            contentId={item.contentId}
+            version={{
+              id: item.versionId!,
+              versionNumber: item.versionNumber ?? 1,
+              title: item.title,
+              body: item.body,
+              signatureHash: item.signatureHash,
+              signedAt: null,
+              authorId: '',
+              assets: item.assets,
+              reason: null,
+              changeSummary: null,
+              createdAt: '',
+            }}
+            sohoMode={sohoMode}
+            visualFormat={item.visualFormat}
+            onRejected={onRejected}
+          />
+        ) : null}
       </div>
     </Dialog>
   );

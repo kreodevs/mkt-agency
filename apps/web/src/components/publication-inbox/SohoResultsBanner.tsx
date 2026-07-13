@@ -4,14 +4,12 @@ interface SohoResultsBannerProps {
   leadsToday: number;
   leadsThisWeek: number;
   attributedLeadsThisWeek?: number;
-  strategyFocus?: string | null;
 }
 
 export function SohoResultsBanner({
   leadsToday,
   leadsThisWeek,
   attributedLeadsThisWeek = 0,
-  strategyFocus,
 }: SohoResultsBannerProps) {
   return (
     <div className="mb-[var(--spacing-lg)] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
@@ -37,15 +35,6 @@ export function SohoResultsBanner({
               <p className="text-xs text-[var(--foreground-muted)]">Desde tus posts</p>
               <p className="text-lg font-bold text-[var(--foreground)]">{attributedLeadsThisWeek}</p>
             </div>
-          </>
-        )}
-        {strategyFocus && (
-          <>
-            <div className="hidden h-10 w-px bg-[var(--border)] sm:block" />
-            <p className="min-w-0 flex-1 text-sm text-[var(--foreground-muted)]">
-              <span className="font-medium text-[var(--foreground)]">Copiloto sugiere: </span>
-              {strategyFocus}
-            </p>
           </>
         )}
       </div>

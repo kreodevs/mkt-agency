@@ -1,5 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, ExternalLink, Link2, MessageCircle, RefreshCw, X } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Link2,
+  MessageCircle,
+  MoreHorizontal,
+  RefreshCw,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import {
@@ -21,19 +31,24 @@ interface InboxQuickPublishActionsProps {
   showRegenerate?: boolean;
   showApproval?: boolean;
   onRejected?: (context: InboxRejectFollowUpContext) => void;
+  layout?: 'default' | 'footer';
 }
 
 function needsApproval(item: PublicationInboxItem): boolean {
   return Boolean(item.versionId && !item.signatureHash && item.status !== 'rejected');
 }
 
+const primaryButtonClass = 'min-h-11 sm:min-h-0';
+
 export function InboxQuickPublishActions({
   item,
   showRegenerate = true,
   showApproval = false,
   onRejected,
+  layout = 'default',
 }: InboxQuickPublishActionsProps) {
   const queryClient = useQueryClient();
+  const [moreOpen, setMoreOpen] = useState(false);
   const canApprove = showApproval && needsApproval(item);
 
   const invalidate = () => {
@@ -116,6 +131,7 @@ export function InboxQuickPublishActions({
 
   const shareWhatsApp = () => {
     window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
+    setMoreOpen(false);
   };
 
   const copyCaptureLink = async () => {
@@ -133,15 +149,62 @@ export function InboxQuickPublishActions({
 
     await navigator.clipboard.writeText(url);
     toast.success('Link de captura copiado — ponlo en tu bio o CTA del post');
+    setMoreOpen(false);
   };
 
+  const moreActions = (
+    <>
+      <Button type="button" size="sm" variant="ghost" className="w-full justify-start" onClick={shareWhatsApp}>
+        <MessageCircle className="mr-2 h-3.5 w-3.5" />
+        WhatsApp
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="w-full justify-start"
+        disabled={captureFormQuery.isLoading}
+        title="URL con UTM para pegar en bio, stories o CTA del post"
+        onClick={() => void copyCaptureLink()}
+      >
+        <Link2 className="mr-2 h-3.5 w-3.5" />
+        Link captura
+      </Button>
+      {showRegenerate ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="w-full justify-start"
+          disabled={regenerateMutation.isPending}
+          onClick={() => {
+            regenerateMutation.mutate();
+            setMoreOpen(false);
+          }}
+        >
+          <RefreshCw
+            className={`mr-2 h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`}
+          />
+          Otra versión
+        </Button>
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="mt-[var(--spacing-md)] flex flex-wrap gap-[var(--spacing-sm)]">
+    <div
+      className={
+        layout === 'footer'
+          ? 'flex flex-wrap items-center justify-end gap-[var(--spacing-sm)]'
+          : 'mt-[var(--spacing-md)] flex flex-wrap gap-[var(--spacing-sm)]'
+      }
+    >
       {canApprove && (
         <>
           <Button
             type="button"
             size="sm"
+            className={primaryButtonClass}
             loading={approveMutation.isPending}
             disabled={approvalBusy}
             onClick={() => approveMutation.mutate()}
@@ -153,6 +216,7 @@ export function InboxQuickPublishActions({
             type="button"
             size="sm"
             variant="outline"
+            className={primaryButtonClass}
             loading={rejectMutation.isPending}
             disabled={approvalBusy}
             onClick={() => rejectMutation.mutate()}
@@ -162,42 +226,51 @@ export function InboxQuickPublishActions({
           </Button>
         </>
       )}
-      <Button type="button" size="sm" onClick={() => void copyAll()}>
+      <Button type="button" size="sm" className={primaryButtonClass} onClick={() => void copyAll()}>
         <Copy className="mr-1 h-3.5 w-3.5" />
         Copiar texto
-      </Button>
-      <Button type="button" size="sm" variant="outline" onClick={openPlatform}>
-        <ExternalLink className="mr-1 h-3.5 w-3.5" />
-        Abrir red
-      </Button>
-      <Button type="button" size="sm" variant="ghost" onClick={shareWhatsApp}>
-        <MessageCircle className="mr-1 h-3.5 w-3.5" />
-        WhatsApp
       </Button>
       <Button
         type="button"
         size="sm"
-        variant="ghost"
-        disabled={captureFormQuery.isLoading}
-        onClick={() => void copyCaptureLink()}
+        variant="outline"
+        className={primaryButtonClass}
+        onClick={openPlatform}
       >
-        <Link2 className="mr-1 h-3.5 w-3.5" />
-        Link captura
+        <ExternalLink className="mr-1 h-3.5 w-3.5" />
+        Abrir red
       </Button>
-      {showRegenerate && (
+
+      <div className="relative">
         <Button
           type="button"
           size="sm"
           variant="ghost"
-          disabled={regenerateMutation.isPending}
-          onClick={() => regenerateMutation.mutate()}
+          className={primaryButtonClass}
+          aria-expanded={moreOpen}
+          aria-haspopup="menu"
+          onClick={() => setMoreOpen((open) => !open)}
         >
-          <RefreshCw
-            className={`mr-1 h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`}
-          />
-          Otra versión
+          <MoreHorizontal className="mr-1 h-3.5 w-3.5" />
+          Más
         </Button>
-      )}
+        {moreOpen ? (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 cursor-default"
+              aria-label="Cerrar menú"
+              onClick={() => setMoreOpen(false)}
+            />
+            <div
+              role="menu"
+              className="absolute right-0 z-50 mt-1 min-w-[11rem] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"
+            >
+              {moreActions}
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

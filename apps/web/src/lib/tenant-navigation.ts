@@ -58,7 +58,7 @@ export const tenantAdvancedNavigation = [
     title: 'Hoy',
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
-      { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+      { label: 'Calendario semanal', href: '/calendario', icon: CalendarDays },
       { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },
     ],
   },
@@ -100,7 +100,7 @@ export const tenantAdvancedNavigation = [
       { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
       { label: 'Competidores', href: '/settings/competitors', icon: Target },
       { label: 'Dominio', href: '/settings/domain', icon: Globe },
-      { label: 'Calendario editorial', href: '/calendar', icon: CalendarDays },
+      { label: 'Calendario editorial (avanzado)', href: '/calendar', icon: CalendarDays },
     ],
   },
 ];

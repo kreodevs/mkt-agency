@@ -28,8 +28,14 @@ import { Card } from '@/components/molecules/Card';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { StatsCard } from '@/components/molecules/StatsCard';
+import { InboxPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { toast } from '@/components/molecules/Sonner';
 import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
+import { useInboxKeyboardHints } from '@/hooks/useInboxKeyboardHints';
+import {
+  excludeTodayFromPending,
+  getTodayContentIds,
+} from '@/lib/inbox-today.util';
 import {
   bulkApproveInbox,
   getPublicationInbox,
@@ -66,6 +72,12 @@ export default function PublicationInboxPage() {
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
   });
 
+  useEffect(() => {
+    if (inboxQuery.isSuccess && window.location.hash === '#inbox-notifications') {
+      document.getElementById('inbox-notifications')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [inboxQuery.isSuccess]);
+
   const sohoSummaryQuery = useQuery({
     queryKey: ['soho-summary', activeProductId],
     queryFn: () => getSohoSummary(activeProductId ?? undefined),
@@ -98,16 +110,22 @@ export default function PublicationInboxPage() {
   const upcoming = data?.upcoming ?? [];
   const rejected = data?.rejected ?? [];
   const notifications = data?.notifications ?? [];
+  const todayIds = useMemo(() => getTodayContentIds(pending, ready), [pending, ready]);
+  const pendingRest = useMemo(
+    () => excludeTodayFromPending(pending, todayIds),
+    [pending, todayIds],
+  );
 
   const handleRejected = (context: InboxRejectFollowUpContext) => {
     setRejectFollowUp(context);
   };
 
   useSohoBrowserNotifications(notifications, sohoMode);
+  useInboxKeyboardHints(sohoMode);
 
   const allPendingSelected = useMemo(
-    () => pending.length > 0 && pending.every((item) => selectedIds.has(item.contentId)),
-    [pending, selectedIds],
+    () => pendingRest.length > 0 && pendingRest.every((item) => selectedIds.has(item.contentId)),
+    [pendingRest, selectedIds],
   );
 
   const toggleSelect = (contentId: string) => {
@@ -124,7 +142,7 @@ export default function PublicationInboxPage() {
       setSelectedIds(new Set());
       return;
     }
-    setSelectedIds(new Set(pending.map((item) => item.contentId)));
+    setSelectedIds(new Set(pendingRest.map((item) => item.contentId)));
   };
 
   const handleMarkNotificationRead = async (id: string) => {
@@ -141,9 +159,11 @@ export default function PublicationInboxPage() {
   if (inboxQuery.isLoading) {
     return (
       <DashboardShell>
-        <div className="flex min-h-[60vh] items-center justify-center text-sm text-[var(--foreground-muted)]">
-          Cargando bandeja de publicación...
-        </div>
+        <PageHeader
+          title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
+          description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
+        />
+        <InboxPageSkeleton />
       </DashboardShell>
     );
   }
@@ -182,12 +202,11 @@ export default function PublicationInboxPage() {
         </div>
       )}
 
-      {summary && (
+      {summary && sohoMode && (
         <SohoResultsBanner
           leadsToday={summary.leadsToday}
           leadsThisWeek={summary.leadsThisWeek}
           attributedLeadsThisWeek={summary.attributedLeadsThisWeek}
-          strategyFocus={summary.strategyFocus}
         />
       )}
 
@@ -207,7 +226,12 @@ export default function PublicationInboxPage() {
       )}
 
       {notifications.length > 0 && (
-        <Card className="mb-[var(--spacing-lg)]" title="Avisos" subtitle="Del copiloto">
+        <Card
+          id="inbox-notifications"
+          className="mb-[var(--spacing-lg)] scroll-mt-24"
+          title="Avisos"
+          subtitle="Del copiloto"
+        >
           <div className="mb-[var(--spacing-md)] flex justify-end">
             <Button type="button" size="sm" variant="ghost" onClick={() => void handleMarkAllRead()}>
               <CheckCheck className="mr-1 h-4 w-4" />
@@ -239,7 +263,13 @@ export default function PublicationInboxPage() {
         </Card>
       )}
 
-      <div className="mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={`mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] ${
+          sohoMode && summary
+            ? 'sm:grid-cols-2 lg:grid-cols-3'
+            : 'sm:grid-cols-2 lg:grid-cols-4'
+        }`}
+      >
         <StatsCard
           title="Por aprobar"
           value={data?.stats.pendingCount ?? 0}
@@ -258,17 +288,19 @@ export default function PublicationInboxPage() {
           icon={<XCircle className="h-5 w-5" aria-hidden />}
           iconTone="warning"
         />
-        <StatsCard
-          title="Contactos hoy"
-          value={summary?.leadsToday ?? 0}
-          description={summary ? `${summary.leadsThisWeek} esta semana` : undefined}
-          icon={<Users className="h-5 w-5" aria-hidden />}
-          iconTone="primary"
-        />
+        {!(sohoMode && summary) ? (
+          <StatsCard
+            title="Contactos hoy"
+            value={summary?.leadsToday ?? 0}
+            description={summary ? `${summary.leadsThisWeek} esta semana` : undefined}
+            icon={<Users className="h-5 w-5" aria-hidden />}
+            iconTone="primary"
+          />
+        ) : null}
       </div>
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
-        <div className="space-y-[var(--spacing-lg)] lg:col-span-2">
+        <div className="space-y-[var(--spacing-lg)] lg:col-span-2 lg:order-1">
           <TodayPublishPanel
             pending={pending}
             ready={ready}
@@ -276,14 +308,18 @@ export default function PublicationInboxPage() {
           />
 
           <Card
-            title="Por aprobar"
-            subtitle={`${pending.length} pieza(s) sugerida(s) por la agencia`}
+            title={todayIds.size > 0 ? 'Resto por aprobar' : 'Por aprobar'}
+            subtitle={`${pendingRest.length} pieza(s) sugerida(s) por la agencia`}
           >
-            {pending.length === 0 ? (
+            {pendingRest.length === 0 ? (
               <EmptyState
                 compact
-                title="Sin pendientes"
-                description="No hay publicaciones pendientes de aprobación esta semana."
+                title={todayIds.size > 0 ? 'Nada más pendiente esta semana' : 'Sin pendientes'}
+                description={
+                  todayIds.size > 0
+                    ? 'Las piezas de hoy están arriba en «Hoy publicas esto».'
+                    : 'No hay publicaciones pendientes de aprobación esta semana.'
+                }
               />
             ) : (
               <div className="space-y-[var(--spacing-md)]">
@@ -309,7 +345,7 @@ export default function PublicationInboxPage() {
                   </div>
                 )}
 
-                {pending.map((item) => (
+                {pendingRest.map((item) => (
                   <InboxItemCard
                     key={item.contentId}
                     item={item}
@@ -355,7 +391,7 @@ export default function PublicationInboxPage() {
           )}
         </div>
 
-        <div className="space-y-[var(--spacing-lg)]">
+        <div className="space-y-[var(--spacing-lg)] lg:order-2">
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
           <InboxKitPanel items={ready} />
 

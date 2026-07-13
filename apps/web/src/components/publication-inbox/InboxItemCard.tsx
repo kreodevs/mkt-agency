@@ -111,9 +111,15 @@ export function InboxItemCard({
           </p>
 
           {showBodyClamp && (
-            <p className="mt-1 text-xs text-[var(--foreground-muted)]">
-              Texto recortado en la tarjeta.
-            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-auto px-0 text-xs text-[var(--primary)]"
+              onClick={() => setDetailOpen(true)}
+            >
+              Leer más
+            </Button>
           )}
 
           <div className="mt-[var(--spacing-md)] space-y-[var(--spacing-sm)]">

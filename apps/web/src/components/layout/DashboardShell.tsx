@@ -1,13 +1,17 @@
 import { Layers } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
+import { ImpersonationContextBar } from '@/components/layout/ImpersonationContextBar';
 import { ImpersonationSwitcher } from '@/components/admin/ImpersonationSwitcher';
 import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonationSelect';
 import { ActiveProductSelector } from '@/components/products/ActiveProductSelector';
 import { Button } from '@/components/atoms/Button';
 import { logout } from '@/services/auth';
+import { getPublicationInbox } from '@/services/publication-inbox';
 import { useAuthStore } from '@/store/auth';
+import { useActiveProductStore } from '@/store/active-product';
 import { isImpersonating } from '@/lib/impersonation';
 import {
   superadminNavigation,
@@ -31,8 +35,17 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const activeProductId = useActiveProductStore((s) => s.productId);
   const { isGrowth, isPaid, updateProfile } = useOperatingProfile();
   const advancedNav = isGrowth;
+
+  const inboxBadgeQuery = useQuery({
+    queryKey: ['publication-inbox', activeProductId],
+    queryFn: () => getPublicationInbox(activeProductId ?? undefined),
+    enabled: Boolean(user?.tenantId && !user.isSuperadmin),
+    staleTime: 30_000,
+  });
+  const unreadNotifications = inboxBadgeQuery.data?.stats.unreadNotifications ?? 0;
 
   const filterPaidNav = (groups: typeof tenantAdvancedNavigation) =>
     groups.map((group) => ({
@@ -46,16 +59,19 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     await updateProfile({ profile: isGrowth ? 'soho' : 'growth' });
   };
 
+  const forceSohoNav = Boolean(user?.impersonating);
+  const useAdvancedNav = advancedNav && !forceSohoNav;
+
   const navigationGroups =
     navigationOverride ??
     (user?.impersonating && user.tenantId
-      ? advancedNav
+      ? useAdvancedNav
         ? filterPaidNav(tenantAdvancedNavigation)
         : tenantSohoNavigation
       : user?.isSuperadmin
         ? superadminNavigation
         : user?.tenantId
-          ? advancedNav
+          ? useAdvancedNav
             ? filterPaidNav(tenantAdvancedNavigation)
             : tenantSohoNavigation
           : []);
@@ -76,7 +92,21 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     <ActiveProductSelector />
   ) : null;
 
-  const showNavModeToggle = Boolean(user?.tenantId && !user.isSuperadmin && !navigationOverride);
+  const showNavModeToggle = Boolean(
+    user?.tenantId && !user.isSuperadmin && !navigationOverride && !user.impersonating,
+  );
+
+  const scrollToNotifications = () => {
+    document.getElementById('inbox-notifications')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleNotificationsClick = () => {
+    if (location.pathname === '/') {
+      scrollToNotifications();
+      return;
+    }
+    void navigate('/#inbox-notifications');
+  };
 
   return (
     <AppLayout
@@ -85,7 +115,12 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
       linkComponent={Link}
       user={user ? { name: user.name, email: user.email } : undefined}
       headerActions={headerActions}
+      banner={isImpersonating() ? <ImpersonationContextBar /> : undefined}
       onLogout={handleLogout}
+      notificationCount={user?.tenantId && !user.isSuperadmin ? unreadNotifications : 0}
+      onNotificationsClick={
+        user?.tenantId && !user.isSuperadmin ? handleNotificationsClick : undefined
+      }
       sidebarFooter={
         showNavModeToggle ? (
           <Button

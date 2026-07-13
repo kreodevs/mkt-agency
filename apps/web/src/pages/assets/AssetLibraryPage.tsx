@@ -12,6 +12,9 @@ import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconBu
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Dialog } from '@/components/molecules/Dialog';
+import { EmptyState } from '@/components/molecules/EmptyState';
+import { AssetGridSkeleton } from '@/components/molecules/PageSkeleton';
+import { Button } from '@/components/atoms/Button';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
@@ -21,8 +24,13 @@ import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
 import { AssetSection, isAssetLocked } from './AssetSection';
 import { AssetFilterBar } from './AssetFilterBar';
 import { useAssetLibraryMutations } from './useAssetLibraryMutations';
+import {
+  persistLibraryViewMode,
+  readLibraryViewMode,
+  type LibraryViewMode,
+} from '@/lib/library-view-preference';
 
-type ViewMode = 'grid' | 'table';
+type ViewMode = LibraryViewMode;
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -45,11 +53,30 @@ export default function AssetLibraryPage() {
   const [folderFilter, setFolderFilter] = useState<FolderSelection>('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
   const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => readLibraryViewMode());
+  const [isMobile, setIsMobile] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
   const [moveTargetFolder, setMoveTargetFolder] = useState<string>('');
   const [folderOrganizerOpen, setFolderOrganizerOpen] = useState(false);
+  const [folderPendingDelete, setFolderPendingDelete] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  const effectiveViewMode: ViewMode = isMobile ? 'grid' : viewMode;
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    persistLibraryViewMode(mode);
+  };
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -135,10 +162,7 @@ export default function AssetLibraryPage() {
 
   const handleDeleteFolder = (folderId: string) => {
     const folderName = folders.find((folder) => folder.id === folderId)?.name ?? 'esta carpeta';
-    if (!window.confirm(`¿Eliminar "${folderName}"? Debe estar vacía (sin archivos ni subcarpetas).`)) {
-      return;
-    }
-    deleteFolderMutation.mutate(folderId);
+    setFolderPendingDelete({ id: folderId, name: folderName });
   };
 
   const handleFolderSelect = (folderId: FolderSelection) => {
@@ -260,21 +284,28 @@ export default function AssetLibraryPage() {
           onFolderFilterChange={setFolderFilter}
           typeFilter={typeFilter}
           onTypeFilterChange={setTypeFilter}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          viewMode={effectiveViewMode}
+          onViewModeChange={handleViewModeChange}
           folders={folders}
           uploadFolderId={uploadFolderId}
           onUploaded={invalidateAssets}
           onOrganizeOpen={() => setFolderOrganizerOpen(true)}
         />
 
-        {viewMode === 'grid' ? (
+        {effectiveViewMode === 'grid' ? (
           assetsQuery.isLoading ? (
-            <div className="py-16 text-center text-[var(--foreground-muted)]">Cargando...</div>
+            <AssetGridSkeleton />
           ) : items.length === 0 ? (
-            <div className="py-16 text-center text-[var(--foreground-muted)]">
-              No hay activos en {currentFolderLabel.toLowerCase()}
-            </div>
+            <EmptyState
+              title="Sin activos en esta carpeta"
+              description={`No hay archivos en ${currentFolderLabel.toLowerCase()}. Sube imágenes, logos o material del producto.`}
+              action={{
+                label: 'Ir a Mi producto',
+                onClick: () => {
+                  window.location.href = '/products';
+                },
+              }}
+            />
           ) : (
             <div className="space-y-6">
               {imagesOnly.length > 0 && (
@@ -375,6 +406,38 @@ export default function AssetLibraryPage() {
           isBusy={folderMutationsBusy}
         />
       </Dialog>
+
+      <Dialog
+        visible={folderPendingDelete !== null}
+        onHide={() => setFolderPendingDelete(null)}
+        title="Eliminar carpeta"
+        description={
+          folderPendingDelete
+            ? `¿Eliminar «${folderPendingDelete.name}»? Debe estar vacía (sin archivos ni subcarpetas).`
+            : undefined
+        }
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setFolderPendingDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deleteFolderMutation.isPending}
+              onClick={() => {
+                if (!folderPendingDelete) return;
+                deleteFolderMutation.mutate(folderPendingDelete.id, {
+                  onSuccess: () => setFolderPendingDelete(null),
+                });
+              }}
+            >
+              Eliminar
+            </Button>
+          </div>
+        }
+      />
 
       <AssetPreviewDialog
         asset={previewAsset}

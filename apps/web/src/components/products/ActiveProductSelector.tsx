@@ -52,8 +52,9 @@ export function ActiveProductSelector() {
     <div className="flex items-center gap-2">
       <Package className="h-3.5 w-3.5 shrink-0 text-[var(--foreground-muted)]" />
       <select
-        className="max-w-[180px] truncate rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs font-medium text-[var(--foreground)]"
+        className="max-w-[min(100%,14rem)] truncate rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs font-medium text-[var(--foreground)]"
         value={productId ?? ''}
+        title={productName ?? undefined}
         onChange={(event) => {
           const nextId = event.target.value || null;
           const match = products.find((p) => p.id === nextId);

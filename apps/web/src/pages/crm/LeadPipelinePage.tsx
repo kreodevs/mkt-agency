@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { CreateLeadDialog, type CreateLeadFormValues } from '@/components/crm/CreateLeadDialog';
 import { LeadDetail } from '@/components/crm/LeadDetail';
+import { LeadDetailMobileSheet } from '@/components/crm/LeadDetailMobileSheet';
 import { LeadPipeline } from '@/components/crm/LeadPipeline';
 import { Button } from '@/components/atoms/Button';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -11,6 +12,7 @@ import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import { useMobileLeadDetailLayout } from '@/hooks/useMediaQuery';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { changeLeadStage, createLead, deleteLead, getLead, listLeads } from '@/services/leads';
 import { listProducts } from '@/services/products';
@@ -109,6 +111,7 @@ export default function LeadPipelinePage() {
     : null;
 
   const defaultCreateProductId = productFilter || activeProductId;
+  const isMobileLeadLayout = useMobileLeadDetailLayout();
 
   return (
     <DashboardShell>
@@ -158,7 +161,7 @@ export default function LeadPipelinePage() {
           />
         </Card>
 
-        <div className="lg:col-span-2">
+        <div className="hidden lg:col-span-2 lg:block">
           <LeadDetail
             lead={selectedLead}
             productName={selectedProductName}
@@ -169,6 +172,18 @@ export default function LeadPipelinePage() {
           />
         </div>
       </div>
+
+      {isMobileLeadLayout ? (
+        <LeadDetailMobileSheet
+          open={!!selectedId}
+          lead={selectedLead}
+          productName={selectedProductName}
+          loading={!!selectedId && leadDetailQuery.isLoading}
+          onClose={() => setSelectedId(null)}
+          onDelete={(id) => deleteMutation.mutate(id)}
+          deleting={deleteMutation.isPending}
+        />
+      ) : null}
 
       <CreateLeadDialog
         visible={createOpen}

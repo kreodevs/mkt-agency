@@ -15,7 +15,7 @@ Página tenant en `/libreria`: carpetas anidadas, listado, filtros, subida y acc
 - **Contenido:** grid o tabla a ancho completo (sin columna lateral permanente).
 
 - **Vista previa:** click en la miniatura abre diálogo amplio (imagen, video con controles, audio, PDF embebido).
-- **Paginación:** 20 activos por página (grid y tabla), consulta server-side `GET /assets?page=&limit=20`.
+- **Vista grid/tabla:** preferencia en `localStorage`; en móvil solo grid. Skeleton al cargar; confirm dialog al borrar carpeta.
 - **Multi-selección:** checkbox por tarjeta + «Seleccionar todos» por sección; barra **Mover / Eliminar** en la sección y barra fija inferior al scroll.
 - **Miniaturas:** videos con frame de metadata; audio/documento con icono tipado.
 

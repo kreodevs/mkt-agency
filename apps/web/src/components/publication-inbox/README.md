@@ -12,7 +12,8 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
-| `InboxQuickPublishActions.tsx` | Copiar, abrir red, WhatsApp, link captura, **Otra versión** (copy + imagen) |
+| `InboxQuickPublishActions.tsx` | Copiar, Abrir red + menú «Más» (WhatsApp, link captura, otra versión) |
+| `InboxContentDetailDialog.tsx` | Ficha en modal; aprobación formal sin duplicar acciones rápidas |
 | `InboxKitPanel.tsx` | Kit Copiar y Llevar (aprobadas) |
 | `InboxRejectFollowUpDialog.tsx` | Tras rechazar (SOHO): elegir otro formato o archivar |
 | `RejectedInboxActions.tsx` | Acciones en tarjetas rechazadas (otro formato / archivar) |
