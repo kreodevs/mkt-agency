@@ -71,7 +71,7 @@ export class ImageBrandingService {
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
-    const left = Math.max(padding, width - logoW - padding);
+    const left = padding;
     const top = padding;
 
     if (top + logoH > height || left + logoW > width) {
