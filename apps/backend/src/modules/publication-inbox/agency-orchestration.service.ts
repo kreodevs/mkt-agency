@@ -97,7 +97,7 @@ export class AgencyOrchestrationService {
       });
 
       if (cmResult.status === 'completed') {
-        result.postsGenerated = cmResult.postsGenerated ?? WEEKLY_CM_POST_COUNT;
+        result.postsGenerated = cmResult.postsGenerated ?? 0;
         result.imagesAttached = cmResult.imagesAttached ?? 0;
 
         await this.agentEvents.logIfAgentActive(AgentRole.CREATIVE, {

@@ -25,6 +25,7 @@ export default function ProductListPage() {
       field: 'name',
       header: 'Producto / servicio',
       sortable: true,
+      width: '180px',
       body: (row) => {
         const product = row as Product;
         return (
@@ -40,10 +41,14 @@ export default function ProductListPage() {
     {
       field: 'targetAudience',
       header: 'Audiencia',
+      width: '200px',
+      wrap: true,
       body: (row) => {
         const value = (row as Product).targetAudience;
         return value ? (
-          <span className="line-clamp-2 text-sm text-[var(--foreground-muted)]">{value}</span>
+          <span className="block line-clamp-3 break-words text-sm leading-snug text-[var(--foreground-muted)]">
+            {value}
+          </span>
         ) : (
           '—'
         );
@@ -52,6 +57,7 @@ export default function ProductListPage() {
     {
       field: 'category',
       header: 'Tipo',
+      width: '100px',
       body: (row) => (row as Product).category ?? '—',
     },
     {

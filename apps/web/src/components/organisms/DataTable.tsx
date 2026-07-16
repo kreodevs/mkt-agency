@@ -11,6 +11,8 @@ export interface DataTableColumn extends Omit<ColumnProps, 'pt'> {
   sortable?: boolean;
   filterable?: boolean;
   width?: string;
+  /** Permite texto en varias líneas (anula whitespace-nowrap de la celda). */
+  wrap?: boolean;
   cellType?: 'default' | 'checkbox';
   checkboxDisabled?: boolean | ((row: Record<string, unknown>) => boolean);
   onCheckboxChange?: (row: Record<string, unknown>, checked: boolean, field: string) => void;
@@ -211,6 +213,14 @@ export const DataTable = forwardRef<HTMLDivElement, DataTableInputProps>(
         >
           {columns.map((col) => {
             const isCheckbox = col.cellType === 'checkbox';
+            const columnBodyCell = col.wrap
+              ? {
+                  className: `${bodyCell.className} whitespace-normal align-top`.replace(
+                    'whitespace-nowrap',
+                    '',
+                  ),
+                }
+              : bodyCell;
             return (
               <Column
                 key={col.field}
@@ -222,10 +232,14 @@ export const DataTable = forwardRef<HTMLDivElement, DataTableInputProps>(
                 filterPlaceholder={
                   isCheckbox ? undefined : `Filtrar ${col.header.toLowerCase()}...`
                 }
-                style={col.width ? { width: col.width, minWidth: col.width } : undefined}
+                style={
+                  col.width
+                    ? { width: col.width, minWidth: col.width, maxWidth: col.width }
+                    : undefined
+                }
                 pt={{
                   headerCell,
-                  bodyCell,
+                  bodyCell: columnBodyCell,
                   filterInput: ptStyles.filterInput,
                 }}
               />

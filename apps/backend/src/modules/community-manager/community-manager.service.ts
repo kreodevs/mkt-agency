@@ -41,6 +41,7 @@ import { ContentEntity } from '../content/infrastructure/typeorm/content.entity'
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
+import { toLocalDateKey } from '../../shared/domain/date-key.util';
 import {
   GenerationContextFacade,
   type GenerationContext,
@@ -225,8 +226,8 @@ export class CommunityManagerService {
     contentDto.campaignId = dto.campaignId;
     contentDto.productId = effectiveProductId;
     const scheduleDate = new Date(today);
-    scheduleDate.setDate(scheduleDate.getDate() + index + 1);
-    contentDto.scheduledDate = scheduleDate.toISOString().split('T')[0];
+    scheduleDate.setDate(scheduleDate.getDate() + index);
+    contentDto.scheduledDate = toLocalDateKey(scheduleDate);
     contentDto.platform = post.platform;
     contentDto.visualFormat = post.visualFormat;
     contentDto.visualPrompt = sanitizeVisualPromptForArt(post.visualDescription, post.body) || null;

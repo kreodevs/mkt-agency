@@ -4,6 +4,7 @@ import {
   type AuthTokens,
   type AuthUser,
 } from '@/store/auth';
+import { useActiveProductStore } from '@/store/active-product';
 import type { ImpersonateResponse } from '@/types/impersonation';
 
 const STORAGE_KEY = 'mkt-agency_impersonation';
@@ -81,7 +82,8 @@ export function applyImpersonationSession(data: ImpersonateResponse, tenantId: s
     readImpersonationContext()?.platformTokens.refreshToken ??
     '';
 
-flushSync(() => {
+  flushSync(() => {
+    useActiveProductStore.getState().setActiveProduct(null);
     useAuthStore.getState().setImpersonationSession(
       {
         accessToken: data.impersonationToken,

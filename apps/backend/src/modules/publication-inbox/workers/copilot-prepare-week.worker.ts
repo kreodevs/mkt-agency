@@ -36,6 +36,7 @@ export class CopilotPrepareWeekWorkerService {
       if (state === 'active' || state === 'waiting' || state === 'delayed') {
         return dedupKey;
       }
+      await existing.remove();
     }
 
     const job = await this.queue.add(
@@ -43,7 +44,7 @@ export class CopilotPrepareWeekWorkerService {
       { tenantId, userId, productId },
       {
         jobId: dedupKey,
-        removeOnComplete: { count: 50, age: 86400 },
+        removeOnComplete: true,
         removeOnFail: { count: 20, age: 86400 },
       },
     );

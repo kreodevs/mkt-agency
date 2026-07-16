@@ -4,7 +4,7 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 
 ## Rutas
 
-- `/products` — listado con progreso de onboarding
+- `/products` — listado con progreso de onboarding (columna **Audiencia** angosta, multilínea, para dejar visibles tipo/onboarding/acciones)
 - `/products/new` — alta de producto (redirige al onboarding)
 - `/products/:id/onboarding` — wizard de onboarding de producto (tags SEO + activación de agentes)
 - `/products/:id` — edición

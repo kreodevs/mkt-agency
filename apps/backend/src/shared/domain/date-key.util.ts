@@ -1,3 +1,16 @@
+/** Clave YYYY-MM-DD en zona horaria local del servidor (no UTC). */
+export function toLocalDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Hoy en zona horaria local del servidor. */
+export function todayDateKey(reference = new Date()): string {
+  return toLocalDateKey(reference);
+}
+
 /** Normaliza fechas de DB (string ISO, Date, etc.) a clave YYYY-MM-DD. */
 export function toDateKey(value: string | Date | null | undefined): string | null {
   if (value == null || value === '') {

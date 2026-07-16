@@ -7,7 +7,7 @@ import {
   UserCircle2,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
@@ -21,6 +21,7 @@ interface CopilotStatusPanelProps {
 
 export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const statusQuery = useQuery({
     queryKey: ['copilot-status', productId],
@@ -37,8 +38,12 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['copilot-status'] });
       void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      void queryClient.invalidateQueries({ queryKey: ['soho-summary'] });
       if (result.status === 'completed') {
-        toast.success(result.message);
+        toast.success(
+          `${result.postsGenerated} publicación(es) en «Por aprobar». Revísalas arriba en la bandeja.`,
+        );
+        navigate('/?welcome=1', { replace: true });
       } else if (result.status === 'blocked') {
         toast.error(result.message);
       } else {

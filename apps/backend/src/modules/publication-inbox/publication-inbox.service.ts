@@ -21,7 +21,7 @@ import {
   PublicationInboxResponseDto,
   type InboxPurgeScope,
 } from './dto/publication-inbox.dto';
-import { toDateKey } from '../../shared/domain/date-key.util';
+import { toDateKey, todayDateKey } from '../../shared/domain/date-key.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { AgencyNotificationEntity } from './infrastructure/typeorm/agency-notification.entity';
 
@@ -432,7 +432,7 @@ export class PublicationInboxService {
   }
 
   private todayKey(): string {
-    return new Date().toISOString().slice(0, 10);
+    return todayDateKey();
   }
 
   private addDays(dateKey: string, days: number): string {

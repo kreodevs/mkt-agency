@@ -11,6 +11,7 @@ import { AgencyOrchestrationService } from './agency-orchestration.service';
 import { AGENCY_NOTIFICATION_TYPES } from './domain/publication-inbox.constants';
 import { PublicationInboxService } from './publication-inbox.service';
 import type { PrepareWeekResponseDto } from './dto/publication-inbox.dto';
+import { todayDateKey } from '../../shared/domain/date-key.util';
 
 const COPILOT_INTEL_WAIT_MS = 120_000;
 const MIN_COMPETITORS_FOR_INTEL = 2;
@@ -176,6 +177,6 @@ export class CopilotOrchestrationService {
   }
 
   private todayKey(): string {
-    return new Date().toISOString().slice(0, 10);
+    return todayDateKey();
   }
 }
