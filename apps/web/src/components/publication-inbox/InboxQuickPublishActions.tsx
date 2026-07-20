@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Check,
   Copy,
@@ -43,6 +44,8 @@ function needsApproval(item: PublicationInboxItem): boolean {
 }
 
 const primaryButtonClass = 'min-h-11 sm:min-h-0';
+const MORE_MENU_MIN_WIDTH = 176;
+const MORE_MENU_Z_INDEX = 1060;
 
 export function InboxQuickPublishActions({
   item,
@@ -54,9 +57,66 @@ export function InboxQuickPublishActions({
   layout = 'default',
 }: InboxQuickPublishActionsProps) {
   const queryClient = useQueryClient();
+  const menuId = useId();
+  const moreTriggerRef = useRef<HTMLButtonElement>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [moreMenuStyle, setMoreMenuStyle] = useState<React.CSSProperties>({});
   const [deleteOpen, setDeleteOpen] = useState(false);
   const canApprove = showApproval && needsApproval(item);
+
+  useEffect(() => {
+    if (!moreOpen || !moreTriggerRef.current) return;
+
+    const updatePosition = () => {
+      if (!moreTriggerRef.current) return;
+      const rect = moreTriggerRef.current.getBoundingClientRect();
+      const width = MORE_MENU_MIN_WIDTH;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUp = spaceBelow < 220 && rect.top > 220;
+
+      setMoreMenuStyle({
+        position: 'fixed',
+        top: openUp ? Math.max(8, rect.top - 8) : rect.bottom + 4,
+        left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
+        width,
+        zIndex: MORE_MENU_Z_INDEX,
+        transform: openUp ? 'translateY(-100%)' : undefined,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [moreOpen]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (moreTriggerRef.current?.contains(target)) return;
+      const menu = document.getElementById(menuId);
+      if (menu?.contains(target)) return;
+      setMoreOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuId, moreOpen]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
@@ -227,6 +287,21 @@ export function InboxQuickPublishActions({
     </>
   );
 
+  const moreMenu =
+    moreOpen && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            id={menuId}
+            role="menu"
+            style={moreMenuStyle}
+            className="max-h-[min(20rem,calc(100dvh-1rem))] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"
+          >
+            {moreActions}
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <div
@@ -280,34 +355,21 @@ export function InboxQuickPublishActions({
 
       <div className="relative">
         <Button
+          ref={moreTriggerRef}
           type="button"
           size="sm"
           variant="ghost"
           className={primaryButtonClass}
           aria-expanded={moreOpen}
           aria-haspopup="menu"
+          aria-controls={moreOpen ? menuId : undefined}
           onClick={() => setMoreOpen((open) => !open)}
         >
           <MoreHorizontal className="mr-1 h-3.5 w-3.5" />
           Más
         </Button>
-        {moreOpen ? (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-40 cursor-default"
-              aria-label="Cerrar menú"
-              onClick={() => setMoreOpen(false)}
-            />
-            <div
-              role="menu"
-              className="absolute right-0 z-50 mt-1 min-w-[11rem] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"
-            >
-              {moreActions}
-            </div>
-          </>
-        ) : null}
       </div>
+      {moreMenu}
       </div>
 
       <InboxContentDeleteDialog
