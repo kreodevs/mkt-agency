@@ -1,5 +1,10 @@
 import type { ContentVisualFormat } from '../../content/domain/content.constants';
 
+/** Esquina reservada para superponer el logo del producto tras la generación IA. */
+export const PRODUCT_LOGO_CORNER = 'top-right' as const;
+
+const LOGO_CORNER_LABEL_ES = 'esquina superior derecha';
+
 export interface BrandedImagePromptInput {
   productName: string;
   title?: string;
@@ -30,8 +35,8 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     parts.push(
       `Incluye el nombre "${productName}" solo como texto legible (preferiblemente en la parte inferior), nunca como monograma o símbolo gráfico.`,
       'PROHIBIDO: logos, monogramas, iniciales estilizadas (ej. una "A" en círculo), iconos de marca, marcas de agua o símbolos en cualquier esquina.',
-      'Reserva un margen limpio en la esquina superior izquierda (~15% del lienzo) sin rostros, texto ni elementos clave; el logo oficial del producto se superpone ahí después por software.',
-      'PROHIBIDO: recuadros blancos, cajas vacías o placeholders en esa esquina.',
+      `Reserva un margen limpio en la ${LOGO_CORNER_LABEL_ES} (~15% del lienzo) sin rostros, texto ni elementos clave; el logo oficial del producto se superpone ahí después por software.`,
+      `PROHIBIDO: recuadros blancos, cajas vacías o placeholders en la ${LOGO_CORNER_LABEL_ES}.`,
     );
   } else {
     parts.push(

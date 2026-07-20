@@ -10,7 +10,7 @@ export function buildFramePrompt(basePrompt: string, index: number, total: numbe
     return basePrompt;
   }
 
-  return `${basePrompt}\n\nFrame ${index + 1} de ${total} para carrusel en redes. Mantén continuidad visual con los demás frames. Deja libre la esquina superior izquierda para el logo (sin monogramas ni iconos ahí).`;
+  return `${basePrompt}\n\nFrame ${index + 1} de ${total} para carrusel en redes. Mantén continuidad visual con los demás frames. Deja libre la esquina superior derecha para el logo (sin monogramas ni iconos ahí).`;
 }
 
 export function detectReelFrameCount(

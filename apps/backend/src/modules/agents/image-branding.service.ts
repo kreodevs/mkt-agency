@@ -71,10 +71,10 @@ export class ImageBrandingService {
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
-    const left = padding;
     const top = padding;
+    const left = width - logoW - padding;
 
-    if (top + logoH > height || left + logoW > width) {
+    if (top + logoH > height || left < 0 || left + logoW > width) {
       throw new Error(
         `Logo exceeds image bounds (${width}x${height}, logo ${logoW}x${logoH})`,
       );
