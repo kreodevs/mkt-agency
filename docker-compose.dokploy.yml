@@ -30,7 +30,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     entrypoint: ["/bin/sh", "/redis-entrypoint.sh"]
-    command: ["--appendonly", "yes", "--appendfsync", "everysec"]
+    # Sin AOF: solo colas BullMQ; evita bucles por incr.aof corrupto en redeploys
+    command: ["--appendonly", "no", "--save", ""]
     environment:
       REDIS_AOF_RESET_ON_CORRUPT: ${REDIS_AOF_RESET_ON_CORRUPT:-true}
     volumes:

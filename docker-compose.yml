@@ -24,7 +24,7 @@ services:
     image: redis:7-alpine
     container_name: mkt-agency-redis
     entrypoint: ["/bin/sh", "/redis-entrypoint.sh"]
-    command: ["--appendonly", "yes", "--appendfsync", "everysec"]
+    command: ["--appendonly", "no", "--save", ""]
     environment:
       REDIS_AOF_RESET_ON_CORRUPT: ${REDIS_AOF_RESET_ON_CORRUPT:-true}
     volumes:

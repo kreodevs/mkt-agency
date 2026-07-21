@@ -92,7 +92,7 @@ SKIP_GENERATED_CONTENT_RESET=false /app/scripts/clear-generated-contents.sh
 Persistencia:
 
 - `pgdata` — PostgreSQL (volumen Docker nombrado)
-- `redisdata` — Redis AOF (volumen Docker nombrado). Solo colas BullMQ; el entrypoint repara o resetea AOF corrupto al arrancar.
+- `redisdata` — Redis (volumen Docker nombrado). Solo colas BullMQ: **sin AOF** (`--appendonly no --save ""`). El entrypoint pone en cuarentena AOF legacy corrupto al arrancar.
 - **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
 
 Antes del primer deploy con MinIO en el servidor:
@@ -182,10 +182,15 @@ Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no exi
 
 El volumen `redisdata` tiene un incremental AOF dañado (apagado brusco, disco lleno, etc.). Redis reinicia en bucle y nunca pasa el healthcheck.
 
-**Solución automática (código ≥ entrypoint redis):** redeploy con `scripts/redis-docker-entrypoint.sh` montado en el servicio `redis`. Al arrancar:
+**Solución automática (código ≥ entrypoint redis v2):** redeploy con compose actual:
 
-1. Ejecuta `redis-check-aof --fix` sobre `appendonly.aof.manifest`.
-2. Si sigue fallando y `REDIS_AOF_RESET_ON_CORRUPT=true` (default), mueve los AOF a `/data/.corrupt-backup-<ts>/` y arranca limpio (solo pierdes colas BullMQ pendientes).
+- Redis arranca **sin AOF** (`--appendonly no --save ""`) — solo colas BullMQ, no datos de negocio.
+- El entrypoint **cuarentena** archivos `appendonly.aof*` legacy (incluido el `.incr.aof` corrupto) antes de arrancar.
+- Logs deben mostrar líneas `[redis-entrypoint]`.
+
+**Si no ves `[redis-entrypoint]` en logs:** el redeploy aún usa compose antiguo (sin bind mount del script). Verifica **Compose path** = `docker-compose.dokploy.yml` y redeploy completo.
+
+**Solución automática (entrypoint v1):** `redis-check-aof --fix` + reset si falla (requiere AOF activo).
 
 **Solución manual inmediata (sin esperar redeploy):** en el servidor, terminal del contenedor `redis` o con el stack detenido:
 
