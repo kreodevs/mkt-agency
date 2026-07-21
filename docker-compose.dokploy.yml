@@ -27,16 +27,12 @@ services:
       - internal
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "/redis-entrypoint.sh"]
-    # Sin AOF: solo colas BullMQ; evita bucles por incr.aof corrupto en redeploys
-    command: ["--appendonly", "no", "--save", ""]
-    environment:
-      REDIS_AOF_RESET_ON_CORRUPT: ${REDIS_AOF_RESET_ON_CORRUPT:-true}
     volumes:
       - redisdata:/data
-      - ./scripts/redis-docker-entrypoint.sh:/redis-entrypoint.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping 2>/dev/null | grep -Eq '^(PONG|LOADING)' || exit 1"]
       interval: 10s

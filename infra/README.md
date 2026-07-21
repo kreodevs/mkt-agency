@@ -6,6 +6,8 @@
 | `docker-compose.dokploy.yml` | Producción en Dokploy (ver `infra/dokploy/README.md`) |
 | `Dockerfile.api` | Imagen NestJS (build multietapa; incluye **FFmpeg** para concatenar videos segmentados) |
 | `Dockerfile.frontend` | Imagen nginx + assets Vite |
+| `Dockerfile.redis` | Imagen Redis 7 + entrypoint de cuarentena AOF (sin bind mount en Dokploy) |
+| `infra/redis/redis.conf` | Redis sin persistencia (BullMQ / rate-limit) |
 | `infra/nginx/frontend.conf` | Proxy `/api` → servicio `api`; timeouts extendidos (180s) en onboarding complete y descubrimiento de competidores |
 
 ## Arranque local

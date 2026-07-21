@@ -21,15 +21,12 @@ services:
       start_period: 40s
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
     container_name: mkt-agency-redis
-    entrypoint: ["/bin/sh", "/redis-entrypoint.sh"]
-    command: ["--appendonly", "no", "--save", ""]
-    environment:
-      REDIS_AOF_RESET_ON_CORRUPT: ${REDIS_AOF_RESET_ON_CORRUPT:-true}
     volumes:
       - redisdata:/data
-      - ./scripts/redis-docker-entrypoint.sh:/redis-entrypoint.sh:ro
     ports:
       - "6379:6379"
     healthcheck:

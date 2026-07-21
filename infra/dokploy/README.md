@@ -92,7 +92,7 @@ SKIP_GENERATED_CONTENT_RESET=false /app/scripts/clear-generated-contents.sh
 Persistencia:
 
 - `pgdata` — PostgreSQL (volumen Docker nombrado)
-- `redisdata` — Redis (volumen Docker nombrado). Solo colas BullMQ: **sin AOF** (`--appendonly no --save ""`). El entrypoint pone en cuarentena AOF legacy corrupto al arrancar.
+- `redisdata` — Redis (volumen Docker nombrado). Imagen **`Dockerfile.redis`** (entrypoint embebido, sin bind mount). Sin AOF/RDB; cuarentena de persistencia legacy al arrancar.
 - **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
 
 Antes del primer deploy con MinIO en el servidor:
@@ -182,15 +182,13 @@ Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no exi
 
 El volumen `redisdata` tiene un incremental AOF dañado (apagado brusco, disco lleno, etc.). Redis reinicia en bucle y nunca pasa el healthcheck.
 
-**Solución automática (código ≥ entrypoint redis v2):** redeploy con compose actual:
+**Solución automática (código ≥ Dockerfile.redis):** redeploy con compose actual:
 
-- Redis arranca **sin AOF** (`--appendonly no --save ""`) — solo colas BullMQ, no datos de negocio.
-- El entrypoint **cuarentena** archivos `appendonly.aof*` legacy (incluido el `.incr.aof` corrupto) antes de arrancar.
-- Logs deben mostrar líneas `[redis-entrypoint]`.
+- Servicio `redis` **build** desde `Dockerfile.redis` (entrypoint dentro de la imagen; Dokploy no monta bind mounts).
+- Al arrancar cuarentena `appendonly.aof*` y `dump.rdb` legacy → Redis vacío, sin leer `.incr.aof` corrupto.
+- Logs deben mostrar `[redis-entrypoint]`.
 
-**Si no ves `[redis-entrypoint]` en logs:** el redeploy aún usa compose antiguo (sin bind mount del script). Verifica **Compose path** = `docker-compose.dokploy.yml` y redeploy completo.
-
-**Solución automática (entrypoint v1):** `redis-check-aof --fix` + reset si falla (requiere AOF activo).
+**Si no ves `[redis-entrypoint]`:** el servicio `redis` sigue usando imagen `redis:7-alpine` directa (compose antiguo). Redeploy con commit que incluye `Dockerfile.redis`.
 
 **Solución manual inmediata (sin esperar redeploy):** en el servidor, terminal del contenedor `redis` o con el stack detenido:
 
