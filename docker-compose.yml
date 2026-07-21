@@ -21,10 +21,24 @@ services:
       start_period: 40s
 
   redis:
-    build:
-      context: .
-      dockerfile: Dockerfile.redis
+    image: redis:7-alpine
     container_name: mkt-agency-redis
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        DATA_DIR=/data
+        echo "[redis-entrypoint] Starting Redis quarantine check" >&2
+        if [ -f "$$DATA_DIR/appendonly.aof.manifest" ] || [ -f "$$DATA_DIR/appendonly.aof" ] || [ -f "$$DATA_DIR/dump.rdb" ]; then
+          ts=$$(date +%s)
+          backup="$$DATA_DIR/.legacy-persistence-$$ts"
+          mkdir -p "$$backup"
+          echo "[redis-entrypoint] Quarantining legacy Redis persistence to $$backup" >&2
+          find "$$DATA_DIR" -maxdepth 1 \( -name 'appendonly.aof' -o -name 'appendonly.aof.*' -o -name 'dump.rdb' \) -exec mv {} "$$backup/" \;
+        fi
+        echo "[redis-entrypoint] Launching redis-server" >&2
+        exec redis-server --appendonly no --save "" --dir /data
     volumes:
       - redisdata:/data
     ports:

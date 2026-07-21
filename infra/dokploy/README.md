@@ -92,7 +92,7 @@ SKIP_GENERATED_CONTENT_RESET=false /app/scripts/clear-generated-contents.sh
 Persistencia:
 
 - `pgdata` — PostgreSQL (volumen Docker nombrado)
-- `redisdata` — Redis (volumen Docker nombrado). Imagen **`Dockerfile.redis`** (entrypoint embebido, sin bind mount). Sin AOF/RDB; cuarentena de persistencia legacy al arrancar.
+- `redisdata` — Redis (volumen Docker nombrado). Entrypoint **inline** en compose (cuarentena AOF legacy + sin persistencia).
 - **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
 
 Antes del primer deploy con MinIO en el servidor:
@@ -176,19 +176,29 @@ Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no exi
 
 **Solución (código ≥ fix orphan tenant):** `SecurityEventRecorderService` omite `tenant_id` inválido y guarda el valor original en `metadata.orphanTenantId`. Redeploy `api`.
 
+### Patches de Dokploy sobrescriben el repo (crítico)
+
+En cada deploy Dokploy puede aplicar **patches** guardados en la UI que **reemplazan** archivos del clone de Git **después** del pull. Si un patch antiguo de `docker-compose.dokploy.yml` sigue activo, ignora commits recientes (p. ej. `Dockerfile.redis`, MinIO bind mount, healthchecks).
+
+**Síntomas:** logs de Redis con `--appendonly yes` / carga de AOF pero **sin** `[redis-entrypoint]`; build sin `Image …-redis Building`; mensaje `Applying N patch(es)...` en el log de deploy.
+
+**Solución:** Dokploy → Compose → **Patches** → eliminar o desactivar patches de `docker-compose.dokploy.yml` e `infra/nginx/frontend.conf`. La fuente de verdad es el repo (`main`). Tras borrar patches, redeploy completo.
+
+> **2026-07-21:** se eliminaron en producción dos patches legacy (`redis-server --appendonly yes`, nginx sin timeouts).
+
 ### `dependency failed to start: container … redis-1 is unhealthy`
 
 **Causa A — AOF corrupto (logs: `Bad file format reading the append only file … incr.aof`):**
 
 El volumen `redisdata` tiene un incremental AOF dañado (apagado brusco, disco lleno, etc.). Redis reinicia en bucle y nunca pasa el healthcheck.
 
-**Solución automática (código ≥ Dockerfile.redis):** redeploy con compose actual:
+**Solución automática (código ≥ inline entrypoint):** redeploy con compose actual (sin patches Dokploy):
 
-- Servicio `redis` **build** desde `Dockerfile.redis` (entrypoint dentro de la imagen; Dokploy no monta bind mounts).
-- Al arrancar cuarentena `appendonly.aof*` y `dump.rdb` legacy → Redis vacío, sin leer `.incr.aof` corrupto.
+- Servicio `redis` usa `redis:7-alpine` con **entrypoint inline** en el YAML (cuarentena AOF + `--appendonly no`).
+- No requiere bind mount ni build de `Dockerfile.redis`.
 - Logs deben mostrar `[redis-entrypoint]`.
 
-**Si no ves `[redis-entrypoint]`:** el servicio `redis` sigue usando imagen `redis:7-alpine` directa (compose antiguo). Redeploy con commit que incluye `Dockerfile.redis`.
+**Si no ves `[redis-entrypoint]`:** revisa **Patches** en Dokploy (un patch legacy puede seguir forzando `redis-server --appendonly yes`).
 
 **Solución manual inmediata (sin esperar redeploy):** en el servidor, terminal del contenedor `redis` o con el stack detenido:
 
