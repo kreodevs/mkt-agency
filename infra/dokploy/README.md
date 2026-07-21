@@ -121,6 +121,8 @@ Programar backups de `pgdata` y de la carpeta MinIO desde el host o Dokploy → 
 ## 8. Healthchecks
 
 - API: `GET /api/v1/setup/status` cada 30s (MDD §7).
+- Postgres: `pg_isready` con `POSTGRES_USER` / `POSTGRES_DB` del contenedor (`start_period` 40s).
+- Redis: acepta `PONG` o `LOADING` mientras carga el AOF (`start_period` 60s).
 - Dokploy reinicia tras fallos consecutivos según política del servidor.
 
 ## 9. CI → Dokploy
@@ -173,6 +175,22 @@ Tras un redeploy, el navegador puede conservar un `index.html` antiguo que refer
 Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no existen (tablas `*_legacy`). Al registrar `login_failed`, la FK fallaba y el login devolvía 500.
 
 **Solución (código ≥ fix orphan tenant):** `SecurityEventRecorderService` omite `tenant_id` inválido y guarda el valor original en `metadata.orphanTenantId`. Redeploy `api`.
+
+### `dependency failed to start: container … redis-1 is unhealthy`
+
+Suele ser **Redis cargando el volumen AOF** (`redisdata`) tras un redeploy: durante unos segundos responde `LOADING` y el healthcheck antiguo (`redis-cli ping` estricto) marcaba `unhealthy` antes de tiempo. Postgres aparece en cascada porque `api` espera ambos servicios.
+
+**Solución en código (≥ fix healthchecks redis/postgres):** redeploy con `docker-compose.dokploy.yml` actual (healthcheck tolera `LOADING`, `start_period` ampliado).
+
+**Si Redis sigue unhealthy tras el redeploy:**
+
+1. Dokploy → logs del servicio **redis** (busca `Bad file format reading the append only file` o `Can't open the AOF`).
+2. Detén el stack y elimina el volumen **`redisdata`** (solo pierdes colas BullMQ en curso; la app reconstruye jobs).
+3. Redeploy.
+
+**Verificar disco en el host:** AOF + Postgres requieren espacio libre; `No space left on device` impide arrancar ambos.
+
+**Postgres en el mismo error:** revisa logs de **postgres** aparte (contraseña/`pgdata` corrupto). Ver también § `password authentication failed for user "mktos"`.
 
 ### `password authentication failed for user "mktos"`
 
