@@ -29,9 +29,13 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --appendonly yes --appendfsync everysec
+    entrypoint: ["/bin/sh", "/redis-entrypoint.sh"]
+    command: ["--appendonly", "yes", "--appendfsync", "everysec"]
+    environment:
+      REDIS_AOF_RESET_ON_CORRUPT: ${REDIS_AOF_RESET_ON_CORRUPT:-true}
     volumes:
       - redisdata:/data
+      - ./scripts/redis-docker-entrypoint.sh:/redis-entrypoint.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping 2>/dev/null | grep -Eq '^(PONG|LOADING)' || exit 1"]
       interval: 10s

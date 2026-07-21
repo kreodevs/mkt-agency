@@ -92,7 +92,7 @@ SKIP_GENERATED_CONTENT_RESET=false /app/scripts/clear-generated-contents.sh
 Persistencia:
 
 - `pgdata` — PostgreSQL (volumen Docker nombrado)
-- `redisdata` — Redis AOF (volumen Docker nombrado)
+- `redisdata` — Redis AOF (volumen Docker nombrado). Solo colas BullMQ; el entrypoint repara o resetea AOF corrupto al arrancar.
 - **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
 
 Antes del primer deploy con MinIO en el servidor:
@@ -178,15 +178,26 @@ Usuarios legacy pueden tener `users.tenant_id` apuntando a tenants que ya no exi
 
 ### `dependency failed to start: container … redis-1 is unhealthy`
 
-Suele ser **Redis cargando el volumen AOF** (`redisdata`) tras un redeploy: durante unos segundos responde `LOADING` y el healthcheck antiguo (`redis-cli ping` estricto) marcaba `unhealthy` antes de tiempo. Postgres aparece en cascada porque `api` espera ambos servicios.
+**Causa A — AOF corrupto (logs: `Bad file format reading the append only file … incr.aof`):**
 
-**Solución en código (≥ fix healthchecks redis/postgres):** redeploy con `docker-compose.dokploy.yml` actual (healthcheck tolera `LOADING`, `start_period` ampliado).
+El volumen `redisdata` tiene un incremental AOF dañado (apagado brusco, disco lleno, etc.). Redis reinicia en bucle y nunca pasa el healthcheck.
 
-**Si Redis sigue unhealthy tras el redeploy:**
+**Solución automática (código ≥ entrypoint redis):** redeploy con `scripts/redis-docker-entrypoint.sh` montado en el servicio `redis`. Al arrancar:
 
-1. Dokploy → logs del servicio **redis** (busca `Bad file format reading the append only file` o `Can't open the AOF`).
-2. Detén el stack y elimina el volumen **`redisdata`** (solo pierdes colas BullMQ en curso; la app reconstruye jobs).
-3. Redeploy.
+1. Ejecuta `redis-check-aof --fix` sobre `appendonly.aof.manifest`.
+2. Si sigue fallando y `REDIS_AOF_RESET_ON_CORRUPT=true` (default), mueve los AOF a `/data/.corrupt-backup-<ts>/` y arranca limpio (solo pierdes colas BullMQ pendientes).
+
+**Solución manual inmediata (sin esperar redeploy):** en el servidor, terminal del contenedor `redis` o con el stack detenido:
+
+```bash
+# Opción 1 — reparar in place
+yes | redis-check-aof --fix /data/appendonly.aof.manifest
+
+# Opción 2 — borrar persistencia (colas BullMQ)
+# Dokploy: detener stack → eliminar volumen redisdata → redeploy
+```
+
+**Causa B — Redis cargando AOF grande:** durante unos segundos responde `LOADING`; el healthcheck actual lo tolera (`start_period` 60s).
 
 **Verificar disco en el host:** AOF + Postgres requieren espacio libre; `No space left on device` impide arrancar ambos.
 
