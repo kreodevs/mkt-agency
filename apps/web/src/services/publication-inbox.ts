@@ -129,3 +129,22 @@ export function markAllNotificationsRead(): Promise<{ marked: number }> {
     method: 'PATCH',
   });
 }
+
+export function publishInboxContentWithN8n(contentId: string): Promise<{
+  contentId: string;
+  dispatched: boolean;
+  webhookUrl: string | null;
+  reason?: string;
+}> {
+  return apiFetch(`/publication-inbox/publish/${contentId}`, { method: 'POST' });
+}
+
+export function markContentPublished(
+  contentId: string,
+  externalPostId?: string,
+): Promise<{ contentId: string; publishedAt: string; externalPostId: string | null }> {
+  return apiFetch(`/contents/${contentId}/mark-published`, {
+    method: 'POST',
+    body: JSON.stringify(externalPostId ? { externalPostId } : {}),
+  });
+}

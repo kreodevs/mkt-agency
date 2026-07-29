@@ -180,3 +180,39 @@ export interface CompleteProductOnboardingResponse {
   };
   agents: ProductOnboardingAgentsResult;
 }
+
+export interface ProductPlatformWebhookOverride {
+  url?: string;
+  enabled?: boolean;
+}
+
+export interface ProductPlatformCredential {
+  accountId?: string;
+  pageId?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  notes?: string;
+}
+
+export interface ProductPublishIntegration {
+  enabled: boolean;
+  webhookUrl: string | null;
+  hasWebhookSecret: boolean;
+  webhookSecret: string | null;
+  autoDispatchOnReady: boolean;
+  webhooksByPlatform: Record<string, ProductPlatformWebhookOverride>;
+  credentialsByPlatform: Record<string, ProductPlatformCredential>;
+  callbackPath: string;
+  configured: boolean;
+}
+
+export interface UpdateProductPublishIntegrationPayload {
+  enabled?: boolean;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  regenerateSecret?: boolean;
+  autoDispatchOnReady?: boolean;
+  webhooksByPlatform?: Record<string, ProductPlatformWebhookOverride>;
+  credentialsByPlatform?: Record<string, ProductPlatformCredential>;
+}
+

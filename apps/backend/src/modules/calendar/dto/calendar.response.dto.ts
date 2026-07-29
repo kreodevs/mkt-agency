@@ -27,6 +27,7 @@ export class CalendarDayItemDto {
   signatureHash!: string | null;
   scheduledDate!: string;
   preview!: string;
+  publishedAt!: string | null;
 }
 
 export class CalendarDayDetailResponseDto {

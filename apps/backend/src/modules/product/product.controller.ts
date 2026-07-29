@@ -37,7 +37,12 @@ import {
 } from './dto/product-media-kit.dto';
 import { ProductLogoService } from './product-logo.service';
 import { ProductMediaKitService } from './product-media-kit.service';
+import { ProductPublishIntegrationService } from './product-publish-integration.service';
 import { ProductService } from './product.service';
+import {
+  ProductPublishIntegrationResponseDto,
+  UpdateProductPublishIntegrationDto,
+} from './dto/product-publish-integration.dto';
 import type { ProductMediaRole } from './domain/product-media-kit.constants';
 import { PRODUCT_MEDIA_ROLES } from './domain/product-media-kit.constants';
 
@@ -50,6 +55,7 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly productLogoService: ProductLogoService,
     private readonly productMediaKitService: ProductMediaKitService,
+    private readonly productPublishIntegrationService: ProductPublishIntegrationService,
   ) {}
 
   @Get()
@@ -180,5 +186,22 @@ export class ProductController {
     @Param('itemId', ParseUUIDPipe) itemId: string,
   ): Promise<void> {
     await this.productMediaKitService.removeFromKit(user.tenantId!, id, itemId);
+  }
+
+  @Get(':id/publish-integration')
+  getPublishIntegration(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ProductPublishIntegrationResponseDto> {
+    return this.productPublishIntegrationService.getIntegration(user.tenantId!, id);
+  }
+
+  @Patch(':id/publish-integration')
+  updatePublishIntegration(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateProductPublishIntegrationDto,
+  ): Promise<ProductPublishIntegrationResponseDto> {
+    return this.productPublishIntegrationService.updateIntegration(user.tenantId!, id, body);
   }
 }

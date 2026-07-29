@@ -16,6 +16,8 @@ export interface PublicationInboxItem {
   platform: string | null;
   visualFormat: string;
   assets: unknown[];
+  publishedAt?: string | null;
+  canPublishWithN8n?: boolean;
 }
 
 export interface AgencyNotification {

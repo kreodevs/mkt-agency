@@ -16,6 +16,8 @@ import type {
   InferProductFromPageResponse,
   SuggestProductKeywordsResponse,
   UpdateProductPayload,
+  ProductPublishIntegration,
+  UpdateProductPublishIntegrationPayload,
 } from '@/types/product';
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -233,5 +235,21 @@ export async function linkProductMediaKit(
 export async function removeProductMediaKitItem(productId: string, itemId: string): Promise<void> {
   await apiFetch<void>(`/products/${productId}/media-kit/${itemId}`, {
     method: 'DELETE',
+  });
+}
+
+export async function getProductPublishIntegration(
+  productId: string,
+): Promise<ProductPublishIntegration> {
+  return apiFetch<ProductPublishIntegration>(`/products/${productId}/publish-integration`);
+}
+
+export async function updateProductPublishIntegration(
+  productId: string,
+  payload: UpdateProductPublishIntegrationPayload,
+): Promise<ProductPublishIntegration> {
+  return apiFetch<ProductPublishIntegration>(`/products/${productId}/publish-integration`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   });
 }

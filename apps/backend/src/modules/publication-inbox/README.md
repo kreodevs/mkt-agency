@@ -17,6 +17,8 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | POST | `/publication-inbox/bulk-delete` | Elimina múltiples `{ contentIds[] }` |
 | POST | `/publication-inbox/purge` | Limpia por alcance `{ scope, productId? }` — `all` \| `pending` \| `ready` \| `rejected` \| `upcoming` |
 | POST | `/publication-inbox/bulk-approve` | Aprueba múltiples contenidos `{ contentIds[] }` |
+| POST | `/publication-inbox/publish/:contentId` | Dispara webhook n8n manual («Publicar con n8n») |
+| POST | `/publication-inbox/webhook/:tenantId/mark-published` | **Público** — callback n8n para cerrar ciclo (`published_at`) |
 | PATCH | `/publication-inbox/notifications/:id/read` | Marca notificación leída |
 | PATCH | `/publication-inbox/notifications/read-all` | Marca todas leídas |
 
@@ -55,3 +57,6 @@ Tabla `agency_notifications`. Tipos: `week_ready`, `approval_reminder`, `publish
 - Onboarding producto → CM genera 7 posts → notificación + redirect a bandeja
 - Frontend: `/` (tenant) = `PublicationInboxPage`
 - Selector de producto activo: `ActiveProductSelector` + `useActiveProductStore`
+- Sin webhook configurado en el producto → flujo manual copiar/pegar sin cambios
+- Con webhook → botón «Publicar con n8n» + auto-dispatch opcional al aprobar
+- Cierre de ciclo: n8n llama callback o usuario «Marcar publicado» / `POST /contents/:id/mark-published`

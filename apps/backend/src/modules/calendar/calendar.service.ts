@@ -30,6 +30,7 @@ interface ContentCalendarRow {
   versionId: string | null;
   body: string | null;
   signatureHash: string | null;
+  publishedAt: Date | null;
 }
 
 @Injectable()
@@ -122,6 +123,7 @@ export class CalendarService {
         'v.id AS "versionId"',
         'v.body AS body',
         'v.signature_hash AS "signatureHash"',
+        'c.published_at AS "publishedAt"',
       ])
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere(
@@ -173,6 +175,11 @@ export class CalendarService {
       signatureHash: row.signatureHash,
       scheduledDate: this.effectiveDate(row),
       preview: body.length > 220 ? `${body.slice(0, 220)}…` : body,
+      publishedAt: row.publishedAt
+        ? row.publishedAt instanceof Date
+          ? row.publishedAt.toISOString()
+          : new Date(row.publishedAt).toISOString()
+        : null,
     };
   }
 }

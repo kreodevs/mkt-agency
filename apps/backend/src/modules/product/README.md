@@ -17,6 +17,8 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `POST /api/v1/products/:id/media-kit/upload` — sube archivo al kit (`?role=`, `?label=`, multipart `file`)
 - `POST /api/v1/products/:id/media-kit/link` — enlaza un asset existente (`assetId`, `role`, `label?`)
 - `DELETE /api/v1/products/:id/media-kit/:itemId` — quita ítem del kit (no borra el asset)
+- `GET /api/v1/products/:id/publish-integration` — config webhook n8n + credenciales por plataforma (metadata)
+- `PATCH /api/v1/products/:id/publish-integration` — guarda integración de publicación automática
 - `GET /api/v1/products/:id/onboarding` — estado del onboarding (% campos, missing, ready)
 - `POST /api/v1/products/:id/infer-from-page` — scrapea URL e infiere nombre, tipo, descripción, propuesta de valor, audiencia, precio y tags
 - `POST /api/v1/products/:id/suggest-keywords` — scrapea URL del producto, analiza contenido/concepto con IA y devuelve tags semánticos (no copia meta keywords del HTML)
@@ -40,3 +42,16 @@ Lógica en `product-onboarding.service.ts`, `product-onboarding.module.ts` y `do
 - Slug único por tenant (auto-generado desde el nombre).
 - Un solo `isPrimary` activo por tenant.
 - Campañas de producto requieren `productId` activo salvo scope `brand`.
+
+## Publicación n8n (por producto)
+
+Metadata en `products.metadata`:
+
+- `publishWebhookEnabled`, `publishWebhookUrl`, `publishWebhookSecret`
+- `publishWebhookAutoDispatch` — envía al aprobar si la fecha programada es hoy
+- `publishWebhooksByPlatform` — override de URL por red
+- `publishCredentialsByPlatform` — IDs/c tokens opcionales para Meta/LinkedIn (n8n puede usar los suyos)
+
+Webhook público de callback: `POST /api/v1/publication-inbox/webhook/:tenantId/mark-published` con header `X-Webhook-Secret` y body `{ productId, contentId, externalPostId? }`.
+
+Servicios: `product-publish-integration.service.ts`, `product-publish-webhook.service.ts`.

@@ -53,4 +53,10 @@ export class ContentEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
+
+  @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
+  publishedAt!: Date | null;
+
+  @Column({ name: 'external_post_id', type: 'varchar', length: 500, nullable: true })
+  externalPostId!: string | null;
 }

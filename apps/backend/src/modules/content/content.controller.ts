@@ -17,6 +17,11 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { ContentService } from './content.service';
 import {
+  MarkContentPublishedDto,
+  MarkContentPublishedResponseDto,
+} from '../product/dto/product-publish-webhook.dto';
+import { ProductPublishWebhookService } from '../product/product-publish-webhook.service';
+import {
   CreateContentDto,
   FeedbackDto,
   ListContentsQueryDto,
@@ -33,7 +38,10 @@ import {
 @Controller('contents')
 @UseGuards(TenantGuard)
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(
+    private readonly contentService: ContentService,
+    private readonly publishWebhookService: ProductPublishWebhookService,
+  ) {}
 
   @Get()
   list(
@@ -70,13 +78,15 @@ export class ContentController {
   }
 
   @Post(':id/versions/:vid/approve')
-  approve(
+  async approve(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('vid', ParseUUIDPipe) vid: string,
     @Body() body: FeedbackDto,
   ): Promise<ApproveContentResponseDto> {
-    return this.contentService.approveVersion(user.tenantId!, user.id, id, vid, body);
+    const result = await this.contentService.approveVersion(user.tenantId!, user.id, id, vid, body);
+    void this.publishWebhookService.maybeAutoDispatchAfterApprove(user.tenantId!, id);
+    return result;
   }
 
   @Post(':id/versions/:vid/reject')
@@ -97,6 +107,20 @@ export class ContentController {
     @Body() body: FeedbackDto,
   ): Promise<ContentVersionResponseDto> {
     return this.contentService.requestChanges(user.tenantId!, user.id, id, vid, body);
+  }
+
+  @Post(':id/mark-published')
+  @HttpCode(HttpStatus.OK)
+  markPublished(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: MarkContentPublishedDto,
+  ): Promise<MarkContentPublishedResponseDto> {
+    return this.publishWebhookService.markPublishedForTenantUser(
+      user.tenantId!,
+      id,
+      body.externalPostId,
+    );
   }
 
   @Post(':id/revert/:vid')

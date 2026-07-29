@@ -14,6 +14,7 @@ Versionado inmutable de piezas de campaña (US-010 + US-011).
 | GET | `/api/v1/contents/:id/versions/:vid` | Versión específica |
 | POST | `/api/v1/contents/:id/revert/:vid` | Revertir (nueva versión) |
 | POST | `/api/v1/contents/:id/versions/:vid/approve` | Kill Switch SHA-256 |
+| POST | `/api/v1/contents/:id/mark-published` | Cierra ciclo de publicación (`published_at`, `external_post_id`) |
 | POST | `.../reject`, `.../request-changes` | Flujo de aprobación |
 
 Cada `PATCH` crea una versión append-only. Si el contenido estaba `approved`, pasa a `in_changes`.

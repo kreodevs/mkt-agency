@@ -24,6 +24,8 @@ import {
 import { toDateKey, todayDateKey } from '../../shared/domain/date-key.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { AgencyNotificationEntity } from './infrastructure/typeorm/agency-notification.entity';
+import { isProductPublishWebhookConfigured } from '../product/domain/product-publish-integration.metadata.util';
+import { ProductPublishWebhookService } from '../product/product-publish-webhook.service';
 
 interface InboxRow {
   id: string;
@@ -44,6 +46,8 @@ interface InboxRow {
   platform: string | null;
   visualFormat: string | null;
   assets: unknown;
+  publishedAt: Date | null;
+  productMetadata: Record<string, unknown> | null;
 }
 
 @Injectable()
@@ -54,6 +58,7 @@ export class PublicationInboxService {
     @InjectRepository(AgencyNotificationEntity)
     private readonly notifications: Repository<AgencyNotificationEntity>,
     private readonly contentService: ContentService,
+    private readonly publishWebhookService: ProductPublishWebhookService,
   ) {}
 
   async getInbox(tenantId: string, productId?: string): Promise<PublicationInboxResponseDto> {
@@ -78,7 +83,7 @@ export class PublicationInboxService {
         rejected.push(item);
       } else if (isPending) {
         pendingApproval.push(item);
-      } else if (isApproved && item.scheduledDate <= today) {
+      } else if (isApproved && !row.publishedAt && item.scheduledDate <= today) {
         readyToPublish.push(item);
       } else if (item.scheduledDate > today) {
         upcoming.push(item);
@@ -203,6 +208,7 @@ export class PublicationInboxService {
           content.currentVersionId,
           {},
         );
+        void this.publishWebhookService.maybeAutoDispatchAfterApprove(tenantId, contentId);
         result.approved += 1;
       } catch (error) {
         const reason =
@@ -299,7 +305,7 @@ export class PublicationInboxService {
     const rows = await this.fetchInboxRows(tenantId, productId);
     return rows.filter((row) => {
       const isApproved = row.status === 'approved' && Boolean(row.signatureHash);
-      return isApproved && this.effectiveDate(row) === today;
+      return isApproved && !row.publishedAt && this.effectiveDate(row) === today;
     });
   }
 
@@ -337,6 +343,8 @@ export class PublicationInboxService {
         'v.assets AS assets',
         'c.platform AS platform',
         'c.visual_format AS "visualFormat"',
+        'c.published_at AS "publishedAt"',
+        'prod.metadata AS "productMetadata"',
       ])
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere(
@@ -373,7 +381,31 @@ export class PublicationInboxService {
       platform: row.platform,
       visualFormat: row.visualFormat ?? 'image',
       assets,
+      publishedAt: row.publishedAt
+        ? row.publishedAt instanceof Date
+          ? row.publishedAt.toISOString()
+          : new Date(row.publishedAt).toISOString()
+        : null,
+      canPublishWithN8n: isProductPublishWebhookConfigured(this.parseProductMetadata(row.productMetadata)),
     };
+  }
+
+  private parseProductMetadata(raw: unknown): Record<string, unknown> | null {
+    if (!raw) return null;
+    if (typeof raw === 'object' && !Array.isArray(raw)) {
+      return raw as Record<string, unknown>;
+    }
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+          ? (parsed as Record<string, unknown>)
+          : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   private parseAssets(raw: unknown): unknown[] {
@@ -418,7 +450,7 @@ export class PublicationInboxService {
 
     if (isRejected) return 'rejected';
     if (isPending) return 'pending';
-    if (isApproved && effectiveDate <= today) return 'ready';
+    if (isApproved && !row.publishedAt && effectiveDate <= today) return 'ready';
     return 'upcoming';
   }
 

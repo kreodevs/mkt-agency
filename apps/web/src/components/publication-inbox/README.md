@@ -12,7 +12,7 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
-| `InboxQuickPublishActions.tsx` | Copiar, Abrir red + menú «Más» (WhatsApp, link captura, otra versión, **eliminar**); menú en portal para no recortarse en tarjeta ni ficha |
+| `InboxQuickPublishActions.tsx` | Copiar, Abrir red, **Publicar con n8n** (si el producto tiene webhook), **Marcar publicado**, menú «Más» |
 | `InboxContentDeleteDialog.tsx` | Confirmación de borrado individual o en lote |
 | `InboxPurgeDialog.tsx` | Limpiar bandeja por alcance (todo / por aprobar / listas / …) |
 | `InboxContentDetailDialog.tsx` | Ficha en modal; aprobación formal sin duplicar acciones rápidas |

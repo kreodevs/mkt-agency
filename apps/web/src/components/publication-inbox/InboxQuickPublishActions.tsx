@@ -9,6 +9,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   RefreshCw,
+  Send,
   Trash2,
   X,
 } from 'lucide-react';
@@ -24,7 +25,7 @@ import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
 import { approveContentVersion, rejectContentVersion } from '@/services/content';
-import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
+import { regenerateInboxContent, deleteInboxContent, publishInboxContentWithN8n, markContentPublished } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
@@ -192,6 +193,34 @@ export function InboxQuickPublishActions({
     },
   });
 
+  const publishN8nMutation = useMutation({
+    mutationFn: () => publishInboxContentWithN8n(item.contentId),
+    onSuccess: (result) => {
+      if (result.dispatched) {
+        toast.success('Enviado a n8n — marca como publicado cuando el flujo termine');
+      } else {
+        toast.message(result.reason ?? 'No se envió al webhook');
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo publicar con n8n');
+    },
+  });
+
+  const markPublishedMutation = useMutation({
+    mutationFn: () => markContentPublished(item.contentId),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success('Marcado como publicado');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo marcar como publicado');
+    },
+  });
+
+  const showN8nPublish = Boolean(item.canPublishWithN8n) && Boolean(item.signatureHash);
+  const showMarkPublished = Boolean(item.signatureHash) && !item.publishedAt;
+
   const copyText = buildPostCopyText(item.title, sanitizePublishableCopy(item.body));
 
   const copyAll = async () => {
@@ -342,6 +371,32 @@ export function InboxQuickPublishActions({
         <Copy className="mr-1 h-3.5 w-3.5" />
         Copiar texto
       </Button>
+      {showN8nPublish ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className={primaryButtonClass}
+          loading={publishN8nMutation.isPending}
+          onClick={() => publishN8nMutation.mutate()}
+        >
+          <Send className="mr-1 h-3.5 w-3.5" />
+          Publicar con n8n
+        </Button>
+      ) : null}
+      {showMarkPublished ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={primaryButtonClass}
+          loading={markPublishedMutation.isPending}
+          onClick={() => markPublishedMutation.mutate()}
+        >
+          <Check className="mr-1 h-3.5 w-3.5" />
+          Marcar publicado
+        </Button>
+      ) : null}
       <Button
         type="button"
         size="sm"

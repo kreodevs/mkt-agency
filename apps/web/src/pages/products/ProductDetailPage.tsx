@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
+import { ProductPublishIntegrationPanel } from '@/components/products/ProductPublishIntegrationPanel';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
@@ -162,6 +163,10 @@ export default function ProductDetailPage() {
             void queryClient.invalidateQueries({ queryKey: ['product', id] });
           }}
         />
+      </div>
+
+      <div className="mb-6">
+        <ProductPublishIntegrationPanel productId={id} />
       </div>
 
       <Card title="Detalle del producto">

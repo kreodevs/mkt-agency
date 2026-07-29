@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -32,6 +33,10 @@ import {
   RequestInboxChangesDto,
   RequestInboxChangesResponseDto,
 } from './dto/publication-inbox.dto';
+import {
+  DispatchPublishWebhookResponseDto,
+} from '../product/dto/product-publish-webhook.dto';
+import { ProductPublishWebhookService } from '../product/product-publish-webhook.service';
 import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { CopilotService } from './copilot.service';
 import { PublicationInboxService } from './publication-inbox.service';
@@ -45,6 +50,7 @@ export class PublicationInboxController {
     private readonly copilotService: CopilotService,
     private readonly communityManager: CommunityManagerService,
     private readonly prepareWeekWorker: CopilotPrepareWeekWorkerService,
+    private readonly publishWebhookService: ProductPublishWebhookService,
   ) {}
 
   @Get()
@@ -157,6 +163,18 @@ export class PublicationInboxController {
     @Body() body: PurgeInboxDto,
   ): Promise<BulkDeleteInboxResponseDto> {
     return this.inboxService.purgeInbox(user.tenantId!, body.scope, body.productId);
+  }
+
+  @Post('publish/:contentId')
+  publishWithN8n(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId', ParseUUIDPipe) contentId: string,
+  ): Promise<DispatchPublishWebhookResponseDto> {
+    return this.publishWebhookService.dispatchForContent(
+      user.tenantId!,
+      contentId,
+      'content.manual_publish',
+    );
   }
 
   @Post('request-changes/:contentId')

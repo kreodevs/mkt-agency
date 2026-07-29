@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { memoryStorage } from 'multer';
@@ -7,9 +8,14 @@ import { AssetsModule } from '../assets/assets.module';
 import { AssetEntity } from '../assets/infrastructure/typeorm/asset.entity';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-media-kit-item.entity';
+import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
+import { ContentVersionEntity } from '../content/infrastructure/typeorm/content-version.entity';
 import { ProductController } from './product.controller';
 import { ProductLogoService } from './product-logo.service';
 import { ProductMediaKitService } from './product-media-kit.service';
+import { ProductPublishIntegrationService } from './product-publish-integration.service';
+import { ProductPublishWebhookController } from './product-publish-webhook.controller';
+import { ProductPublishWebhookService } from './product-publish-webhook.service';
 import { ProductService } from './product.service';
 
 const MAX_LOGO_FILE_SIZE = 2 * 1024 * 1024;
@@ -19,14 +25,33 @@ const MAX_MEDIA_KIT_FILE_SIZE = 52_428_800;
   imports: [
     AuthSharedModule,
     AssetsModule,
+    ConfigModule,
     MulterModule.register({
       storage: memoryStorage(),
       limits: { fileSize: MAX_LOGO_FILE_SIZE },
     }),
-    TypeOrmModule.forFeature([ProductEntity, ProductMediaKitItemEntity, AssetEntity]),
+    TypeOrmModule.forFeature([
+      ProductEntity,
+      ProductMediaKitItemEntity,
+      AssetEntity,
+      ContentEntity,
+      ContentVersionEntity,
+    ]),
   ],
-  controllers: [ProductController],
-  providers: [ProductService, ProductLogoService, ProductMediaKitService],
-  exports: [ProductService, ProductLogoService, ProductMediaKitService],
+  controllers: [ProductController, ProductPublishWebhookController],
+  providers: [
+    ProductService,
+    ProductLogoService,
+    ProductMediaKitService,
+    ProductPublishIntegrationService,
+    ProductPublishWebhookService,
+  ],
+  exports: [
+    ProductService,
+    ProductLogoService,
+    ProductMediaKitService,
+    ProductPublishIntegrationService,
+    ProductPublishWebhookService,
+  ],
 })
 export class ProductModule {}

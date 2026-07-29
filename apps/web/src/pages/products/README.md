@@ -17,8 +17,12 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 - `src/components/products/ProductKeywordTagsInput.tsx` — editor de tags SEO
 - `src/components/products/ProductMediaKitPanel.tsx` — panel drag & drop del kit
 - `src/components/products/ProductLogoPanel.tsx` — logo con tokens `--warning` para avisos
+- `src/components/products/ProductPublishIntegrationPanel.tsx` — webhook n8n por producto (detalle `/products/:id`)
 
-## Onboarding de producto
+## Publicación n8n
+
+Configura en detalle del producto. La bandeja muestra «Publicar con n8n» solo si el producto tiene webhook activo; si no, copiar/pegar como siempre.
+
 
 Wizard de 7 pasos alineado al de empresa (`/onboarding`):
 
