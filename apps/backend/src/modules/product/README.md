@@ -54,4 +54,6 @@ Metadata en `products.metadata`:
 
 Webhook público de callback: `POST /api/v1/publication-inbox/webhook/:tenantId/mark-published` con header `X-Webhook-Secret` y body `{ productId, contentId, externalPostId? }`.
 
+Workflow n8n de ejemplo: [`docs/integrations/n8n/mkt-agency-publish-instagram-linkedin.json`](../../../docs/integrations/n8n/mkt-agency-publish-instagram-linkedin.json).
+
 Servicios: `product-publish-integration.service.ts`, `product-publish-webhook.service.ts`.

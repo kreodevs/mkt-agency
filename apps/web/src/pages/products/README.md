@@ -23,8 +23,9 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 
 Configura en detalle del producto. La bandeja muestra «Publicar con n8n» solo si el producto tiene webhook activo; si no, copiar/pegar como siempre.
 
+Workflow de ejemplo importable: [`docs/integrations/n8n/`](../../../docs/integrations/n8n/README.md).
 
-Wizard de 7 pasos alineado al de empresa (`/onboarding`):
+## Onboarding de producto
 
 1. Nombre + **URL del producto** (paso 1) — botón **Analizar e inferir campos** (`POST /products/:id/infer-from-page`)
 2. Tipo, descripción, propuesta de valor, audiencia (prellenables por IA)

@@ -1,0 +1,413 @@
+{
+  "name": "Mkt Agency — Publicar Instagram + LinkedIn",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Configuración\n\n1. Activa el workflow y copia la **Production URL** del nodo Webhook → pégala en el producto (Mkt Agency → Publicación n8n).\n2. Variables de entorno en n8n:\n   - `MKT_AGENCY_WEBHOOK_SECRET` — mismo secret del producto (callback)\n   - `META_ACCESS_TOKEN` — token Graph API (Instagram/Facebook)\n   - `META_IG_USER_ID` — ID cuenta Instagram Business\n   - `LINKEDIN_ACCESS_TOKEN` — token OAuth LinkedIn\n   - `LINKEDIN_AUTHOR_URN` — ej. `urn:li:organization:123456`\n3. Opcional: `pageId` / `accountId` vienen en `credentials` del payload por producto.\n4. Tras publicar, el flujo llama `callbackUrl` con `mark-published`.",
+        "height": 340,
+        "width": 520,
+        "color": 4
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Sticky Note — Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-720, -320]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mkt-agency-publish",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Webhook Mkt Agency",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-480, -80],
+      "webhookId": "mkt-agency-publish-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body ?? raw;\n\nconst assets = Array.isArray(body.assets) ? body.assets : [];\nconst imageUrl = assets[0]?.url ?? null;\nconst creds = body.credentials && typeof body.credentials === 'object' ? body.credentials : {};\n\nreturn [\n  {\n    json: {\n      event: body.event,\n      tenantId: body.tenantId,\n      productId: body.productId,\n      productName: body.productName,\n      contentId: body.contentId,\n      platform: (body.platform ?? '').toLowerCase(),\n      title: body.title,\n      copy: body.copy,\n      scheduledDate: body.scheduledDate,\n      visualFormat: body.visualFormat,\n      versionId: body.versionId,\n      assets,\n      imageUrl,\n      callbackUrl: body.callbackUrl,\n      credentials: creds,\n      metaIgUserId: creds.pageId || $env.META_IG_USER_ID || '',\n      linkedinAuthorUrn: creds.accountId\n        ? (String(creds.accountId).startsWith('urn:') ? creds.accountId : `urn:li:organization:${creds.accountId}`)\n        : ($env.LINKEDIN_AUTHOR_URN || ''),\n    },\n  },\n];"
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Normalizar payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, -80]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "instagram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "instagram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "facebook",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "facebook"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "linkedin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "linkedin"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "d4e5f6a7-b8c9-0123-def0-234567890123",
+      "name": "Enrutar por platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [0, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst igUserId = item.metaIgUserId;\nconst accessToken = $env.META_ACCESS_TOKEN;\nconst imageUrl = item.imageUrl;\nconst caption = item.copy;\n\nif (!igUserId) throw new Error('Falta META_IG_USER_ID o credentials.pageId');\nif (!accessToken) throw new Error('Falta META_ACCESS_TOKEN en variables de entorno n8n');\nif (!imageUrl) throw new Error('El payload no trae assets[0].url (URL firmada)');\n\nconst container = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://graph.facebook.com/v21.0/${igUserId}/media`,\n  qs: {\n    image_url: imageUrl,\n    caption,\n    access_token: accessToken,\n  },\n});\n\nconst published = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://graph.facebook.com/v21.0/${igUserId}/media_publish`,\n  qs: {\n    creation_id: container.id,\n    access_token: accessToken,\n  },\n});\n\nreturn [\n  {\n    json: {\n      ...item,\n      publishPlatform: 'instagram',\n      externalPostId: String(published.id ?? container.id),\n      providerResponse: published,\n    },\n  },\n];"
+      },
+      "id": "e5f6a7b8-c9d0-1234-ef01-345678901234",
+      "name": "Publicar Instagram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, -280]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst pageId = item.credentials?.pageId || item.metaIgUserId;\nconst accessToken = $env.META_ACCESS_TOKEN;\nconst imageUrl = item.imageUrl;\nconst caption = item.copy;\n\nif (!pageId) throw new Error('Falta pageId en credentials o META_IG_USER_ID');\nif (!accessToken) throw new Error('Falta META_ACCESS_TOKEN');\nif (!imageUrl) throw new Error('Sin imageUrl en assets');\n\nconst published = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://graph.facebook.com/v21.0/${pageId}/photos`,\n  qs: {\n    url: imageUrl,\n    caption,\n    access_token: accessToken,\n  },\n});\n\nreturn [\n  {\n    json: {\n      ...item,\n      publishPlatform: 'facebook',\n      externalPostId: String(published.id ?? published.post_id ?? ''),\n      providerResponse: published,\n    },\n  },\n];"
+      },
+      "id": "f6a7b8c9-d0e1-2345-f012-456789012345",
+      "name": "Publicar Facebook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst accessToken = $env.LINKEDIN_ACCESS_TOKEN;\nconst author = item.linkedinAuthorUrn;\nconst text = item.copy;\n\nif (!accessToken) throw new Error('Falta LINKEDIN_ACCESS_TOKEN');\nif (!author) throw new Error('Falta LINKEDIN_AUTHOR_URN o credentials.accountId');\n\n// Post de texto + enlace al asset (evita flujo multi-paso de upload de imagen en el ejemplo).\nconst commentary = item.imageUrl ? `${text}\\n\\n${item.imageUrl}` : text;\n\nconst body = {\n  author,\n  lifecycleState: 'PUBLISHED',\n  specificContent: {\n    'com.linkedin.ugc.ShareContent': {\n      shareCommentary: { text: commentary },\n      shareMediaCategory: 'NONE',\n    },\n  },\n  visibility: {\n    'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',\n  },\n};\n\nconst published = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.linkedin.com/v2/ugcPosts',\n  headers: {\n    Authorization: `Bearer ${accessToken}`,\n    'X-Restli-Protocol-Version': '2.0.0',\n    'Content-Type': 'application/json',\n  },\n  body,\n  json: true,\n});\n\nreturn [\n  {\n    json: {\n      ...item,\n      publishPlatform: 'linkedin',\n      externalPostId: String(published.id ?? ''),\n      providerResponse: published,\n    },\n  },\n];"
+      },
+      "id": "a7b8c9d0-e1f2-3456-0123-567890123456",
+      "name": "Publicar LinkedIn",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [\n  {\n    json: {\n      ...item,\n      publishPlatform: item.platform,\n      externalPostId: null,\n      publishSkipped: true,\n      skipReason: `Plataforma no soportada: ${item.platform}`,\n    },\n  },\n];"
+      },
+      "id": "b8c9d0e1-f2a3-4567-1234-678901234567",
+      "name": "Plataforma no soportada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.publishSkipped }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0e1f2a3-b4c5-6789-3456-890123456789",
+      "name": "¿Publicó OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [560, -80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callbackUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{ $env.MKT_AGENCY_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productId: $json.productId, contentId: $json.contentId, externalPostId: $json.externalPostId }) }}",
+        "options": {}
+      },
+      "id": "e1f2a3b4-c5d6-7890-4567-901234567890",
+      "name": "Callback mark-published",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, -180]
+    },
+    {
+      "parameters": {
+        "content": "## LinkedIn con imagen nativa\n\nEste ejemplo publica **texto + URL del asset** en el cuerpo del post.\n\nPara imagen nativa en el feed, añade antes del nodo LinkedIn:\n1. Register upload (`/v2/assets?action=registerUpload`)\n2. PUT binario a la URL de upload\n3. UGC con `shareMediaCategory: IMAGE`",
+        "height": 220,
+        "width": 380,
+        "color": 6
+      },
+      "id": "f2a3b4c5-d6e7-8901-5678-012345678901",
+      "name": "Sticky Note — LinkedIn imagen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 280]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, contentId: $json.contentId, externalPostId: $json.externalPostId, platform: $json.publishPlatform }) }}",
+        "options": {}
+      },
+      "id": "a3b4c5d6-e7f8-9012-6789-123456789012",
+      "name": "Responder webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1240, -180]
+    }
+  ],
+  "pinData": {
+    "Webhook Mkt Agency": [
+      {
+        "json": {
+          "event": "content.manual_publish",
+          "tenantId": "00000000-0000-0000-0000-000000000001",
+          "productId": "00000000-0000-0000-0000-000000000002",
+          "productName": "Producto demo",
+          "contentId": "00000000-0000-0000-0000-000000000003",
+          "platform": "instagram",
+          "title": "Tips de marketing",
+          "copy": "3 ideas para vender más este mes. Guarda el post.",
+          "scheduledDate": "2026-07-08",
+          "visualFormat": "image",
+          "versionId": "00000000-0000-0000-0000-000000000004",
+          "assets": [
+            {
+              "assetId": "00000000-0000-0000-0000-000000000005",
+              "url": "https://example.com/signed-asset.jpg",
+              "mimeType": "image/jpeg",
+              "fileName": "post.jpg",
+              "expiresIn": 3600
+            }
+          ],
+          "callbackUrl": "https://api.tu-dominio.com/api/v1/publication-inbox/webhook/00000000-0000-0000-0000-000000000001/mark-published",
+          "credentials": {
+            "pageId": "17841400000000000"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Mkt Agency": {
+      "main": [
+        [
+          {
+            "node": "Normalizar payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar payload": {
+      "main": [
+        [
+          {
+            "node": "Enrutar por platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrutar por platform": {
+      "main": [
+        [
+          {
+            "node": "Publicar Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publicar Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publicar LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Plataforma no soportada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar Instagram": {
+      "main": [
+        [
+          {
+            "node": "¿Publicó OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar Facebook": {
+      "main": [
+        [
+          {
+            "node": "¿Publicó OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "¿Publicó OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plataforma no soportada": {
+      "main": [
+        [
+          {
+            "node": "¿Publicó OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Publicó OK?": {
+      "main": [
+        [
+          {
+            "node": "Callback mark-published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Callback mark-published": {
+      "main": [
+        [
+          {
+            "node": "Responder webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "mkt-agency-publish-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "mkt-agency"
+    }
+  ]
+}
