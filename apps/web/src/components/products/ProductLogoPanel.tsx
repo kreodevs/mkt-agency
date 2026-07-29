@@ -91,7 +91,7 @@ export function ProductLogoPanel({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-[var(--foreground)]">Logo de {productName}</p>
           <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
-            Se usa en todas las imágenes generadas por IA (nombre abajo + logo superpuesto arriba a la derecha).
+            Se superpone arriba a la izquierda en todas las imágenes generadas por IA. Regenera el visual («Otra versión») tras subir o cambiar el logo.
           </p>
           {logoSourceUrl && (
             <p className="mt-1 truncate text-xs text-[var(--foreground-muted)]" title={logoSourceUrl}>

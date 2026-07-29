@@ -22,11 +22,11 @@ export class ImageBrandingService {
     const height = metadata.height ?? 1024;
 
     const padding = Math.max(12, Math.round(Math.min(width, height) * 0.04));
-    let logoWidth = Math.max(96, Math.round(Math.min(width, height) * 0.2));
+    let logoWidth = Math.max(96, Math.round(Math.min(width, height) * 0.18));
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
-        const composited = await this.compositeLogo(
+        return await this.compositeLogo(
           base,
           width,
           height,
@@ -35,12 +35,6 @@ export class ImageBrandingService {
           logoWidth,
           padding,
         );
-
-        if (composited.length <= normalizedBase.length * 0.98) {
-          this.logger.warn(`Logo composite may not have applied for asset ${logoAssetId}`);
-        }
-
-        return composited;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes('bounds') && attempt < 4) {
@@ -67,21 +61,55 @@ export class ImageBrandingService {
     padding: number,
   ): Promise<Buffer> {
     const rasterizedLogo = await this.rasterizeLogo(logoBuffer, mimeType, logoWidth);
-    const logoMeta = await sharp(rasterizedLogo).metadata();
+    const logoWithShadow = await this.withDropShadow(rasterizedLogo);
+    const logoMeta = await sharp(logoWithShadow).metadata();
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
+    const left = padding;
     const top = padding;
-    const left = width - logoW - padding;
 
-    if (top + logoH > height || left < 0 || left + logoW > width) {
+    if (top + logoH > height || left + logoW > width) {
       throw new Error(
         `Logo exceeds image bounds (${width}x${height}, logo ${logoW}x${logoH})`,
       );
     }
 
     return base
-      .composite([{ input: rasterizedLogo, top, left }])
+      .composite([{ input: logoWithShadow, top, left }])
+      .png()
+      .toBuffer();
+  }
+
+  /** Sombra suave para que el logo se lea sobre fondos claros u oscuros (sin placa blanca). */
+  private async withDropShadow(logoPng: Buffer): Promise<Buffer> {
+    const meta = await sharp(logoPng).metadata();
+    const logoW = meta.width ?? 100;
+    const logoH = meta.height ?? 100;
+    const offset = Math.max(2, Math.round(Math.min(logoW, logoH) * 0.04));
+    const pad = Math.max(4, offset * 2);
+    const canvasW = logoW + pad * 2;
+    const canvasH = logoH + pad * 2;
+
+    const shadow = await sharp(logoPng)
+      .ensureAlpha()
+      .tint({ r: 0, g: 0, b: 0 })
+      .linear(0.55, 0)
+      .blur(3)
+      .toBuffer();
+
+    return sharp({
+      create: {
+        width: canvasW,
+        height: canvasH,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .composite([
+        { input: shadow, top: pad + offset, left: pad + offset },
+        { input: logoPng, top: pad, left: pad },
+      ])
       .png()
       .toBuffer();
   }

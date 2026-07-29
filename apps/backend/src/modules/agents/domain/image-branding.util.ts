@@ -1,9 +1,9 @@
 import type { ContentVisualFormat } from '../../content/domain/content.constants';
 
-/** Esquina reservada para superponer el logo del producto tras la generación IA. */
-export const PRODUCT_LOGO_CORNER = 'top-right' as const;
+/** Esquina donde Sharp superpone el logo del producto tras la generación IA. */
+export const PRODUCT_LOGO_CORNER = 'top-left' as const;
 
-const LOGO_CORNER_LABEL_ES = 'esquina superior derecha';
+const LOGO_CORNER_LABEL_ES = 'esquina superior izquierda';
 
 export interface BrandedImagePromptInput {
   productName: string;
@@ -33,10 +33,10 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
   if (input.hasLogo) {
     parts.push(
-      `Incluye el nombre "${productName}" solo como texto legible (preferiblemente en la parte inferior), nunca como monograma o símbolo gráfico.`,
-      'PROHIBIDO: logos, monogramas, iniciales estilizadas (ej. una "A" en círculo), iconos de marca, marcas de agua o símbolos en cualquier esquina.',
-      `Reserva un margen limpio en la ${LOGO_CORNER_LABEL_ES} (~15% del lienzo) sin rostros, texto ni elementos clave; el logo oficial del producto se superpone ahí después por software.`,
-      `PROHIBIDO: recuadros blancos, cajas vacías o placeholders en la ${LOGO_CORNER_LABEL_ES}.`,
+      'NO incluyas logos, monogramas, marcas de agua, iconos de redes (LinkedIn, Instagram, etc.) ni símbolos de marca generados por IA.',
+      'NO dejes recuadros vacíos, cajas blancas, marcos en blanco ni placeholders en ninguna esquina — el lienzo debe estar totalmente compuesto.',
+      `El logo oficial del producto se superpone después por software en la ${LOGO_CORNER_LABEL_ES}; no simules ni reserves un hueco para él.`,
+      `Evita titulares grandes con el nombre "${productName}"; el branding lo aporta el logo superpuesto, no texto inventado.`,
     );
   } else {
     parts.push(

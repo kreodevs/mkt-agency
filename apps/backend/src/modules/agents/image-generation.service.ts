@@ -337,7 +337,9 @@ export class ImageGenerationService implements OnModuleInit {
   ): Promise<Buffer> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     if (!branding.logoAssetId) {
-      this.logger.warn(`Product ${productId} has no logoAssetId; skipping overlay`);
+      this.logger.warn(
+        `Product ${productId} (${branding.productName}) has no logoAssetId — skipping overlay. Upload logo in product settings.`,
+      );
       return imageBuffer;
     }
     try {
