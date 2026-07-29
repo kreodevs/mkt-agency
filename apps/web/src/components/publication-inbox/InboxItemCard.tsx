@@ -6,6 +6,7 @@ import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxContentDetailDialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
+import { InboxArtPublishBar } from '@/components/publication-inbox/InboxArtPublishBar';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
 import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
@@ -98,6 +99,7 @@ export function InboxItemCard({
           </div>
 
           <InboxItemVisualPreview item={item} />
+          <InboxArtPublishBar item={item} />
 
           <p
             className={[
@@ -127,6 +129,7 @@ export function InboxItemCard({
               <InboxQuickPublishActions
                 item={item}
                 showApproval={showApproval}
+                hideArtPrimaryActions
                 onRejected={onRejected}
               />
             )}

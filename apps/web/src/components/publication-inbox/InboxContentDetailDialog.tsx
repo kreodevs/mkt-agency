@@ -6,6 +6,7 @@ import { StatusPill } from '@/components/atoms/StatusPill';
 import { Button } from '@/components/atoms/Button';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
+import { InboxArtPublishBar } from '@/components/publication-inbox/InboxArtPublishBar';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
 import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
@@ -78,6 +79,7 @@ export function InboxContentDetailDialog({
               item={item}
               showApproval={false}
               showRegenerate={!isRejected}
+              hideArtPrimaryActions
               onRejected={onRejected}
               onDeleted={() => onOpenChange(false)}
               layout="footer"
@@ -114,6 +116,7 @@ export function InboxContentDetailDialog({
         </div>
 
         <InboxItemVisualPreview item={item} variant="detail" />
+        <InboxArtPublishBar item={item} />
 
         <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
           <p className="mb-[var(--spacing-sm)] text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">

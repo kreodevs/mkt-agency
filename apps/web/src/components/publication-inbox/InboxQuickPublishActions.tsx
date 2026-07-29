@@ -25,8 +25,9 @@ import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
 import { approveContentVersion, rejectContentVersion } from '@/services/content';
-import { regenerateInboxContent, deleteInboxContent, publishInboxContentWithN8n, markContentPublished } from '@/services/publication-inbox';
+import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
+import { useInboxPublishActions } from '@/hooks/useInboxPublishActions';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
 
@@ -38,6 +39,8 @@ interface InboxQuickPublishActionsProps {
   onRejected?: (context: InboxRejectFollowUpContext) => void;
   onDeleted?: () => void;
   layout?: 'default' | 'footer';
+  /** Oculta Publicar n8n / Marcar publicado (van en la barra del arte). */
+  hideArtPrimaryActions?: boolean;
 }
 
 function needsApproval(item: PublicationInboxItem): boolean {
@@ -56,6 +59,7 @@ export function InboxQuickPublishActions({
   onRejected,
   onDeleted,
   layout = 'default',
+  hideArtPrimaryActions = false,
 }: InboxQuickPublishActionsProps) {
   const queryClient = useQueryClient();
   const menuId = useId();
@@ -193,33 +197,15 @@ export function InboxQuickPublishActions({
     },
   });
 
-  const publishN8nMutation = useMutation({
-    mutationFn: () => publishInboxContentWithN8n(item.contentId),
-    onSuccess: (result) => {
-      if (result.dispatched) {
-        toast.success('Enviado a n8n — marca como publicado cuando el flujo termine');
-      } else {
-        toast.message(result.reason ?? 'No se envió al webhook');
-      }
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo publicar con n8n');
-    },
-  });
+  const {
+    publishN8nMutation,
+    markPublishedMutation,
+    canPublishWithN8n,
+    canMarkPublishedManually,
+  } = useInboxPublishActions(item);
 
-  const markPublishedMutation = useMutation({
-    mutationFn: () => markContentPublished(item.contentId),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success('Marcado como publicado');
-    },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo marcar como publicado');
-    },
-  });
-
-  const showN8nPublish = Boolean(item.canPublishWithN8n) && Boolean(item.signatureHash);
-  const showMarkPublished = Boolean(item.signatureHash) && !item.publishedAt;
+  const showN8nPublish = canPublishWithN8n && !hideArtPrimaryActions;
+  const showMarkPublished = canMarkPublishedManually && !hideArtPrimaryActions;
 
   const copyText = buildPostCopyText(item.title, sanitizePublishableCopy(item.body));
 

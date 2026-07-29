@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Images, Megaphone, Package, Plus, Sparkles, Star } from 'lucide-react';
+import { ClipboardList, Images, Megaphone, Package, Plus, Sparkles, Star, Webhook } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -105,6 +105,12 @@ export default function ProductListPage() {
               <Button variant="outline" size="sm" className="gap-1">
                 <Images className="h-3.5 w-3.5" />
                 Kit
+              </Button>
+            </Link>
+            <Link to={`/products/${product.id}#publicacion-n8n`}>
+              <Button variant="outline" size="sm" className="gap-1" title="Configurar webhook n8n del producto">
+                <Webhook className="h-3.5 w-3.5" />
+                Integración n8n
               </Button>
             </Link>
             <Link to={`/products/${product.id}`}>

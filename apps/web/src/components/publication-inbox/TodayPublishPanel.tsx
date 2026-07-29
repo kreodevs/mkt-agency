@@ -49,7 +49,7 @@ export function TodayPublishPanel({
 
       <div className="mb-3 flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
         <CalendarCheck className="h-4 w-4 text-[var(--success)]" />
-        Aprueba si hace falta, luego copia y pega en tu red.
+        Aprueba si hace falta; luego publica cada arte (n8n o copiar/pegar).
       </div>
 
       <div className="space-y-4">

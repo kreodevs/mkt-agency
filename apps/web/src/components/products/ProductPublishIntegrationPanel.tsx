@@ -118,7 +118,7 @@ export function ProductPublishIntegrationPanel({ productId }: ProductPublishInte
   return (
     <Card
       title="Publicación automática (n8n)"
-      subtitle="Opcional. Sin webhook, la bandeja sigue en modo copiar/pegar."
+      subtitle="Opcional. Aquí configuras el webhook; el botón Publicar vive en cada arte de la bandeja."
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <label className="flex items-center gap-2 text-sm">

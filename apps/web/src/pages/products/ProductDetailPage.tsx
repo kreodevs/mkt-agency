@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, FolderOpen, Images, Megaphone } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
@@ -30,6 +30,7 @@ const CATEGORY_OPTIONS: Array<{ label: string; value: ProductCategory }> = [
 export default function ProductDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
@@ -57,6 +58,16 @@ export default function ProductDetailPage() {
     setValueProposition(product.valueProposition ?? '');
     setWebsiteUrl(product.websiteUrl ?? '');
   }, [productQuery.data]);
+
+  useEffect(() => {
+    if (location.hash !== '#publicacion-n8n' || productQuery.isLoading) return;
+    const el = document.getElementById('publicacion-n8n');
+    if (!el) return;
+    const timer = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [location.hash, productQuery.isLoading, productQuery.data]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: UpdateProductPayload) => updateProduct(id, payload),
@@ -165,7 +176,7 @@ export default function ProductDetailPage() {
         />
       </div>
 
-      <div className="mb-6">
+      <div id="publicacion-n8n" className="mb-6 scroll-mt-6">
         <ProductPublishIntegrationPanel productId={id} />
       </div>
 

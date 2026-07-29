@@ -4,7 +4,7 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 
 ## Rutas
 
-- `/products` — listado con progreso de onboarding (columna **Audiencia** angosta, multilínea, para dejar visibles tipo/onboarding/acciones)
+- `/products` — listado; **Integración n8n** = configuración; **Publicar** = en cada arte de la bandeja
 - `/products/new` — alta de producto (redirige al onboarding)
 - `/products/:id/onboarding` — wizard de onboarding de producto (tags SEO + activación de agentes)
 - `/products/:id` — edición
@@ -21,7 +21,7 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 
 ## Publicación n8n
 
-Configura en detalle del producto. La bandeja muestra «Publicar con n8n» solo si el producto tiene webhook activo; si no, copiar/pegar como siempre.
+**Configuración** en producto (`Integración n8n`). **Publicar** en cada arte aprobado de la bandeja/copiloto (barra bajo el mockup visual).
 
 Workflow de ejemplo importable: [`docs/integrations/n8n/`](../../../docs/integrations/n8n/README.md).
 
