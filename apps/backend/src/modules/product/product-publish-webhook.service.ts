@@ -15,6 +15,7 @@ import { ProductEntity } from '../product/infrastructure/typeorm/product.entity'
 import {
   getProductPublishIntegrationConfig,
   resolveProductPublishWebhookUrl,
+  type ProductPlatformCredential,
 } from '../product/domain/product-publish-integration.metadata.util';
 import { ProductPublishIntegrationService } from '../product/product-publish-integration.service';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
@@ -42,7 +43,7 @@ export interface PublishWebhookPayload {
     expiresIn: number;
   }>;
   callbackUrl: string;
-  credentials: Record<string, unknown> | null;
+  credentials: ProductPlatformCredential | null;
 }
 
 export interface DispatchPublishWebhookResult {
