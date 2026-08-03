@@ -31,9 +31,9 @@ export function BrandProductGuide({ variant, productId }: BrandProductGuideProps
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-4 text-sm">
+    <div className="mb-6 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-4 text-sm">
       <div className="flex items-start gap-3">
-        <Package className="mt-0.5 h-5 w-5 shrink-0 text-indigo-500" />
+        <Package className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]" />
         <div>
           <p className="font-semibold text-[var(--foreground)]">Activación del producto</p>
           <p className="mt-1 text-[var(--foreground-muted)]">

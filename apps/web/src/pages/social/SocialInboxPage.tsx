@@ -101,7 +101,7 @@ export default function SocialInboxPage() {
 
       <SocialInboxGuide variant={isSoho ? 'soho' : 'growth'} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card
           title="Registrar interacción"
           subtitle="Pega un comentario o DM que recibiste (modo manual hasta conectar OAuth)"

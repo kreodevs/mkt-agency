@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HEALTH_UI } from '@/lib/semantic-ui';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Card } from '@/components/molecules/Card';
@@ -257,8 +258,8 @@ export function BrandProductOnboardingPanel({
             />
           </>
         ) : (
-          <div className="flex items-start gap-2 rounded-[var(--radius)] border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div className={`flex items-start gap-2 rounded-[var(--radius)] border p-3 text-sm ${HEALTH_UI.good.border} ${HEALTH_UI.good.bg}`}>
+            <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${HEALTH_UI.good.text}`} />
             <p className="text-[var(--foreground-muted)]">
               Perfil listo ({keywordCount} tags). Puedes generar el Brand Brief o{' '}
               <Link

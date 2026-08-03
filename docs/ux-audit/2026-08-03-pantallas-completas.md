@@ -161,11 +161,20 @@ Esta iteración corrige **P0** y quick wins **P1** en las pantallas de mayor uso
 7. ~~**OnboardingWizardPage** — progress indicator más visible en móvil.~~
 8. ~~**PublicCapturePage** — error con `--destructive` en lugar de `text-red-600`.~~
 
-### P3 (futuro)
+### P4 (2026-08-03)
 
-- ~~Mobile cards para `/campaigns` y tablas admin restantes.~~
-- ~~Tokens en gradientes violeta de BrandInterview (spinner IA).~~
-- ~~Error `motion/react` — dependencia `motion` instalada vía yarn.~~
+- Mobile cards: `/contents`, `/proposals`, `/reports`, `/tenants`
+- Tokens Tailwind restantes (WebsiteAnalyzer, BrandProductGuide, agents catalog, etc.)
+- Layout mobile: `/settings/copilot`, `/social/inbox`, `/agency/activity`
+- Backend: bootstrap LLM keys desde env (`LlmProviderBootstrapService`, `TAVILY_API_KEY`)
+- SDD: `scripts/sync-sdd-tasks.mjs` sincronizó 88 ítems en tasks.md / PROGRESO.md
+
+### Pendiente real (no UX)
+
+- SSL ACME producción (dominios whitelabel)
+- Media Buyer API real (paid ads)
+- Observabilidad Prometheus/Grafana/Loki
+- Mobile cards admin LLM + AssetLibrary tabla
 
 ---
 

@@ -4,7 +4,8 @@ Entidades de configuración de plataforma (superadmin).
 
 ## LLM
 
-- **`llm_providers`** — proveedores OpenAI-compatible (URL + API key + modelo por defecto).
+- **`llm_providers`** — proveedores OpenAI-compatible (URL + API key + modelo por defecto). Claves opcionales vía env (`OPENROUTER_API_KEY`, etc.) con bootstrap al arrancar.
+- **`platform_integrations`** — Tavily (`TAVILY_API_KEY` en env → bootstrap si fila vacía).
 - **`llm_task_configs`** — tarea → proveedor + modelo + temperatura.
 
 Configuración vía UI:

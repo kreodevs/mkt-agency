@@ -10,3 +10,4 @@
 | `ContentVisualPanel.tsx` | Preview imagen/carrusel IA (sin video IA) + generar / regenerar; usa `visualPrompt` del contenido |
 | `ContentPlatformBadge.tsx` | Badge con icono y color por red social (Instagram, Facebook, LinkedIn, TikTok, X) |
 | `ContentPublishPanel.tsx` | Copiar copy, descargar texto (.txt) y descargar visuales; selector de red destino |
+| `ContentListCard.tsx` | Tarjeta mobile para listado en `/contents` (&lt; md) |

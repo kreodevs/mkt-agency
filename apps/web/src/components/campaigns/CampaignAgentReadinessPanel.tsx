@@ -103,7 +103,7 @@ export function CampaignAgentReadinessPanel({
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
               ) : (
                 <AlertCircle
-                  className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-600' : 'text-[var(--foreground-subtle)]'}`}
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-[var(--warning)]' : 'text-[var(--foreground-subtle)]'}`}
                 />
               )}
               <div className="min-w-0 flex-1">

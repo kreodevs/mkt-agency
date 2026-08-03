@@ -68,7 +68,6 @@ export interface AgentCatalogItem {
   icon: string;
   href: string;
   status: 'ready' | 'coming_soon';
-  color: string;
 }
 
 export const AGENTS_CATALOG: AgentCatalogItem[] = [
@@ -80,7 +79,6 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     icon: 'Bot',
     href: '/agents/brand-interview',
     status: 'ready',
-    color: 'from-violet-500 to-purple-600',
   },
   {
     id: 'competitor_intel',
@@ -90,7 +88,6 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     icon: 'Target',
     href: '/agents/competitor-intel',
     status: 'ready',
-    color: 'from-amber-500 to-orange-600',
   },
   {
     id: 'image_generation',
@@ -100,6 +97,5 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     icon: 'Image',
     href: '/agents/image-generator',
     status: 'ready',
-    color: 'from-pink-500 to-rose-600',
   },
 ];

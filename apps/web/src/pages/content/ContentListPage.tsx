@@ -10,6 +10,7 @@ import {
   buildContentGenerationMap,
 } from '@/components/content/ContentVisualPanel';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { ContentListCard } from '@/components/content/ContentListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -221,17 +222,41 @@ export default function ContentListPage() {
           </select>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={tableData}
-          loading={contentsQuery.isLoading}
-          emptyMessage={
-            contentsQuery.isError
-              ? 'No se pudo cargar el listado'
-              : 'No hay contenidos que coincidan con los filtros'
-          }
-          rows={10}
-        />
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {contentsQuery.isLoading ? (
+            <p className="text-sm text-[var(--foreground-muted)]">Cargando contenidos…</p>
+          ) : tableData.length === 0 ? (
+            <p className="text-sm text-[var(--foreground-muted)]">
+              {contentsQuery.isError
+                ? 'No se pudo cargar el listado'
+                : 'No hay contenidos que coincidan con los filtros'}
+            </p>
+          ) : (
+            tableData.map((content) => (
+              <ContentListCard
+                key={content.id}
+                content={content}
+                productLabel={
+                  content.productId ? (productMap.get(content.productId) ?? '—') : 'Marca'
+                }
+              />
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block">
+          <DataTable
+            columns={columns}
+            data={tableData}
+            loading={contentsQuery.isLoading}
+            emptyMessage={
+              contentsQuery.isError
+                ? 'No se pudo cargar el listado'
+                : 'No hay contenidos que coincidan con los filtros'
+            }
+            rows={10}
+          />
+        </div>
       </Card>
     </DashboardShell>
   );

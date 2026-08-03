@@ -200,7 +200,7 @@ export default function ImageGeneratorPage() {
                         <ImageIcon className="h-8 w-8" />
                         {img.status === 'failed' ? 'Error' : 'Sin imagen'}
                         {img.status === 'failed' && img.errorMessage && (
-                          <p className="line-clamp-3 text-xs text-destructive">{img.errorMessage}</p>
+                          <p className="line-clamp-3 text-xs text-[var(--destructive)]">{img.errorMessage}</p>
                         )}
                       </div>
                     )}
@@ -278,7 +278,7 @@ export default function ImageGeneratorPage() {
                         }}
                         loading={deleteMutation.isPending}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        <Trash2 className="h-3.5 w-3.5 text-[var(--destructive)]" />
                       </Button>
                     </div>
                   </div>

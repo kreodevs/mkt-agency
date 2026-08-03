@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { maskApiKey } from '../../../shared/ai/llm-provider.service';
@@ -17,12 +18,26 @@ export interface PlatformIntegrationResponse {
 @Injectable()
 export class PlatformIntegrationService implements OnModuleInit {
   constructor(
+    private readonly config: ConfigService,
     @InjectRepository(PlatformIntegrationEntity)
     private readonly integrations: Repository<PlatformIntegrationEntity>,
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.ensureDefaults();
+    await this.bootstrapFromEnv();
+  }
+
+  private async bootstrapFromEnv(): Promise<void> {
+    const tavilyKey = this.config.get<string>('TAVILY_API_KEY')?.trim();
+    if (!tavilyKey) return;
+
+    const row = await this.integrations.findOne({ where: { slug: 'tavily' } });
+    if (!row || row.apiKey?.trim()) return;
+
+    row.apiKey = tavilyKey;
+    row.isActive = true;
+    await this.integrations.save(row);
   }
 
   private async ensureDefaults(): Promise<void> {

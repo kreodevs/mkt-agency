@@ -90,7 +90,7 @@ export function DayDetail({ date, items, loading, onClose }: DayDetailProps) {
                   {item.type}
                 </span>
                 {item.productName && (
-                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
+                  <span className="rounded-full bg-[var(--info)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--info)]">
                     {item.productName}
                   </span>
                 )}

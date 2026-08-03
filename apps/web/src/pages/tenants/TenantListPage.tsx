@@ -6,6 +6,7 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { TenantListCard } from '@/components/tenants/TenantListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -209,7 +210,34 @@ export default function TenantListPage() {
           </select>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {tableData.map((tenant) => (
+            <TenantListCard
+              key={tenant.id}
+              tenant={tenant}
+              impersonating={impersonatingId === tenant.id}
+              onEdit={() => setEditTenantId(tenant.id)}
+              onImpersonate={() => {
+                setImpersonatingId(tenant.id);
+                void impersonateTenant(tenant.id)
+                  .then(() => navigate('/'))
+                  .catch((err) => {
+                    window.alert(getApiErrorMessage(err));
+                  })
+                  .finally(() => setImpersonatingId(null));
+              }}
+            />
+          ))}
+          {!tenantsQuery.isLoading && tableData.length === 0 ? (
+            <p className="text-center text-sm text-[var(--foreground-muted)]">
+              {tenantsQuery.isError
+                ? 'No se pudo cargar el listado de tenants'
+                : 'No hay tenants que coincidan con los filtros'}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <DataTable
             columns={columns}
             data={tableData}

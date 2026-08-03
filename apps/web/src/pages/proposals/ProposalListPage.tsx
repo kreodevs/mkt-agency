@@ -8,6 +8,7 @@ import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { ProposalListCard } from '@/components/proposals/ProposalListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -124,12 +125,25 @@ export default function ProposalListPage() {
           </Button>
         </Card>
 
-        <DataTable
-          columns={columns}
-          data={items}
-          loading={proposalsQuery.isLoading}
-          emptyMessage="Aún no hay propuestas"
-        />
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {items.map((proposal) => (
+            <ProposalListCard key={proposal.id} proposal={proposal} />
+          ))}
+          {!proposalsQuery.isLoading && items.length === 0 ? (
+            <p className="text-center text-sm text-[var(--foreground-muted)]">
+              Aún no hay propuestas
+            </p>
+          ) : null}
+        </div>
+
+        <div className="hidden md:block">
+          <DataTable
+            columns={columns}
+            data={items}
+            loading={proposalsQuery.isLoading}
+            emptyMessage="Aún no hay propuestas"
+          />
+        </div>
       </div>
     </DashboardShell>
   );

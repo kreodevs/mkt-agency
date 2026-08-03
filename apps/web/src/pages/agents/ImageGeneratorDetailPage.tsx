@@ -165,7 +165,7 @@ export default function ImageGeneratorDetailPage() {
         <Card title="Prompt" subtitle={new Date(generation.createdAt).toLocaleString('es-MX')}>
           <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{generation.prompt}</p>
           {generation.status === 'failed' && generation.errorMessage && (
-            <p className="mt-3 text-sm text-destructive">{generation.errorMessage}</p>
+            <p className="mt-3 text-sm text-[var(--destructive)]">{generation.errorMessage}</p>
           )}
         </Card>
 
@@ -317,7 +317,7 @@ export default function ImageGeneratorDetailPage() {
           )}
           <Button
             variant="ghost"
-            className="gap-2 text-destructive"
+            className="gap-2 text-[var(--destructive)]"
             loading={deleteMutation.isPending}
             onClick={() => deleteMutation.mutate()}
           >

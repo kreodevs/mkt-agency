@@ -8,6 +8,7 @@ import { IconButton } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { ReportListCard } from '@/components/reports/ReportListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -122,12 +123,29 @@ export default function ReportListPage() {
           </Button>
         </Card>
 
-        <DataTable
-          columns={columns}
-          data={items}
-          loading={reportsQuery.isLoading}
-          emptyMessage="Aún no hay reportes"
-        />
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {items.map((report) => (
+            <ReportListCard
+              key={report.id}
+              report={report}
+              onView={() => navigate(`/reports/${report.id}`)}
+            />
+          ))}
+          {!reportsQuery.isLoading && items.length === 0 ? (
+            <p className="text-center text-sm text-[var(--foreground-muted)]">
+              Aún no hay reportes
+            </p>
+          ) : null}
+        </div>
+
+        <div className="hidden md:block">
+          <DataTable
+            columns={columns}
+            data={items}
+            loading={reportsQuery.isLoading}
+            emptyMessage="Aún no hay reportes"
+          />
+        </div>
       </div>
     </DashboardShell>
   );

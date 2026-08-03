@@ -8,6 +8,7 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
+import { HEALTH_UI } from '@/lib/semantic-ui';
 import { Button } from '@/components/atoms/Button';
 import type { SectionKey } from '@/types/company-profile';
 import { updateCompanyProfileSection } from '@/services/company-profile';
@@ -94,8 +95,8 @@ export default function WebsiteAnalyzerFlow() {
   if (step === 'input') {
     return (
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-          <Sparkles className="h-10 w-10 text-white" />
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--primary)] shadow-lg">
+          <Sparkles className="h-10 w-10 text-[var(--primary-foreground)]" />
         </div>
         <h1 className="mb-2 text-2xl font-black text-[var(--foreground)]">
           Tu agencia de marketing IA
@@ -164,8 +165,8 @@ export default function WebsiteAnalyzerFlow() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
         <div className="max-w-md text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-            <Loader2 className="h-10 w-10 animate-spin text-white" />
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--primary)] shadow-lg">
+            <Loader2 className="h-10 w-10 animate-spin text-[var(--primary-foreground)]" />
           </div>
           <h2 className="mb-2 text-xl font-black text-[var(--foreground)]">
             Analizando {url}
@@ -214,8 +215,8 @@ export default function WebsiteAnalyzerFlow() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+        <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${HEALTH_UI.good.bg}`}>
+          <CheckCircle2 className={`h-8 w-8 ${HEALTH_UI.good.text}`} />
         </div>
         <h2 className="text-2xl font-black text-[var(--foreground)]">
           Sitio analizado con éxito

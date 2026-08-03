@@ -6,6 +6,7 @@
 | `redis-docker-entrypoint.sh` | Entrypoint embebido en `Dockerfile.redis`: cuarentena `appendonly.aof*` y `dump.rdb` legacy al arrancar. |
 | `reset-tenant-operational-data.sh` | Local: compila backend y ejecuta migraciones (incluye `0024` reset operativo). |
 | `clear-generated-contents.sh` | Borra contenidos generados y competidores (`SKIP_GENERATED_CONTENT_RESET=false` por defecto). Idempotente aunque la migración `0032` ya esté aplicada. |
+| `sync-sdd-tasks.mjs` | Marca `[x]` en `specs/001-mkt-agency-os/tasks.md`, `docs/sdd/tasks.md` y `docs/sdd/PROGRESO.md` cuando hay evidencia en el repo. Ejecutar: `node scripts/sync-sdd-tasks.mjs`. |
 
 Variables:
 

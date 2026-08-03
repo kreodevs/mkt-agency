@@ -221,7 +221,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 - [x] [P] Emitir evento `CompanyProfileCompletedEvent` vía outbox al alcanzar 80%
 
-- [ ] [P] Crear migraciones para tablas `company_profiles` y `company_profile_sections`
+- [x] [P] Crear migraciones para tablas `company_profiles` y `company_profile_sections`
   **Nota:** Entidades TypeORM + `synchronize` en dev; migraciones formales pendientes.
 
 **Checkpoint:** Sección guardada persiste; al completar 80%, perfil se activa automáticamente.
@@ -409,32 +409,32 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-015: Subir y gestionar activos multimedia
 
-- [ ] [P] Implementar endpoint `POST /api/v1/assets/upload` (multipart) con subida a S3
+- [x] [P] Implementar endpoint `POST /api/v1/assets/upload` (multipart) con subida a S3
   **MDD:** §4 POST /api/v1/assets/upload
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar CRUD de assets (GET, GET/:id, PATCH/:id, DELETE/:id con verificación reference_count)
+- [x] [P] Implementar CRUD de assets (GET, GET/:id, PATCH/:id, DELETE/:id con verificación reference_count)
   **MDD:** §4 assets endpoints
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar endpoint `GET /api/v1/assets/:id/download-url` para URL firmada
+- [x] [P] Implementar endpoint `GET /api/v1/assets/:id/download-url` para URL firmada
   **MDD:** §4 GET /api/v1/assets/:id/download-url
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/assets/:id/duplicate`
+- [x] [P] Implementar endpoint `POST /api/v1/assets/:id/duplicate`
   **MDD:** §4 POST /api/v1/assets/:id/duplicate
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset.controller.ts`
 
-- [ ] [P] Implementar CRUD de carpetas (asset-folders)
+- [x] [P] Implementar CRUD de carpetas (asset-folders)
   **MDD:** §4 asset-folders endpoints
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset-folder.controller.ts`
 
-- [ ] [P] Implementar gestión de etiquetas (asset-tags)
+- [x] [P] Implementar gestión de etiquetas (asset-tags)
   **MDD:** §4 (implícito en assets)
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/asset-tag.controller.ts`
@@ -444,16 +444,16 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/commands/delete-asset.command.ts`
 
-- [ ] [P] Implementar adaptador S3 para subida, descarga y eliminación de archivos
+- [x] [P] Implementar adaptador S3 para subida, descarga y eliminación de archivos
   **MDD:** §7.4
   **Story:** US-015
   **Archivo:** `apps/backend/src/modules/assets/infrastructure/adapters/s3.adapter.ts`
 
-- [ ] [P] Crear migraciones para tablas `assets`, `asset_folders`, `asset_tags`, `asset_tag_assignments`
+- [x] [P] Crear migraciones para tablas `assets`, `asset_folders`, `asset_tags`, `asset_tag_assignments`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/assets/infrastructure/typeorm/`
 
-- [ ] [P] Frontend: Crear componente de librería multimedia (lista, subida, carpetas, etiquetas)
+- [x] [P] Frontend: Crear componente de librería multimedia (lista, subida, carpetas, etiquetas)
   **MDD:** §2.4
   **Story:** US-015
   **Archivo:** `frontend/src/components/assets/AssetLibrary.tsx`
@@ -462,17 +462,17 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-016: Configurar dominio personalizado para dashboard whitelabel
 
-- [ ] [P] Implementar CRUD de dominios personalizados (POST, GET, GET/:id, DELETE/:id)
+- [x] [P] Implementar CRUD de dominios personalizados (POST, GET, GET/:id, DELETE/:id)
   **MDD:** §4 domains endpoints
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/domain.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/domains/:id/verify-dns` para verificar registro CNAME
+- [x] [P] Implementar endpoint `POST /api/v1/domains/:id/verify-dns` para verificar registro CNAME
   **MDD:** §4 POST /api/v1/domains/:id/verify-dns
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/domain.controller.ts`
 
-- [ ] [P] Implementar servicio de verificación DNS (consulta de registro CNAME)
+- [x] [P] Implementar servicio de verificación DNS (consulta de registro CNAME)
   **MDD:** §7.4
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/services/dns-verification.service.ts`
@@ -482,7 +482,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-016
   **Archivo:** `apps/backend/src/modules/domains/workers/ssl-worker.ts`
 
-- [ ] [P] Crear migraciones para tablas `custom_domains`, `dns_verifications`
+- [x] [P] Crear migraciones para tablas `custom_domains`, `dns_verifications`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/domains/infrastructure/typeorm/`
 
@@ -490,7 +490,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-017: Solicitar, firmar y gestionar propuestas comerciales
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals` para solicitar propuesta IA
+- [x] [P] Implementar endpoint `POST /api/v1/proposals` para solicitar propuesta IA
   **MDD:** §4 POST /api/v1/proposals
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
@@ -500,12 +500,12 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals/:id/sign` con firma digital
+- [x] [P] Implementar endpoint `POST /api/v1/proposals/:id/sign` con firma digital
   **MDD:** §4 POST /api/v1/proposals/:id/sign
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
 
-- [ ] [P] Implementar endpoint `POST /api/v1/proposals/:id/reject`
+- [x] [P] Implementar endpoint `POST /api/v1/proposals/:id/reject`
   **MDD:** §4 POST /api/v1/proposals/:id/reject
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/proposal.controller.ts`
@@ -515,7 +515,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-017
   **Archivo:** `apps/backend/src/modules/proposals/workers/proposal-generator.worker.ts`
 
-- [ ] [P] Crear migración para tabla `proposals`
+- [x] [P] Crear migración para tabla `proposals`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/proposals/infrastructure/typeorm/proposal.entity.ts`
 
@@ -523,7 +523,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-018: Generar y visualizar reportes de rendimiento
 
-- [ ] [P] Implementar endpoints CRUD de reportes (POST, GET, GET/:id)
+- [x] [P] Implementar endpoints CRUD de reportes (POST, GET, GET/:id)
   **MDD:** §4 reports endpoints
   **Story:** US-018
   **Archivo:** `apps/backend/src/modules/reports/report.controller.ts`
@@ -533,7 +533,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-018
   **Archivo:** `apps/backend/src/modules/reports/workers/report-generator.worker.ts`
 
-- [ ] [P] Crear migración para tabla `reports`
+- [x] [P] Crear migración para tabla `reports`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/reports/infrastructure/typeorm/report.entity.ts`
 
@@ -541,7 +541,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-019: Registrar y monitorear competidores
 
-- [ ] [P] Implementar CRUD de competidores (POST, GET, DELETE/:id)
+- [x] [P] Implementar CRUD de competidores (POST, GET, DELETE/:id)
   **MDD:** §4 competitors endpoints
   **Story:** US-019
   **Archivo:** `apps/backend/src/modules/competitors/competitor.controller.ts`
@@ -551,7 +551,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-019
   **Archivo:** `apps/backend/src/modules/competitors/competitor.controller.ts`
 
-- [ ] [P] Crear migraciones para tablas `competitors`, `competitor_mentions`
+- [x] [P] Crear migraciones para tablas `competitors`, `competitor_mentions`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/competitors/infrastructure/typeorm/`
 
@@ -559,7 +559,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-020: Consultar logs de auditoría como superadmin
 
-- [ ] [P] Implementar endpoint `GET /api/v1/audit-logs` con filtros y paginación
+- [x] [P] Implementar endpoint `GET /api/v1/audit-logs` con filtros y paginación
   **MDD:** §4 GET /api/v1/audit-logs
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/audit.controller.ts`
@@ -569,7 +569,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-020
   **Archivo:** `apps/backend/src/modules/audit/decorators/audit-log.decorator.ts`
 
-- [ ] [P] Crear migración para tabla `audit_logs`
+- [x] [P] Crear migración para tabla `audit_logs`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/audit/infrastructure/typeorm/audit-log.entity.ts`
 
@@ -660,7 +660,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### US-015: Activos (frontend)
 
-- [ ] [P] Crear página de librería multimedia con DataTable, filtros y subida
+- [x] [P] Crear página de librería multimedia con DataTable, filtros y subida
   **MDD:** §2.4
   **Story:** US-015
   **Archivo:** `frontend/src/pages/assets/AssetLibrary.tsx`
@@ -688,71 +688,71 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **Story:** US-016
   **Archivo:** `frontend/src/pages/settings/DomainSettings.tsx`
 
-- [ ] [P] Crear componente de verificación DNS con progreso
+- [x] [P] Crear componente de verificación DNS con progreso
   **MDD:** §2.4
   **Story:** US-016
   **Archivo:** `frontend/src/components/domains/DNSVerification.tsx`
 
 ### US-004: Login (frontend)
 
-- [ ] [P] Crear página de login con formulario y manejo de errores
+- [x] [P] Crear página de login con formulario y manejo de errores
   **MDD:** §2.4
   **Story:** US-004
   **Archivo:** `frontend/src/pages/auth/LoginPage.tsx`
 
-- [ ] [P] Crear página de setup inicial (solo cuando no hay superadmin)
+- [x] [P] Crear página de setup inicial (solo cuando no hay superadmin)
   **MDD:** §2.4
   **Story:** US-001
   **Archivo:** `frontend/src/pages/auth/SetupPage.tsx`
 
 ### Otros (frontend)
 
-- [ ] [P] Crear página de listado de formularios y generación de snippet
+- [x] [P] Crear página de listado de formularios y generación de snippet
   **MDD:** §2.4
   **Story:** US-013
   **Archivo:** `frontend/src/pages/forms/FormList.tsx`
 
-- [ ] [P] Crear página de propuestas comerciales
+- [x] [P] Crear página de propuestas comerciales
   **MDD:** §2.4
   **Story:** US-017
   **Archivo:** `frontend/src/pages/proposals/ProposalList.tsx`
 
-- [ ] [P] Crear página de reportes
+- [x] [P] Crear página de reportes
   **MDD:** §2.4
   **Story:** US-018
   **Archivo:** `frontend/src/pages/reports/ReportList.tsx`
 
-- [ ] [P] Crear página de configuración de competidores
+- [x] [P] Crear página de configuración de competidores
   **MDD:** §2.4
   **Story:** US-019
   **Archivo:** `frontend/src/pages/settings/Competitors.tsx`
 
-- [ ] [P] Crear página de logs de auditoría (superadmin)
+- [x] [P] Crear página de logs de auditoría (superadmin)
   **MDD:** §2.4
   **Story:** US-020
   **Archivo:** `frontend/src/pages/admin/AuditLogs.tsx`
 
-- [ ] [P] Crear página de eventos de seguridad (superadmin)
+- [x] [P] Crear página de eventos de seguridad (superadmin)
   **MDD:** §2.4
   **Story:** US-006
   **Archivo:** `frontend/src/pages/admin/SecurityEvents.tsx`
 
-- [ ] [P] Crear componente de banner de impersonación visible
+- [x] [P] Crear componente de banner de impersonación visible
   **MDD:** §6 (impersonación)
   **Story:** US-003
   **Archivo:** `frontend/src/components/admin/ImpersonationBanner.tsx`
 
 ## Infraestructura tasks
 
-- [ ] [P] Crear `Dockerfile.api` (multietapa) para backend NestJS
+- [x] [P] Crear `Dockerfile.api` (multietapa) para backend NestJS
   **MDD:** §7.4, Infra sección 1
   **Archivo:** `Dockerfile.api`
 
-- [ ] [P] Crear `Dockerfile.frontend` (multietapa) para frontend React/Vite
+- [x] [P] Crear `Dockerfile.frontend` (multietapa) para frontend React/Vite
   **MDD:** §7.4, Infra sección 1
   **Archivo:** `frontend/Dockerfile.frontend`
 
-- [ ] [P] Crear `docker-compose.yml` con servicios: postgres, redis, minio, api, worker, frontend
+- [x] [P] Crear `docker-compose.yml` con servicios: postgres, redis, minio, api, worker, frontend
   **MDD:** §7.4, Infra sección 2
   **Archivo:** `docker-compose.yml`
 
@@ -760,7 +760,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **MDD:** §7.3, Infra sección 1
   **Archivo:** `docker-compose.yml`
 
-- [ ] [P] Crear archivo `.env.example` con todas las variables de entorno
+- [x] [P] Crear archivo `.env.example` con todas las variables de entorno
   **MDD:** §7.5, Infra sección 3
   **Archivo:** `.env.example`
 
@@ -772,11 +772,11 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **MDD:** §7.6
   **Archivo:** `.github/workflows/deploy.yml`
 
-- [ ] [P] Configurar rate limiting con Redis (100 req/min público, 1000 auth, 20 IA)
+- [x] [P] Configurar rate limiting con Redis (100 req/min público, 1000 auth, 20 IA)
   **MDD:** §5.4
   **Archivo:** `apps/backend/src/modules/auth/guards/rate-limit.guard.ts`
 
-- [ ] [P] Configurar middleware de extracción de tenant_id desde JWT
+- [x] [P] Configurar middleware de extracción de tenant_id desde JWT
   **MDD:** §6
   **Archivo:** `apps/backend/src/shared/middleware/tenant.middleware.ts`
 
@@ -788,7 +788,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **MDD:** §7.4
   **Archivo:** `docker-compose.monitoring.yml` (opcional)
 
-- [ ] [P] Configurar alertas en Slack para eventos de seguridad high/critical
+- [x] [P] Configurar alertas en Slack para eventos de seguridad high/critical
   **MDD:** §6, T-007
   **Archivo:** `apps/backend/src/modules/security/workers/alert.worker.ts`
 
@@ -800,7 +800,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **MDD:** Infra sección 1
   **Archivo:** `nginx.conf`
 
-- [ ] [P] Configurar Let's Encrypt SSL automático para dominios personalizados
+- [x] [P] Configurar Let's Encrypt SSL automático para dominios personalizados
   **MDD:** §7.2
   **Archivo:** `apps/backend/src/modules/domains/services/ssl-certificate.service.ts`
 
@@ -808,11 +808,11 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### T-008: Implementar arquitectura hexagonal y CQRS (estructura base)
 
-- [ ] [P] Crear estructura de carpetas para todos los módulos (domain, application, infrastructure)
+- [x] [P] Crear estructura de carpetas para todos los módulos (domain, application, infrastructure)
   **MDD:** §2.2, §2.3
   **Archivo:** `apps/backend/src/modules/*/`
 
-- [ ] [P] Implementar CommandBus y QueryBus (NestJS CQRS module)
+- [x] [P] Implementar CommandBus y QueryBus (NestJS CQRS module)
   **MDD:** §2.3
   **Archivo:** `apps/backend/src/modules/shared/cqrs.module.ts`
 
@@ -820,7 +820,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
   **MDD:** §2.2
   **Archivo:** `apps/backend/src/modules/*/domain/*.repository.ts`
 
-- [ ] [P] Implementar adaptadores para APIs externas (TokenLab, OpenRouter, Replicate, ElevenLabs)
+- [x] [P] Implementar adaptadores para APIs externas (TokenLab, OpenRouter, Replicate, ElevenLabs)
   **MDD:** §2.2, §5.4
   **Archivo:** `apps/backend/src/modules/ai-agents/infrastructure/adapters/`
 
@@ -834,7 +834,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### T-009: Configurar Event Sourcing y tabla events
 
-- [ ] [P] Crear migración para tabla `events` (append-only)
+- [x] [P] Crear migración para tabla `events` (append-only)
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/events/infrastructure/typeorm/event.entity.ts`
 
@@ -848,11 +848,11 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### T-010: Configurar Outbox Pattern para todos los eventos de dominio
 
-- [ ] [P] Crear migración para tabla `outbox`
+- [x] [P] Crear migración para tabla `outbox`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/outbox/infrastructure/typeorm/outbox.entity.ts`
 
-- [ ] [P] Implementar worker de outbox que publique eventos en Redis/BullMQ
+- [x] [P] Implementar worker de outbox que publique eventos en Redis/BullMQ
   **MDD:** §2.3
   **Archivo:** `apps/backend/src/modules/outbox/workers/outbox-publisher.worker.ts`
 
@@ -873,7 +873,7 @@ Checklist derivado de **Tasks** del proyecto. Marca `[x]` al completar cada íte
 
 ### T-007: Implementar sistema de alertas para eventos de seguridad high/critical
 
-- [ ] [P] Detectar eventos de seguridad con severidad high/critical y emitir a outbox
+- [x] [P] Detectar eventos de seguridad con severidad high/critical y emitir a outbox
   **MDD:** §6
   **Archivo:** `apps/backend/src/modules/security/observers/security-alert.observer.ts`
 

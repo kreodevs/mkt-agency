@@ -102,7 +102,7 @@ export default function CopilotSettingsPage() {
                   key={platform}
                   type="button"
                   onClick={() => togglePlatform(platform)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
                     active
                       ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
                       : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/40'

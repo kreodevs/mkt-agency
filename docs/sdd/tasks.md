@@ -226,7 +226,7 @@
   **Story:** US-007
   **Archivo:** `apps/backend/src/modules/company-profile/events/company-profile-completed.event.ts`
 
-- [ ] [P] Crear migraciones para tablas `company_profiles` y `company_profile_sections`
+- [x] [P] Crear migraciones para tablas `company_profiles` y `company_profile_sections`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/company-profile/infrastructure/typeorm/`
 
@@ -578,15 +578,15 @@
   **MDD:** §2.1
   **Archivo:** `frontend/package.json`, `frontend/vite.config.ts`
 
-- [ ] [P] Configurar React Router v6 con lazy loading por módulo
+- [x] [P] Configurar React Router v6 con lazy loading por módulo
   **MDD:** §2.4
   **Archivo:** `frontend/src/router/index.tsx`
 
-- [ ] [P] Configurar TanStack Query (React Query) para estado del servidor
+- [x] [P] Configurar TanStack Query (React Query) para estado del servidor
   **MDD:** §2.4
   **Archivo:** `frontend/src/providers/QueryProvider.tsx`
 
-- [ ] [P] Configurar Zustand para estado global (sesión, UI state)
+- [x] [P] Configurar Zustand para estado global (sesión, UI state)
   **MDD:** §2.4
   **Archivo:** `frontend/src/store/index.ts`
 
@@ -594,15 +594,15 @@
   **MDD:** §6
   **Archivo:** `frontend/src/services/auth.ts`
 
-- [ ] [P] Implementar interceptor de TanStack Query para refrescar token automáticamente
+- [x] [P] Implementar interceptor de TanStack Query para refrescar token automáticamente
   **MDD:** §5.5 (caso borde sesión expirada)
   **Archivo:** `frontend/src/hooks/useAuthRefresh.ts`
 
-- [ ] [P] Crear componente layout con sidebar, header y soporte de dominio personalizado
+- [x] [P] Crear componente layout con sidebar, header y soporte de dominio personalizado
   **MDD:** §2.4
   **Archivo:** `frontend/src/components/layout/DashboardLayout.tsx`
 
-- [ ] [P] Implementar protección de rutas según rol (JWT guard)
+- [x] [P] Implementar protección de rutas según rol (JWT guard)
   **MDD:** §6
   **Archivo:** `frontend/src/guards/AuthGuard.tsx`
 
@@ -666,7 +666,7 @@
 
 ### US-007: Onboarding (frontend)
 
-- [ ] [P] Crear página de onboarding progresivo con secciones del cuestionario
+- [x] [P] Crear página de onboarding progresivo con secciones del cuestionario
   **MDD:** §2.4
   **Story:** US-007
   **Archivo:** `frontend/src/pages/onboarding/OnboardingWizard.tsx`
@@ -690,12 +690,12 @@
 
 ### US-004: Login (frontend)
 
-- [ ] [P] Crear página de login con formulario y manejo de errores
+- [x] [P] Crear página de login con formulario y manejo de errores
   **MDD:** §2.4
   **Story:** US-004
   **Archivo:** `frontend/src/pages/auth/LoginPage.tsx`
 
-- [ ] [P] Crear página de setup inicial (solo cuando no hay superadmin)
+- [x] [P] Crear página de setup inicial (solo cuando no hay superadmin)
   **MDD:** §2.4
   **Story:** US-001
   **Archivo:** `frontend/src/pages/auth/SetupPage.tsx`
@@ -771,7 +771,7 @@
   **MDD:** §5.4
   **Archivo:** `apps/backend/src/modules/auth/guards/rate-limit.guard.ts`
 
-- [ ] [P] Configurar middleware de extracción de tenant_id desde JWT
+- [x] [P] Configurar middleware de extracción de tenant_id desde JWT
   **MDD:** §6
   **Archivo:** `apps/backend/src/shared/middleware/tenant.middleware.ts`
 
@@ -783,7 +783,7 @@
   **MDD:** §7.4
   **Archivo:** `docker-compose.monitoring.yml` (opcional)
 
-- [ ] [P] Configurar alertas en Slack para eventos de seguridad high/critical
+- [x] [P] Configurar alertas en Slack para eventos de seguridad high/critical
   **MDD:** §6, T-007
   **Archivo:** `apps/backend/src/modules/security/workers/alert.worker.ts`
 
@@ -795,7 +795,7 @@
   **MDD:** Infra sección 1
   **Archivo:** `nginx.conf`
 
-- [ ] [P] Configurar Let's Encrypt SSL automático para dominios personalizados
+- [x] [P] Configurar Let's Encrypt SSL automático para dominios personalizados
   **MDD:** §7.2
   **Archivo:** `apps/backend/src/modules/domains/services/ssl-certificate.service.ts`
 
@@ -803,11 +803,11 @@
 
 ### T-008: Implementar arquitectura hexagonal y CQRS (estructura base)
 
-- [ ] [P] Crear estructura de carpetas para todos los módulos (domain, application, infrastructure)
+- [x] [P] Crear estructura de carpetas para todos los módulos (domain, application, infrastructure)
   **MDD:** §2.2, §2.3
   **Archivo:** `apps/backend/src/modules/*/`
 
-- [ ] [P] Implementar CommandBus y QueryBus (NestJS CQRS module)
+- [x] [P] Implementar CommandBus y QueryBus (NestJS CQRS module)
   **MDD:** §2.3
   **Archivo:** `apps/backend/src/modules/shared/cqrs.module.ts`
 
@@ -815,7 +815,7 @@
   **MDD:** §2.2
   **Archivo:** `apps/backend/src/modules/*/domain/*.repository.ts`
 
-- [ ] [P] Implementar adaptadores para APIs externas (TokenLab, OpenRouter, Replicate, ElevenLabs)
+- [x] [P] Implementar adaptadores para APIs externas (TokenLab, OpenRouter, Replicate, ElevenLabs)
   **MDD:** §2.2, §5.4
   **Archivo:** `apps/backend/src/modules/ai-agents/infrastructure/adapters/`
 
@@ -829,7 +829,7 @@
 
 ### T-009: Configurar Event Sourcing y tabla events
 
-- [ ] [P] Crear migración para tabla `events` (append-only)
+- [x] [P] Crear migración para tabla `events` (append-only)
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/events/infrastructure/typeorm/event.entity.ts`
 
@@ -843,11 +843,11 @@
 
 ### T-010: Configurar Outbox Pattern para todos los eventos de dominio
 
-- [ ] [P] Crear migración para tabla `outbox`
+- [x] [P] Crear migración para tabla `outbox`
   **MDD:** §3.1 SQL
   **Archivo:** `apps/backend/src/modules/outbox/infrastructure/typeorm/outbox.entity.ts`
 
-- [ ] [P] Implementar worker de outbox que publique eventos en Redis/BullMQ
+- [x] [P] Implementar worker de outbox que publique eventos en Redis/BullMQ
   **MDD:** §2.3
   **Archivo:** `apps/backend/src/modules/outbox/workers/outbox-publisher.worker.ts`
 

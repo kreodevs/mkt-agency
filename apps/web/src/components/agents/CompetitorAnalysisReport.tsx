@@ -137,7 +137,7 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
             <ul className="space-y-2">
               {gaps.map((g, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <Target className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                  <Target className="h-4 w-4 shrink-0 mt-0.5 text-[var(--warning)]" />
                   <span className="text-[var(--foreground)]">{g}</span>
                 </li>
               ))}
@@ -162,7 +162,7 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
             <ul className="space-y-2">
               {insights.map((insight, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                  <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-[var(--warning)]" />
                   <span className="text-[var(--foreground)]">{insight}</span>
                 </li>
               ))}
