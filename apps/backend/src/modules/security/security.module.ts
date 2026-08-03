@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
-import { QueueModule } from '../../shared/queue/queue.module';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
 import { LoggingSecurityAlertAdapter } from './adapters/logging-security-alert.adapter';
 import {
@@ -16,15 +15,12 @@ import { SecurityAlertObserver } from './observers/security-alert.observer';
 import { SecurityController } from './security.controller';
 import { SecurityEventsService } from './security-events.service';
 import { SecurityEventRecorderService } from './services/security-event-recorder.service';
-import { AlertProcessor } from './workers/alert.processor';
-import { AlertWorkerService } from './workers/alert.worker';
 
 @Module({
   imports: [
     ConfigModule,
     AuthSharedModule,
-    QueueModule,
-    TypeOrmModule.forFeature([SecurityEventEntity, OutboxEntity, TenantEntity]),
+    TypeOrmModule.forFeature([SecurityEventEntity, TenantEntity, OutboxEntity]),
   ],
   controllers: [SecurityController],
   providers: [
@@ -33,8 +29,6 @@ import { AlertWorkerService } from './workers/alert.worker';
     SecurityAlertObserver,
     SlackSecurityAlertAdapter,
     LoggingSecurityAlertAdapter,
-    AlertWorkerService,
-    AlertProcessor,
     {
       provide: SECURITY_ALERT_NOTIFIER,
       inject: [ConfigService, SlackSecurityAlertAdapter, LoggingSecurityAlertAdapter],
@@ -46,6 +40,6 @@ import { AlertWorkerService } from './workers/alert.worker';
         config.get<string>('SLACK_SECURITY_WEBHOOK_URL') ? slack : logging,
     },
   ],
-  exports: [SecurityEventRecorderService],
+  exports: [SecurityEventRecorderService, SECURITY_ALERT_NOTIFIER],
 })
 export class SecurityModule {}

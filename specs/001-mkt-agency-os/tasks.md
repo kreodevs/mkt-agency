@@ -885,7 +885,7 @@
   **MDD:** §2.2, §5.4
   **Archivo:** `apps/backend/src/modules/ai-agents/infrastructure/adapters/`
 
-- [ ] [P] Implementar Circuit Breaker en adaptadores de IA (5 fallos → open 60s)
+- [x] [P] Implementar Circuit Breaker en adaptadores de IA (5 fallos → open 60s)
   **MDD:** §5.4
   **Archivo:** `apps/backend/src/shared/circuit-breaker/circuit-breaker.service.ts`
 

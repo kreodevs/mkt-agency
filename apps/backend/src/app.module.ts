@@ -80,6 +80,7 @@ import { LlmUsageEventEntity } from './modules/platform/infrastructure/typeorm/l
 import { ProductModule } from './modules/product/product.module';
 import { ProductOnboardingModule } from './modules/product/product-onboarding.module';
 import { PublicationInboxModule } from './modules/publication-inbox/publication-inbox.module';
+import { OutboxModule } from './modules/outbox/outbox.module';
 import { ProductEntity } from './modules/product/infrastructure/typeorm/product.entity';
 import { ProductMediaKitItemEntity } from './modules/product/infrastructure/typeorm/product-media-kit-item.entity';
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
@@ -202,6 +203,7 @@ import {
     StrategyModule,
     CommunityManagerModule,
     PublicationInboxModule,
+    OutboxModule,
     AuditModule,
     SuperadminModule,
     UsersModule,

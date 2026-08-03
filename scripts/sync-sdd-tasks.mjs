@@ -198,8 +198,18 @@ const EVIDENCE = [
     files: ['apps/backend/src/modules/company-profile/infrastructure/typeorm/outbox.entity.ts'],
   },
   {
-    pattern: /worker de outbox|outbox-writer/,
-    files: ['apps/backend/src/modules/company-profile/services/outbox-writer.service.ts'],
+    pattern: /worker de outbox|outbox-publisher|OutboxDispatcher/,
+    files: [
+      'apps/backend/src/modules/outbox/outbox-dispatcher.service.ts',
+      'apps/backend/src/modules/outbox/workers/outbox-dispatcher.worker.ts',
+    ],
+  },
+  {
+    pattern: /Circuit Breaker en adaptadores de IA|circuit-breaker/,
+    files: [
+      'apps/backend/src/shared/ai/llm-circuit-breaker.service.ts',
+      'apps/backend/src/shared/ai/llm.client.ts',
+    ],
   },
   {
     pattern: /tabla `events`/,

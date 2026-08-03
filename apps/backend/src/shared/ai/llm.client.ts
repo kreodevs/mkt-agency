@@ -1,4 +1,5 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { LlmCircuitBreakerService } from './llm-circuit-breaker.service';
 import { LlmConfigService } from './llm-config.service';
 import { LlmProviderService } from './llm-provider.service';
 import { LlmUsageService } from './llm-usage.service';
@@ -34,6 +35,7 @@ export class LlmClient {
     private readonly llmConfig: LlmConfigService,
     private readonly llmProviders: LlmProviderService,
     private readonly llmUsage: LlmUsageService,
+    private readonly circuitBreaker: LlmCircuitBreakerService,
   ) {}
 
   async isConfigured(): Promise<boolean> {
@@ -62,6 +64,17 @@ export class LlmClient {
     const primaryModel = options.model ?? resolved.model;
     const modelsToTry = this.buildModelAttempts(primaryModel, resolved.fallbackModel);
 
+    if (!resolved.providerId) {
+      throw new ServiceUnavailableException({
+        error: 'No LLM provider configured for this task',
+        code: 'LLM_PROVIDER_MISSING',
+        taskType: resolved.taskType,
+      });
+    }
+
+    const providerId = resolved.providerId;
+    this.circuitBreaker.assertAllow(providerId, resolved.taskType);
+
     let lastError: Error | null = null;
 
     for (let index = 0; index < modelsToTry.length; index += 1) {
@@ -75,7 +88,7 @@ export class LlmClient {
           );
         }
 
-        return await this.requestChatJson<T>({
+        const result = await this.requestChatJson<T>({
           resolved,
           systemPrompt,
           userPrompt,
@@ -86,8 +99,12 @@ export class LlmClient {
           tenantId: options.tenantId,
           userId: options.userId,
         });
+
+        this.circuitBreaker.recordSuccess(providerId);
+        return result;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
+        this.circuitBreaker.recordFailure(providerId, lastError);
         const hasNextModel = index < modelsToTry.length - 1;
 
         if (!hasNextModel || !this.shouldRetryWithFallback(lastError)) {
