@@ -10,6 +10,7 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { InputText } from '@/components/atoms/InputText';
+import { AdminUserCard } from '@/components/admin/AdminUserCard';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { listSuperadminUsers, updateSuperadminUser, type SuperadminUser } from '@/services/superadmin';
 import { toast } from 'sonner';
@@ -183,7 +184,22 @@ export default function AdminUsersPage() {
             />
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="space-y-[var(--spacing-md)] md:hidden">
+            {items.map((u) => (
+              <AdminUserCard
+                key={u.id}
+                user={u}
+                onEdit={() => {
+                  setEditingUser(u);
+                  setEditRole(u.role);
+                  setEditStatus(u.status);
+                  setEditName(u.name);
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
           <DataTable
             columns={columns}
             data={items}

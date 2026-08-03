@@ -5,6 +5,7 @@ import { InputText } from '@/components/atoms/InputText';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
+import { AuditLogCard } from '@/components/admin/AuditLogCard';
 import { listAuditLogs } from '@/services/audit';
 import type { AuditLog } from '@/types/audit';
 
@@ -119,7 +120,18 @@ export default function AuditLogsPage() {
           </div>
         </Card>
 
-        <div className="overflow-x-auto">
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {items.map((log) => (
+            <AuditLogCard key={log.id} log={log} />
+          ))}
+          {!logsQuery.isLoading && items.length === 0 ? (
+            <p className="text-center text-sm text-[var(--foreground-muted)]">
+              No hay logs con estos filtros
+            </p>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <DataTable
             columns={columns}
             data={items}

@@ -163,8 +163,9 @@ Esta iteración corrige **P0** y quick wins **P1** en las pantallas de mayor uso
 
 ### P3 (futuro)
 
-- Mobile cards para `/campaigns` y tablas admin restantes.
-- Tokens en gradientes violeta de BrandInterview (spinner IA).
+- ~~Mobile cards para `/campaigns` y tablas admin restantes.~~
+- ~~Tokens en gradientes violeta de BrandInterview (spinner IA).~~
+- ~~Error `motion/react` — dependencia `motion` instalada vía yarn.~~
 
 ---
 

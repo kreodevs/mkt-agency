@@ -1,6 +1,7 @@
 # Componentes de campañas
 
 - `CampaignKanban` — pipeline por estado (`draft` → `completed`), drag & drop vía Kreo `KanbanBoard`
+- `CampaignListCard` — tarjeta mobile para listado en `/campaigns` (&lt; md)
 - `CampaignAgentReadinessPanel` — selector orgánico/pagado, checklist horizontal de agentes (grid responsive) + `POST /campaigns/auto-generate`
 - `CampaignPlatformEditor` — edición inline de plataformas en detalle (`PATCH /campaigns/:id`; sincroniza `strategy.channels` en backend)
 - `CampaignGeneratePosts` — genera copy CM vinculado a la campaña (`POST /community-manager/generate` con `campaignId`)

@@ -7,6 +7,7 @@ import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { CampaignAgentReadinessPanel } from '@/components/campaigns/CampaignAgentReadinessPanel';
 import { CampaignKanban } from '@/components/campaigns/CampaignKanban';
+import { CampaignListCard } from '@/components/campaigns/CampaignListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -287,17 +288,44 @@ export default function CampaignListPage() {
         </div>
 
         {viewMode === 'table' ? (
-          <DataTable
-            columns={columns}
-            data={tableData}
-            loading={campaignsQuery.isLoading}
-            emptyMessage={
-              campaignsQuery.isError
-                ? 'No se pudo cargar el listado de campañas'
-                : 'No hay campañas que coincidan con los filtros'
-            }
-            rows={10}
-          />
+          <>
+            <div className="space-y-[var(--spacing-md)] md:hidden">
+              {campaignsQuery.isLoading ? (
+                <p className="text-sm text-[var(--foreground-muted)]">Cargando campañas…</p>
+              ) : tableData.length === 0 ? (
+                <p className="text-sm text-[var(--foreground-muted)]">
+                  {campaignsQuery.isError
+                    ? 'No se pudo cargar el listado de campañas'
+                    : 'No hay campañas que coincidan con los filtros'}
+                </p>
+              ) : (
+                tableData.map((campaign) => (
+                  <CampaignListCard
+                    key={campaign.id}
+                    campaign={campaign}
+                    productLabel={
+                      campaign.productId
+                        ? (productMap.get(campaign.productId) ?? 'Producto')
+                        : '—'
+                    }
+                  />
+                ))
+              )}
+            </div>
+            <div className="hidden md:block">
+              <DataTable
+                columns={columns}
+                data={tableData}
+                loading={campaignsQuery.isLoading}
+                emptyMessage={
+                  campaignsQuery.isError
+                    ? 'No se pudo cargar el listado de campañas'
+                    : 'No hay campañas que coincidan con los filtros'
+                }
+                rows={10}
+              />
+            </div>
+          </>
         ) : (
           <CampaignKanban
             campaigns={tableData}

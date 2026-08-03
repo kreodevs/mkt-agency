@@ -1,6 +1,7 @@
 # Campañas (US-009 frontend)
 
 - `CampaignListPage` — `/campaigns` (tabla + Kanban, filtros, campaña automática desde agentes)
+- Vista **mobile** en lista: `CampaignListCard` (&lt; md); Kanban sin cambios.
 - `CampaignCreatePage` — `/campaigns/new`
 - `CampaignDetailPage` — `/campaigns/:id` (orgánico: plan editorial + edición de plataformas + generar posts; pagado: estrategia IA + presupuestos)
 

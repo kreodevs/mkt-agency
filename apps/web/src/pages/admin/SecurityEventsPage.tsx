@@ -6,6 +6,7 @@ import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
+import { SecurityEventCard } from '@/components/admin/SecurityEventCard';
 import { listSecurityEvents } from '@/services/security';
 import type { SecurityEvent, SecurityEventSeverity } from '@/types/security';
 
@@ -135,7 +136,18 @@ export default function SecurityEventsPage() {
           />
         </Card>
 
-        <div className="overflow-x-auto">
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {items.map((event) => (
+            <SecurityEventCard key={event.id} event={event} />
+          ))}
+          {!eventsQuery.isLoading && items.length === 0 ? (
+            <p className="text-center text-sm text-[var(--foreground-muted)]">
+              No hay eventos con estos filtros
+            </p>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <DataTable
             columns={columns}
             data={items}

@@ -11,6 +11,7 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
+import { PackageListCard } from '@/components/admin/PackageListCard';
 import {
   createPackage,
   deletePackage,
@@ -179,11 +180,24 @@ export default function PackageListPage() {
       />
 
       <Card className="mt-6">
-        <DataTable
-          columns={columns}
-          data={packagesQuery.data?.items ?? []}
-          loading={packagesQuery.isLoading}
-        />
+        <div className="space-y-[var(--spacing-md)] md:hidden">
+          {(packagesQuery.data?.items ?? []).map((pkg) => (
+            <PackageListCard
+              key={pkg.id}
+              pkg={pkg}
+              deleting={deleteMutation.isPending}
+              onEdit={() => openEdit(pkg)}
+              onDelete={() => deleteMutation.mutate(pkg.id)}
+            />
+          ))}
+        </div>
+        <div className="hidden md:block">
+          <DataTable
+            columns={columns}
+            data={packagesQuery.data?.items ?? []}
+            loading={packagesQuery.isLoading}
+          />
+        </div>
       </Card>
 
       <Dialog

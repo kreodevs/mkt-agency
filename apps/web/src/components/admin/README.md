@@ -10,3 +10,14 @@ Componentes de administración superadmin.
 - `LlmModelSelect.tsx` — lista portaleada al `[role="dialog"]` con posición absoluta (visible + clicable dentro del modal Radix); `data-llm-model-listbox`; clic + Enter.
 
 La lógica de sesión vive en `@/lib/impersonation`. Durante impersonación, `GET /tenants` usa el JWT de plataforma guardado en `localStorage` (no el JWT del tenant). Si ese access token expira (15 min), `apiFetchAsPlatform` lo renueva con el refresh token de plataforma antes de reintentar.
+
+## Tarjetas mobile (superadmin)
+
+En pantallas &lt; md, las tablas de admin usan cards en lugar de scroll horizontal:
+
+| Componente | Página |
+|------------|--------|
+| `AdminUserCard` | `/admin/users` |
+| `AuditLogCard` | `/admin/audit-logs` |
+| `SecurityEventCard` | `/admin/security-events` |
+| `PackageListCard` | `/admin/packages` |

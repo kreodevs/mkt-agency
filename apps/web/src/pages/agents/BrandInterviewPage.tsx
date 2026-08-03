@@ -509,8 +509,8 @@ export default function BrandInterviewPage() {
 
           {(isProcessing || isSending) && (
             <div className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent)]/5 p-[var(--spacing-md)]">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600">
-                <Sparkles className="h-4 w-4 animate-pulse text-white" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--primary)]">
+                <Sparkles className="h-4 w-4 animate-pulse text-[var(--primary-foreground)]" />
               </div>
               <div className="min-w-0 space-y-1">
                 <p className="text-sm font-medium text-[var(--foreground)]">

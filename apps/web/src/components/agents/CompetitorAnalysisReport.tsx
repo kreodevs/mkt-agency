@@ -94,7 +94,7 @@ export function CompetitorAnalysisReport({ analysis }: CompetitorAnalysisReportP
             {competitors.map((c, i) => (
               <div key={c.name ?? i} className="px-[var(--spacing-md)] py-[var(--spacing-sm)] first:pt-[var(--spacing-md)] last:pb-[var(--spacing-md)]">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-amber-500" />
+                  <TrendingUp className="h-4 w-4 text-[var(--warning)]" />
                   <span className="font-semibold text-[var(--foreground)]">{c.name}</span>
                 </div>
                 {c.positioning && (
