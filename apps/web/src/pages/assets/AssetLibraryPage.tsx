@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { AssetBulkSelectionBar } from '@/components/assets/AssetBulkSelectionBar';
@@ -50,6 +51,7 @@ function folderQueryParams(folderFilter: FolderSelection) {
 
 export default function AssetLibraryPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [folderFilter, setFolderFilter] = useState<FolderSelection>('');
   const [typeFilter, setTypeFilter] = useState<'' | AssetType>('');
   const [page, setPage] = useState(1);
@@ -278,7 +280,7 @@ export default function AssetLibraryPage() {
         description="Organiza capturas y medios en carpetas. El copiloto CM usa PC / iPad / iOS al generar posts."
       />
 
-      <div className={`space-y-6 ${selectedIds.size > 0 ? 'pb-28' : ''}`}>
+      <div className={`space-y-[var(--spacing-lg)] ${selectedIds.size > 0 ? 'pb-28' : ''}`}>
         <AssetFilterBar
           folderFilter={folderFilter}
           onFolderFilterChange={setFolderFilter}
@@ -301,9 +303,7 @@ export default function AssetLibraryPage() {
               description={`No hay archivos en ${currentFolderLabel.toLowerCase()}. Sube imágenes, logos o material del producto.`}
               action={{
                 label: 'Ir a Mi producto',
-                onClick: () => {
-                  window.location.href = '/products';
-                },
+                onClick: () => navigate('/products'),
               }}
             />
           ) : (

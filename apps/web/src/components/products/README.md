@@ -10,5 +10,6 @@ Componentes UI reutilizables del eje producto-first. Tokens Kreo y moléculas `C
 | `ProductKeywordSuggestion` | Paso tags: regenerar keywords desde URL |
 | `ProductKeywordTagsInput` | Editor de tags (mín. 3) en wizard de producto |
 | `ProductLogoPanel` | Logo del producto: extraer de web, subir manual; se superpone arriba a la izquierda en imágenes IA |
-| `ProductPublishIntegrationPanel` | Webhook n8n por producto, auto-dispatch y credenciales Meta/LinkedIn (detalle producto) |
+| `ProductListCard` | Tarjeta SOHO/mobile en listado de productos (`/products`) — acciones esenciales sin n8n/campañas |
+| `ProductPublishIntegrationPanel` | Webhook n8n por producto, auto-dispatch y credenciales Meta/LinkedIn (detalle producto, solo Growth) |
 | `ProductMediaKitPanel` | Kit de medios reales (capturas, eventos, demos) — subida directa o **Desde librería** (carpetas PC/iPad/iOS) en `/products/:id/media-kit` |

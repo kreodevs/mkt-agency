@@ -8,9 +8,12 @@ import { InputText } from '@/components/atoms/InputText';
 import { Textarea } from '@/components/atoms/Textarea';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { EmptyState } from '@/components/molecules/EmptyState';
+import { ProductPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
 import { ProductPublishIntegrationPanel } from '@/components/products/ProductPublishIntegrationPanel';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
@@ -32,6 +35,8 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { isGrowth } = useOperatingProfile();
+  const sohoMode = !isGrowth;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -109,7 +114,7 @@ export default function ProductDetailPage() {
   if (productQuery.isLoading) {
     return (
       <DashboardShell>
-        <p className="text-sm text-[var(--foreground-muted)]">Cargando producto...</p>
+        <ProductPageSkeleton />
       </DashboardShell>
     );
   }
@@ -117,11 +122,11 @@ export default function ProductDetailPage() {
   if (productQuery.isError || !productQuery.data) {
     return (
       <DashboardShell>
-        <Card title="Producto no encontrado">
-          <Link to="/products">
-            <Button variant="outline">Volver al catálogo</Button>
-          </Link>
-        </Card>
+        <EmptyState
+          title="Producto no encontrado"
+          description="El producto no existe o ya fue archivado."
+          action={{ label: 'Volver al catálogo', onClick: () => navigate('/products') }}
+        />
       </DashboardShell>
     );
   }
@@ -130,14 +135,18 @@ export default function ProductDetailPage() {
     <DashboardShell>
       <PageHeader
         title={productQuery.data.name}
-        description="Edita la oferta comercial que alimenta tus campañas."
+        description={
+          sohoMode
+            ? 'Perfil de tu oferta — alimenta al copiloto de marketing.'
+            : 'Edita la oferta comercial que alimenta tus campañas.'
+        }
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-[var(--spacing-sm)]">
             {!productQuery.data.onboardingCompleted && (
               <Link to={`/products/${id}/onboarding`}>
                 <Button variant="outline" className="gap-2">
                   <ClipboardList className="h-4 w-4" />
-                  Completar onboarding
+                  Completar perfil
                 </Button>
               </Link>
             )}
@@ -153,12 +162,14 @@ export default function ProductDetailPage() {
                 Librería
               </Button>
             </Link>
-            <Link to={`/campaigns/new?productId=${id}`}>
-              <Button className="gap-2">
-                <Megaphone className="h-4 w-4" />
-                Nueva campaña
-              </Button>
-            </Link>
+            {!sohoMode && (
+              <Link to={`/campaigns/new?productId=${id}`}>
+                <Button className="gap-2">
+                  <Megaphone className="h-4 w-4" />
+                  Nueva campaña
+                </Button>
+              </Link>
+            )}
           </div>
         }
       />
@@ -176,9 +187,11 @@ export default function ProductDetailPage() {
         />
       </div>
 
-      <div id="publicacion-n8n" className="mb-6 scroll-mt-6">
-        <ProductPublishIntegrationPanel productId={id} />
-      </div>
+      {!sohoMode && (
+        <div id="publicacion-n8n" className="mb-[var(--spacing-lg)] scroll-mt-6">
+          <ProductPublishIntegrationPanel productId={id} />
+        </div>
+      )}
 
       <Card title="Detalle del producto">
         <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-4">

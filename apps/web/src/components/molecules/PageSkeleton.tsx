@@ -27,6 +27,16 @@ export function InboxPageSkeleton() {
   );
 }
 
+export function ProductPageSkeleton() {
+  return (
+    <div className="space-y-[var(--spacing-lg)]" aria-busy="true" aria-label="Cargando producto">
+      <SkeletonBlock className="h-10 w-64" />
+      <SkeletonBlock className="h-32 w-full" />
+      <SkeletonBlock className="h-96 w-full max-w-xl" />
+    </div>
+  );
+}
+
 export function AssetGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div

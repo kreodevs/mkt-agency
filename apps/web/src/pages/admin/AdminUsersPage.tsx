@@ -10,6 +10,7 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { InputText } from '@/components/atoms/InputText';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { listSuperadminUsers, updateSuperadminUser, type SuperadminUser } from '@/services/superadmin';
 import { toast } from 'sonner';
 
@@ -26,10 +27,10 @@ const statusLabels: Record<string, string> = {
   inactive: 'Inactivo',
 };
 
-const statusColors: Record<string, string> = {
-  active: 'bg-emerald-500/10 text-emerald-600',
-  suspended: 'bg-red-500/10 text-red-600',
-  inactive: 'bg-gray-500/10 text-gray-600',
+const statusPillMap: Record<string, 'success' | 'error' | 'neutral'> = {
+  active: 'success',
+  suspended: 'error',
+  inactive: 'neutral',
 };
 
 const filterInputClass =
@@ -105,7 +106,13 @@ export default function AdminUsersPage() {
       header: 'Rol',
       body: (row) => {
         const u = row as SuperadminUser;
-        if (u.isSuperadmin) return <span className="text-xs font-semibold text-purple-600">Superadmin</span>;
+        if (u.isSuperadmin) {
+          return (
+            <StatusPill status="luxury" size="sm">
+              Superadmin
+            </StatusPill>
+          );
+        }
         return <span className="text-sm">{roleLabels[u.role] ?? u.role}</span>;
       },
     },
@@ -115,9 +122,9 @@ export default function AdminUsersPage() {
       body: (row) => {
         const u = row as SuperadminUser;
         return (
-          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[u.status] ?? 'bg-gray-500/10 text-gray-600'}`}>
+          <StatusPill status={statusPillMap[u.status] ?? 'neutral'} size="sm">
             {statusLabels[u.status] ?? u.status}
-          </span>
+          </StatusPill>
         );
       },
     },
@@ -220,7 +227,9 @@ export default function AdminUsersPage() {
               <p><span className="font-medium">Email:</span> {editingUser.email}</p>
               <p><span className="font-medium">Tenant:</span> {editingUser.tenant?.name ?? '—'}</p>
               {editingUser.isSuperadmin && (
-                <p className="text-xs text-purple-600 font-semibold">Superadmin global</p>
+                <StatusPill status="luxury" size="sm" className="mt-1">
+                  Superadmin global
+                </StatusPill>
               )}
             </div>
 

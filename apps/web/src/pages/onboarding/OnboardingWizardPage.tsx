@@ -200,9 +200,11 @@ export default function OnboardingWizardPage() {
         </div>
       )}
 
-      <div className="mb-6 space-y-2">
+      <div className="sticky top-0 z-10 -mx-[var(--spacing-md)] mb-6 space-y-2 border-b border-[var(--border)] bg-[var(--background)]/95 px-[var(--spacing-md)] py-3 backdrop-blur-sm md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-[var(--foreground-muted)]">Progreso global</span>
+          <span className="text-[var(--foreground-muted)]">
+            Paso {currentStep + 1} de {ONBOARDING_SECTIONS.length}
+          </span>
           <span className="font-semibold text-[var(--primary)]">
             {profileQuery.data?.completionPercentage ?? 0}%
           </span>

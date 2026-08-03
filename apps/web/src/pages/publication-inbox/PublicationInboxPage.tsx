@@ -199,17 +199,19 @@ export default function PublicationInboxPage() {
         title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
         description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-[var(--destructive)] hover:text-[var(--destructive)]"
-              onClick={() => setPurgeOpen(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-              Limpiar contenido
-            </Button>
+          <div className="flex flex-wrap items-center gap-[var(--spacing-sm)]">
+            {!sohoMode && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-[var(--destructive)] hover:text-[var(--destructive)]"
+                onClick={() => setPurgeOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpiar contenido
+              </Button>
+            )}
             <Link to="/calendario">
               <Button type="button" variant="outline" size="sm" className="gap-1.5">
                 <CalendarDays className="h-4 w-4" />
@@ -298,32 +300,26 @@ export default function PublicationInboxPage() {
         </Card>
       )}
 
-      <div
-        className={`mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] ${
-          sohoMode && summary
-            ? 'sm:grid-cols-2 lg:grid-cols-3'
-            : 'sm:grid-cols-2 lg:grid-cols-4'
-        }`}
-      >
-        <StatsCard
-          title="Por aprobar"
-          value={data?.stats.pendingCount ?? 0}
-          icon={<ClipboardCheck className="h-5 w-5" aria-hidden />}
-          iconTone="warning"
-        />
-        <StatsCard
-          title="Listas para publicar"
-          value={data?.stats.readyCount ?? 0}
-          icon={<Send className="h-5 w-5" aria-hidden />}
-          iconTone="success"
-        />
-        <StatsCard
-          title="Rechazadas"
-          value={data?.stats.rejectedCount ?? 0}
-          icon={<XCircle className="h-5 w-5" aria-hidden />}
-          iconTone="warning"
-        />
-        {!(sohoMode && summary) ? (
+      {!(sohoMode && summary) && (
+        <div className="mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Por aprobar"
+            value={data?.stats.pendingCount ?? 0}
+            icon={<ClipboardCheck className="h-5 w-5" aria-hidden />}
+            iconTone="warning"
+          />
+          <StatsCard
+            title="Listas para publicar"
+            value={data?.stats.readyCount ?? 0}
+            icon={<Send className="h-5 w-5" aria-hidden />}
+            iconTone="success"
+          />
+          <StatsCard
+            title="Rechazadas"
+            value={data?.stats.rejectedCount ?? 0}
+            icon={<XCircle className="h-5 w-5" aria-hidden />}
+            iconTone="warning"
+          />
           <StatsCard
             title="Contactos hoy"
             value={summary?.leadsToday ?? 0}
@@ -331,8 +327,8 @@ export default function PublicationInboxPage() {
             icon={<Users className="h-5 w-5" aria-hidden />}
             iconTone="primary"
           />
-        ) : null}
-      </div>
+        </div>
+      )}
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
         <div className="space-y-[var(--spacing-lg)] lg:col-span-2 lg:order-1">

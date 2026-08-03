@@ -475,7 +475,7 @@ export default function BrandInterviewPage() {
               return (
                 <div
                   key={msg.id}
-                  className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                  className="rounded-lg border border-[var(--destructive)]/30 bg-[var(--destructive)]/5 p-4 text-sm text-[var(--destructive)]"
                 >
                   {msg.content}
                 </div>

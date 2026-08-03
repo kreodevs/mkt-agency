@@ -116,40 +116,40 @@ export default function LeadPipelinePage() {
   return (
     <DashboardShell>
       <PageHeader
-        title="Pipeline CRM"
+        title={isSoho ? 'Contactos' : 'Pipeline CRM'}
         description={
           isSoho
             ? 'Prospectos desde inbox social, formularios o alta manual — arrastra tarjetas entre etapas'
             : 'Leads capturados desde formularios — filtra por producto, score IA y etapas Kanban'
         }
         actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <Button type="button" className="gap-1.5" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Agregar lead
-            </Button>
-            <div className="min-w-[200px]">
-              <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
-                Filtrar por producto
-              </label>
-              <select
-                className={selectClass}
-                value={productFilter}
-                onChange={(e) => setProductFilter(e.target.value)}
-              >
-                <option value="">Todos los productos</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <Button type="button" className="gap-1.5" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {isSoho ? 'Nuevo contacto' : 'Agregar lead'}
+          </Button>
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="mb-[var(--spacing-lg)] max-w-xs">
+        <label htmlFor="lead-product-filter" className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
+          Filtrar por producto
+        </label>
+        <select
+          id="lead-product-filter"
+          className={`${selectClass} w-full`}
+          value={productFilter}
+          onChange={(e) => setProductFilter(e.target.value)}
+        >
+          <option value="">Todos los productos</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <LeadPipeline
             leads={leads}

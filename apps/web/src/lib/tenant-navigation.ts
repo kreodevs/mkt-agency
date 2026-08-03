@@ -33,7 +33,7 @@ export const superadminNavigation = [
   {
     title: 'Administración',
     items: [
-      { label: 'Inicio', href: '/', icon: Shield },
+      { label: 'Panel', href: '/tenants', icon: Shield },
       { label: 'Tenants', href: '/tenants', icon: Building2 },
       { label: 'Paquetes', href: '/admin/packages', icon: Package },
       { label: 'Usuarios', href: '/admin/users', icon: Users },

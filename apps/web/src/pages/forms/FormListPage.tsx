@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Code2, Plus, Trash2 } from 'lucide-react';
+import { Code2, FileInput, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { FormSnippet } from '@/components/forms/FormSnippet';
+import { FormListCard } from '@/components/forms/FormListCard';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { EmptyState } from '@/components/molecules/EmptyState';
 import { DataTable } from '@/components/organisms/DataTable';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -197,14 +199,52 @@ export default function FormListPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <DataTable
-            data={items}
-            loading={formsQuery.isLoading}
-            emptyMessage="Aún no hay formularios"
-            columns={columns}
-          />
-        </Card>
+        {items.length === 0 && !formsQuery.isLoading ? (
+          <div className="lg:col-span-3">
+            <EmptyState
+              icon={FileInput}
+              title="Aún no hay formularios"
+              description="Crea un formulario embebido para capturar contactos desde tu sitio. Asócialo a un producto para que los leads queden atribuidos automáticamente."
+              action={{
+                label: 'Crear formulario',
+                onClick: () => {
+                  const nameInput = document.querySelector<HTMLInputElement>(
+                    'input[placeholder="Nombre del formulario"]',
+                  );
+                  nameInput?.focus();
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="space-y-[var(--spacing-md)] md:hidden lg:col-span-3">
+              {items.map((form) => (
+                <FormListCard
+                  key={form.id}
+                  form={form}
+                  productLabel={
+                    form.productId
+                      ? (productNameById.get(form.productId) ?? '—')
+                      : 'Sin producto'
+                  }
+                  selected={selectedId === form.id}
+                  deleting={deleteMutation.isPending}
+                  onSelect={() => setSelectedId(form.id)}
+                  onDelete={() => deleteMutation.mutate(form.id)}
+                />
+              ))}
+            </div>
+            <Card className="hidden md:block lg:col-span-3">
+              <DataTable
+                data={items}
+                loading={formsQuery.isLoading}
+                emptyMessage="Aún no hay formularios"
+                columns={columns}
+              />
+            </Card>
+          </>
+        )}
 
         <div className="space-y-4 lg:col-span-2">
           {selectedForm && (

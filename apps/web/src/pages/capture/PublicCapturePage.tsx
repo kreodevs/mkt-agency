@@ -116,7 +116,7 @@ export default function PublicCapturePage() {
           </Button>
 
           {submitMutation.isError && (
-            <p className="text-sm text-red-600">No se pudo enviar. Intenta de nuevo.</p>
+            <p className="text-sm text-[var(--destructive)]">No se pudo enviar. Intenta de nuevo.</p>
           )}
         </form>
       </div>

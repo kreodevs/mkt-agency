@@ -5,6 +5,8 @@ Página tenant en `/forms`: listado, creación rápida, asignación de **product
 - Al crear o editar un formulario puedes vincularlo a un producto del catálogo.
 - El snippet JS incluye `productId` de forma automática (no editable en el embed).
 - Los leads capturados heredan `productId` del formulario.
+- **Mobile:** listado con `FormListCard` en pantallas &lt; md; tabla en desktop.
+- **Empty state:** guía para crear el primer formulario cuando el listado está vacío.
 - **Atribución post → lead:** `fields` usa el mismo JSON que DynamicForm (Kreo). La bandeja SOHO copia `/c/:formId?utm_*` con `contentId`; el submit guarda UTM en `lead.metadata`.
 - **Captura SOHO:** `GET /forms/capture?productId=` crea o reutiliza el formulario activo del producto.
 

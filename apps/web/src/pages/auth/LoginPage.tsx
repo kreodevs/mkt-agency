@@ -5,6 +5,7 @@ import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { Card } from '@/components/molecules/Card';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { ApiError } from '@/services/api';
 import { login } from '@/services/auth';
 import { useAuthStore } from '@/store/auth';
@@ -33,22 +34,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
-      <Card title="Iniciar sesión" subtitle="Mkt Agency OS" className="w-full max-w-md">
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <AuthShell
+      headline="Iniciar sesión"
+      tagline="Tu copiloto de marketing — aprueba, publica y mide resultados."
+    >
+      <Card title="Accede a tu cuenta" className="w-full shadow-sm">
+        <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
           <InputText
             label="Email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
             fullWidth
           />
           <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label className="text-sm font-medium text-[var(--foreground)]">Contraseña</label>
+            <label htmlFor="login-password" className="text-sm font-medium text-[var(--foreground)]">
+              Contraseña
+            </label>
             <Password
+              id="login-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
@@ -57,12 +66,15 @@ export default function LoginPage() {
           </Button>
           <p className="text-center text-sm text-[var(--foreground-muted)]">
             ¿Primera instalación?{' '}
-            <Link to="/setup" className="text-[var(--primary)] hover:underline">
+            <Link
+              to="/setup"
+              className="font-medium text-[var(--primary)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            >
               Configurar superadmin
             </Link>
           </p>
         </form>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

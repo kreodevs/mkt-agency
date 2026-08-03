@@ -34,7 +34,9 @@ export const PageHeader = ({
       )}
     </div>
     {actions && (
-      <div className="flex shrink-0 items-center gap-[var(--spacing-md)]">{actions}</div>
+      <div className="flex w-full shrink-0 flex-wrap items-center gap-[var(--spacing-sm)] md:w-auto md:justify-end md:gap-[var(--spacing-md)]">
+        {actions}
+      </div>
     )}
   </div>
 );

@@ -115,8 +115,8 @@ export default function CompetitorIntelPage() {
         )}
 
         {!activeAnalysis && latestFailed && !selectedAnalysis?.analysis && (
-          <Card className="border-red-200 bg-red-50/50">
-            <div className="text-sm text-red-700">
+          <Card className="border-[var(--destructive)]/30 bg-[var(--destructive)]/5">
+            <div className="text-sm text-[var(--destructive)]">
               <p className="font-semibold">Error en el último análisis</p>
               <p className="mt-1">{latestFailed.errorMessage}</p>
             </div>

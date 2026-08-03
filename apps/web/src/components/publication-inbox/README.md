@@ -24,3 +24,12 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 Hook: `hooks/useSohoBrowserNotifications.ts` — avisos del navegador para `week_ready`, `publish_reminder`, `approval_reminder`.
 
 **Fase C pendiente (no en scope):** scheduling nativo Meta/LinkedIn, WhatsApp Business API, atribución lead↔post.
+
+## Calendarios: `/calendario` vs `/calendar`
+
+| Ruta | Perfil | Propósito |
+|------|--------|-----------|
+| `/calendario` | SOHO / Copiloto | Vista semanal simplificada: qué publicar cada día, aprobar desde el panel del día, leyenda verde/amarillo/rojo |
+| `/calendar` | Growth / Agencia | Calendario editorial completo con filtros, estados editoriales y flujo de contenidos |
+
+No unificar rutas: el menú SOHO (`tenantSohoNavigation`) apunta solo a `/calendario`; el menú avanzado incluye `/calendar` bajo herramientas editoriales.

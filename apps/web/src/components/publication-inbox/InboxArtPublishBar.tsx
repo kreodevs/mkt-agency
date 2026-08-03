@@ -13,7 +13,6 @@ export function InboxArtPublishBar({ item }: InboxArtPublishBarProps) {
     publishN8nMutation,
     markPublishedMutation,
     canPublishWithN8n,
-    canMarkPublishedManually,
     isPublished,
     isApproved,
   } = useInboxPublishActions(item);

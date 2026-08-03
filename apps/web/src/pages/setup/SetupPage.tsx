@@ -5,6 +5,8 @@ import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { Card } from '@/components/molecules/Card';
+import { AuthShell } from '@/components/layout/AuthShell';
+import { SkeletonBlock } from '@/components/molecules/PageSkeleton';
 import { ApiError } from '@/services/api';
 import { getSetupStatus, initSetup } from '@/services/auth';
 
@@ -45,24 +47,26 @@ export default function SetupPage() {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-[var(--foreground-muted)]">
-        Verificando instalación...
-      </div>
+      <AuthShell headline="Preparando instalación" tagline="Verificando estado de la plataforma…">
+        <div className="space-y-[var(--spacing-md)]" aria-busy="true" aria-label="Verificando instalación">
+          <SkeletonBlock className="h-48 w-full" />
+        </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
-      <Card
-        title="Bootstrap"
-        subtitle="Crea el primer superadmin de la plataforma"
-        className="w-full max-w-md"
-      >
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+    <AuthShell
+      headline="Primera configuración"
+      tagline="Crea el superadmin que administrará tenants, IA y seguridad."
+    >
+      <Card title="Cuenta superadmin" className="w-full shadow-sm">
+        <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
           <InputText
             label="Nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
             required
             fullWidth
           />
@@ -71,23 +75,29 @@ export default function SetupPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
             fullWidth
           />
           <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label className="text-sm font-medium text-[var(--foreground)]">Contraseña</label>
+            <label htmlFor="setup-password" className="text-sm font-medium text-[var(--foreground)]">
+              Contraseña
+            </label>
             <Password
+              id="setup-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
               required
               minLength={12}
             />
+            <p className="text-xs text-[var(--foreground-muted)]">Mínimo 12 caracteres.</p>
           </div>
           <Button type="submit" loading={loading} className="w-full">
             Crear superadmin
           </Button>
         </form>
       </Card>
-    </div>
+    </AuthShell>
   );
 }
