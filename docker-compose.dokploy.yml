@@ -6,6 +6,12 @@
 # - Red internal para postgres/redis/minio/api
 # - MinIO: bind mount host MINIO_DATA_DIR (default /var/lib/mkt-agency/minio)
 # - Dominios: configurar en Dokploy UI → Domains (servicio frontend, puerto 80)
+# - Healthchecks: interval 5m, URLs con nombre de servicio (no localhost/127.0.0.1)
+
+x-health-5m: &health-5m
+  interval: 300s
+  timeout: 10s
+  retries: 3
 
 services:
   postgres:
@@ -18,10 +24,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "pg_isready -h postgres -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" || exit 1"]
+      <<: *health-5m
       start_period: 40s
     networks:
       - internal
@@ -47,10 +51,8 @@ services:
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping 2>/dev/null | grep -Eq '^(PONG|LOADING)' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "redis-cli -h redis ping 2>/dev/null | grep -Eq '^(PONG|LOADING)' || exit 1"]
+      <<: *health-5m
       start_period: 60s
     networks:
       - internal
@@ -65,10 +67,9 @@ services:
       - ${MINIO_DATA_DIR:-/var/lib/mkt-agency/minio}:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "curl -fsS http://minio:9000/minio/health/live || exit 1"]
+      <<: *health-5m
+      start_period: 30s
     networks:
       - internal
 
@@ -96,7 +97,6 @@ services:
       context: .
       dockerfile: Dockerfile.api
     restart: unless-stopped
-    # Sin ports: — la API solo es accesible en la red internal (nginx → mkt-agency-api:3000)
     expose:
       - "3000"
     environment:
@@ -135,11 +135,9 @@ services:
       test:
         [
           "CMD-SHELL",
-          "node -e \"fetch('http://127.0.0.1:3000/api/v1/setup/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+          "node -e \"fetch('http://api:3000/api/v1/setup/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
         ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      <<: *health-5m
       start_period: 40s
     networks:
       internal:
@@ -175,6 +173,14 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://api:3000/api/v1/setup/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      <<: *health-5m
+      start_period: 60s
     networks:
       - internal
 
@@ -194,6 +200,10 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://frontend:80/ >/dev/null 2>&1 || exit 1"]
+      <<: *health-5m
+      start_period: 30s
     networks:
       - dokploy-network
       - internal
