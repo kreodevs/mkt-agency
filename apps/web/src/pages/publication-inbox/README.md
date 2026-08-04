@@ -6,7 +6,7 @@ Página principal del tenant en `/`. En **modo copiloto** (default SOHO) el usua
 
 | Modo | Menú | Rutas legacy |
 |------|------|----------------|
-| Copiloto (default) | Inicio, **Calendario**, **Librería**, Mi producto, Ajustes | `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → `/` |
+| Copiloto (default) | Inicio, **Resumen**, **Calendario**, Actividad agentes, Inbox social, Leads, **Librería**, Mi producto, Ajustes | `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → `/` |
 | Vista completa | 5 grupos: **Hoy**, Mi negocio, Crear con IA, Herramientas, Configuración | Rutas accesibles |
 
 **Vista completa (avanzado):** flujo diario igual que copiloto en Inicio (preparar · aprobar · copiar). Menú extra para KPIs, métricas y herramientas manuales.
@@ -34,4 +34,4 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 | `store/copilot-ui.ts` | Persistencia modo avanzado |
 | `lib/tenant-navigation.ts` | Nav SOHO vs avanzado |
 
-Resumen KPIs legacy: `/agency-overview` (solo modo avanzado en sidebar).
+Resumen KPIs: `/agency-overview` — **Resumen** en menú SOHO y Growth (sidebar «Mi negocio» en vista completa).

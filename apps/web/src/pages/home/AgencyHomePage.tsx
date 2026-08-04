@@ -25,6 +25,7 @@ import { Button } from '@/components/atoms/Button';
 import { apiFetch } from '@/services/api';
 import { getCompanyProfile } from '@/services/company-profile';
 import { HEALTH_UI, contentStatusToPill, type HealthKey } from '@/lib/semantic-ui';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
 interface UpcomingPost {
   id: string;
@@ -85,7 +86,62 @@ function resolveHealth(key?: string): (typeof HEALTH_UI)[HealthKey] {
 
 export default function AgencyHomePage() {
   const user = useAuthStore((s) => s.user);
+  const { isSoho } = useOperatingProfile();
   const isSuperadminNative = user?.isSuperadmin && !user?.impersonating;
+
+  const navLinks = useMemo(
+    () => ({
+      calendar: isSoho ? '/calendario' : '/calendar',
+      strategy: isSoho ? '/agency/activity' : '/strategy',
+      performance: isSoho ? '/agency/activity' : '/dashboard',
+      community: isSoho ? '/' : '/community',
+      agents: isSoho ? '/agents/brand-interview' : '/agents',
+    }),
+    [isSoho],
+  );
+
+  const quickActions = useMemo(
+    () =>
+      isSoho
+        ? [
+            { to: '/products', icon: Package, title: 'Mi producto', desc: 'Catálogo y media kit' },
+            {
+              to: navLinks.community,
+              icon: MessageSquare,
+              title: 'Preparar semana',
+              desc: 'Genera publicaciones en la bandeja',
+            },
+            {
+              to: navLinks.strategy,
+              icon: Lightbulb,
+              title: 'Actividad agentes',
+              desc: 'Log del copiloto y analytics lite',
+            },
+            {
+              to: navLinks.agents,
+              icon: Sparkles,
+              title: 'Brand Analyst',
+              desc: 'Entrevista de marca e inteligencia',
+            },
+          ]
+        : [
+            { to: '/products', icon: Package, title: 'Mis productos', desc: 'Catálogo y campañas' },
+            {
+              to: navLinks.community,
+              icon: MessageSquare,
+              title: 'Community Manager',
+              desc: 'Genera copy para redes',
+            },
+            {
+              to: navLinks.strategy,
+              icon: Lightbulb,
+              title: 'Analizar estrategia',
+              desc: 'Revisa qué funciona',
+            },
+            { to: navLinks.agents, icon: Sparkles, title: 'Agentes IA', desc: 'Brand Analyst + más' },
+          ],
+    [isSoho, navLinks],
+  );
 
   const homeQuery = useQuery({
     queryKey: ['agency-home'],
@@ -199,8 +255,12 @@ export default function AgencyHomePage() {
   return (
     <DashboardShell>
       <PageHeader
-        title="Mi agencia"
-        description="Escritorio de tu agencia de marketing IA"
+        title={isSoho ? 'Resumen' : 'Mi agencia'}
+        description={
+          isSoho
+            ? 'KPIs de tu copiloto: publicaciones, leads y actividad de agentes'
+            : 'Escritorio de tu agencia de marketing IA'
+        }
       />
       {homeQuery.isError && (
         <p className="mb-[var(--spacing-md)] text-sm text-[var(--warning)]">
@@ -222,7 +282,7 @@ export default function AgencyHomePage() {
             value={homeData.upcoming.length}
             icon={<CalendarDays className="h-5 w-5" aria-hidden />}
             iconTone="accent"
-            linkTo="/calendar"
+            linkTo={navLinks.calendar}
             linkText="Ver calendario"
           />
           <KpiWithLink
@@ -239,15 +299,15 @@ export default function AgencyHomePage() {
             value={`${homeData.leads.conversionRate}%`}
             icon={<TrendingUp className="h-5 w-5" aria-hidden />}
             iconTone="success"
-            linkTo="/"
-            linkText="Ver dashboard"
+            linkTo={navLinks.performance}
+            linkText={isSoho ? 'Ver actividad' : 'Ver dashboard'}
           />
           <KpiWithLink
             title="Ajustes pendientes"
             value={homeData.strategy?.suggestionsCount ?? 0}
             icon={<Lightbulb className="h-5 w-5" aria-hidden />}
             iconTone="warning"
-            linkTo="/strategy"
+            linkTo={navLinks.strategy}
             linkText="Revisar"
           />
         </div>
@@ -258,7 +318,11 @@ export default function AgencyHomePage() {
               <EmptyState
                 compact
                 title="Sin programación"
-                description="Sin contenido programado. Genera copy en Community Manager."
+                description={
+                  isSoho
+                    ? 'Sin contenido programado. Usa Inicio → Preparar mi semana.'
+                    : 'Sin contenido programado. Genera copy en Community Manager.'
+                }
               />
             ) : (
               <div className="space-y-[var(--spacing-sm)]">
@@ -300,7 +364,7 @@ export default function AgencyHomePage() {
                 ))}
                 {homeData.upcoming.length > 4 && (
                   <Link
-                    to="/calendar"
+                    to={navLinks.calendar}
                     className="flex items-center justify-center gap-1 pt-[var(--spacing-sm)] text-xs font-medium text-[var(--primary)] hover:underline"
                   >
                     Ver las {homeData.upcoming.length} programadas
@@ -316,7 +380,11 @@ export default function AgencyHomePage() {
               <EmptyState
                 compact
                 title="Sin análisis"
-                description="Sin análisis de estrategia aún. Genera uno en la sección Estrategia."
+                description={
+                  isSoho
+                    ? 'Prepara tu semana en Inicio para generar estrategia y contenido.'
+                    : 'Sin análisis de estrategia aún. Genera uno en la sección Estrategia.'
+                }
               />
             ) : (
               <div className="space-y-[var(--spacing-md)]">
@@ -349,7 +417,7 @@ export default function AgencyHomePage() {
 
                 {homeData.strategy.suggestionsCount > 0 && (
                   <Link
-                    to="/strategy"
+                    to={navLinks.strategy}
                     className={`flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border p-[var(--spacing-md)] text-sm font-medium transition-colors ${HEALTH_UI.fair.border} ${HEALTH_UI.fair.bg} ${HEALTH_UI.fair.text} hover:bg-[var(--warning)]/15`}
                   >
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -364,17 +432,12 @@ export default function AgencyHomePage() {
 
         <Card title="Acciones rápidas" subtitle="Lo que puedes hacer ahora">
           <div className="grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { to: '/products', icon: Package, title: 'Mis productos', desc: 'Catálogo y campañas' },
-              { to: '/community', icon: MessageSquare, title: 'Community Manager', desc: 'Genera copy para redes' },
-              { to: '/strategy', icon: Lightbulb, title: 'Analizar estrategia', desc: 'Revisa qué funciona' },
-              { to: '/agents', icon: Sparkles, title: 'Agentes IA', desc: 'Brand Analyst + más' },
-            ].map((action, index) => {
+            {quickActions.map((action, index) => {
               const Icon = action.icon;
               const tone = QUICK_ACTION_TONES[index];
               return (
                 <Link
-                  key={action.to}
+                  key={action.to + action.title}
                   to={action.to}
                   className="flex items-center gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                 >

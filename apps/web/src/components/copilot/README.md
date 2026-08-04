@@ -11,6 +11,6 @@ UX simplificada para usuarios que solo copian y pegan en redes.
 
 Estado de modo avanzado: `store/copilot-ui.ts` (`mkt-advanced-nav` en localStorage).
 
-Navegación SOHO: `lib/tenant-navigation.ts` → `tenantSohoNavigation` (5 ítems).
+Navegación SOHO: `lib/tenant-navigation.ts` → `tenantSohoNavigation` (9 ítems, incl. **Resumen** → `/agency-overview`).
 
 Vista completa: 5 grupos en `tenantAdvancedNavigation` (Hoy, Mi negocio, Crear con IA, Herramientas, Configuración). Banner de bienvenida en Inicio la primera vez (`advancedGuideDismissed` en `copilot-ui.ts`).

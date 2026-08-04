@@ -1,6 +1,7 @@
 # Home
 
-- `AgencyHomePage` — `/agency-overview` (**Resumen** en menú vista completa)
+- `AgencyHomePage` — `/agency-overview`
   - **Superadmin:** panel de administración (tenants + enlace a modelos por tarea). Agentes y campañas solo vía impersonación.
-  - **Tenant / impersonación:** escritorio con `StatsCard`, `EmptyState`, `StatusPill` y tokens Kreo (`--spacing-*`, `--success`, `--warning`).
+  - **SOHO:** título «Resumen»; enlaces a `/calendario`, `/agency/activity`, `/` (preparar semana) y `/agents/brand-interview`.
+  - **Growth:** título «Mi agencia»; enlaces legacy (`/calendar`, `/strategy`, `/dashboard`, `/agents`).
   - Muestra el analizador web solo si el perfil no está completado y aún no hay actividad de marketing.

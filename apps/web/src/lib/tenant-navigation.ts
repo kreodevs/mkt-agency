@@ -105,12 +105,13 @@ export const tenantAdvancedNavigation = [
   },
 ];
 
-/** Navegación SOHO: bandeja, actividad agentes, producto y ajustes. */
+/** Navegación SOHO: bandeja, resumen KPIs, actividad agentes, producto y ajustes. */
 export const tenantSohoNavigation = [
   {
     title: 'Copiloto',
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
+      { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
       { label: 'Inbox social', href: '/social/inbox', icon: MessagesSquare },
