@@ -1,7 +1,8 @@
-# Utilidades frontend
+# lib (frontend)
 
-| Módulo | Uso |
-|---|---|
-| `semantic-ui.ts` | Tokens semánticos compartidos: `HEALTH_UI`, `contentStatusToPill`, `PLATFORM_ICON_TONE` |
+Utilidades compartidas del SPA tenant.
 
-Usar en páginas y componentes en lugar de colores Tailwind hardcoded (`amber-*`, `emerald-*`, `pink-*`).
+| Archivo | Rol |
+|---------|-----|
+| `tenant-navigation.ts` | Menús SOHO vs Growth |
+| `agent-event-navigation.ts` | Enlaces contextuales desde eventos inter-agente (`/agency/activity`) |

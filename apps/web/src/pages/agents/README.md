@@ -4,7 +4,7 @@ Tokens Kreo (`--accent`, `--warning`, `--radius-md`); sin gradientes violet/ambe
 
 | Ruta | Hub |
 |------|-----|
-| `/agents` | Catálogo con estado e historial por agente |
+| `/agents` | Catálogo con estado e historial por agente (**accesible en SOHO**, menú Copiloto) |
 | `/agents/brand-interview` | Historial + onboarding inline (URL → inferencia) o Brand Brief si el producto ya está listo |
 | `/agents/brand-interview/:id` | Resultado / generación del Brand Brief (onboarding o entrevista legacy) |
 | `/agents/competitor-intel` | Historial + reporte + nuevo análisis; búsqueda IA de competidores si no hay registros |

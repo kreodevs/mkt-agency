@@ -22,7 +22,7 @@ Configuración: `PATCH /tenant/operating-profile` — UI en **Ajustes** (`Operat
 
 ### Hub de agentes
 
-**Ruta:** `/agents` (vista avanzada; redirige en copiloto puro)
+**Ruta:** `/agents` — accesible en **SOHO** (menú Copiloto → Agentes IA) y en Growth (Crear con IA).
 
 Catálogo con estado por agente: **Ver historial**, **Continuar** o **Iniciar** (`useAgentHubStats`).
 
@@ -80,6 +80,7 @@ En SOHO, la generación ocurre vía **copiloto** (Preparar semana), no desde est
 
 - Log de eventos inter-agente (`GET /agency/events`).
 - Filtrable por producto.
+- Cada evento muestra enlace contextual al resultado (bandeja, resumen, leads, estrategia…).
 
 ### Estrategia y planes (Growth)
 

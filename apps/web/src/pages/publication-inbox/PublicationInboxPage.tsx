@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
+  Bot,
   CalendarDays,
   CheckCheck,
   ClipboardCheck,
@@ -434,6 +435,29 @@ export default function PublicationInboxPage() {
 
         <div className="space-y-[var(--spacing-lg)] lg:order-2">
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
+
+          {sohoMode && (
+            <Card title="Agentes IA" subtitle="Complemento manual del copiloto semanal">
+              <div className="space-y-[var(--spacing-sm)] text-sm">
+                {[
+                  { to: '/agents', label: 'Catálogo de agentes', icon: Bot },
+                  { to: '/agents/brand-interview', label: 'Brand Analyst', icon: Bot },
+                  { to: '/agents/competitor-intel', label: 'Competitor Intel', icon: Bot },
+                  { to: '/agents/image-generator', label: 'Generador de imágenes', icon: Bot },
+                ].map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
+                  >
+                    <item.icon className="h-4 w-4 shrink-0 text-[var(--primary)]" />
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          )}
+
           <InboxKitPanel items={ready} />
 
           <Card

@@ -95,7 +95,7 @@ export default function AgencyHomePage() {
       strategy: isSoho ? '/agency/activity' : '/strategy',
       performance: isSoho ? '/agency/activity' : '/dashboard',
       community: isSoho ? '/' : '/community',
-      agents: isSoho ? '/agents/brand-interview' : '/agents',
+      agents: '/agents',
     }),
     [isSoho],
   );
@@ -120,8 +120,8 @@ export default function AgencyHomePage() {
             {
               to: navLinks.agents,
               icon: Sparkles,
-              title: 'Brand Analyst',
-              desc: 'Entrevista de marca e inteligencia',
+              title: 'Agentes IA',
+              desc: 'Brand Analyst, competencia e imágenes',
             },
           ]
         : [

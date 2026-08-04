@@ -6,12 +6,12 @@ Página principal del tenant en `/`. En **modo copiloto** (default SOHO) el usua
 
 | Modo | Menú | Rutas legacy |
 |------|------|----------------|
-| Copiloto (default) | Inicio, **Resumen**, **Calendario**, Actividad agentes, Inbox social, Leads, **Librería**, Mi producto, Ajustes | `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → `/` |
+| Copiloto (default) | Inicio, **Resumen**, **Calendario**, Actividad agentes, **Agentes IA**, Inbox social, Leads, **Librería**, Mi producto, Ajustes | `/contents`, `/calendar`, `/community`, `/strategy`, `/dashboard` → `/` |
 | Vista completa | 5 grupos: **Hoy**, Mi negocio, Crear con IA, Herramientas, Configuración | Rutas accesibles |
 
 **Vista completa (avanzado):** flujo diario igual que copiloto en Inicio (preparar · aprobar · copiar). Menú extra para KPIs, métricas y herramientas manuales.
 
-`/libreria` y `/calendario` en ambos modos. Toggle sidebar: «Ver todas las herramientas» / «Vista simple (copiloto)».
+`/libreria` y `/calendario` en ambos modos. Toggle sidebar: «Cambiar a modo agencia (Growth)» / «Volver a copiloto (SOHO)» (cambia perfil operativo; ver tooltip).
 
 ## Archivos
 
@@ -19,7 +19,7 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 
 | Archivo | Rol |
 |---------|-----|
-| `pages/publication-inbox/PublicationInboxPage.tsx` | Vista hub + `CopilotStatusPanel` |
+| `pages/publication-inbox/PublicationInboxPage.tsx` | Vista hub + `CopilotStatusPanel` + tarjeta Agentes IA (SOHO) |
 | `pages/publication-inbox/PublicationCalendarPage.tsx` | Calendario SOHO en `/calendario` (`useSohoCalendarMonth`) |
 | `components/publication-inbox/SohoCalendarDayPanel.tsx` | Detalle del día con `InboxItemCard` |
 | `components/publication-inbox/SohoCalendarLegend.tsx` | Leyenda de colores del calendario |
@@ -34,4 +34,6 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 | `store/copilot-ui.ts` | Persistencia modo avanzado |
 | `lib/tenant-navigation.ts` | Nav SOHO vs avanzado |
 
-Resumen KPIs: `/agency-overview` — **Resumen** en menú SOHO y Growth (sidebar «Mi negocio» en vista completa).
+Resumen KPIs: `/agency-overview` — **Resumen** en menú SOHO y Growth.
+
+**Calendarios:** SOHO usa `/calendario` (menú **Calendario**); Growth también puede usar `/calendar` (calendario editorial avanzado). Ver `docs/ayuda/calendario/README.md`.

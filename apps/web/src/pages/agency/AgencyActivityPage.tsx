@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowRight } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -12,6 +14,7 @@ import {
 } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import { getAgentEventNavigation } from '@/lib/agent-event-navigation';
 
 export default function AgencyActivityPage() {
   const productId = useResolvedProductId();
@@ -61,7 +64,9 @@ export default function AgencyActivityPage() {
             <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
           )}
           <ul className="max-h-[420px] space-y-2 overflow-y-auto">
-            {(eventsQuery.data ?? []).map((event) => (
+            {(eventsQuery.data ?? []).map((event) => {
+              const destination = getAgentEventNavigation(event.eventType, isSoho);
+              return (
               <li
                 key={event.id}
                 className="rounded-md border border-[var(--border)] px-3 py-2 text-sm"
@@ -75,11 +80,23 @@ export default function AgencyActivityPage() {
                     {event.targetAgent ? ` → ${event.targetAgent}` : ''}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[var(--foreground-muted)]">
-                  {new Date(event.createdAt).toLocaleString()}
-                </p>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-[var(--foreground-muted)]">
+                    {new Date(event.createdAt).toLocaleString()}
+                  </p>
+                  {destination && (
+                    <Link
+                      to={destination.href}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline"
+                    >
+                      {destination.label}
+                      <ArrowRight className="h-3 w-3" aria-hidden />
+                    </Link>
+                  )}
+                </div>
               </li>
-            ))}
+            );
+            })}
             {(eventsQuery.data ?? []).length === 0 && !eventsQuery.isLoading && (
               <p className="text-sm text-[var(--foreground-muted)]">
                 Prepara una semana en Inicio para ver actividad.

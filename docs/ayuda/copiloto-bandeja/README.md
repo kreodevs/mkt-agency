@@ -12,12 +12,14 @@ Centraliza el flujo diario del dueño de negocio: ver qué publicar hoy, aprobar
 
 | Modo | Cómo activarlo | Menú |
 |------|----------------|------|
-| **Copiloto (default)** | Sidebar → no activar vista avanzada | Inicio, Calendario, Actividad, Inbox social, Leads, Librería, Mi producto, Ajustes |
-| **Vista completa (avanzado)** | Ajustes o toggle «Ver todas las herramientas» | 5 grupos: Hoy, Mi negocio, Crear con IA, Herramientas, Configuración |
+| **Copiloto (default)** | Perfil tenant `soho` | Inicio, Resumen, Calendario, Actividad agentes, **Agentes IA**, Inbox social, Leads, Librería, Mi producto, Ajustes |
+| **Vista completa (Growth)** | Sidebar → «Cambiar a modo agencia (Growth)» | 5 grupos: Hoy, Mi negocio, Crear con IA, Herramientas, Configuración |
 
-En modo copiloto, rutas legacy como `/contents`, `/calendar`, `/community`, `/strategy` y `/dashboard` **redirigen a `/`**.
+En modo copiloto, rutas legacy como `/contents`, `/calendar`, `/community`, `/strategy` y `/dashboard` **redirigen a `/`**. **`/agents` y subrutas sí están disponibles** en SOHO.
 
-Persistencia del modo avanzado: `localStorage` clave `mkt-advanced-nav`.
+**Calendario:** usa `/calendario` en copiloto; `/calendar` es el calendario editorial avanzado (solo Growth). Ver [Calendario](../calendario/README.md).
+
+El toggle del sidebar **cambia el perfil operativo** en servidor (`PATCH /tenant/operating-profile`), no solo expande el menú local.
 
 ## Cómo usarlo
 

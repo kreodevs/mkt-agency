@@ -110,14 +110,7 @@ export function AppRouter() {
                 </SohoLegacyRedirect>
               }
             />
-            <Route
-              path="/agents"
-              element={
-                <SohoLegacyRedirect>
-                  <AgentListPage />
-                </SohoLegacyRedirect>
-              }
-            />
+            <Route path="/agents" element={<AgentListPage />} />
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />

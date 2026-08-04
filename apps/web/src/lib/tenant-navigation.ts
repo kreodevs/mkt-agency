@@ -114,6 +114,7 @@ export const tenantSohoNavigation = [
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
+      { label: 'Agentes IA', href: '/agents', icon: Bot },
       { label: 'Inbox social', href: '/social/inbox', icon: MessagesSquare },
       { label: 'Leads', href: '/leads', icon: Users },
       { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },

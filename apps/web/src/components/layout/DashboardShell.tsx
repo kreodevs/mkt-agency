@@ -128,10 +128,15 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
             variant="ghost"
             size="sm"
             className="w-full justify-start text-xs text-[var(--foreground-muted)]"
+            title={
+              advancedNav
+                ? 'Vuelve al perfil copiloto SOHO: menú reducido centrado en bandeja y aprobación.'
+                : 'Activa el perfil agencia Growth: campañas, estrategia comercial, métricas y herramientas manuales.'
+            }
             onClick={() => void handleNavModeToggle()}
           >
-            <Layers className="mr-2 h-3.5 w-3.5" />
-            {advancedNav ? 'Vista simple (copiloto)' : 'Ver todas las herramientas'}
+            <Layers className="mr-2 h-3.5 w-3.5 shrink-0" />
+            {advancedNav ? 'Volver a copiloto (SOHO)' : 'Cambiar a modo agencia (Growth)'}
           </Button>
         ) : undefined
       }

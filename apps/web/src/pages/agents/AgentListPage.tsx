@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Bot, ChevronRight, ImageIcon, Target } from 'lucide-react';
-import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
@@ -10,6 +10,7 @@ import { getAgentCardActions, useAgentHubStats } from '@/hooks/useAgentHubStats'
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { withActiveProductQuery } from '@/store/active-product';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
 const ICONS = {
   Bot,
@@ -20,14 +21,19 @@ const ICONS = {
 export default function AgentListPage() {
   const hubStats = useAgentHubStats();
   const resolvedProductId = useResolvedProductId();
+  const { isSoho } = useOperatingProfile();
 
   const withProduct = (href: string) => withActiveProductQuery(href);
 
   return (
-    <DashboardShell navigationOverride={tenantNavigation}>
+    <DashboardShell>
       <PageHeader
         title="🤖 Agentes IA"
-        description="Lanza agentes de inteligencia artificial para analizar, investigar y generar contenido para tu producto activo."
+        description={
+          isSoho
+            ? 'Brand Analyst, inteligencia competitiva e imágenes — complemento manual del copiloto semanal.'
+            : 'Lanza agentes de inteligencia artificial para analizar, investigar y generar contenido para tu producto activo.'
+        }
       />
 
       {resolvedProductId && <ProductContextBanner productId={resolvedProductId} />}
