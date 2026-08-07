@@ -102,6 +102,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             icon={UserCircle2}
             label="CMs virtuales"
             done={status.cmCharacterReady}
+            href={status.cmCharacterReady ? undefined : '/#cm-characters'}
             detail={
               status.cmCharactersTotalCount > 0
                 ? `${status.cmCharactersReadyCount}/${status.cmCharactersTotalCount} listas`
@@ -112,11 +113,17 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             icon={Users}
             label={`Competidores (${status.competitorsCount})`}
             done={status.competitorsCount >= 2}
+            href={status.competitorsCount >= 2 ? undefined : '/agents/competitor-intel'}
           />
           <PipelineRow
             icon={Target}
             label="Análisis de competencia"
             done={status.analysisStatus === 'completed'}
+            href={
+              status.analysisStatus === 'completed' || analysisInFlight
+                ? undefined
+                : '/agents/competitor-intel'
+            }
             detail={
               analysisInFlight
                 ? 'En progreso...'
@@ -158,7 +165,9 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
     </Card>
 
     {status.onboardingCompleted && (
-      <CmCharacterSetupPanel productId={productId ?? status.productId} />
+      <div id="cm-characters">
+        <CmCharacterSetupPanel productId={productId ?? status.productId} />
+      </div>
     )}
     </div>
   );

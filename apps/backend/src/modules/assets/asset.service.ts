@@ -270,20 +270,10 @@ export class AssetService {
     return { url, expiresIn: DOWNLOAD_URL_TTL_SECONDS };
   }
 
-  async getExternalFileUrl(
-    tenantId: string,
-    assetId: string,
-    user: { id: string; tenantId: string; email?: string; role?: string },
-  ): Promise<string> {
+  async getExternalFileUrl(tenantId: string, assetId: string): Promise<string> {
     await this.findOwnedAsset(tenantId, assetId);
 
-    const { accessToken } = this.jwtTokenService.signAccessToken({
-      sub: user.id,
-      email: user.email ?? 'asset-access@internal',
-      role: user.role ?? 'member',
-      isSuperadmin: false,
-      tenantId: user.tenantId,
-    });
+    const { accessToken } = this.jwtTokenService.signAssetReadToken(tenantId, assetId);
 
     const apiBase = this.config.get<string>(
       'API_PUBLIC_URL',

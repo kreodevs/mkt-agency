@@ -33,6 +33,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       tenantId: payload.tenantId ?? null,
       impersonating: payload.impersonating ?? false,
       superadminId: payload.superadminId ?? null,
+      tokenScope: payload.scope ?? null,
+      assetId: payload.assetId ?? null,
     };
   }
 }

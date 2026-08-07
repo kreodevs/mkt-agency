@@ -86,6 +86,8 @@ import { ProductMediaKitItemEntity } from './modules/product/infrastructure/type
 import { TenantEntity } from './modules/tenant/infrastructure/typeorm/tenant.entity';
 import { TenantPlatformAdminEntity } from './modules/tenant/infrastructure/typeorm/tenant-platform-admin.entity';
 import { AuthSharedModule } from './shared/auth/auth-shared.module';
+import { AssetTokenScopeGuard } from './shared/guards/asset-token-scope.guard';
+import { ImpersonationDestructiveGuard } from './shared/guards/impersonation-destructive.guard';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { LoggerModule } from './shared/logger/logger.module';
 import { RedisModule } from './shared/redis/redis.module';
@@ -217,6 +219,14 @@ import {
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AssetTokenScopeGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ImpersonationDestructiveGuard,
     },
   ],
 })

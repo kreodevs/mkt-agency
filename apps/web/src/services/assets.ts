@@ -33,13 +33,9 @@ export function resolveAssetPreviewUrl(
     url?: string | null;
     thumbnailUrl?: string | null;
   },
-  options: { variant?: AssetUrlVariant } = {},
+  options: { variant?: AssetUrlVariant; preferHttpFallback?: boolean } = {},
 ): string | null {
   const variant = options.variant ?? 'thumb';
-  const authenticated = getAssetFileUrl(asset.id, variant);
-  if (authenticated) {
-    return authenticated;
-  }
 
   if (variant === 'thumb' && asset.thumbnailUrl?.startsWith('http')) {
     return asset.thumbnailUrl;
@@ -49,7 +45,17 @@ export function resolveAssetPreviewUrl(
     return asset.url;
   }
 
-  return null;
+  if (options.preferHttpFallback) {
+    return null;
+  }
+
+  const token = getAccessToken();
+  if (!token || !asset.id) {
+    return null;
+  }
+
+  const segment = variant === 'thumb' ? 'thumbnail' : 'file';
+  return `${API_BASE}/assets/${asset.id}/${segment}?access_token=${encodeURIComponent(token)}`;
 }
 
 function buildQuery(params: ListAssetsParams): string {

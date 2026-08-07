@@ -2,6 +2,9 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
@@ -22,7 +25,7 @@ export class TenantWebhookInfoController {
     const info = await this.webhooks.getOrCreateSecret(user.tenantId);
     return {
       webhookUrl: info.webhookPath,
-      secret: info.secret,
+      hasSecret: Boolean(info.secret),
       header: 'X-Webhook-Secret',
       exampleBody: {
         message: '¿Cuánto cuesta?',
@@ -30,6 +33,20 @@ export class TenantWebhookInfoController {
         channel: 'comment',
         authorHandle: '@cliente',
       },
+    };
+  }
+
+  @Post('webhook-info/rotate')
+  @HttpCode(HttpStatus.OK)
+  async rotateWebhookSecret(@CurrentUser() user: AuthenticatedUser) {
+    if (!user.tenantId) {
+      throw new ForbiddenException({ error: 'Tenant required', code: 'FORBIDDEN' });
+    }
+    const info = await this.webhooks.rotateSecret(user.tenantId);
+    return {
+      webhookUrl: info.webhookPath,
+      secret: info.secret,
+      header: 'X-Webhook-Secret',
     };
   }
 }

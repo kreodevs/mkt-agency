@@ -24,8 +24,8 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más adecuada por post TikTok.
 
 1. **Biblioteca** — varias CMs en `product.metadata.cmCharacters` (migración automática desde `cmCharacter` legacy).
-2. **Retrato** — IA (`cm_portrait_generation`, modelo OpenRouter `black-forest-labs/flux.2-pro`) o selección desde biblioteca de assets.
-3. **Vista previa** — TTS + lip-sync para marcar la CM como `ready`.
+2. **Retrato** — IA o biblioteca. Cambiar retrato resetea `readyAt` y exige nueva vista previa.
+3. **Vista previa** — TTS + lip-sync para marcar la CM como `ready` (`readyCount`).
 4. Posts TikTok `talking-head` incluyen `cmCharacterId` elegido por el LLM.
 
 Replicate y otros proveedores externos no pueden resolver hostnames internos de Docker (`minio:9000`). El pipeline de lip-sync usa URLs públicas de la API (`API_PUBLIC_URL`) con JWT de corta duración (`GET /assets/:id/file?access_token=...`) en lugar de presigned MinIO. En producción, `API_PUBLIC_URL` debe ser alcanzable desde internet; en local puede requerir túnel (ngrok, etc.) para probar lip-sync.

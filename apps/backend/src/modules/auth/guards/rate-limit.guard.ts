@@ -12,7 +12,7 @@ import { RateLimitTier } from '../domain/rate-limit.constants';
 import { RateLimitService } from '../services/rate-limit.service';
 
 const AI_PATH_PATTERN =
-  /\/(proposals|reports)(\/|$)|\/suggest|\/generate-strategy/;
+  /\/(proposals|reports)(\/|$)|\/suggest|\/generate-strategy|\/prepare-week|\/competitor-intel|\/community-manager\/generate|\/image-generation|\/generate-portrait|\/generate-preview|\/suggest-keywords|\/competitors\/discover/;
 
 function resolveTier(
   request: Request,

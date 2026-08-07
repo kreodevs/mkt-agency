@@ -206,7 +206,9 @@ export class CmCharacterService {
 
     const next = mergeCmCharacterEntry(entry, {
       portraitAssetId: asset.id,
-      status: entry.status === 'ready' ? 'ready' : 'pending',
+      status: 'pending',
+      readyAt: null,
+      previewVideoAssetId: null,
       errorMessage: null,
     });
     this.replaceEntry(library, next);
@@ -216,9 +218,7 @@ export class CmCharacterService {
       characterId: next.id,
       portraitAssetId: asset.id,
       status: next.status ?? 'pending',
-      message: entry.status === 'ready'
-        ? 'Retrato actualizado desde la biblioteca.'
-        : 'Retrato asignado. Genera la vista previa para activar esta CM.',
+      message: 'Retrato asignado. Genera la vista previa para activar esta CM.',
     };
   }
 
@@ -301,6 +301,8 @@ export class CmCharacterService {
       const updated = mergeCmCharacterEntry(current, {
         portraitAssetId: asset.id,
         status: 'pending',
+        readyAt: null,
+        previewVideoAssetId: null,
         errorMessage: null,
       });
       this.replaceEntry(library, updated);

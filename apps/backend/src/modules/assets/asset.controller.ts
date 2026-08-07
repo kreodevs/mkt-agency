@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
+import { assertAssetFileAccess } from './domain/asset-file-access.util';
 import { AssetService } from './asset.service';
 import { ListAssetsQueryDto, UpdateAssetDto } from './dto/asset.request.dto';
 import {
@@ -65,6 +66,7 @@ export class AssetController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<StreamableFile> {
+    assertAssetFileAccess(user, id);
     const file = await this.assetService.readFile(user.tenantId!, id);
     return new StreamableFile(file.buffer, {
       type: file.mimeType,
@@ -77,6 +79,7 @@ export class AssetController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<StreamableFile> {
+    assertAssetFileAccess(user, id);
     const file = await this.assetService.readThumbnail(user.tenantId!, id);
     return new StreamableFile(file.buffer, {
       type: file.mimeType,

@@ -136,7 +136,7 @@ export class TalkingHeadComposerService {
     accessUser?: ComposeTalkingHeadOptions['accessUser'],
   ): Promise<string> {
     if (accessUser) {
-      return this.assetService.getExternalFileUrl(tenantId, assetId, accessUser);
+      return this.assetService.getExternalFileUrl(tenantId, assetId);
     }
     const signed = await this.assetService.getDownloadUrl(tenantId, assetId);
     return signed.url;

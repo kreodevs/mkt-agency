@@ -63,6 +63,13 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
   const libraryQuery = useQuery({
     queryKey: ['cm-characters', productId],
     queryFn: () => listCmCharacters(productId),
+    refetchInterval: (query) => {
+      const chars = query.state.data?.characters ?? [];
+      const generating = chars.some(
+        (c) => c.status === 'generating_portrait' || c.status === 'generating_preview',
+      );
+      return generating ? 3000 : false;
+    },
   });
 
   const library = libraryQuery.data;
@@ -482,8 +489,10 @@ function EditPanel({
         </div>
       </div>
 
-      {character.ready && (
-        <div className="grid gap-4 sm:grid-cols-2">
+      {(character.portraitAssetId || character.previewVideoAssetId) && (
+        <div
+          className={`grid gap-4 ${character.ready && character.previewVideoAssetId ? 'sm:grid-cols-2' : 'max-w-xs'}`}
+        >
           {character.portraitAssetId && (
             <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
               <AuthenticatedAssetImage
@@ -512,9 +521,7 @@ function EditPanel({
       </div>
 
       {character.status === 'failed' && character.errorMessage && (
-        <p className="text-sm text-destructive">
-          Error al generar vista previa: {character.errorMessage}
-        </p>
+        <p className="text-sm text-destructive">Error: {character.errorMessage}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -545,17 +552,6 @@ function EditPanel({
           )}
         </Button>
       </div>
-
-      {character.portraitAssetId && !character.previewVideoAssetId && !character.ready && (
-        <div className="max-w-xs overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
-          <AuthenticatedAssetImage
-            assetId={character.portraitAssetId}
-            variant="full"
-            title="Retrato"
-            className="aspect-[9/16] w-full object-cover"
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import type Redis from 'ioredis';
 import { REDIS_CLIENT } from '../../../shared/redis/redis.module';
 import {
@@ -31,10 +31,15 @@ export class RateLimitService {
         throw new RateLimitExceededException();
       }
     } catch (err) {
-      if (err instanceof Error && 'statusCode' in err) {
+      if (err instanceof RateLimitExceededException) {
         throw err;
       }
-      // Redis caído: no bloquear tráfico en dev/MVP
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException({
+          error: 'Rate limiting unavailable',
+          code: 'SERVICE_UNAVAILABLE',
+        });
+      }
       return;
     }
   }

@@ -46,12 +46,21 @@ export class CopilotService {
 
     let nextStep = 'Revisa y publica lo que ya está listo';
     let canPrepareWeek = onboardingCompleted;
+    let prepareBlockedReason: string | null = null;
 
     if (!onboardingCompleted) {
       nextStep = 'Completa el onboarding de tu producto';
       canPrepareWeek = false;
+      prepareBlockedReason =
+        'Termina el wizard de producto (descripción, audiencia y tags SEO).';
     } else if (cmLibrary.readyCount === 0) {
-      nextStep = 'Configura al menos una CM virtual en tu biblioteca (retrato + vista previa)';
+      nextStep =
+        'Configura al menos una CM virtual en tu biblioteca (retrato + vista previa)';
+      canPrepareWeek = false;
+      prepareBlockedReason =
+        cmLibrary.characters.length > 0
+          ? 'Completa retrato y vista previa en al menos una CM de tu biblioteca.'
+          : 'Crea una CM virtual y completa retrato + vista previa.';
     } else if (inbox.stats.readyCount > 0) {
       nextStep = `Copia y pega ${inbox.stats.readyCount} publicación(es) listas`;
     } else if (inbox.stats.pendingCount > 0) {
@@ -83,9 +92,7 @@ export class CopilotService {
             : 'sin configurar',
       cmCharactersReadyCount: cmLibrary.readyCount,
       cmCharactersTotalCount: cmLibrary.characters.length,
-      prepareBlockedReason: onboardingCompleted
-        ? null
-        : 'Termina el wizard de producto (descripción, audiencia y tags SEO).',
+      prepareBlockedReason,
     };
   }
 

@@ -11,6 +11,7 @@ import {
   ProductPublishIntegrationResponseDto,
   UpdateProductPublishIntegrationDto,
 } from './dto/product-publish-integration.dto';
+import type { ProductPlatformCredential } from './domain/product-publish-integration.metadata.util';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class ProductPublishIntegrationService {
     productId: string,
   ): Promise<ProductPublishIntegrationResponseDto> {
     const product = await this.findOwnedProduct(tenantId, productId);
-    return this.toResponse(product, tenantId);
+    return this.toResponse(product, tenantId, { revealWebhookSecret: false });
   }
 
   async updateIntegration(
@@ -57,13 +58,21 @@ export class ProductPublishIntegrationService {
         ? { webhooksByPlatform: dto.webhooksByPlatform }
         : {}),
       ...(dto.credentialsByPlatform !== undefined
-        ? { credentialsByPlatform: dto.credentialsByPlatform }
+        ? {
+            credentialsByPlatform: mergePlatformCredentials(
+              current.credentialsByPlatform,
+              dto.credentialsByPlatform,
+            ),
+          }
         : {}),
     });
 
     product.metadata = nextMetadata;
     await this.products.save(product);
-    return this.toResponse(product, tenantId);
+    const revealSecret =
+      Boolean(dto.regenerateSecret) ||
+      (webhookSecret !== current.webhookSecret && Boolean(webhookSecret));
+    return this.toResponse(product, tenantId, { revealWebhookSecret: revealSecret });
   }
 
   async validateWebhookSecret(
@@ -101,22 +110,69 @@ export class ProductPublishIntegrationService {
   private toResponse(
     product: ProductEntity,
     tenantId: string,
+    options: { revealWebhookSecret?: boolean } = {},
   ): ProductPublishIntegrationResponseDto {
     const config = getProductPublishIntegrationConfig(product.metadata);
     const configured = isProductPublishWebhookConfigured(product.metadata);
+    const revealWebhookSecret = options.revealWebhookSecret === true;
 
     return {
       enabled: config.enabled,
       webhookUrl: config.webhookUrl,
       hasWebhookSecret: Boolean(config.webhookSecret),
-      webhookSecret: config.webhookSecret,
+      webhookSecret: revealWebhookSecret ? config.webhookSecret : null,
       autoDispatchOnReady: config.autoDispatchOnReady,
       webhooksByPlatform: config.webhooksByPlatform,
-      credentialsByPlatform: config.credentialsByPlatform,
+      credentialsByPlatform: maskPlatformCredentials(config.credentialsByPlatform),
       callbackPath: `/api/v1/publication-inbox/webhook/${tenantId}/mark-published`,
       configured,
     };
   }
+}
+
+function maskPlatformCredentials(
+  credentials: Record<string, ProductPlatformCredential>,
+): Record<string, ProductPlatformCredential> {
+  return Object.fromEntries(
+    Object.entries(credentials).map(([platform, cred]) => [
+      platform,
+      {
+        accountId: cred.accountId,
+        pageId: cred.pageId,
+        notes: cred.notes,
+        accessToken: cred.accessToken ? '••••••••' : undefined,
+        refreshToken: cred.refreshToken ? '••••••••' : undefined,
+      },
+    ]),
+  );
+}
+
+function mergePlatformCredentials(
+  current: Record<string, ProductPlatformCredential>,
+  patch: Record<string, ProductPlatformCredential>,
+): Record<string, ProductPlatformCredential> {
+  const result = { ...current };
+
+  for (const [platform, cred] of Object.entries(patch)) {
+    const prev = current[platform] ?? {};
+    const accessToken =
+      cred.accessToken && cred.accessToken !== '••••••••'
+        ? cred.accessToken
+        : prev.accessToken;
+    const refreshToken =
+      cred.refreshToken && cred.refreshToken !== '••••••••'
+        ? cred.refreshToken
+        : prev.refreshToken;
+
+    result[platform] = {
+      ...prev,
+      ...cred,
+      ...(accessToken !== undefined ? { accessToken } : {}),
+      ...(refreshToken !== undefined ? { refreshToken } : {}),
+    };
+  }
+
+  return result;
 }
 
 function timingSafeEqual(a: Buffer, b: Buffer): boolean {

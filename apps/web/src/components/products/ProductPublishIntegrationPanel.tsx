@@ -98,13 +98,11 @@ export function ProductPublishIntegrationPanel({ productId }: ProductPublishInte
   };
 
   const copySecret = async () => {
-    const secret = integrationQuery.data?.webhookSecret;
-    if (!secret) {
+    if (integrationQuery.data?.hasWebhookSecret) {
       regenerateSecretMutation.mutate();
       return;
     }
-    await navigator.clipboard.writeText(secret);
-    toast.success('Secret copiado');
+    regenerateSecretMutation.mutate();
   };
 
   if (integrationQuery.isLoading) {
@@ -197,7 +195,7 @@ export function ProductPublishIntegrationPanel({ productId }: ProductPublishInte
             className="gap-2"
           >
             <Copy className="h-4 w-4" />
-            {integrationQuery.data?.hasWebhookSecret ? 'Copiar secret' : 'Generar secret'}
+            {integrationQuery.data?.hasWebhookSecret ? 'Rotar y copiar secret' : 'Generar secret'}
           </Button>
           <Button
             type="button"

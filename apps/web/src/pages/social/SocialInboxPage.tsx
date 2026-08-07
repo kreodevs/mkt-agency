@@ -15,7 +15,7 @@ import {
   listSocialInteractions,
   markSocialInteractionReplied,
 } from '@/services/social-inbox';
-import { getTenantWebhookInfo } from '@/services/operating-profile';
+import { getTenantWebhookInfo, rotateTenantWebhookSecret } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 
@@ -53,6 +53,19 @@ export default function SocialInboxPage() {
   const webhookQuery = useQuery({
     queryKey: ['tenant-webhook-info'],
     queryFn: getTenantWebhookInfo,
+  });
+
+  const rotateSecretMutation = useMutation({
+    mutationFn: rotateTenantWebhookSecret,
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ['tenant-webhook-info'] });
+      void copyToClipboard(data.secret, 'Secret');
+      setCopiedField('secret');
+      window.setTimeout(() => setCopiedField(null), 2000);
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo rotar el secret');
+    },
   });
 
   const ingestMutation = useMutation({
@@ -176,19 +189,15 @@ export default function SocialInboxPage() {
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 break-all">
                     <span className="text-[var(--foreground-muted)]">Secret: </span>
-                    {webhookQuery.data.secret}
+                    {webhookQuery.data.hasSecret ? '••••••••••••' : 'Sin configurar'}
                   </p>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
                     className="shrink-0 gap-1"
-                    onClick={() => {
-                      void copyToClipboard(webhookQuery.data!.secret, 'Secret').then(() => {
-                        setCopiedField('secret');
-                        window.setTimeout(() => setCopiedField(null), 2000);
-                      });
-                    }}
+                    loading={rotateSecretMutation.isPending}
+                    onClick={() => rotateSecretMutation.mutate()}
                   >
                     {copiedField === 'secret' ? (
                       <Check className="h-3.5 w-3.5" />

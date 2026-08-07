@@ -39,6 +39,25 @@ export class TenantWebhookService {
     };
   }
 
+  async rotateSecret(tenantId: string): Promise<{ secret: string; webhookPath: string }> {
+    const tenant = await this.tenants.findOne({ where: { id: tenantId } });
+    if (!tenant) {
+      throw new NotFoundException({ error: 'Tenant not found', code: 'NOT_FOUND' });
+    }
+
+    const secret = randomBytes(24).toString('hex');
+    const settings = {
+      ...(tenant.settings ?? {}),
+      [SETTINGS_KEY_SOCIAL_WEBHOOK_SECRET]: secret,
+    };
+    await this.tenants.update(tenantId, { settings });
+
+    return {
+      secret,
+      webhookPath: `/api/v1/social-inbox/webhook/${tenantId}`,
+    };
+  }
+
   async validateSecret(tenantId: string, provided: string | undefined): Promise<void> {
     const { secret } = await this.getOrCreateSecret(tenantId);
     const a = createHash('sha256').update(secret).digest();

@@ -6,6 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { JwtPayload } from './jwt-payload.interface';
 
 const ACCESS_TOKEN_TTL_SECONDS = 900;
+const ASSET_READ_TOKEN_TTL_SECONDS = 300;
 const IMPERSONATION_TOKEN_TTL_SECONDS = 3600;
 const KEY_ID = 'mkt-agency-key-1';
 
@@ -45,6 +46,31 @@ export class JwtTokenService {
     });
 
     return { accessToken, expiresIn: ACCESS_TOKEN_TTL_SECONDS };
+  }
+
+  signAssetReadToken(tenantId: string, assetId: string): {
+    accessToken: string;
+    expiresIn: number;
+  } {
+    const accessToken = jwt.sign(
+      {
+        sub: 'asset-read',
+        email: 'asset-read@internal',
+        role: 'member',
+        isSuperadmin: false,
+        tenantId,
+        scope: 'asset:read',
+        assetId,
+      } satisfies Omit<JwtPayload, 'iat' | 'exp'>,
+      this.privateKey,
+      {
+        algorithm: 'RS256',
+        expiresIn: ASSET_READ_TOKEN_TTL_SECONDS,
+        keyid: KEY_ID,
+      },
+    );
+
+    return { accessToken, expiresIn: ASSET_READ_TOKEN_TTL_SECONDS };
   }
 
   signImpersonationToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): {

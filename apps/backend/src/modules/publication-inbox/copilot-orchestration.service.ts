@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompetitorIntelService } from '../agents/competitor-intel.service';
+import { CmCharacterService } from '../community-manager/cm-character.service';
 import { CompetitorService } from '../competitors/competitor.service';
 import { inferDiscoveryScope } from '../competitors/domain/competitor-discovery-context.util';
 import { ProductService } from '../product/product.service';
@@ -28,6 +29,7 @@ export class CopilotOrchestrationService {
     private readonly competitorIntel: CompetitorIntelService,
     private readonly agencyOrchestration: AgencyOrchestrationService,
     private readonly inboxService: PublicationInboxService,
+    private readonly cmCharacter: CmCharacterService,
   ) {}
 
   async prepareWeek(
@@ -42,6 +44,19 @@ export class CopilotOrchestrationService {
       return {
         status: 'blocked',
         message: 'Completa el onboarding del producto antes de preparar la semana.',
+        productId: product.id,
+        productName: product.name,
+        postsGenerated: 0,
+        imagesAttached: 0,
+        warnings,
+      };
+    }
+
+    if (!(await this.cmCharacter.hasAnyReadyCharacter(tenantId, product.id))) {
+      return {
+        status: 'blocked',
+        message:
+          'Configura al menos una CM virtual (retrato + vista previa) antes de preparar la semana.',
         productId: product.id,
         productName: product.name,
         postsGenerated: 0,

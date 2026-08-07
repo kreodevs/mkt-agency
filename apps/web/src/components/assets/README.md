@@ -8,7 +8,7 @@
 | `AssetBulkSelectionBar.tsx` | Mover / eliminar selección múltiple |
 | `AssetLibraryPagination.tsx` | Paginación server-side (20 por página) |
 | `AssetPreviewDialog.tsx` | Diálogo pantalla amplia (imagen, video, audio, PDF) |
-| `AuthenticatedAssetImage.tsx` | `<img>` autenticado; `variant="thumb"` (default en cards) o `"full"` (editor/vista previa) |
-| `AuthenticatedAssetVideo.tsx` | `<video>` con la misma URL autenticada; usado en generaciones MP4 del Image Generator |
+| `AuthenticatedAssetImage.tsx` | `<img>` vía `fetch` + Bearer (sin JWT en URL); fallback «No disponible» |
+| `AuthenticatedAssetVideo.tsx` | `<video>` con el mismo patrón autenticado |
 
 Servicio: `src/services/assets.ts` (`getAssetFileUrl`, `resolveAssetPreviewUrl` con `variant: 'thumb' | 'full'`).

@@ -79,9 +79,17 @@ export async function getAgencyAttribution(params?: {
 
 export async function getTenantWebhookInfo(): Promise<{
   webhookUrl: string;
-  secret: string;
+  hasSecret: boolean;
   header: string;
   exampleBody: Record<string, unknown>;
 }> {
   return apiFetch('/tenant/webhook-info');
+}
+
+export async function rotateTenantWebhookSecret(): Promise<{
+  webhookUrl: string;
+  secret: string;
+  header: string;
+}> {
+  return apiFetch('/tenant/webhook-info/rotate', { method: 'POST' });
 }

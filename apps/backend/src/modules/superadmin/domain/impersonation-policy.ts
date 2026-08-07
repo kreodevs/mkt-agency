@@ -6,6 +6,9 @@ const DESTRUCTIVE_ACTIONS = new Set([
   'delete_asset',
   'delete_campaign',
   'delete_user',
+  'delete_content',
+  'purge_inbox',
+  'bulk_delete',
 ]);
 
 export class ImpersonationPolicy {
