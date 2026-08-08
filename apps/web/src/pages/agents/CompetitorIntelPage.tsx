@@ -7,6 +7,7 @@ import { CompetitorIntelHistory } from '@/components/agents/CompetitorIntelHisto
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { EmptyState } from '@/components/molecules/EmptyState';
 import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import { listCompetitorAnalyses, triggerCompetitorAnalysis, getCompetitorAnalysis } from '@/services/agents';
@@ -86,6 +87,7 @@ export default function CompetitorIntelPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Agente IA"
         title="Competitor Intel"
         description="Análisis profundo de tus competidores: fortalezas, debilidades y oportunidades de mercado."
         actions={
@@ -134,12 +136,11 @@ export default function CompetitorIntelPage() {
         )}
 
         {!analysesQuery.isLoading && analyses.length === 0 && !hasCompetitors && (
-          <Card>
-            <div className="py-6 text-center text-sm text-[var(--foreground-muted)]">
-              Aún no hay análisis ni competidores registrados. Usa la búsqueda con IA abajo para
-              empezar.
-            </div>
-          </Card>
+          <EmptyState
+            icon={Crosshair}
+            title="Sin competidores ni análisis"
+            description="Usa la búsqueda con IA abajo para descubrir y registrar competidores."
+          />
         )}
 
         {!hasCompetitors && (
@@ -153,14 +154,15 @@ export default function CompetitorIntelPage() {
         )}
 
         {!analysesQuery.isLoading && analyses.length === 0 && hasCompetitors && (
-          <Card>
-            <div className="py-12 text-center text-sm text-[var(--foreground-muted)]">
-              Ya tienes competidores registrados. Inicia el primer reporte abajo.
-            </div>
-          </Card>
+          <EmptyState
+            compact
+            icon={Sparkles}
+            title="Listo para el primer reporte"
+            description="Ya tienes competidores registrados. Inicia el análisis abajo."
+          />
         )}
 
-        <Card title={analyses.length > 0 ? 'Nuevo análisis' : 'Primer análisis'}>
+        <Card variant="accent" title={analyses.length > 0 ? 'Nuevo análisis' : 'Primer análisis'}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-1 items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--warning)]/20 bg-[var(--warning)]/10">
@@ -173,6 +175,7 @@ export default function CompetitorIntelPage() {
               </p>
             </div>
             <Button
+              variant="brand"
               onClick={() => triggerMutation.mutate()}
               loading={triggerMutation.isPending}
               disabled={!!activeAnalysis || !hasCompetitors}

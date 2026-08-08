@@ -31,14 +31,23 @@ export function AuthShell({ children, headline, tagline, className }: AuthShellP
         aria-hidden
       />
 
+      <div
+        className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[var(--brand)]/10 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-[var(--color-brand-light)]/15 blur-3xl"
+        aria-hidden
+      />
+
       <header className="relative mb-[var(--spacing-lg)] flex flex-col items-center gap-[var(--spacing-sm)] text-center">
         <div
-          className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--card)] text-[var(--primary)] shadow-sm"
+          className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--brand)]/25 bg-[var(--brand-muted)] text-[var(--brand)] shadow-[var(--shadow-sm)]"
           aria-hidden
         >
           <Sparkles className="h-6 w-6" />
         </div>
-        <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+        <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
           Mkt Agency OS
         </p>
         {headline ? (

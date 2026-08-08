@@ -31,8 +31,8 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="mb-[var(--spacing-md)] flex h-14 w-14 items-center justify-center rounded-full bg-[var(--secondary)] text-[var(--foreground-muted)]">
-        <Icon className="h-7 w-7 opacity-60" aria-hidden />
+      <div className="mb-[var(--spacing-md)] flex h-14 w-14 items-center justify-center rounded-full border border-[var(--brand)]/20 bg-[var(--brand-muted)] text-[var(--brand)] shadow-sm">
+        <Icon className="h-7 w-7" aria-hidden />
       </div>
       <h3 className="mb-[var(--spacing-xs)] text-base font-semibold text-[var(--foreground)]">{title}</h3>
       {description && (

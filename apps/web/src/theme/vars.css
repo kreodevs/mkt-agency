@@ -16,6 +16,10 @@
   --color-cloud-dark: #87867f;
   --color-cloud-medium: #b0aea5;
   --color-oat: #e3dacc;
+  --color-brand: #c2410c;
+  --color-brand-light: #ea580c;
+  --color-brand-muted: #fff7ed;
+  --color-brand-deep: #9a3412;
 
   /* Typography — families */
   --font-anthropic-sans: 'Anthropic Sans', Arial, sans-serif;
@@ -119,11 +123,23 @@
   --primary-hover: #2a2a28;
   --background: var(--color-ivory-light);
   --background-secondary: var(--color-ivory-medium);
+  --background-muted: var(--color-ivory-dark);
   --foreground: var(--color-slate-dark);
   --foreground-muted: var(--color-slate-light);
   --foreground-subtle: var(--color-cloud-dark);
-  --accent: var(--color-slate-light);
-  --accent-foreground: var(--color-ivory-light);
+  --accent: var(--color-brand);
+  --accent-foreground: #ffffff;
+  --accent-muted: var(--color-brand-muted);
+  --brand: var(--color-brand);
+  --brand-foreground: #ffffff;
+  --brand-muted: var(--color-brand-muted);
+  --gradient-brand: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-light) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    var(--color-brand-muted) 0%,
+    var(--color-ivory-light) 45%,
+    var(--color-ivory-medium) 100%
+  );
   --card: var(--color-ivory-medium);
   --card-foreground: var(--color-slate-dark);
   --card-border: var(--color-cloud-medium);

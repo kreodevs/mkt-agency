@@ -187,11 +187,12 @@ export default function CommunityManagerPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Copy para redes"
         title="Community Manager"
         description="Genera copy manual por red y formato. Para la semana completa, usa Inicio → Preparar mi semana."
       />
 
-      <Card className="mb-6 border-[var(--primary)]/30 bg-[var(--primary)]/5">
+      <Card variant="accent" className="mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-[var(--foreground)]">Recomendado</p>
@@ -200,7 +201,7 @@ export default function CommunityManagerPage() {
             </p>
           </div>
           <Link to="/">
-            <Button type="button" className="gap-2">
+            <Button type="button" variant="brand" className="gap-2">
               <Sparkles className="h-4 w-4" />
               Ir a Preparar mi semana
             </Button>

@@ -37,6 +37,7 @@ export default function PublicationCalendarPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Copiloto SOHO"
         title="Calendario de publicación"
         description="Consulta qué día toca publicar cada pieza. Toca un día para copiar y publicar."
         actions={
@@ -48,6 +49,14 @@ export default function PublicationCalendarPage() {
           </Link>
         }
       />
+
+      <div className="page-hero mb-[var(--spacing-lg)]">
+        <p className="text-sm text-[var(--foreground-muted)]">
+          <span className="brand-gradient-text font-medium">Vista mensual</span>
+          {' · '}
+          Los días con color tienen publicaciones. Verde = listo para copiar y publicar.
+        </p>
+      </div>
 
       <SohoCalendarLegend />
 
@@ -74,6 +83,7 @@ export default function PublicationCalendarPage() {
       {!monthQuery.isError && !isEmptyMonth && (
         <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-5">
           <Card
+            variant="elevated"
             className="lg:col-span-3"
             title="Mes"
             subtitle="Haz clic en un día con publicaciones"
@@ -99,7 +109,7 @@ export default function PublicationCalendarPage() {
                 onClose={() => setSelectedDate(null)}
               />
             ) : (
-              <Card title="Día seleccionado" subtitle="Elige una fecha en el calendario">
+              <Card variant="elevated" title="Día seleccionado" subtitle="Elige una fecha en el calendario">
                 <p className="text-sm text-[var(--foreground-muted)]">
                   Los días con color tienen publicaciones programadas. Verde significa que ya puedes
                   copiar y pegar en tu red social.

@@ -2,25 +2,46 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
+import { InputText } from '@/components/atoms/InputText';
+import { Textarea } from '@/components/atoms/Textarea';
+import { Card } from '@/components/molecules/Card';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { parseCaptureAttributionFromSearch } from '@/lib/capture-attribution';
 import { getPublicForm, submitPublicForm } from '@/services/forms';
 import type { FormFieldDefinition } from '@/types/forms';
 
-function FieldInput({ field }: { field: FormFieldDefinition }) {
-  const common = {
-    id: field.name,
-    name: field.name,
-    required: field.required,
-    className:
-      'mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)]',
-  };
-
+function CaptureField({
+  field,
+  primaryColor,
+}: {
+  field: FormFieldDefinition;
+  primaryColor?: string;
+}) {
   if (field.type === 'textarea') {
-    return <textarea {...common} rows={4} />;
+    return (
+      <div className="flex flex-col gap-[var(--spacing-xs)]">
+        <label htmlFor={field.name} className="text-sm font-medium text-[var(--foreground)]">
+          {field.label}
+          {field.required ? ' *' : ''}
+        </label>
+        <Textarea id={field.name} name={field.name} required={field.required} rows={4} />
+      </div>
+    );
   }
 
   const type = field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : 'text';
-  return <input {...common} type={type} />;
+
+  return (
+    <InputText
+      id={field.name}
+      name={field.name}
+      type={type}
+      required={field.required}
+      label={`${field.label}${field.required ? ' *' : ''}`}
+      fullWidth
+      style={primaryColor ? ({ '--ring': primaryColor } as React.CSSProperties) : undefined}
+    />
+  );
 }
 
 export default function PublicCapturePage() {
@@ -46,48 +67,48 @@ export default function PublicCapturePage() {
   });
 
   const form = formQuery.data;
-  const primaryColor =
-    typeof form?.style?.primaryColor === 'string' ? form.style.primaryColor : '#2563eb';
+  const useBrandStyle =
+    typeof form?.style?.primaryColor !== 'string' || form.style.primaryColor === '#2563eb';
 
   if (formQuery.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-[var(--foreground-muted)]">
-        Cargando formulario...
-      </div>
+      <AuthShell headline="Cargando formulario" tagline="Un momento, por favor.">
+        <Card variant="elevated">
+          <p className="text-sm text-[var(--foreground-muted)]">Preparando tu experiencia…</p>
+        </Card>
+      </AuthShell>
     );
   }
 
   if (formQuery.isError || !form) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 text-center text-[var(--foreground-muted)]">
-        Este formulario no está disponible.
-      </div>
+      <AuthShell headline="Formulario no disponible" tagline="El enlace puede haber expirado.">
+        <Card variant="elevated">
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Este formulario no está disponible en este momento.
+          </p>
+        </Card>
+      </AuthShell>
     );
   }
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background)] p-[var(--spacing-xl)] text-center shadow-sm">
-          <p className="text-lg font-bold text-[var(--foreground)]">¡Gracias!</p>
-          <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-            Recibimos tu mensaje. Te contactaremos pronto.
+      <AuthShell headline="¡Gracias!" tagline="Recibimos tu mensaje. Te contactaremos pronto.">
+        <Card variant="accent" title="Envío confirmado">
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Tu información llegó correctamente al equipo.
           </p>
-        </div>
-      </div>
+        </Card>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--background-muted)] px-4 py-10">
-      <div className="w-full max-w-md rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background)] p-[var(--spacing-lg)] shadow-sm">
-        <h1 className="text-xl font-black text-[var(--foreground)]">{form.name}</h1>
-        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          Déjanos tus datos y te respondemos.
-        </p>
-
+    <AuthShell headline={form.name} tagline="Déjanos tus datos y te respondemos.">
+      <Card variant="elevated" title="Completa el formulario">
         <form
-          className="mt-6 space-y-4"
+          className="flex flex-col gap-[var(--spacing-md)]"
           onSubmit={(event) => {
             event.preventDefault();
             const data = new FormData(event.currentTarget);
@@ -99,27 +120,36 @@ export default function PublicCapturePage() {
           }}
         >
           {form.fields.map((field) => (
-            <label key={field.name} className="block text-sm font-medium text-[var(--foreground)]">
-              {field.label}
-              {field.required ? ' *' : ''}
-              <FieldInput field={field} />
-            </label>
+            <CaptureField
+              key={field.name}
+              field={field}
+              primaryColor={
+                useBrandStyle ? undefined : (form.style?.primaryColor as string | undefined)
+              }
+            />
           ))}
 
           <Button
             type="submit"
+            variant={useBrandStyle ? 'brand' : 'default'}
             className="w-full"
             disabled={submitMutation.isPending}
-            style={{ backgroundColor: primaryColor }}
+            style={
+              useBrandStyle
+                ? undefined
+                : { backgroundColor: form.style?.primaryColor as string | undefined }
+            }
           >
             {submitMutation.isPending ? 'Enviando...' : 'Enviar'}
           </Button>
 
           {submitMutation.isError && (
-            <p className="text-sm text-[var(--destructive)]">No se pudo enviar. Intenta de nuevo.</p>
+            <p className="text-sm text-[var(--destructive)]">
+              No se pudo enviar. Intenta de nuevo.
+            </p>
           )}
         </form>
-      </div>
-    </div>
+      </Card>
+    </AuthShell>
   );
 }

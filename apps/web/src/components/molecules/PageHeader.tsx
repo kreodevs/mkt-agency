@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 export interface PageHeaderProps {
   title: ReactNode;
   description?: ReactNode;
+  eyebrow?: ReactNode;
   breadcrumbs?: ReactNode;
   actions?: ReactNode;
   className?: string;
@@ -12,6 +13,7 @@ export interface PageHeaderProps {
 export const PageHeader = ({
   title,
   description,
+  eyebrow,
   breadcrumbs,
   actions,
   className,
@@ -24,9 +26,12 @@ export const PageHeader = ({
   >
     <div className="flex flex-col gap-1.5">
       {breadcrumbs && <div className="mb-[var(--spacing-sm)]">{breadcrumbs}</div>}
-      <h1 className="type-ui-sans-semibold text-[var(--foreground)]">
-        {title}
-      </h1>
+      {eyebrow && (
+        <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+          {eyebrow}
+        </p>
+      )}
+      <h1 className="type-ui-sans-semibold text-[var(--foreground)]">{title}</h1>
       {description && (
         <p className="type-body-serif-s mt-[var(--spacing-xs)] max-w-2xl text-[var(--foreground-muted)]">
           {description}

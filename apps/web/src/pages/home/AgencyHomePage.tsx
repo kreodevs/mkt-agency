@@ -19,6 +19,7 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Card } from '@/components/molecules/Card';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { StatsCard } from '@/components/molecules/StatsCard';
+import { InboxPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { Button } from '@/components/atoms/Button';
@@ -70,9 +71,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 const QUICK_ACTION_TONES = [
   'border-[var(--primary)]/20 bg-[var(--primary)]/10 text-[var(--primary)]',
-  'border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]',
+  'border-[var(--brand)]/25 bg-[var(--brand-muted)] text-[var(--brand)]',
   'border-[var(--warning)]/20 bg-[var(--warning)]/10 text-[var(--warning)]',
-  'border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]',
+  'border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success)]',
 ] as const;
 
 function getStatusLabel(status: string): string {
@@ -213,12 +214,8 @@ export default function AgencyHomePage() {
   if (homeQuery.isLoading || profileQuery.isLoading) {
     return (
       <DashboardShell>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
-            <div className="mb-[var(--spacing-md)] text-4xl">🏢</div>
-            <p className="text-[var(--foreground-muted)]">Cargando tu agencia...</p>
-          </div>
-        </div>
+        <PageHeader eyebrow="Resumen" title="Tu agencia" description="Cargando métricas…" />
+        <InboxPageSkeleton />
       </DashboardShell>
     );
   }
@@ -255,6 +252,7 @@ export default function AgencyHomePage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={isSoho ? 'Copiloto SOHO' : 'Growth'}
         title={isSoho ? 'Resumen' : 'Mi agencia'}
         description={
           isSoho

@@ -139,6 +139,7 @@ export default function ProductListPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={sohoMode ? 'Oferta comercial' : 'Catálogo'}
         title={sohoMode ? 'Mi producto' : 'Mis productos'}
         description={
           sohoMode
@@ -146,7 +147,7 @@ export default function ProductListPage() {
             : 'Centro de tu catálogo: las campañas se crean sobre lo que vendes.'
         }
         actions={
-          <Button className="gap-2" onClick={() => navigate('/products/new')}>
+          <Button variant="brand" className="gap-2" onClick={() => navigate('/products/new')}>
             <Plus className="h-4 w-4" />
             {sohoMode ? 'Agregar producto' : 'Nuevo producto'}
           </Button>
@@ -169,7 +170,7 @@ export default function ProductListPage() {
             <ProductListCard key={product.id} product={product} sohoMode={sohoMode} />
           ))}
           {sohoMode && items.length === 1 ? (
-            <Card title="¿Vendes más de una cosa?" subtitle="Opcional">
+            <Card variant="elevated" title="¿Vendes más de una cosa?" subtitle="Opcional">
               <p className="mb-[var(--spacing-md)] text-sm text-[var(--foreground-muted)]">
                 Puedes agregar otro producto o servicio, o dejar que la IA analice tu web.
               </p>
@@ -189,7 +190,7 @@ export default function ProductListPage() {
           ) : null}
         </div>
       ) : (
-        <Card title="Catálogo activo" subtitle={`${items.length} producto(s)`}>
+        <Card variant="elevated" title="Catálogo activo" subtitle={`${items.length} producto(s)`}>
           <DataTable
             columns={columns}
             data={items}

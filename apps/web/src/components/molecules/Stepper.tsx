@@ -43,7 +43,7 @@ export const Stepper = forwardRef<HTMLDivElement, StepperProps>(
                     className={cn(
                       'h-full transition-all duration-500',
                       isCompleted
-                        ? 'bg-[var(--primary)] opacity-70'
+                        ? 'bg-[var(--brand)] opacity-90'
                         : 'bg-[var(--border)]',
                     )}
                   />
@@ -54,9 +54,9 @@ export const Stepper = forwardRef<HTMLDivElement, StepperProps>(
                     className={cn(
                       'relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-[var(--background)] text-sm font-bold transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
                       isActive &&
-                        'scale-110 border-[var(--primary)] text-[var(--primary)] shadow-lg ring-4 ring-[var(--primary)]/10',
+                        'scale-110 border-[var(--brand)] text-[var(--brand)] shadow-lg ring-4 ring-[var(--brand)]/15',
                       isCompleted &&
-                        'border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]',
+                        'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]',
                       isPending &&
                         'border-[var(--border)] text-[var(--foreground-muted)]',
                     )}

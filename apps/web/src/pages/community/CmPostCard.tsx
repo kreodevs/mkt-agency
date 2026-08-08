@@ -8,6 +8,7 @@ import {
   ImageIcon,
   Target,
 } from 'lucide-react';
+import { Card } from '@/components/molecules/Card';
 import { PLATFORM_ICONS, PLATFORM_COLORS, PLATFORM_LABELS } from './community-manager.constants';
 import { PLATFORM_ICON_TONE } from '@/lib/semantic-ui';
 import { CONTENT_VISUAL_FORMAT_LABELS } from '@/lib/visual-format';
@@ -33,8 +34,7 @@ export function CmPostCard({ post }: { post: SocialPost }) {
   const colorClass = PLATFORM_COLORS[post.platform] ?? PLATFORM_ICON_TONE;
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--border)] transition-colors hover:border-[var(--primary)]">
-      <div className="p-4">
+    <Card variant="elevated" className="transition-colors hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--card-border))]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0 flex-1">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] ${colorClass}`}>
@@ -142,8 +142,7 @@ export function CmPostCard({ post }: { post: SocialPost }) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </Card>
   );
 }
 

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle2,
   Loader2,
+  Package,
   Sparkles,
   Target,
   UserCircle2,
@@ -10,6 +11,8 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
+import { Stepper } from '@/components/molecules/Stepper';
+import { Progress } from '@/components/molecules/Progress';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
@@ -17,6 +20,23 @@ import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPane
 
 interface CopilotStatusPanelProps {
   productId?: string;
+}
+
+function pipelineActiveIndex(status: {
+  onboardingCompleted: boolean;
+  cmCharacterReady: boolean;
+  competitorsCount: number;
+  analysisStatus: string;
+}): number {
+  if (!status.onboardingCompleted) return 0;
+  if (!status.cmCharacterReady) return 1;
+  if (status.competitorsCount < 2) return 2;
+  if (status.analysisStatus !== 'completed') return 3;
+  return 4;
+}
+
+function pipelineProgressPercent(activeIndex: number): number {
+  return Math.round((activeIndex / 4) * 100);
 }
 
 export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
@@ -69,7 +89,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
   if (statusQuery.isLoading) {
     return (
-      <Card title="Tu copiloto" subtitle="Estado del pipeline">
+      <Card variant="accent" title="Tu copiloto" subtitle="Estado del pipeline">
         <p className="text-sm text-[var(--foreground-muted)]">Cargando estado...</p>
       </Card>
     );
@@ -77,98 +97,127 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
   if (!status) return null;
 
+  const activeIndex = pipelineActiveIndex(status);
+  const progress = pipelineProgressPercent(activeIndex);
+
   return (
     <div className="space-y-[var(--spacing-md)]">
-    <Card
-      title="Tu copiloto"
-      subtitle={`Producto: ${status.productName}`}
-    >
-      <div className="space-y-[var(--spacing-md)]">
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--secondary)]/30 p-[var(--spacing-md)]">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-            Siguiente paso
-          </p>
-          <p className="mt-[var(--spacing-xs)] text-sm font-medium text-[var(--foreground)]">{status.nextStep}</p>
-        </div>
+      <Card
+        variant="accent"
+        title="Tu copiloto"
+        subtitle={`Producto: ${status.productName}`}
+      >
+        <div className="space-y-[var(--spacing-md)]">
+          <div className="space-y-[var(--spacing-sm)]">
+            <div className="flex items-center justify-between gap-[var(--spacing-sm)]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+                Progreso del pipeline
+              </p>
+              <span className="text-xs font-semibold text-[var(--brand)]">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
 
-        <ul className="space-y-[var(--spacing-sm)] text-sm">
-          <PipelineRow
-            icon={CheckCircle2}
-            label="Producto listo"
-            done={status.onboardingCompleted}
-            href="/products"
+          <Stepper
+            readOnly
+            activeIndex={activeIndex}
+            className="py-[var(--spacing-sm)]"
+            model={[
+              { label: 'Producto', description: 'Onboarding', icon: <Package className="h-4 w-4" /> },
+              { label: 'CMs', description: 'Retrato + preview', icon: <UserCircle2 className="h-4 w-4" /> },
+              { label: 'Rival', description: 'Competidores', icon: <Users className="h-4 w-4" /> },
+              { label: 'Intel', description: 'Análisis', icon: <Target className="h-4 w-4" /> },
+            ]}
           />
-          <PipelineRow
-            icon={UserCircle2}
-            label="CMs virtuales"
-            done={status.cmCharacterReady}
-            href={status.cmCharacterReady ? undefined : '/#cm-characters'}
-            detail={
-              status.cmCharactersTotalCount > 0
-                ? `${status.cmCharactersReadyCount}/${status.cmCharactersTotalCount} listas`
-                : status.cmCharacterStatus
-            }
-          />
-          <PipelineRow
-            icon={Users}
-            label={`Competidores (${status.competitorsCount})`}
-            done={status.competitorsCount >= 2}
-            href={status.competitorsCount >= 2 ? undefined : '/agents/competitor-intel'}
-          />
-          <PipelineRow
-            icon={Target}
-            label="Análisis de competencia"
-            done={status.analysisStatus === 'completed'}
-            href={
-              status.analysisStatus === 'completed' || analysisInFlight
-                ? undefined
-                : '/agents/competitor-intel'
-            }
-            detail={
-              analysisInFlight
-                ? 'En progreso...'
-                : status.analysisUpdatedAt
-                  ? `Actualizado ${new Date(status.analysisUpdatedAt).toLocaleDateString('es-MX')}`
-                  : 'Pendiente'
-            }
-          />
-        </ul>
 
-        {status.prepareBlockedReason && (
-          <p className="text-xs text-[var(--warning)]">{status.prepareBlockedReason}</p>
-        )}
+          <div className="rounded-[var(--radius-md)] border border-[var(--brand)]/20 bg-[var(--brand-muted)]/60 p-[var(--spacing-md)]">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+              Siguiente paso
+            </p>
+            <p className="mt-[var(--spacing-xs)] text-sm font-medium text-[var(--foreground)]">
+              {status.nextStep}
+            </p>
+          </div>
 
-        <Button
-          type="button"
-          className="w-full"
-          disabled={!status.canPrepareWeek || isPreparing || analysisInFlight}
-          onClick={() => prepareMutation.mutate()}
-        >
-          {isPreparing || analysisInFlight ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Preparando tu semana...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Preparar mi semana
-            </>
+          <ul className="space-y-[var(--spacing-sm)] text-sm">
+            <PipelineRow
+              icon={CheckCircle2}
+              label="Producto listo"
+              done={status.onboardingCompleted}
+              href="/products"
+            />
+            <PipelineRow
+              icon={UserCircle2}
+              label="CMs virtuales"
+              done={status.cmCharacterReady}
+              href={status.cmCharacterReady ? undefined : '/#cm-characters'}
+              detail={
+                status.cmCharactersTotalCount > 0
+                  ? `${status.cmCharactersReadyCount}/${status.cmCharactersTotalCount} listas`
+                  : status.cmCharacterStatus
+              }
+            />
+            <PipelineRow
+              icon={Users}
+              label={`Competidores (${status.competitorsCount})`}
+              done={status.competitorsCount >= 2}
+              href={status.competitorsCount >= 2 ? undefined : '/agents/competitor-intel'}
+            />
+            <PipelineRow
+              icon={Target}
+              label="Análisis de competencia"
+              done={status.analysisStatus === 'completed'}
+              href={
+                status.analysisStatus === 'completed' || analysisInFlight
+                  ? undefined
+                  : '/agents/competitor-intel'
+              }
+              detail={
+                analysisInFlight
+                  ? 'En progreso...'
+                  : status.analysisUpdatedAt
+                    ? `Actualizado ${new Date(status.analysisUpdatedAt).toLocaleDateString('es-MX')}`
+                    : 'Pendiente'
+              }
+            />
+          </ul>
+
+          {status.prepareBlockedReason && (
+            <p className="text-xs text-[var(--warning)]">{status.prepareBlockedReason}</p>
           )}
-        </Button>
 
-        <p className="text-xs text-[var(--foreground-subtle)]">
-          El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
-          solo copies y pegues.
-        </p>
-      </div>
-    </Card>
+          <Button
+            type="button"
+            variant="brand"
+            className="w-full"
+            disabled={!status.canPrepareWeek || isPreparing || analysisInFlight}
+            onClick={() => prepareMutation.mutate()}
+          >
+            {isPreparing || analysisInFlight ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Preparando tu semana...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Preparar mi semana
+              </>
+            )}
+          </Button>
 
-    {status.onboardingCompleted && (
-      <div id="cm-characters">
-        <CmCharacterSetupPanel productId={productId ?? status.productId} />
-      </div>
-    )}
+          <p className="text-xs text-[var(--foreground-subtle)]">
+            El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
+            solo copies y pegues.
+          </p>
+        </div>
+      </Card>
+
+      {status.onboardingCompleted && (
+        <div id="cm-characters">
+          <CmCharacterSetupPanel productId={productId ?? status.productId} />
+        </div>
+      )}
     </div>
   );
 }
@@ -205,7 +254,10 @@ function PipelineRow({
   if (href && !done) {
     return (
       <li>
-        <Link to={href} className="hover:text-[var(--primary)]">
+        <Link
+          to={href}
+          className="block rounded-[var(--radius-sm)] px-[var(--spacing-xs)] py-[var(--spacing-xxs)] transition-colors hover:bg-[var(--brand-muted)] hover:text-[var(--brand)]"
+        >
           {content}
         </Link>
       </li>

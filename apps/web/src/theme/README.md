@@ -14,6 +14,14 @@ Sistema visual definido en `design.md`, implementado en `vars.css` y `tailwind.c
 | cloud-dark | `--color-cloud-dark` | `--foreground-subtle`, captions |
 | cloud-medium | `--color-cloud-medium` | `--border` |
 | oat | `--color-oat` | `--border-hover`, acentos footer |
+| brand | `--color-brand` | `--brand`, CTAs destacados, progreso, acentos SOHO |
+| brand-muted | — | `--brand-muted`, fondos suaves de acento |
+
+## Marca SOHO (2026)
+
+- `--gradient-brand`, `--gradient-hero`: gradientes terracotta para CTAs y héroes
+- `--background-muted`: superficies secundarias (antes indefinido en varias pantallas)
+- Utilidades globales en `index.css`: `.page-hero`, `.brand-gradient-text`, `.kreo-surface-elevated`
 
 ## Tipografía
 

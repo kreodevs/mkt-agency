@@ -197,6 +197,7 @@ export default function PublicationInboxPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={sohoMode ? 'Modo copiloto' : 'Bandeja editorial'}
         title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
         description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
         actions={
@@ -222,6 +223,23 @@ export default function PublicationInboxPage() {
           </div>
         }
       />
+
+      {sohoMode && (
+        <div className="page-hero mb-[var(--spacing-lg)]">
+          <div className="relative flex flex-col gap-[var(--spacing-sm)] pl-[var(--spacing-md)]">
+            <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+              Flujo diario
+            </p>
+            <p className="type-ui-sans-medium max-w-2xl text-[var(--foreground)]">
+              Prepara la semana con IA, aprueba borradores y publica en tus redes con un clic.
+            </p>
+            <p className="type-body-serif-s max-w-xl text-[var(--foreground-muted)]">
+              El copiloto descubre competidores, genera copy y visuales; tú mantienes el control
+              editorial antes de publicar.
+            </p>
+          </div>
+        </div>
+      )}
 
       {advancedNav && !advancedGuideDismissed && (
         <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-[var(--spacing-md)]">

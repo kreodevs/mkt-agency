@@ -38,7 +38,7 @@ export default function LoginPage() {
       headline="Iniciar sesión"
       tagline="Tu copiloto de marketing — aprueba, publica y mide resultados."
     >
-      <Card title="Accede a tu cuenta" className="w-full shadow-sm">
+      <Card title="Accede a tu cuenta" variant="elevated" className="w-full">
         <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
           <InputText
             label="Email"

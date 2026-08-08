@@ -15,12 +15,13 @@ const iconToneClass: Record<NonNullable<StatsCardProps['iconTone']>, string> = {
   primary: 'border-[var(--primary)]/20 bg-[var(--primary)]/10 text-[var(--primary)]',
   success: 'border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success)]',
   warning: 'border-[var(--warning)]/20 bg-[var(--warning)]/10 text-[var(--warning)]',
-  accent: 'border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]',
+  accent: 'border-[var(--brand)]/25 bg-[var(--brand-muted)] text-[var(--brand)]',
 };
 
 export const StatsCard = forwardRef<HTMLDivElement, StatsCardProps>(
   ({ title, value, description, icon, iconTone = 'primary', className }, ref) => (
-    <Card ref={ref} className={cn('relative overflow-hidden', className)}>
+    <Card ref={ref} variant="elevated" className={cn('relative overflow-hidden', className)}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[var(--gradient-brand)] opacity-80" />
       <div className="flex items-start justify-between gap-[var(--spacing-md)]">
         <div className="space-y-[var(--spacing-xs)]">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
