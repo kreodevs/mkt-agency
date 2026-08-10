@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { QUEUE_APPROVAL_REMINDER } from '../../../shared/queue/queue.constants';
 import { TenantEntity } from '../../tenant/infrastructure/typeorm/tenant.entity';
 import { AGENCY_NOTIFICATION_TYPES } from '../domain/publication-inbox.constants';
+import { OwnerNotificationService } from '../services/owner-notification.service';
 import { PublicationInboxService } from '../publication-inbox.service';
 
 export interface ApprovalReminderJobData {
@@ -23,6 +24,7 @@ export class ApprovalReminderWorkerService implements OnModuleInit {
     @InjectQueue(QUEUE_APPROVAL_REMINDER)
     private readonly queue: Queue<ApprovalReminderJobData>,
     private readonly inboxService: PublicationInboxService,
+    private readonly ownerNotifications: OwnerNotificationService,
   ) {}
 
   onModuleInit(): void {
@@ -78,7 +80,10 @@ export class ApprovalReminderWorkerService implements OnModuleInit {
           dedupKey: `approval-reminder-${today}`,
         });
 
-        if (notification) sent += 1;
+        if (notification) {
+          sent += 1;
+          await this.ownerNotifications.notifyApprovalReminder(tenant.id, pending.length);
+        }
       } catch (error) {
         this.logger.warn(`Approval reminder failed for tenant ${tenant.id}`, error);
       }
@@ -116,7 +121,10 @@ export class ApprovalReminderWorkerService implements OnModuleInit {
           dedupKey: `publish-reminder-${today}`,
         });
 
-        if (notification) sent += 1;
+        if (notification) {
+          sent += 1;
+          await this.ownerNotifications.notifyPublishReminder(tenant.id, readyToday.length);
+        }
       } catch (error) {
         this.logger.warn(`Publish reminder failed for tenant ${tenant.id}`, error);
       }

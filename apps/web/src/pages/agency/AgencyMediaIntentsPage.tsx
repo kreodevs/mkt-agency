@@ -8,6 +8,7 @@ import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import {
   approveMediaIntent,
+  exportMediaIntentKit,
   launchMediaIntentManual,
   listMediaIntents,
 } from '@/services/paid-media';
@@ -50,6 +51,22 @@ export default function AgencyMediaIntentsPage() {
       toast.error(error instanceof ApiError ? error.message : 'Error al registrar lanzamiento');
     },
   });
+
+  const downloadKit = async (intentId: string) => {
+    try {
+      const kit = await exportMediaIntentKit(intentId);
+      const blob = new Blob([kit.markdown], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = kit.filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      toast.success('Kit de pauta descargado');
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo descargar el kit');
+    }
+  };
 
   return (
     <DashboardShell>
@@ -127,6 +144,13 @@ export default function AgencyMediaIntentsPage() {
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void downloadKit(intent.id)}
+                  >
+                    Descargar kit
+                  </Button>
                   {intent.status === 'pending_approval' && (
                     <Button
                       size="sm"

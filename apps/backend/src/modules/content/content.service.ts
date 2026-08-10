@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -27,11 +28,14 @@ import {
 import { ContentApprovalEntity } from './infrastructure/typeorm/content-approval.entity';
 import { ContentVersionEntity } from './infrastructure/typeorm/content-version.entity';
 import { ContentEntity } from './infrastructure/typeorm/content.entity';
+import { KnowledgeIndexService } from '../knowledge/services/knowledge-index.service';
 import { ContentEventSourcingService } from './services/content-event-sourcing.service';
 import { DigitalSignatureService } from './services/digital-signature.service';
 
 @Injectable()
 export class ContentService {
+  private readonly logger = new Logger(ContentService.name);
+
   constructor(
     @InjectRepository(ContentEntity)
     private readonly contents: Repository<ContentEntity>,
@@ -45,6 +49,7 @@ export class ContentService {
     private readonly dataSource: DataSource,
     private readonly signatureService: DigitalSignatureService,
     private readonly eventSourcing: ContentEventSourcingService,
+    private readonly knowledgeIndex: KnowledgeIndexService,
   ) {}
 
   async list(
@@ -458,6 +463,18 @@ export class ContentService {
           status: 'pending',
         }),
       );
+
+      void this.knowledgeIndex
+        .indexApprovedContent(
+          tenantId,
+          contentId,
+          version.title,
+          version.body,
+          content.productId,
+        )
+        .catch((error) => {
+          this.logger.warn(`Knowledge index skipped for content ${contentId}`, error);
+        });
 
       return {
         contentId,

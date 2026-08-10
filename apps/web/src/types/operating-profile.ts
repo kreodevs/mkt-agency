@@ -73,6 +73,36 @@ export interface CreateAgencyPlanPayload {
   channels?: string[];
 }
 
+export interface ExecutiveSuggestion {
+  id: string;
+  action: string;
+  rationale: string;
+  priority: 'high' | 'medium' | 'low';
+  requiresApproval: true;
+}
+
+export interface ExecutiveWeeklyReport {
+  periodDays: number;
+  generatedAt: string;
+  headline: string;
+  executiveSummary: string;
+  keyMetrics: Record<string, string | number>;
+  paidMediaInsight: string | null;
+  suggestions: ExecutiveSuggestion[];
+  fallback?: boolean;
+}
+
+export interface CampaignTemplateSuggestion {
+  templateId: string;
+  name: string;
+  description: string | null;
+  objective: string | null;
+  platforms: string[];
+  industry: string;
+  copilotHint: string;
+  matchScore: number;
+}
+
 export interface LeadPerformanceSummary {
   periodDays: number;
   totalLeads: number;

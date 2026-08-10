@@ -15,6 +15,7 @@ describe('ContentService — validation & routing', () => {
       {} as any, // dataSource
       {} as any, // signatureService
       {} as any, // eventSourcing
+      {} as any, // knowledgeIndex
     );
   });
 

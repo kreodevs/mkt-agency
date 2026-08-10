@@ -63,6 +63,8 @@ export interface SocialCopyContext {
   cmCharacterReady?: boolean;
   /** CMs listas que el LLM puede elegir por post. */
   cmCharacters?: CmCharacterLlmOption[];
+  /** Fragmentos RAG de marca (brief, posts aprobados, media kit). */
+  knowledgeContext?: string | null;
 }
 
 export interface SocialCopyAdapterPort {

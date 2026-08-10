@@ -13,6 +13,7 @@ Media Buyer sin APIs de Meta/Google. Genera **intenciones de campaña** para lan
 | Método | Ruta |
 |--------|------|
 | GET | `/api/v1/agency/media-intents` |
+| GET | `/api/v1/agency/media-intents/:id/export-kit` |
 | POST | `/api/v1/agency/media-intents/:id/approve` |
 | POST | `/api/v1/agency/media-intents/:id/launch-manual` |
 | POST | `/api/v1/agency/media-intents/process-pack/:packId` |

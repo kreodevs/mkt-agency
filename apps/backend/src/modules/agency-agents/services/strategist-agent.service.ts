@@ -12,6 +12,7 @@ import type { ContentBriefPayload } from '../domain/handoff/creative-pack.types'
 import { AgentPlanEntity } from '../infrastructure/typeorm/agent-plan.entity';
 import { AgentEventService } from './agent-event.service';
 import { AgentRole } from '../domain/agent-role.enum';
+import { KnowledgeRetrievalService } from '../../knowledge/services/knowledge-retrieval.service';
 import { CreativeAgentService } from './creative-agent.service';
 import { OperatingProfileService } from './operating-profile.service';
 import type { CreateAgencyPlanDto } from '../dto/agency-plan.request.dto';
@@ -25,6 +26,7 @@ export class StrategistAgentService {
     private readonly agentEvents: AgentEventService,
     private readonly llm: LlmClient,
     private readonly creativeAgent: CreativeAgentService,
+    private readonly knowledgeRetrieval: KnowledgeRetrievalService,
   ) {}
 
   async createPlan(
@@ -161,6 +163,12 @@ export class StrategistAgentService {
         : 'Todos los budgetPercent deben ser 0 (sin pauta pagada).');
 
     try {
+      const knowledgeContext = await this.knowledgeRetrieval.formatForPrompt(
+        tenantId,
+        [dto.objective, dto.metric, dto.target].filter(Boolean).join(' '),
+        dto.productId,
+      );
+
       const result = await this.llm.chatJson<StrategistPlanPayload>(
         systemPrompt,
         JSON.stringify({
@@ -170,6 +178,7 @@ export class StrategistAgentService {
           horizon: dto.horizon ?? '30d',
           includeBudget,
           channels: dto.channels ?? [],
+          knowledgeContext,
         }),
         { taskType: 'campaign_strategy', tenantId },
       );

@@ -18,6 +18,12 @@ Capa modular de agentes de agencia con perfiles operativos **SOHO** vs **Growth*
 | PATCH | `/api/v1/tenant/operating-profile` | Actualizar perfil / presupuesto |
 | GET | `/api/v1/agency/events` | Log de eventos inter-agente |
 | GET | `/api/v1/agency/performance` | Resumen leads (Analytics lite) |
+| GET | `/api/v1/agency/performance/paid` | Cruce gasto CSV + leads atribuidos (CPL) |
+| GET | `/api/v1/agency/executive-report` | Último reporte ejecutivo semanal |
+| POST | `/api/v1/agency/executive-report/generate` | Generar reporte + email al dueño |
+| GET | `/api/v1/agency/campaign-template-suggestions` | Plantillas por industria (copiloto) |
+| GET | `/api/v1/agency/performance/imports` | Historial de imports CSV |
+| POST | `/api/v1/agency/performance/import` | Subir CSV Meta/Google Ads |
 | GET | `/api/v1/agency/anomalies` | Alertas semanales |
 | GET | `/api/v1/agency/attribution` | MTA lite (`first_touch` / `last_touch`) |
 | GET | `/api/v1/agency/creative-packs` | Packs persistidos |
@@ -48,10 +54,11 @@ Capa modular de agentes de agencia con perfiles operativos **SOHO** vs **Growth*
 
 | Cola | Horario | Acción |
 |------|---------|--------|
-| `weekly-balance` | Lunes 07:00 | Analytics → PerformanceReport + anomalías; Strategist → WeeklyBalance (Growth) |
+| `weekly-balance` | Lunes 07:00 | Analytics → PerformanceReport + anomalías; reporte ejecutivo LLM + email; Strategist → WeeklyBalance (Growth) |
 
 ## Agentes adicionales
 
 - `CreativeAgentService` — genera `CreativePack`, persiste en DB y dispara Media Buyer stub
 - `AnalyticsAgentService.detectAnomalies` — caídas/spikes de leads sin APIs de ads
 - `AnalyticsAgentService.getAttributionReport` — first/last touch desde metadata de leads
+- `knowledge/` — RAG ligero por tenant (brief, posts aprobados, media kit) → prompts CM/Strategist/Creative

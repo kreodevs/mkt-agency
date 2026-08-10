@@ -24,6 +24,7 @@ describe('GenerationContextFacade', () => {
       { listEntitiesForProduct: jest.fn().mockResolvedValue([]), buildMediaKitContextForLlm: jest.fn() } as any, // mediaKitService
       { buildLibrarySummaryForLlm: jest.fn().mockResolvedValue([]) } as any, // assetFolderService
       { listReadyForLlm: jest.fn().mockResolvedValue([]), hasAnyReadyCharacter: jest.fn().mockResolvedValue(false) } as any, // cmCharacter
+      { retrieveForPrompt: jest.fn().mockResolvedValue('') } as any, // knowledgeRetrieval
     );
   });
 

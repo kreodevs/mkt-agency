@@ -3,8 +3,9 @@
 | Ruta | Componente | Perfil |
 |------|------------|--------|
 | `/agency/strategy` | `AgencyStrategyPage` | Growth |
-| `/agency/activity` | `AgencyActivityPage` | SOHO + Growth |
-| `/agency/media-intents` | `AgencyMediaIntentsPage` | Growth con pauta (`growth_paid`) |
+| `/agency/activity` | `AgencyActivityPage` | SOHO + Growth — eventos, reporte ejecutivo, leads |
+| `/agency/performance` | `AgencyPerformancePage` | SOHO + Growth — import CSV ads + CPL cruzado |
+| `/agency/media-intents` | `AgencyMediaIntentsPage` | Growth con pauta (`growth_paid`) — aprobar, descargar kit `.md`, marcar lanzamiento manual |
 
 Eventos en `/agency/activity` enlazan al artefacto según tipo (`lib/agent-event-navigation.ts`).
 

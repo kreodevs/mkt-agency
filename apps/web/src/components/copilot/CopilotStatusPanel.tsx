@@ -210,6 +210,27 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
             solo copies y pegues.
           </p>
+
+          {status.campaignTemplateSuggestions?.length > 0 && (
+            <div className="rounded-[var(--radius-sm)] border border-[var(--border)] p-[var(--spacing-sm)]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+                Plantillas sugeridas para tu industria
+              </p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {status.campaignTemplateSuggestions.map((template) => (
+                  <li key={template.templateId}>
+                    <Link
+                      to={`/campaigns/new?templateId=${template.templateId}`}
+                      className="font-medium text-[var(--brand)] hover:underline"
+                    >
+                      {template.name}
+                    </Link>
+                    <p className="text-xs text-[var(--foreground-muted)]">{template.copilotHint}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </Card>
 

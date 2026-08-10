@@ -5,6 +5,7 @@ import { LeadEntity } from '../../crm/infrastructure/typeorm/lead.entity';
 import { AgentRole } from '../domain/agent-role.enum';
 import { AgentEventService } from './agent-event.service';
 import { OperatingProfileService } from './operating-profile.service';
+import { AdPerformanceImportService } from './ad-performance-import.service';
 
 export interface LeadPerformanceSummary {
   periodDays: number;
@@ -29,6 +30,25 @@ export interface AttributionReport {
   byChannel: Array<{ channel: string; count: number; share: number }>;
 }
 
+export interface PaidPerformanceCrossSummary {
+  periodDays: number;
+  ads: {
+    spend: number;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    importCount: number;
+  };
+  leads: {
+    attributedPaidLeads: number;
+    totalLeads: number;
+  };
+  metrics: {
+    costPerLead: number | null;
+    costPerClick: number | null;
+  };
+}
+
 @Injectable()
 export class AnalyticsAgentService {
   constructor(
@@ -36,6 +56,7 @@ export class AnalyticsAgentService {
     private readonly leads: Repository<LeadEntity>,
     private readonly agentEvents: AgentEventService,
     private readonly operatingProfile: OperatingProfileService,
+    private readonly adImports: AdPerformanceImportService,
   ) {}
 
   async getLeadPerformanceSummary(
@@ -175,6 +196,83 @@ export class AnalyticsAgentService {
       .sort((a, b) => b.count - a.count);
 
     return { model, periodDays, totalLeads, byChannel };
+  }
+
+  async getPaidPerformanceCrossSummary(
+    tenantId: string,
+    productId?: string,
+    periodDays = 30,
+  ): Promise<PaidPerformanceCrossSummary> {
+    const since = new Date();
+    since.setDate(since.getDate() - periodDays);
+
+    const [adsTotals, leadRows] = await Promise.all([
+      this.adImports.aggregateTotalsSince(tenantId, since, productId),
+      this.fetchLeadsSince(tenantId, since, productId),
+    ]);
+
+    const attributedPaidLeads = leadRows.filter((lead) =>
+      this.isPaidAttributedLead(lead.metadata as Record<string, unknown> | null),
+    ).length;
+
+    const costPerLead =
+      attributedPaidLeads > 0 && adsTotals.spend > 0
+        ? Math.round((adsTotals.spend / attributedPaidLeads) * 100) / 100
+        : null;
+    const costPerClick =
+      adsTotals.clicks > 0 && adsTotals.spend > 0
+        ? Math.round((adsTotals.spend / adsTotals.clicks) * 100) / 100
+        : null;
+
+    return {
+      periodDays,
+      ads: adsTotals,
+      leads: {
+        attributedPaidLeads,
+        totalLeads: leadRows.length,
+      },
+      metrics: {
+        costPerLead,
+        costPerClick,
+      },
+    };
+  }
+
+  private async fetchLeadsSince(
+    tenantId: string,
+    since: Date,
+    productId?: string,
+  ): Promise<LeadEntity[]> {
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :since', { since });
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    return qb.getMany();
+  }
+
+  private isPaidAttributedLead(metadata: Record<string, unknown> | null): boolean {
+    if (!metadata) return false;
+
+    const medium = String(metadata.utm_medium ?? metadata.utmMedium ?? '').toLowerCase();
+    const paidMediums = ['cpc', 'ppc', 'paid', 'paid_social', 'paidsocial'];
+    if (paidMediums.includes(medium)) {
+      return true;
+    }
+
+    const source = String(
+      metadata.utm_source ?? metadata.utmSource ?? metadata.source ?? '',
+    ).toLowerCase();
+    const paidSources = ['facebook', 'instagram', 'meta', 'google', 'google_ads', 'fb', 'ig'];
+    if (!paidSources.includes(source)) {
+      return false;
+    }
+
+    return medium !== 'organic' && medium !== 'referral' && medium !== 'social';
   }
 
   private resolveAttributionChannel(

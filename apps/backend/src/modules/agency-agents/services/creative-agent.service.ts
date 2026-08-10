@@ -7,6 +7,7 @@ import { AgentRole } from '../domain/agent-role.enum';
 import type { CreativePackPayload } from '../domain/handoff/creative-pack.types';
 import type { ContentBriefPayload } from '../domain/handoff/creative-pack.types';
 import { CreativePackEntity } from '../infrastructure/typeorm/creative-pack.entity';
+import { KnowledgeRetrievalService } from '../../knowledge/services/knowledge-retrieval.service';
 import { AgentEventService } from './agent-event.service';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class CreativeAgentService {
     private readonly packs: Repository<CreativePackEntity>,
     @Inject(forwardRef(() => MediaBuyerStubService))
     private readonly mediaBuyer: MediaBuyerStubService,
+    private readonly knowledgeRetrieval: KnowledgeRetrievalService,
   ) {}
 
   async generateFromBrief(
@@ -80,9 +82,15 @@ export class CreativeAgentService {
     const platforms = brief.platforms.length > 0 ? brief.platforms : ['instagram'];
 
     try {
+      const knowledgeContext = await this.knowledgeRetrieval.formatForPrompt(
+        tenantId,
+        [brief.objective, ...(brief.topics ?? [])].filter(Boolean).join(' '),
+        brief.productId,
+      );
+
       const result = await this.llm.chatJson<CreativePackPayload>(
         'Eres Director Creativo. Responde JSON: {"hypotheses":[{"id","painPoint","angle","expectedLift"}],"adCopies":[{"hypothesisId","platform","format","headline","primaryText","cta","visualDirection"}]}. Mínimo 2 hipótesis y 1 copy por plataforma.',
-        JSON.stringify({ brief, platforms }),
+        JSON.stringify({ brief, platforms, knowledgeContext }),
         { taskType: 'social_copy', tenantId },
       );
       if (Array.isArray(result?.hypotheses) && Array.isArray(result?.adCopies)) {

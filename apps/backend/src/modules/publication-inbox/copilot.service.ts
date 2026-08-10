@@ -7,6 +7,7 @@ import { CmCharacterService } from '../community-manager/cm-character.service';
 import { ProductService } from '../product/product.service';
 import { isProductOnboardingCompleted } from '../product/domain/product-onboarding.util';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
+import { CampaignTemplateSuggestionService } from '../agency-agents/services/campaign-template-suggestion.service';
 import type { CopilotStatusResponseDto } from './dto/publication-inbox.dto';
 import { PublicationInboxService } from './publication-inbox.service';
 
@@ -20,17 +21,19 @@ export class CopilotService {
     private readonly competitorIntel: CompetitorIntelService,
     private readonly inboxService: PublicationInboxService,
     private readonly cmCharacter: CmCharacterService,
+    private readonly templateSuggestions: CampaignTemplateSuggestionService,
   ) {}
 
   async getStatus(tenantId: string, productId?: string): Promise<CopilotStatusResponseDto> {
     const product = await this.resolveProduct(tenantId, productId);
     const onboardingCompleted = isProductOnboardingCompleted(product);
 
-    const [competitors, latestAnalysis, inbox, cmLibrary] = await Promise.all([
+    const [competitors, latestAnalysis, inbox, cmLibrary, campaignTemplates] = await Promise.all([
       this.competitorService.list(tenantId),
       this.competitorIntel.getLatestCompletedAnalysis(tenantId),
       this.inboxService.getInbox(tenantId, product.id),
       this.cmCharacter.listLibrary(tenantId, product.id),
+      this.templateSuggestions.suggestForProduct(tenantId, product.id, 2),
     ]);
 
     const pendingAnalysis = await this.competitorIntel.listAnalyses(tenantId);
@@ -93,6 +96,7 @@ export class CopilotService {
       cmCharactersReadyCount: cmLibrary.readyCount,
       cmCharactersTotalCount: cmLibrary.characters.length,
       prepareBlockedReason,
+      campaignTemplateSuggestions: campaignTemplates,
     };
   }
 

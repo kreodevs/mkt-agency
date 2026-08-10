@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, RefreshCw } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { toast } from '@/components/molecules/Sonner';
 import {
   listAgentEvents,
   getAgencyPerformance,
   getAgencyAnomalies,
   getAgencyAttribution,
+  getExecutiveReport,
+  generateExecutiveReport,
 } from '@/services/operating-profile';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
@@ -19,6 +23,7 @@ import { getAgentEventNavigation } from '@/lib/agent-event-navigation';
 export default function AgencyActivityPage() {
   const productId = useResolvedProductId();
   const { isSoho } = useOperatingProfile();
+  const queryClient = useQueryClient();
   const [attributionModel, setAttributionModel] = useState<'first_touch' | 'last_touch'>(
     'last_touch',
   );
@@ -47,6 +52,21 @@ export default function AgencyActivityPage() {
       }),
   });
 
+  const executiveReportQuery = useQuery({
+    queryKey: ['executive-report', productId],
+    queryFn: () => getExecutiveReport(productId ?? undefined),
+  });
+
+  const generateReportMutation = useMutation({
+    mutationFn: () => generateExecutiveReport(productId ?? undefined),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['executive-report'] });
+      void queryClient.invalidateQueries({ queryKey: ['agency-events'] });
+      toast.success('Reporte ejecutivo generado');
+    },
+    onError: () => toast.error('No se pudo generar el reporte'),
+  });
+
   return (
     <DashboardShell>
       <PageHeader
@@ -58,6 +78,79 @@ export default function AgencyActivityPage() {
             : 'Eventos del ciclo cerrado entre agentes de la agencia'
         }
       />
+
+      <Card
+        title="Reporte ejecutivo semanal"
+        subtitle="Leads + pauta CSV — sugerencias para tu aprobación (sin auto-ejecución)"
+        className="mb-6"
+      >
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={generateReportMutation.isPending}
+            onClick={() => generateReportMutation.mutate()}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${generateReportMutation.isPending ? 'animate-spin' : ''}`}
+            />
+            Generar ahora
+          </Button>
+          {executiveReportQuery.data?.generatedAt && (
+            <span className="text-xs text-[var(--foreground-muted)]">
+              Último: {new Date(executiveReportQuery.data.generatedAt).toLocaleString('es-MX')}
+            </span>
+          )}
+        </div>
+        {executiveReportQuery.isLoading && (
+          <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+        )}
+        {!executiveReportQuery.data && !executiveReportQuery.isLoading && (
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Aún no hay reporte. Se genera automáticamente los lunes o puedes forzarlo arriba.
+          </p>
+        )}
+        {executiveReportQuery.data && (
+          <div className="space-y-3 text-sm">
+            <p className="font-medium">{executiveReportQuery.data.headline}</p>
+            <p className="text-[var(--foreground-muted)]">
+              {executiveReportQuery.data.executiveSummary}
+            </p>
+            {executiveReportQuery.data.paidMediaInsight && (
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Pauta: {executiveReportQuery.data.paidMediaInsight}
+              </p>
+            )}
+            {executiveReportQuery.data.suggestions.length > 0 && (
+              <ul className="space-y-2">
+                {executiveReportQuery.data.suggestions.map((item) => (
+                  <li key={item.id} className="rounded border border-[var(--border)] p-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill
+                        status={
+                          item.priority === 'high'
+                            ? 'warning'
+                            : item.priority === 'medium'
+                              ? 'info'
+                              : 'neutral'
+                        }
+                      >
+                        {item.priority}
+                      </StatusPill>
+                      <span className="text-xs text-[var(--foreground-muted)]">
+                        Requiere tu firma
+                      </span>
+                    </div>
+                    <p className="mt-1 font-medium">{item.action}</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{item.rationale}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card title="Eventos recientes">
@@ -107,6 +200,11 @@ export default function AgencyActivityPage() {
         </Card>
 
         <Card title="Leads (Analytics lite)" subtitle="Últimos 30 días">
+          <p className="mb-3 text-xs">
+            <Link to="/agency/performance" className="text-[var(--primary)] hover:underline">
+              Importar CSV de pauta y ver CPL estimado →
+            </Link>
+          </p>
           {performanceQuery.isLoading && (
             <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
           )}

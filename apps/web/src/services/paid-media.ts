@@ -32,3 +32,13 @@ export async function launchMediaIntentManual(id: string): Promise<MediaCampaign
     method: 'POST',
   });
 }
+
+export interface MediaIntentKitExport {
+  filename: string;
+  markdown: string;
+  checklist: string[];
+}
+
+export async function exportMediaIntentKit(id: string): Promise<MediaIntentKitExport> {
+  return apiFetch<MediaIntentKitExport>(`/agency/media-intents/${id}/export-kit`);
+}

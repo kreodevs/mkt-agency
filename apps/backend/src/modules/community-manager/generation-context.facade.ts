@@ -23,6 +23,7 @@ import { type CmCharacterLlmOption } from './domain/cm-character.constants';
 import { type LibraryFolderSummary } from '../assets/asset-folder.service';
 import { type MediaKitLlmItem } from '../product/product-media-kit.service';
 import { buildCompetitorIntelBriefForSocialCopy } from './domain/competitor-intel-brief.util';
+import { KnowledgeRetrievalService } from '../knowledge/services/knowledge-retrieval.service';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { type CmPlatform } from './domain/cm-platforms.constants';
 
@@ -37,6 +38,7 @@ export interface GenerationContext {
   cmCharacterReady: boolean;
   libraryFolders: LibraryFolderSummary[];
   mediaKitContext: MediaKitLlmItem[];
+  knowledgeContext: string | null;
 }
 
 @Injectable()
@@ -59,6 +61,7 @@ export class GenerationContextFacade {
     private readonly mediaKitService: ProductMediaKitService,
     private readonly assetFolderService: AssetFolderService,
     private readonly cmCharacter: CmCharacterService,
+    private readonly knowledgeRetrieval: KnowledgeRetrievalService,
   ) {}
 
   async buildGenerationContext(
@@ -86,6 +89,21 @@ export class GenerationContextFacade {
       ? await this.mediaKitService.buildMediaKitContextForLlm(tenantId, kit)
       : [];
 
+    const knowledgeQuery = [
+      productContext?.name,
+      productContext?.description,
+      'marca tono audiencia mensajes',
+    ]
+      .filter((value) => typeof value === 'string' && value.trim())
+      .join(' ');
+    const knowledgeContext = knowledgeQuery
+      ? await this.knowledgeRetrieval.formatForPrompt(
+          tenantId,
+          knowledgeQuery,
+          effectiveProductId,
+        )
+      : null;
+
     return {
       resolvedProfile,
       productContext,
@@ -97,6 +115,7 @@ export class GenerationContextFacade {
       cmCharacterReady,
       libraryFolders,
       mediaKitContext,
+      knowledgeContext,
     };
   }
 

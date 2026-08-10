@@ -23,6 +23,7 @@ import {
   ProductMediaKitListResponseDto,
 } from './dto/product-media-kit.dto';
 import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-media-kit-item.entity';
+import { KnowledgeIndexService } from '../knowledge/services/knowledge-index.service';
 import { ProductService } from './product.service';
 import type { ContentVisualFormat } from '../content/domain/content.constants';
 
@@ -44,6 +45,7 @@ export class ProductMediaKitService {
     private readonly assetService: AssetService,
     private readonly assetFolderService: AssetFolderService,
     private readonly productService: ProductService,
+    private readonly knowledgeIndex: KnowledgeIndexService,
   ) {}
 
   async listForProduct(
@@ -122,6 +124,10 @@ export class ProductMediaKitService {
         sortOrder: count,
       }),
     );
+
+    void this.knowledgeIndex
+      .indexMediaKitItem(tenantId, productId, saved.id, saved.role, saved.label)
+      .catch(() => undefined);
 
     return this.toResponse(saved, asset)!;
   }

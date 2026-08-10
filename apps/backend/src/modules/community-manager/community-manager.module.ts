@@ -9,6 +9,7 @@ import { AgentsModule } from '../agents/agents.module';
 import { AssetsModule } from '../assets/assets.module';
 import { ProductModule } from '../product/product.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
@@ -53,6 +54,7 @@ import { TonePresetController } from './tone-preset.controller';
     AgentsModule,
     LlmModule,
     ContentModule,
+    KnowledgeModule,
   ],
   controllers: [
     CommunityManagerController,

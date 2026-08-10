@@ -10,6 +10,7 @@ import { isProductOnboardingCompleted } from '../product/domain/product-onboardi
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { AgencyOrchestrationService } from './agency-orchestration.service';
 import { AGENCY_NOTIFICATION_TYPES } from './domain/publication-inbox.constants';
+import { OwnerNotificationService } from './services/owner-notification.service';
 import { PublicationInboxService } from './publication-inbox.service';
 import type { PrepareWeekResponseDto } from './dto/publication-inbox.dto';
 import { todayDateKey } from '../../shared/domain/date-key.util';
@@ -30,6 +31,7 @@ export class CopilotOrchestrationService {
     private readonly agencyOrchestration: AgencyOrchestrationService,
     private readonly inboxService: PublicationInboxService,
     private readonly cmCharacter: CmCharacterService,
+    private readonly ownerNotifications: OwnerNotificationService,
   ) {}
 
   async prepareWeek(
@@ -148,6 +150,12 @@ export class CopilotOrchestrationService {
         },
         dedupKey: `copilot-week-${product.id}-${this.todayKey()}`,
       });
+
+      await this.ownerNotifications.notifyWeekReady(
+        tenantId,
+        run.postsGenerated,
+        product.name,
+      );
     }
 
     return {

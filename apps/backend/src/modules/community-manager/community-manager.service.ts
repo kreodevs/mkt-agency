@@ -322,6 +322,7 @@ export class CommunityManagerService {
         libraryFolders: ctx.libraryFolders.map(({ path, device, imageCount, videoCount }) => ({
           path, device, imageCount, videoCount,
         })),
+        knowledgeContext: ctx.knowledgeContext,
       }),
     );
   }
@@ -506,6 +507,7 @@ export class CommunityManagerService {
           : undefined,
         mediaKit: deps.mediaKitContext,
         libraryFolders: deps.libraryFolders.map(({ path, device, imageCount, videoCount }) => ({ path, device, imageCount, videoCount })),
+        knowledgeContext: deps.knowledgeContext,
       }),
     );
   }

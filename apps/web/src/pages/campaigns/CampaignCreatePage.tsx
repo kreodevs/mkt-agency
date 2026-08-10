@@ -20,6 +20,7 @@ export default function CampaignCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialProductId = searchParams.get('productId') ?? '';
+  const initialTemplateId = searchParams.get('templateId') ?? '';
   const initialScope = (searchParams.get('scope') as CampaignScope | null) ?? 'product';
 
   const [scope, setScope] = useState<CampaignScope>(
@@ -28,7 +29,7 @@ export default function CampaignCreatePage() {
   const [productId, setProductId] = useState(initialProductId);
   const [name, setName] = useState('');
   const [objective, setObjective] = useState('');
-  const [templateId, setTemplateId] = useState('');
+  const [templateId, setTemplateId] = useState(initialTemplateId);
   const [totalBudget, setTotalBudget] = useState('');
   const [platforms, setPlatforms] = useState<string[]>([]);
 

@@ -11,6 +11,7 @@ export const AGENT_EVENT_TYPES = [
   'SentimentSignal',
   'PlanRevision',
   'WeeklyBalance',
+  'ExecutiveWeeklyReport',
   'SohoWeekPrepared',
   'StrategistPlanDraft',
   'BudgetReallocated',

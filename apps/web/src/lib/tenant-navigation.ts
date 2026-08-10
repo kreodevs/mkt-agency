@@ -67,6 +67,7 @@ export const tenantAdvancedNavigation = [
     items: [
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
+      { label: 'Rendimiento pauta', href: '/agency/performance', icon: BarChart3 },
       { label: 'Mis productos', href: '/products', icon: Package },
       { label: 'Ajustes', href: '/settings/copilot', icon: Settings },
     ],
@@ -114,6 +115,7 @@ export const tenantSohoNavigation = [
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
+      { label: 'Rendimiento pauta', href: '/agency/performance', icon: BarChart3 },
       { label: 'Agentes IA', href: '/agents', icon: Bot },
       { label: 'Inbox social', href: '/social/inbox', icon: MessagesSquare },
       { label: 'Leads', href: '/leads', icon: Users },

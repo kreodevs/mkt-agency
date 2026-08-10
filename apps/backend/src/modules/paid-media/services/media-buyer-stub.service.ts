@@ -7,6 +7,10 @@ import { CreativePackEntity } from '../../agency-agents/infrastructure/typeorm/c
 import { AgentPlanEntity } from '../../agency-agents/infrastructure/typeorm/agent-plan.entity';
 import { AgentEventService } from '../../agency-agents/services/agent-event.service';
 import { OperatingProfileService } from '../../agency-agents/services/operating-profile.service';
+import {
+  buildMediaIntentKitMarkdown,
+  type MediaIntentKitExport,
+} from '../domain/media-intent-kit.util';
 import { MediaCampaignIntentEntity } from '../infrastructure/typeorm/media-campaign-intent.entity';
 
 @Injectable()
@@ -136,6 +140,25 @@ export class MediaBuyerStubService {
     intent.approvedAt = new Date();
     intent.approvedBy = userId;
     return this.intents.save(intent);
+  }
+
+  async exportIntentKit(tenantId: string, intentId: string): Promise<MediaIntentKitExport> {
+    const intent = await this.intents.findOne({ where: { id: intentId, tenantId } });
+    if (!intent) {
+      throw new NotFoundException({ error: 'Intent not found', code: 'NOT_FOUND' });
+    }
+
+    let packPayload: CreativePackPayload | null = null;
+    if (intent.creativePackId) {
+      const pack = await this.packs.findOne({
+        where: { id: intent.creativePackId, tenantId },
+      });
+      if (pack?.payload) {
+        packPayload = pack.payload as unknown as CreativePackPayload;
+      }
+    }
+
+    return buildMediaIntentKitMarkdown(intent, packPayload);
   }
 
   async markManualLaunch(

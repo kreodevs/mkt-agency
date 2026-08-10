@@ -61,6 +61,7 @@ const SocialInboxPage = lazy(() => import('@/pages/social/SocialInboxPage'));
 const AgencyStrategyPage = lazy(() => import('@/pages/agency/AgencyStrategyPage'));
 const AgencyActivityPage = lazy(() => import('@/pages/agency/AgencyActivityPage'));
 const AgencyMediaIntentsPage = lazy(() => import('@/pages/agency/AgencyMediaIntentsPage'));
+const AgencyPerformancePage = lazy(() => import('@/pages/agency/AgencyPerformancePage'));
 const CopilotSettingsPage = lazy(() => import('@/pages/settings/CopilotSettingsPage'));
 const PublicCapturePage = lazy(() => import('@/pages/capture/PublicCapturePage'));
 
@@ -140,6 +141,7 @@ export function AppRouter() {
             <Route path="/products/:id/media-kit" element={<ProductMediaKitPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/agency/activity" element={<AgencyActivityPage />} />
+            <Route path="/agency/performance" element={<AgencyPerformancePage />} />
             <Route path="/social/inbox" element={<SocialInboxPage />} />
             <Route
               path="/agency/strategy"

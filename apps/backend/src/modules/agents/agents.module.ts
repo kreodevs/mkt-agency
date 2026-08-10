@@ -8,6 +8,7 @@ import { ContentModule } from '../content/content.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
 import { ProductModule } from '../product/product.module';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { AssetsModule } from '../assets/assets.module';
@@ -80,6 +81,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     ProductModule,
     AssetsModule,
     ContentModule,
+    KnowledgeModule,
   ],
   controllers: [AgentInterviewController, CompetitorIntelController, ImageGenerationController],
   providers: [

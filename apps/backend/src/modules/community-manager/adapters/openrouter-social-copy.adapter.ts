@@ -36,6 +36,10 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       ? `Contexto de marca y producto: ${JSON.stringify(context.brandBrief)}`
       : '';
 
+    const knowledgeGuide = context.knowledgeContext?.trim()
+      ? context.knowledgeContext.trim()
+      : '';
+
     const productFocus = context.focusProductName
       ? `IMPORTANTE: Todo el copy debe promocionar exclusivamente el producto/servicio "${context.focusProductName}". No mezcles otros productos del catálogo.`
       : '';
@@ -136,6 +140,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       toneGuide,
       topicsGuide,
       brandContext,
+      knowledgeGuide,
       productFocus,
       competitorIntelGuide,
       revisionGuide,

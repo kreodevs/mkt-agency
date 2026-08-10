@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AgencyAgentsModule } from '../agency-agents/agency-agents.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
@@ -41,7 +41,7 @@ import { StrategyGeneratorWorkerService } from './workers/strategy-generator.wor
 @Module({
   imports: [
     AuthSharedModule,
-    AgencyAgentsModule,
+    forwardRef(() => AgencyAgentsModule),
     QueueModule,
     LlmModule,
     CompanyProfileModule,

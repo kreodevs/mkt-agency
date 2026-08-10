@@ -155,6 +155,33 @@ export async function apiFetch<T>(
   return response.json() as Promise<T>;
 }
 
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const token = getAccessToken();
+  const headers = new Headers();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as Record<string, unknown> & {
+      code?: string;
+    };
+    throw new ApiError(
+      parseErrorBody(body, response.statusText),
+      response.status,
+      typeof body.code === 'string' ? body.code : undefined,
+    );
+  }
+
+  return response.json() as Promise<T>;
+}
+
 async function refreshPlatformAccessToken(): Promise<string | null> {
   const refreshToken =
     getPlatformRefreshToken() ?? useAuthStore.getState().tokens?.refreshToken ?? null;

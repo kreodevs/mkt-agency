@@ -6,6 +6,7 @@ import { memoryStorage } from 'multer';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { AssetsModule } from '../assets/assets.module';
 import { AssetEntity } from '../assets/infrastructure/typeorm/asset.entity';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-media-kit-item.entity';
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
@@ -25,6 +26,7 @@ const MAX_MEDIA_KIT_FILE_SIZE = 52_428_800;
   imports: [
     AuthSharedModule,
     AssetsModule,
+    KnowledgeModule,
     ConfigModule,
     MulterModule.register({
       storage: memoryStorage(),

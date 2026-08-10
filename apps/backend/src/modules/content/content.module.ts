@@ -4,6 +4,7 @@ import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
 import { ProductModule } from '../product/product.module';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 import { ContentApprovalEntity } from './infrastructure/typeorm/content-approval.entity';
@@ -17,6 +18,7 @@ import { DigitalSignatureService } from './services/digital-signature.service';
   imports: [
     AuthSharedModule,
     ProductModule,
+    KnowledgeModule,
     TypeOrmModule.forFeature([
       ContentEntity,
       ContentVersionEntity,

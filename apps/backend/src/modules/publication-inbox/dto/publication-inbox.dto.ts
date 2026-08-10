@@ -94,6 +94,16 @@ export class CopilotStatusResponseDto {
   cmCharactersReadyCount!: number;
   cmCharactersTotalCount!: number;
   prepareBlockedReason!: string | null;
+  campaignTemplateSuggestions!: Array<{
+    templateId: string;
+    name: string;
+    description: string | null;
+    objective: string | null;
+    platforms: string[];
+    industry: string;
+    copilotHint: string;
+    matchScore: number;
+  }>;
 }
 
 export class PrepareWeekResponseDto {

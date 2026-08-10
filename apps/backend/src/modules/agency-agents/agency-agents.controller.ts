@@ -9,8 +9,13 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
@@ -33,6 +38,10 @@ import { AnalyticsAgentService } from './services/analytics-agent.service';
 import { CreativeAgentService } from './services/creative-agent.service';
 import { OperatingProfileService } from './services/operating-profile.service';
 import { StrategistAgentService } from './services/strategist-agent.service';
+import { AdPerformanceImportService } from './services/ad-performance-import.service';
+import { ExecutiveReportService } from './services/executive-report.service';
+import { CampaignTemplateSuggestionService } from './services/campaign-template-suggestion.service';
+import { OwnerNotificationService } from '../publication-inbox/services/owner-notification.service';
 
 @Controller('tenant')
 @UseGuards(TenantGuard)
@@ -69,7 +78,90 @@ export class AgencyAgentsController {
     private readonly agentEvents: AgentEventService,
     private readonly analytics: AnalyticsAgentService,
     private readonly creative: CreativeAgentService,
+    private readonly adImports: AdPerformanceImportService,
+    private readonly executiveReport: ExecutiveReportService,
+    private readonly templateSuggestions: CampaignTemplateSuggestionService,
+    @Inject(forwardRef(() => OwnerNotificationService))
+    private readonly ownerNotifications: OwnerNotificationService,
   ) {}
+
+  @Get('executive-report')
+  getExecutiveReport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+  ) {
+    return this.executiveReport.getLatest(user.tenantId!, productId);
+  }
+
+  @Post('executive-report/generate')
+  @HttpCode(HttpStatus.OK)
+  async generateExecutiveReport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+  ) {
+    const report = await this.executiveReport.generateForTenant(
+      user.tenantId!,
+      productId,
+      {
+        onGenerated: async (payload) => {
+          await this.ownerNotifications.notifyExecutiveReport(user.tenantId!, payload);
+        },
+      },
+    );
+    return report;
+  }
+
+  @Get('campaign-template-suggestions')
+  getCampaignTemplateSuggestions(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.templateSuggestions.suggestForProduct(
+      user.tenantId!,
+      productId,
+      limit ? parseInt(limit, 10) : 3,
+    );
+  }
+
+  @Get('performance/paid')
+  getPaidPerformance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('productId') productId?: string,
+    @Query('periodDays') periodDays?: string,
+  ) {
+    return this.analytics.getPaidPerformanceCrossSummary(
+      user.tenantId!,
+      productId,
+      periodDays ? parseInt(periodDays, 10) : 30,
+    );
+  }
+
+  @Get('performance/imports')
+  listPerformanceImports(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adImports.listImports(
+      user.tenantId!,
+      limit ? parseInt(limit, 10) : 10,
+    );
+  }
+
+  @Post('performance/import')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  importPerformanceCsv(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('productId') productId?: string,
+    @Body('platform') platform?: 'meta' | 'google' | 'auto',
+  ) {
+    return this.adImports.importCsv(user.tenantId!, user.id, file, {
+      productId: productId?.trim() || undefined,
+      platform: platform ?? 'auto',
+    });
+  }
 
   @Get('performance')
   getPerformance(

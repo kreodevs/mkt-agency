@@ -73,6 +73,18 @@ export interface CopilotStatus {
   cmCharactersReadyCount: number;
   cmCharactersTotalCount: number;
   prepareBlockedReason: string | null;
+  campaignTemplateSuggestions: CampaignTemplateSuggestion[];
+}
+
+export interface CampaignTemplateSuggestion {
+  templateId: string;
+  name: string;
+  description: string | null;
+  objective: string | null;
+  platforms: string[];
+  industry: string;
+  copilotHint: string;
+  matchScore: number;
 }
 
 export interface PrepareWeekResult {

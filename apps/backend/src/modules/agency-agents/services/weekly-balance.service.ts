@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
@@ -8,12 +8,15 @@ import { AgentRole } from '../domain/agent-role.enum';
 import { AgentEventService } from './agent-event.service';
 import { AnalyticsAgentService } from './analytics-agent.service';
 import { OperatingProfileService } from './operating-profile.service';
+import { ExecutiveReportService } from './executive-report.service';
+import { OwnerNotificationService } from '../../publication-inbox/services/owner-notification.service';
 
 export interface WeeklyBalanceResult {
   tenantId: string;
   productsProcessed: number;
   reportsPublished: number;
   anomalies: number;
+  executiveReports: number;
 }
 
 @Injectable()
@@ -28,6 +31,9 @@ export class WeeklyBalanceService {
     private readonly operatingProfile: OperatingProfileService,
     private readonly analytics: AnalyticsAgentService,
     private readonly agentEvents: AgentEventService,
+    private readonly executiveReport: ExecutiveReportService,
+    @Inject(forwardRef(() => OwnerNotificationService))
+    private readonly ownerNotifications: OwnerNotificationService,
   ) {}
 
   async runForAllTenants(): Promise<number> {
@@ -50,6 +56,7 @@ export class WeeklyBalanceService {
       productsProcessed: 0,
       reportsPublished: 0,
       anomalies: 0,
+      executiveReports: 0,
     };
 
     const profile = await this.operatingProfile.getProfile(tenantId);
@@ -93,6 +100,17 @@ export class WeeklyBalanceService {
           },
         });
       }
+    }
+
+    try {
+      await this.executiveReport.generateForTenant(tenantId, undefined, {
+        onGenerated: async (report) => {
+          await this.ownerNotifications.notifyExecutiveReport(tenantId, report);
+        },
+      });
+      result.executiveReports = 1;
+    } catch (error) {
+      this.logger.warn(`Executive report failed tenant=${tenantId}`, error);
     }
 
     await this.agentEvents.log({

@@ -1,12 +1,10 @@
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -21,6 +19,14 @@ import { MediaBuyerStubService } from './services/media-buyer-stub.service';
 @UseGuards(TenantGuard, GrowthProfileGuard, PaidBudgetGuard)
 export class PaidMediaController {
   constructor(private readonly mediaBuyer: MediaBuyerStubService) {}
+
+  @Get(':id/export-kit')
+  exportKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.mediaBuyer.exportIntentKit(user.tenantId!, id);
+  }
 
   @Get()
   list(@CurrentUser() user: AuthenticatedUser) {

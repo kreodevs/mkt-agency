@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmailModule } from '../../shared/email/email.module';
 import { AuthSharedModule } from '../../shared/auth/auth-shared.module';
+import { OwnerNotificationService } from './services/owner-notification.service';
 import { QueueModule } from '../../shared/queue/queue.module';
 import { UserEntity } from '../../shared/infrastructure/typeorm/user.entity';
 import { AgencyAgentsModule } from '../agency-agents/agency-agents.module';
@@ -28,8 +30,9 @@ import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.
 
 @Module({
   imports: [
+    EmailModule,
     AuthSharedModule,
-    AgencyAgentsModule,
+    forwardRef(() => AgencyAgentsModule),
     QueueModule,
     ContentModule,
     CommunityManagerModule,
@@ -48,6 +51,7 @@ import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.
   controllers: [PublicationInboxController],
   providers: [
     PublicationInboxService,
+    OwnerNotificationService,
     CopilotService,
     CopilotOrchestrationService,
     AgencyOrchestrationService,
@@ -58,6 +62,6 @@ import { CopilotPrepareWeekWorkerService } from './workers/copilot-prepare-week.
     CopilotPrepareWeekWorkerService,
     CopilotPrepareWeekProcessor,
   ],
-  exports: [PublicationInboxService],
+  exports: [PublicationInboxService, OwnerNotificationService],
 })
 export class PublicationInboxModule {}

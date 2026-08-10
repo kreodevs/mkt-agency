@@ -6,6 +6,8 @@ import { SocialInboxModule } from './modules/social-inbox/social-inbox.module';
 import { SocialInteractionEntity } from './modules/social-inbox/infrastructure/typeorm/social-interaction.entity';
 import { PaidMediaModule } from './modules/paid-media/paid-media.module';
 import { MediaCampaignIntentEntity } from './modules/paid-media/infrastructure/typeorm/media-campaign-intent.entity';
+import { AdPerformanceImportEntity } from './modules/agency-agents/infrastructure/typeorm/ad-performance-import.entity';
+import { TenantKnowledgeChunkEntity } from './modules/knowledge/infrastructure/typeorm/tenant-knowledge-chunk.entity';
 import { AgencyAgentsModule } from './modules/agency-agents/agency-agents.module';
 import { AgentEventLogEntity } from './modules/agency-agents/infrastructure/typeorm/agent-event-log.entity';
 import { AgentPlanEntity } from './modules/agency-agents/infrastructure/typeorm/agent-plan.entity';
@@ -91,6 +93,7 @@ import { ImpersonationDestructiveGuard } from './shared/guards/impersonation-des
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { LoggerModule } from './shared/logger/logger.module';
 import { RedisModule } from './shared/redis/redis.module';
+import { EmailModule } from './shared/email/email.module';
 import { RateLimitGuard } from './modules/auth/guards/rate-limit.guard';
 import { UserEntity } from './shared/infrastructure/typeorm/user.entity';
 import {
@@ -107,6 +110,7 @@ import {
     }),
     LoggerModule,
     RedisModule,
+    EmailModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -174,6 +178,8 @@ import {
           AgentPlanEntity,
           CreativePackEntity,
           MediaCampaignIntentEntity,
+          AdPerformanceImportEntity,
+          TenantKnowledgeChunkEntity,
           SocialInteractionEntity,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',

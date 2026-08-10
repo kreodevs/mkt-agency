@@ -944,6 +944,117 @@
 
 ---
 
+## Épicas — Opción A: Agencia virtual dueño-en-control
+
+Producto multi-tenant donde el **dueño del negocio** aprueba y publica; sin APIs de pauta ni operadores de agencia intermedios. Alineado al spec (HITL obligatorio, publicación manual o n8n opcional).
+
+### E-A1: Notificaciones al dueño (Fase 1)
+
+- [x] [P] Crear módulo `shared/email` con puerto `EmailPort`, adaptador consola y SMTP (`nodemailer`)
+  **Epic:** E-A1
+  **Archivo:** `apps/backend/src/shared/email/`
+
+- [x] [P] Servicio `OwnerNotificationService` — resolver emails de owners activos por `tenant_id`
+  **Epic:** E-A1
+  **Archivo:** `apps/backend/src/modules/publication-inbox/services/owner-notification.service.ts`
+
+- [x] [P] Enviar email en recordatorio de aprobación y publicación diaria (`approval-reminder` worker)
+  **Epic:** E-A1
+  **Archivo:** `apps/backend/src/modules/publication-inbox/workers/approval-reminder.worker.ts`
+
+- [x] [P] Enviar email cuando el copiloto termina «Preparar semana»
+  **Epic:** E-A1
+  **Archivo:** `apps/backend/src/modules/publication-inbox/copilot-orchestration.service.ts`
+
+- [ ] [P] Preferencias de notificación por tenant (email on/off, digest diario)
+  **Epic:** E-A1
+  **Archivo:** `apps/backend/src/modules/tenant/` (futuro)
+
+- [ ] [P] Integración opcional Slack/Telegram por tenant (webhook)
+  **Epic:** E-A1
+
+**Checkpoint:** Con SMTP configurado, el owner recibe email con enlace a la bandeja; sin SMTP, log en consola sin fallar el job.
+
+### E-A2: Media Buyer asistido — kit de pauta exportable (Fase 1)
+
+- [x] [P] Utilidad `buildMediaIntentKitMarkdown` (copys, presupuesto, checklist Ads Manager)
+  **Epic:** E-A2
+  **Archivo:** `apps/backend/src/modules/paid-media/domain/media-intent-kit.util.ts`
+
+- [x] [P] Endpoint `GET /api/v1/agency/media-intents/:id/export-kit`
+  **Epic:** E-A2
+  **Archivo:** `apps/backend/src/modules/paid-media/paid-media.controller.ts`
+
+- [x] [P] Botón «Descargar kit» en UI Growth (`AgencyMediaIntentsPage`)
+  **Epic:** E-A2
+  **Archivo:** `apps/web/src/pages/agency/AgencyMediaIntentsPage.tsx`
+
+- [ ] [P] Incluir URLs de assets del creative pack en el kit (cuando existan)
+  **Epic:** E-A2
+
+**Checkpoint:** Owner aprueba intent, descarga `.md`, ejecuta en Meta/Google manualmente y marca `launched_manual`.
+
+### E-A3: Import CSV resultados de ads (Fase 1)
+
+- [x] [P] Migración tabla `ad_performance_imports` (tenant, plataforma, periodo, filas JSONB)
+  **Epic:** E-A3
+  **Archivo:** `apps/backend/src/database/migrations/1740000000041-CreateAdPerformanceImports.ts`
+
+- [x] [P] Endpoint `POST /api/v1/agency/performance/import` (CSV Meta/Google)
+  **Epic:** E-A3
+  **Archivo:** `apps/backend/src/modules/agency-agents/agency-agents.controller.ts`
+
+- [x] [P] Cruce import + leads atribuidos en `AnalyticsAgentService`
+  **Epic:** E-A3
+  **Archivo:** `apps/backend/src/modules/agency-agents/services/analytics-agent.service.ts`
+
+- [x] [P] UI subida CSV en `/agency/performance`
+  **Epic:** E-A3
+  **Archivo:** `apps/web/src/pages/agency/AgencyPerformancePage.tsx`
+
+**Checkpoint:** Owner sube export de Ads Manager; dashboard muestra CPL estimado cruzado con leads del CRM.
+
+### E-A4: Contexto de marca — RAG ligero (Fase 2)
+
+- [x] [P] Tabla `tenant_knowledge_chunks` con `tsvector` + embeddings JSONB (sin pgvector)
+  **Epic:** E-A4
+  **Archivo:** `apps/backend/src/database/migrations/1740000000042-CreateTenantKnowledgeChunks.ts`
+
+- [x] [P] Indexar brand brief, media kit y posts aprobados al aprobar contenido
+  **Epic:** E-A4
+  **Archivo:** `apps/backend/src/modules/knowledge/services/knowledge-index.service.ts`
+
+- [x] [P] Inyectar chunks relevantes en prompts CM / Creative / Strategist
+  **Epic:** E-A4
+  **Archivo:** `apps/backend/src/modules/knowledge/services/knowledge-retrieval.service.ts`
+
+### E-A5: Inteligencia operativa para el dueño (Fase 3)
+
+- [x] [P] Reporte ejecutivo semanal LLM (datos internos + CSV ads)
+  **Epic:** E-A5
+  **Archivo:** `apps/backend/src/modules/agency-agents/services/executive-report.service.ts`
+
+- [x] [P] Sugerencias accionables sin auto-ejecución («repite este ángulo»)
+  **Epic:** E-A5
+  **Archivo:** `apps/backend/src/modules/agency-agents/services/executive-report.service.ts`
+
+- [x] [P] Plantillas de campaña por industria en copiloto
+  **Epic:** E-A5
+  **Archivo:** `apps/backend/src/database/migrations/1740000000043-SeedIndustryCampaignTemplates.ts`
+
+### E-A6: Escala multi-tenant sin perder control (Fase 4)
+
+- [ ] [P] Perfiles SOHO / Growth más explícitos en onboarding
+  **Epic:** E-A6
+
+- [ ] [P] Payload n8n enriquecido (arte, copy, UTM, contentId)
+  **Epic:** E-A6
+
+- [ ] [P] Consola superadmin: salud por tenant (sin aprobar, LLM caído)
+  **Epic:** E-A6
+
+---
+
 ## Registro de cambios del documento
 
 | Versión | Fecha      | Descripción del cambio                                                                                                                                                                                                                                                      |

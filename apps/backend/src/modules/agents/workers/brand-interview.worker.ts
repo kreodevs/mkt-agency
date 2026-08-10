@@ -6,6 +6,8 @@ import { Repository } from 'typeorm';
 import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_BRAND_INTERVIEW } from '../../../shared/queue/queue.constants';
 import { formatWorkerErrorMessage } from '../../../shared/worker-error.util';
+import { KnowledgeModule } from '../../knowledge/knowledge.module';
+import { KnowledgeIndexService } from '../../knowledge/services/knowledge-index.service';
 import { CompanyProfileService } from '../../company-profile/company-profile.service';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
 import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
@@ -37,6 +39,7 @@ export class BrandInterviewWorkerService {
     private readonly companyProfile: CompanyProfileService,
     @Inject(INTERVIEW_ADAPTER)
     private readonly adapter: InterviewAdapterPort,
+    private readonly knowledgeIndex: KnowledgeIndexService,
     @InjectQueue(QUEUE_BRAND_INTERVIEW)
     private readonly queue: Queue<BrandInterviewJobData>,
   ) {}
@@ -176,6 +179,19 @@ export class BrandInterviewWorkerService {
         `Brand interview ${interview.id}: brief saved but profile merge failed`,
         error,
       );
+    }
+
+    if (interview.brandBriefMarkdown?.trim()) {
+      void this.knowledgeIndex
+        .indexBrandBrief(
+          interview.tenantId,
+          interview.id,
+          interview.brandBriefMarkdown,
+          interview.productId,
+        )
+        .catch((error: unknown) => {
+          this.logger.warn(`Knowledge index skipped for interview ${interview.id}`, error);
+        });
     }
 
     await this.messages.save(
