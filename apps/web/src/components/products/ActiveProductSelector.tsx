@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Package } from 'lucide-react';
+import { Select } from '@/components/atoms/Select';
 import { listProducts } from '@/services/products';
 import { useActiveProductStore } from '@/store/active-product';
 
@@ -51,8 +52,9 @@ export function ActiveProductSelector() {
   return (
     <div className="flex items-center gap-2">
       <Package className="h-3.5 w-3.5 shrink-0 text-[var(--foreground-muted)]" />
-      <select
-        className="max-w-[min(100%,14rem)] truncate rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs font-medium text-[var(--foreground)]"
+      <Select
+        fullWidth={false}
+        className="max-w-[min(100%,14rem)] truncate text-xs font-medium [&_select]:py-1.5 [&_select]:text-xs"
         value={productId ?? ''}
         title={productName ?? undefined}
         onChange={(event) => {
@@ -61,15 +63,14 @@ export function ActiveProductSelector() {
           setActiveProduct(nextId, match?.name ?? null);
         }}
         aria-label="Producto activo"
-      >
-        <option value="">Todos los productos</option>
-        {products.map((product) => (
-          <option key={product.id} value={product.id}>
-            {product.name}
-            {product.isPrimary ? ' ★' : ''}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: '', label: 'Todos los productos' },
+          ...products.map((product) => ({
+            value: product.id,
+            label: `${product.name}${product.isPrimary ? ' ★' : ''}`,
+          })),
+        ]}
+      />
     </div>
   );
 }

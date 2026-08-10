@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
 import { EmptyState } from '@/components/molecules/EmptyState';
+import { ListPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
@@ -242,7 +243,7 @@ export default function CommunityManagerPage() {
       />
 
       {batchesQuery.isLoading ? (
-        <div className="py-12 text-center text-[var(--foreground-muted)]">Cargando...</div>
+        <ListPageSkeleton />
       ) : !latestBatch ? (
         <Card>
           <EmptyState

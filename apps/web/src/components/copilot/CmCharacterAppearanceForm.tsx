@@ -1,9 +1,7 @@
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import type { CmCharacterStatus } from '@/services/cm-character';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export type AppearanceDraft = {
   name: string;
@@ -49,26 +47,24 @@ export function AppearanceForm({
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-sm">
-          <span className="text-[var(--foreground-muted)]">Género</span>
-          <select
-            className={selectClass}
-            value={appearance.gender ?? 'female'}
-            onChange={(e) =>
-              onChange({
-                ...draft,
-                appearance: {
-                  ...appearance,
-                  gender: e.target.value as 'female' | 'male' | 'neutral',
-                },
-              })
-            }
-          >
-            <option value="female">Mujer</option>
-            <option value="male">Hombre</option>
-            <option value="neutral">Neutral</option>
-          </select>
-        </label>
+        <Select
+          label="Género"
+          value={appearance.gender ?? 'female'}
+          onChange={(e) =>
+            onChange({
+              ...draft,
+              appearance: {
+                ...appearance,
+                gender: e.target.value as 'female' | 'male' | 'neutral',
+              },
+            })
+          }
+          options={[
+            { value: 'female', label: 'Mujer' },
+            { value: 'male', label: 'Hombre' },
+            { value: 'neutral', label: 'Neutral' },
+          ]}
+        />
         <InputText
           label="Rango de edad"
           value={appearance.ageRange ?? ''}

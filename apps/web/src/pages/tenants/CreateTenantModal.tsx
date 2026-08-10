@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/molecules/Dialog';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Password } from '@/components/atoms/Password';
 import { toast } from '@/components/molecules/Sonner';
 import { getApiErrorMessage } from '@/services/api';
@@ -15,8 +16,6 @@ interface CreateTenantModalProps {
   onCreated: () => void;
 }
 
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 const PASSWORD_POLICY = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -200,18 +199,15 @@ export function CreateTenantModal({ visible, onHide, onCreated }: CreateTenantMo
             </p>
           ) : (
             <>
-              <select
-                className={selectClass}
+              <Select
                 value={packageId}
                 onChange={(e) => setPackageId(e.target.value)}
                 required
-              >
-                {activePackages.map((pkg) => (
-                  <option key={pkg.id} value={pkg.id}>
-                    {pkg.name}
-                  </option>
-                ))}
-              </select>
+                options={activePackages.map((pkg) => ({
+                  value: pkg.id,
+                  label: pkg.name,
+                }))}
+              />
               {selectedPackage && (
                 <p className="text-xs text-[var(--foreground-muted)]">
                   {selectedPackage.maxUsers} usuarios · {formatBytes(selectedPackage.maxAssetsSize)}{' '}

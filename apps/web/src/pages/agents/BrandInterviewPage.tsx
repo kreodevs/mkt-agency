@@ -9,6 +9,7 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
@@ -19,9 +20,6 @@ import { useActiveProductStore } from '@/store/active-product';
 import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
 import { getEffectiveInterviewStatus, hasBrandBriefResult, isLegacyManualInterview, isOnboardingSourcedInterview } from '@/utils/brandInterview';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 function isInterviewProcessing(interview: AgentInterview): boolean {
   if (interview.status !== 'in_progress') return false;
@@ -258,26 +256,22 @@ export default function BrandInterviewPage() {
               ) : null}
               {!inProgressInterview && products.length > 0 && (
                 <div className="w-full max-w-sm text-left">
-                  <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
-                    Producto
-                  </label>
-                  <select
-                    className={selectClass}
+                  <Select
+                    label="Producto"
                     value={selectedProductId}
                     onChange={(e) => setSelectedProductId(e.target.value)}
-                  >
-                    <option value="">Marca general (entrevista manual)</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.onboardingCompleted
+                    placeholder="Marca general (entrevista manual)"
+                    options={products.map((p) => ({
+                      value: p.id,
+                      label: `${p.name}${
+                        p.onboardingCompleted
                           ? ' · onboarding listo'
                           : p.onboardingReady
                             ? ' · datos completos'
-                            : ''}
-                      </option>
-                    ))}
-                  </select>
+                            : ''
+                      }`,
+                    }))}
+                  />
                   {selectedProduct && selectedProduct.onboardingCompletionPercentage != null ? (
                     <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">
                       Onboarding: {selectedProduct.onboardingCompletionPercentage}%

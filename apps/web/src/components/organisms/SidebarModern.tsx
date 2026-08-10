@@ -78,20 +78,20 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
           <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
             {collapsed ? (
               <Tooltip content={`Mkt Agency · v${appVersion}`}>
-                <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--gradient-brand)] text-lg font-black text-white shadow-[var(--shadow-sm)]">
                   M
                 </div>
               </Tooltip>
             ) : (
               <Tooltip content={`Versión en ejecución: v${appVersion}`}>
                 <div className="flex min-w-0 flex-1 items-center gap-[var(--spacing-md)]">
-                  <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-xl font-black text-[var(--primary-foreground)]">
+                  <div className="flex h-avatar-sm w-avatar-sm shrink-0 items-center justify-center rounded-lg bg-[var(--gradient-brand)] text-lg font-black text-white shadow-[var(--shadow-sm)]">
                     M
                   </div>
                   <div className="min-w-0">
                     {brand ?? (
                       <span className="block truncate whitespace-nowrap text-xl font-black uppercase tracking-tighter text-[var(--foreground)]">
-                        Mkt <span className="text-[var(--primary)]">Agency</span>
+                        Mkt <span className="brand-gradient-text">Agency</span>
                       </span>
                     )}
                   </div>
@@ -135,7 +135,7 @@ export const SidebarModern = forwardRef<HTMLElement, SidebarModernProps>(
                         className={cn(
                           'group relative flex cursor-pointer items-center gap-[var(--spacing-md)] rounded-[var(--radius)] px-[var(--spacing-md)] py-2.5 transition-all duration-200 press-subtle',
                           isActive
-                            ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md'
+                            ? 'bg-[var(--brand-muted)] text-[var(--brand-deep)] shadow-sm ring-1 ring-[color-mix(in_srgb,var(--brand)_22%,transparent)]'
                             : 'text-[var(--foreground-muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]',
                         )}
                       >

@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -14,9 +15,6 @@ import { listProducts } from '@/services/products';
 import type { CampaignScope, CreateCampaignPayload } from '@/types/campaign';
 
 const PLATFORMS = ['facebook', 'instagram', 'google', 'linkedin', 'tiktok', 'email'] as const;
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function CampaignCreatePage() {
   const navigate = useNavigate();
@@ -149,37 +147,31 @@ export default function CampaignCreatePage() {
           </fieldset>
 
           {scope === 'product' && (
-            <div className="flex flex-col gap-[var(--spacing-xs)]">
-              <label className="text-sm font-medium text-[var(--foreground)]">Producto</label>
-              <select
-                className={selectClass}
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                required
-                disabled={productsQuery.isLoading}
+            <Select
+              label="Producto"
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              required
+              disabled={productsQuery.isLoading}
+              placeholder="Selecciona un producto"
+              options={products.map((product) => ({
+                value: product.id,
+                label: `${product.name}${product.isPrimary ? ' (principal)' : ''}`,
+              }))}
+            />
+          )}
+          {scope === 'product' && products.length === 0 && !productsQuery.isLoading && (
+            <p className="text-xs text-[var(--foreground-muted)]">
+              Registra un producto en{' '}
+              <button
+                type="button"
+                className="text-[var(--primary)] underline"
+                onClick={() => navigate('/products/new')}
               >
-                <option value="">Selecciona un producto</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                    {product.isPrimary ? ' (principal)' : ''}
-                  </option>
-                ))}
-              </select>
-              {products.length === 0 && !productsQuery.isLoading && (
-                <p className="text-xs text-[var(--foreground-muted)]">
-                  Registra un producto en{' '}
-                  <button
-                    type="button"
-                    className="text-[var(--primary)] underline"
-                    onClick={() => navigate('/products/new')}
-                  >
-                    Mis productos
-                  </button>{' '}
-                  antes de continuar.
-                </p>
-              )}
-            </div>
+                Mis productos
+              </button>{' '}
+              antes de continuar.
+            </p>
           )}
 
           <InputText
@@ -199,25 +191,17 @@ export default function CampaignCreatePage() {
             />
           </div>
 
-          <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label className="text-sm font-medium text-[var(--foreground)]">
-              Plantilla (opcional)
-            </label>
-            <select
-              className={selectClass}
-              value={templateId}
-              onChange={(e) => onTemplateChange(e.target.value)}
-              disabled={templatesQuery.isLoading}
-            >
-              <option value="">Sin plantilla</option>
-              {templatesQuery.data?.items.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                  {template.isPredefined ? ' (predefinida)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Plantilla (opcional)"
+            value={templateId}
+            onChange={(e) => onTemplateChange(e.target.value)}
+            disabled={templatesQuery.isLoading}
+            placeholder="Sin plantilla"
+            options={(templatesQuery.data?.items ?? []).map((template) => ({
+              value: template.id,
+              label: `${template.name}${template.isPredefined ? ' (predefinida)' : ''}`,
+            }))}
+          />
 
           <InputText
             label="Presupuesto total (USD)"

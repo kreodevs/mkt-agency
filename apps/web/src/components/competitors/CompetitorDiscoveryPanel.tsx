@@ -4,6 +4,7 @@ import { Globe, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Checkbox } from '@/components/atoms/Checkbox';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
@@ -142,24 +143,17 @@ export function CompetitorDiscoveryPanel({
   return (
     <Card title={title} subtitle={subtitle}>
       <div className="space-y-4">
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-[var(--foreground)]">Producto</span>
-          <select
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
-          >
-            <option value="">Contexto general de marca</option>
-            {(productsQuery.data?.items ?? []).map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-[var(--foreground-muted)]">
-            Recomendado: elige el producto con tags SEO para mejores resultados.
-          </p>
-        </label>
+        <Select
+          label="Producto"
+          value={productId}
+          onChange={(e) => setProductId(e.target.value)}
+          placeholder="Contexto general de marca"
+          options={(productsQuery.data?.items ?? []).map((product) => ({
+            value: product.id,
+            label: product.name,
+          }))}
+          hint="Recomendado: elige el producto con tags SEO para mejores resultados."
+        />
 
         <div className="grid gap-2 sm:grid-cols-3">
           {SCOPE_OPTIONS.map((option) => {

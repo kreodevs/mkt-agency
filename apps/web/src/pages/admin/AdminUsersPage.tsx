@@ -10,6 +10,7 @@ import { Dialog } from '@/components/molecules/Dialog';
 import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { AdminUserCard } from '@/components/admin/AdminUserCard';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { listSuperadminUsers, updateSuperadminUser, type SuperadminUser } from '@/services/superadmin';
@@ -167,6 +168,7 @@ export default function AdminUsersPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Plataforma"
           title="Usuarios"
           description="Listado global de usuarios. Superadministración — todos los tenants."
         />
@@ -258,33 +260,29 @@ export default function AdminUsersPage() {
               />
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Rol</label>
-              <select
-                className={filterInputClass}
-                value={editRole}
-                onChange={(e) => setEditRole(e.target.value)}
-                disabled={editingUser.isSuperadmin}
-              >
-                <option value="owner">Dueño</option>
-                <option value="admin">Admin</option>
-                <option value="member">Miembro</option>
-                <option value="viewer">Espectador</option>
-              </select>
-            </div>
+            <Select
+              label="Rol"
+              value={editRole}
+              onChange={(e) => setEditRole(e.target.value)}
+              disabled={editingUser.isSuperadmin}
+              options={[
+                { value: 'owner', label: 'Dueño' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'member', label: 'Miembro' },
+                { value: 'viewer', label: 'Espectador' },
+              ]}
+            />
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Estado</label>
-              <select
-                className={filterInputClass}
-                value={editStatus}
-                onChange={(e) => setEditStatus(e.target.value)}
-              >
-                <option value="active">Activo</option>
-                <option value="suspended">Suspendido</option>
-                <option value="inactive">Inactivo</option>
-              </select>
-            </div>
+            <Select
+              label="Estado"
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value)}
+              options={[
+                { value: 'active', label: 'Activo' },
+                { value: 'suspended', label: 'Suspendido' },
+                { value: 'inactive', label: 'Inactivo' },
+              ]}
+            />
 
             <div className="flex justify-end gap-2 pt-2">
               <button

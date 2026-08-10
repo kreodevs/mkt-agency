@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LayoutGrid, List, Plus, Sparkles } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { CampaignAgentReadinessPanel } from '@/components/campaigns/CampaignAgentReadinessPanel';
 import { CampaignKanban } from '@/components/campaigns/CampaignKanban';
@@ -51,8 +52,13 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(new Date(value));
 }
 
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
+function productFilterOptions(items: { id: string; name: string }[]) {
+  return [
+    { value: '', label: 'Todos los productos' },
+    ...items.map((product) => ({ value: product.id, label: product.name })),
+  ];
+}
 
 export default function CampaignListPage() {
   const navigate = useNavigate();
@@ -188,6 +194,7 @@ export default function CampaignListPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Growth"
         title="Campañas"
         description="Gestiona campañas multicanal y su pipeline de estados"
         actions={
@@ -200,6 +207,7 @@ export default function CampaignListPage() {
             </Link>
             {readinessQuery.data?.ready && (
               <Button
+                variant="brand"
                 loading={autoGenerateMutation.isPending}
                 onClick={() => autoGenerateMutation.mutate()}
                 className="gap-2"
@@ -224,46 +232,38 @@ export default function CampaignListPage() {
         </div>
       )}
 
-      <Card>
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <select
-            className={filterSelectClass}
+      <Card variant="elevated">
+        <div className="filter-row mb-4 items-center">
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por estado"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | CampaignStatus)}
-            aria-label="Filtrar por estado"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className={filterSelectClass}
+            options={STATUS_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por plataforma"
             value={platformFilter}
             onChange={(e) => setPlatformFilter(e.target.value)}
-            aria-label="Filtrar por plataforma"
-          >
-            {PLATFORM_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className={filterSelectClass}
+            options={PLATFORM_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por producto"
             value={productFilter}
             onChange={(e) => setProductFilter(e.target.value)}
-            aria-label="Filtrar por producto"
-          >
-            <option value="">Todos los productos</option>
-            {(productsQuery.data?.items ?? []).map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
+            options={productFilterOptions(productsQuery.data?.items ?? [])}
+          />
 
           <div className="ml-auto flex gap-1 rounded-[var(--radius)] border border-[var(--border)] p-1">
             <Button

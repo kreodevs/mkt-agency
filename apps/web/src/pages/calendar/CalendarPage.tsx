@@ -7,11 +7,17 @@ import { DayDetail } from '@/components/calendar/DayDetail';
 import { DownloadKit } from '@/components/content/DownloadKit';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { Select } from '@/components/atoms/Select';
 import { useCalendarDay, useCalendarMonth } from '@/hooks/useCalendar';
 import { listProducts } from '@/services/products';
 
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
+function productFilterOptions(items: { id: string; name: string }[]) {
+  return [
+    { value: '', label: 'Todos los productos' },
+    ...items.map((product) => ({ value: product.id, label: product.name })),
+  ];
+}
 
 function currentMonthYear() {
   const now = new Date();
@@ -36,28 +42,24 @@ export default function CalendarPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Editorial"
         title="Calendario editorial"
         description="Piezas por día — filtra por producto para ver solo ese catálogo"
         actions={
-          <select
-            className={filterSelectClass}
+          <Select
+            fullWidth={false}
+            className="min-w-[12rem]"
+            aria-label="Filtrar por producto"
             value={productFilter}
             onChange={(e) => setProductFilter(e.target.value)}
-            aria-label="Filtrar por producto"
-          >
-            <option value="">Todos los productos</option>
-            {(productsQuery.data?.items ?? []).map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
+            options={productFilterOptions(productsQuery.data?.items ?? [])}
+          />
         }
       />
 
       <div className="grid gap-6 lg:grid-cols-5">
         {!monthQuery.isLoading && (monthQuery.data?.days.length ?? 0) === 0 && (
-          <Card className="border-dashed lg:col-span-5">
+          <Card variant="elevated" className="border-dashed lg:col-span-5">
             <p className="text-sm text-[var(--foreground)]">
               No hay piezas en{' '}
               {new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(
@@ -76,7 +78,7 @@ export default function CalendarPage() {
           </Card>
         )}
 
-        <Card className="lg:col-span-3">
+        <Card variant="elevated" className="lg:col-span-3">
           <CalendarView
             data={monthQuery.data}
             loading={monthQuery.isLoading}

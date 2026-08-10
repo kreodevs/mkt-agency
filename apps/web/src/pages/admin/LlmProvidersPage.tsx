@@ -168,6 +168,7 @@ export default function LlmProvidersPage() {
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
+        eyebrow="Plataforma"
         title="Proveedores LLM"
         description="Varios proveedores pueden estar activos a la vez. Cada tarea LLM elige su proveedor y modelo."
         actions={

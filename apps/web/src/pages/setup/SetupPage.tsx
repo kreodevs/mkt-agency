@@ -60,7 +60,7 @@ export default function SetupPage() {
       headline="Primera configuración"
       tagline="Crea el superadmin que administrará tenants, IA y seguridad."
     >
-      <Card title="Cuenta superadmin" className="w-full shadow-sm">
+      <Card variant="elevated" title="Cuenta superadmin" className="w-full">
         <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
           <InputText
             label="Nombre"
@@ -93,7 +93,7 @@ export default function SetupPage() {
             />
             <p className="text-xs text-[var(--foreground-muted)]">Mínimo 12 caracteres.</p>
           </div>
-          <Button type="submit" loading={loading} className="w-full">
+          <Button type="submit" variant="brand" loading={loading} className="w-full">
             Crear superadmin
           </Button>
         </form>

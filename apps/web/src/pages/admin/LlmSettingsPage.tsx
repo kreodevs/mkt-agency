@@ -10,6 +10,7 @@ import { IconButton } from '@/components/atoms/IconButton';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
 import { suggestPaidFallbackModelId } from '@/lib/llm-models';
@@ -19,9 +20,6 @@ import {
   updateLlmTask,
   type LlmTaskConfig,
 } from '@/services/superadmin';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function LlmSettingsPage() {
   const queryClient = useQueryClient();
@@ -135,6 +133,7 @@ export default function LlmSettingsPage() {
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
+        eyebrow="Plataforma"
         title="Modelos por tarea"
         description="Asigna proveedor, modelo principal y fallback de pago por tarea. Ante rate limit (429) la API reintenta con el fallback."
       />
@@ -174,27 +173,20 @@ export default function LlmSettingsPage() {
             </p>
           ) : (
             <>
-              <div className="flex flex-col gap-[var(--spacing-xs)]">
-                <label htmlFor="llm-task-provider" className="text-sm font-medium">
-                  Proveedor
-                </label>
-                <select
-                  id="llm-task-provider"
-                  className={selectClass}
-                  value={providerId}
-                  onChange={(event) => {
-                    setProviderId(event.target.value);
-                    setModel('');
-                    setFallbackModel('');
-                  }}
-                >
-                  {configuredProviders.map((provider) => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Proveedor"
+                id="llm-task-provider"
+                value={providerId}
+                onChange={(event) => {
+                  setProviderId(event.target.value);
+                  setModel('');
+                  setFallbackModel('');
+                }}
+                options={configuredProviders.map((provider) => ({
+                  value: provider.id,
+                  label: provider.name,
+                }))}
+              />
 
               <LlmModelSelect
                 providerId={providerId}

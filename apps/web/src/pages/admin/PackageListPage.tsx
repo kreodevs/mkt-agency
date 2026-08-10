@@ -169,6 +169,7 @@ export default function PackageListPage() {
   return (
     <DashboardShell navigationOverride={superadminNavigation}>
       <PageHeader
+        eyebrow="Plataforma"
         title="Paquetes"
         description="Define límites reutilizables para tenants (usuarios, storage, IA, campañas)."
         actions={

@@ -74,6 +74,7 @@ export default function AuditLogsPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Plataforma"
           title="Logs de auditoría"
           description="Registro append-only de acciones sensibles (retención 90 días)."
         />

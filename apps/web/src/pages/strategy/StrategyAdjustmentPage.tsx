@@ -144,6 +144,7 @@ export default function StrategyAdjustmentPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Growth"
         title="Recomendaciones de estrategia"
         description="Sugerencias automáticas según tus publicaciones y contactos — aprueba o descarta cada una"
         actions={

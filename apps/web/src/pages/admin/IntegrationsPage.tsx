@@ -65,6 +65,7 @@ export default function IntegrationsPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
+          eyebrow="Plataforma"
           title="Integraciones"
           description="Servicios externos usados por agentes de la plataforma."
         />

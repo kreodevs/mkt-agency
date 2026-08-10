@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Copy, Download, Check } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import { getImageGenerationByContentId } from '@/services/agents';
@@ -133,22 +134,17 @@ export function ContentPublishPanel({
 
         {onPlatformChange ? (
           <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label htmlFor="content-platform" className="text-sm font-medium">
-              Cambiar red social
-            </label>
-            <select
+            <Select
+              label="Cambiar red social"
               id="content-platform"
-              className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
               value={platformValue}
               onChange={(event) => onPlatformChange(event.target.value as CmPlatform | '')}
-            >
-              <option value="">Sin asignar</option>
-              {CONTENT_PLATFORMS.map((value) => (
-                <option key={value} value={value}>
-                  {CONTENT_PLATFORM_LABELS[value]}
-                </option>
-              ))}
-            </select>
+              placeholder="Sin asignar"
+              options={CONTENT_PLATFORMS.map((value) => ({
+                value,
+                label: CONTENT_PLATFORM_LABELS[value],
+              }))}
+            />
             {platformValue ? (
               <p className="text-xs text-[var(--foreground-muted)]">
                 {CONTENT_PLATFORM_HINTS[platformValue]}

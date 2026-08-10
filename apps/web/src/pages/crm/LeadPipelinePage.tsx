@@ -7,6 +7,7 @@ import { LeadDetail } from '@/components/crm/LeadDetail';
 import { LeadDetailMobileSheet } from '@/components/crm/LeadDetailMobileSheet';
 import { LeadPipeline } from '@/components/crm/LeadPipeline';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
@@ -18,8 +19,13 @@ import { changeLeadStage, createLead, deleteLead, getLead, listLeads } from '@/s
 import { listProducts } from '@/services/products';
 import type { LeadStage } from '@/types/lead.constants';
 
-const selectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
+function productFilterOptions(items: { id: string; name: string }[]) {
+  return [
+    { value: '', label: 'Todos los productos' },
+    ...items.map((product) => ({ value: product.id, label: product.name })),
+  ];
+}
 
 export default function LeadPipelinePage() {
   const queryClient = useQueryClient();
@@ -116,6 +122,7 @@ export default function LeadPipelinePage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={isSoho ? 'Copiloto SOHO' : 'CRM'}
         title={isSoho ? 'Contactos' : 'Pipeline CRM'}
         description={
           isSoho
@@ -123,7 +130,7 @@ export default function LeadPipelinePage() {
             : 'Leads capturados desde formularios — filtra por producto, score IA y etapas Kanban'
         }
         actions={
-          <Button type="button" className="gap-1.5" onClick={() => setCreateOpen(true)}>
+          <Button type="button" variant="brand" className="gap-1.5" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" />
             {isSoho ? 'Nuevo contacto' : 'Agregar lead'}
           </Button>
@@ -131,26 +138,16 @@ export default function LeadPipelinePage() {
       />
 
       <div className="mb-[var(--spacing-lg)] max-w-xs">
-        <label htmlFor="lead-product-filter" className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
-          Filtrar por producto
-        </label>
-        <select
-          id="lead-product-filter"
-          className={`${selectClass} w-full`}
+        <Select
+          label="Filtrar por producto"
           value={productFilter}
           onChange={(e) => setProductFilter(e.target.value)}
-        >
-          <option value="">Todos los productos</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+          options={productFilterOptions(products)}
+        />
       </div>
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-5">
-        <Card className="lg:col-span-3">
+        <Card variant="elevated" className="lg:col-span-3">
           <LeadPipeline
             leads={leads}
             loading={leadsQuery.isLoading}

@@ -184,11 +184,12 @@ export default function AgencyHomePage() {
     return (
       <DashboardShell>
         <PageHeader
+          eyebrow="Plataforma"
           title="Administración"
           description="Panel de control de la plataforma"
         />
         <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-2">
-          <Card title="Organizaciones" subtitle="Tenants e impersonación">
+          <Card variant="elevated" title="Organizaciones" subtitle="Tenants e impersonación">
             <p className="mb-[var(--spacing-md)] text-sm text-[var(--foreground-muted)]">
               Campañas, agentes IA y operativa de marketing se ejecutan impersonando un tenant
               desde el listado de organizaciones.
@@ -197,7 +198,7 @@ export default function AgencyHomePage() {
               <Button>Ver listado de tenants</Button>
             </Link>
           </Card>
-          <Card title="Configuración IA" subtitle="Modelos por tarea">
+          <Card variant="elevated" title="Configuración IA" subtitle="Modelos por tarea">
             <p className="mb-[var(--spacing-md)] text-sm text-[var(--foreground-muted)]">
               Asigna proveedor y modelo a cada tarea de IA. No ejecutes agentes desde aquí: eso
               ocurre en el contexto del tenant.

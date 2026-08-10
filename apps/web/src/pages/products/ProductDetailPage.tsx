@@ -5,6 +5,7 @@ import { ClipboardList, FolderOpen, Images, Megaphone } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -18,9 +19,6 @@ import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
 import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import type { ProductCategory, UpdateProductPayload } from '@/types/product';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 const CATEGORY_OPTIONS: Array<{ label: string; value: ProductCategory }> = [
   { label: 'Producto físico', value: 'physical' },
@@ -205,20 +203,15 @@ export default function ProductDetailPage() {
             onChange={(e) => setWebsiteUrl(e.target.value)}
           />
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-[var(--foreground)]">Tipo</span>
-            <select
-              className={selectClass}
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ProductCategory)}
-            >
-              {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Tipo"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ProductCategory)}
+            options={CATEGORY_OPTIONS.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+            }))}
+          />
 
           <div className="flex flex-col gap-[var(--spacing-xs)]">
             <label className="text-sm font-medium text-[var(--foreground)]">Descripción</label>

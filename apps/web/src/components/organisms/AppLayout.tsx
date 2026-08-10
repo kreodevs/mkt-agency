@@ -157,8 +157,12 @@ export const AppLayout = forwardRef<HTMLDivElement, AppLayoutProps>(
             </div>
           </header>
           {banner}
-          <main className="custom-scrollbar rubber-band min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
-            <div className="mx-auto max-w-[1600px]">
+          <main className="custom-scrollbar rubber-band relative min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-10">
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_100%_0%,color-mix(in_srgb,var(--brand)_8%,transparent)_0%,transparent_55%)]"
+              aria-hidden
+            />
+            <div className="relative mx-auto max-w-[1600px]">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={location.pathname}

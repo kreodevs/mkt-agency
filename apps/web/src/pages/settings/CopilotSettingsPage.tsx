@@ -87,12 +87,13 @@ export default function CopilotSettingsPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Copiloto SOHO"
         title="Ajustes del copiloto"
         description="Redes donde publicas y cuántos posts generar por semana"
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Redes sociales" subtitle="El copiloto generará copy para estas plataformas">
+        <Card variant="elevated" title="Redes sociales" subtitle="El copiloto generará copy para estas plataformas">
           <div className="flex flex-wrap gap-2">
             {ALL_PLATFORMS.map((platform) => {
               const Icon = PLATFORM_ICONS[platform];
@@ -104,8 +105,8 @@ export default function CopilotSettingsPage() {
                   onClick={() => togglePlatform(platform)}
                   className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
                     active
-                      ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
-                      : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--primary)]/40'
+                      ? 'border-[var(--brand)] bg-[var(--brand-muted)] text-[var(--brand-deep)]'
+                      : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--border))]'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -143,7 +144,7 @@ export default function CopilotSettingsPage() {
         <OperatingProfileCard />
 
         {isGrowth && (
-          <Card title="Vista Growth" subtitle="Herramientas de agencia activas">
+          <Card variant="elevated" title="Vista Growth" subtitle="Herramientas de agencia activas">
             <p className="text-sm text-[var(--foreground-muted)]">
               Tienes acceso a campañas, estrategia comercial y métricas avanzadas desde el menú
               lateral.

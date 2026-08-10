@@ -177,6 +177,7 @@ export default function OnboardingWizardPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Onboarding"
         title="Perfil de empresa"
         description={
           isCompleted

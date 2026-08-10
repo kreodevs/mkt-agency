@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -12,8 +13,13 @@ import { ApiError } from '@/services/api';
 import { createContent } from '@/services/content';
 import type { ContentType, CreateContentPayload } from '@/types/content';
 
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+const CONTENT_TYPE_OPTIONS = [
+  { value: 'ad', label: 'Anuncio' },
+  { value: 'social', label: 'Social' },
+  { value: 'email', label: 'Email' },
+  { value: 'blog', label: 'Blog' },
+  { value: 'landing', label: 'Landing' },
+] as const;
 
 export default function ContentCreatePage() {
   const navigate = useNavigate();
@@ -61,20 +67,15 @@ export default function ContentCreatePage() {
             fullWidth
           />
 
-          <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label className="text-sm font-medium text-[var(--foreground)]">Tipo</label>
-            <select
-              className={selectClass}
-              value={type}
-              onChange={(e) => setType(e.target.value as ContentType)}
-            >
-              <option value="ad">Anuncio</option>
-              <option value="social">Social</option>
-              <option value="email">Email</option>
-              <option value="blog">Blog</option>
-              <option value="landing">Landing</option>
-            </select>
-          </div>
+          <Select
+            label="Tipo"
+            value={type}
+            onChange={(e) => setType(e.target.value as ContentType)}
+            options={CONTENT_TYPE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
 
           <InputText
             label="Fecha programada (opcional)"

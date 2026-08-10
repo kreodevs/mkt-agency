@@ -26,6 +26,7 @@ import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardS
 import { Card } from '@/components/molecules/Card';
 import { StatsCard } from '@/components/molecules/StatsCard';
 import { PageHeader } from '@/components/molecules/PageHeader';
+import { InboxPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { apiFetch } from '@/services/api';
 
 interface MetricsResponse {
@@ -73,14 +74,13 @@ export default function MetricsDashboardPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Growth"
         title="Panel de métricas"
         description="Resumen visual del rendimiento de tu agencia"
       />
 
       {metricsQuery.isLoading ? (
-        <div className="py-20 text-center text-[var(--foreground-muted)]">
-          Cargando métricas...
-        </div>
+        <InboxPageSkeleton />
       ) : !data ? (
         <div className="py-20 text-center text-[var(--foreground-muted)]">
           No hay datos suficientes para mostrar métricas.

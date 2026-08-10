@@ -276,6 +276,7 @@ export default function AssetLibraryPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Medios"
         title="Librería multimedia"
         description="Organiza capturas y medios en carpetas. El copiloto CM usa PC / iPad / iOS al generar posts."
       />

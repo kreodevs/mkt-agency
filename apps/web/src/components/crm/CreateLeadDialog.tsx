@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { Dialog } from '@/components/molecules/Dialog';
 import { InputText } from '@/components/atoms/InputText';
 
@@ -107,24 +108,17 @@ export function CreateLeadDialog({
           onChange={(e) => setForm((current) => ({ ...current, company: e.target.value }))}
         />
         {products.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="create-lead-product" className="text-sm font-medium">
-              Producto
-            </label>
-            <select
-              id="create-lead-product"
-              className="h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
-              value={form.productId}
-              onChange={(e) => setForm((current) => ({ ...current, productId: e.target.value }))}
-            >
-              <option value="">Sin asignar</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Producto"
+            id="create-lead-product"
+            value={form.productId}
+            onChange={(e) => setForm((current) => ({ ...current, productId: e.target.value }))}
+            placeholder="Sin asignar"
+            options={products.map((product) => ({
+              value: product.id,
+              label: product.name,
+            }))}
+          />
         )}
         <div className="flex flex-col gap-1">
           <label htmlFor="create-lead-note" className="text-sm font-medium">

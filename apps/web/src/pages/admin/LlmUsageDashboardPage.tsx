@@ -103,6 +103,7 @@ export default function LlmUsageDashboardPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Plataforma"
           title="Consumo IA"
           description="Tokens consumidos y costo estimado global y por tenant (OpenRouter)."
         />

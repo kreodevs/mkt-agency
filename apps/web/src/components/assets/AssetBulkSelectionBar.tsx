@@ -1,11 +1,9 @@
 import { FolderInput, Trash2 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import { resolveFolderPath } from '@/lib/asset-folder-tree';
 import type { AssetFolder } from '@/types/assets';
-
-const selectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 type AssetBulkSelectionBarProps = {
   selectedCount: number;
@@ -48,20 +46,21 @@ export function AssetBulkSelectionBar({
         {lockedCount > 0 && ` · ${lockedCount} en uso (no se eliminarán)`}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          className={selectClass}
+        <Select
+          fullWidth={false}
+          className="min-w-[10rem]"
+          aria-label="Mover a carpeta"
           value={moveTargetFolder}
           onChange={(event) => onMoveTargetChange(event.target.value)}
-          aria-label="Mover a carpeta"
-        >
-          <option value="">Mover a…</option>
-          <option value="__root__">Sin carpeta</option>
-          {folders.map((folder) => (
-            <option key={folder.id} value={folder.id}>
-              {resolveFolderPath(folders, folder.id)}
-            </option>
-          ))}
-        </select>
+          placeholder="Mover a…"
+          options={[
+            { value: '__root__', label: 'Sin carpeta' },
+            ...folders.map((folder) => ({
+              value: folder.id,
+              label: resolveFolderPath(folders, folder.id) ?? folder.name,
+            })),
+          ]}
+        />
         <Button
           type="button"
           variant="secondary"

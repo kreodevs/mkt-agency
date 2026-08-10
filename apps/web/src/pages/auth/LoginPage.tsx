@@ -61,7 +61,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          <Button type="submit" loading={loading} className="w-full">
+          <Button type="submit" variant="brand" loading={loading} className="w-full">
             Entrar
           </Button>
           <p className="text-center text-sm text-[var(--foreground-muted)]">

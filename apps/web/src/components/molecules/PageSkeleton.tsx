@@ -37,6 +37,16 @@ export function ProductPageSkeleton() {
   );
 }
 
+export function ListPageSkeleton() {
+  return (
+    <div className="page-stack" aria-busy="true" aria-label="Cargando listado">
+      <SkeletonBlock className="h-10 w-72" />
+      <SkeletonBlock className="h-12 w-full max-w-2xl" />
+      <SkeletonBlock className="h-64 w-full" />
+    </div>
+  );
+}
+
 export function AssetGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div

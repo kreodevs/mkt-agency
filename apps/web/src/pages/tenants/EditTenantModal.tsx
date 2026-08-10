@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/molecules/Dialog';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { toast } from '@/components/molecules/Sonner';
 import { getApiErrorMessage } from '@/services/api';
 import { listPackages } from '@/services/packages';
@@ -17,8 +18,6 @@ interface EditTenantModalProps {
   onUpdated: () => void;
 }
 
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 const STATUS_OPTIONS: Array<{ label: string; value: TenantStatus }> = [
   { label: 'Activo', value: 'active' },
@@ -148,58 +147,37 @@ export function EditTenantModal({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-                Plan
-              </label>
-              <select
-                className={selectClass}
-                value={plan}
-                onChange={(e) => setPlan(e.target.value as TenantPlan)}
-              >
-                {PLAN_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Plan"
+              value={plan}
+              onChange={(e) => setPlan(e.target.value as TenantPlan)}
+              options={PLAN_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+            />
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-                Estado
-              </label>
-              <select
-                className={selectClass}
-                value={status}
-                onChange={(e) => setStatus(e.target.value as TenantStatus)}
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Estado"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as TenantStatus)}
+              options={STATUS_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+            />
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              Paquete
-            </label>
-            <select
-              className={selectClass}
-              value={packageId}
-              onChange={(e) => setPackageId(e.target.value)}
-            >
-              <option value="">Sin paquete</option>
-              {activePackages.map((pkg) => (
-                <option key={pkg.id} value={pkg.id}>
-                  {pkg.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Paquete"
+            value={packageId}
+            onChange={(e) => setPackageId(e.target.value)}
+            placeholder="Sin paquete"
+            options={activePackages.map((pkg) => ({
+              value: pkg.id,
+              label: pkg.name,
+            }))}
+          />
 
           <InputText
             label="Usuarios máximos"

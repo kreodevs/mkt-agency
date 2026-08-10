@@ -133,6 +133,19 @@
     background: var(--card);
     box-shadow: var(--shadow-md);
   }
+
+  .page-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+  }
 }
 
 /* ── tailwindcss-animate fix: animation-fill-mode ── */

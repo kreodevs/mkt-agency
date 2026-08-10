@@ -5,6 +5,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import { StatusBadge } from '@/components/content/StatusBadge';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
@@ -312,23 +313,18 @@ export default function ContentEditPage() {
               </Button>
 
               <div className="flex flex-col gap-[var(--spacing-xs)]">
-                <label htmlFor="content-visual-format" className="text-sm font-medium">
-                  Formato visual (IA)
-                </label>
-                <select
-                  id="content-visual-format"
-                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm"
-                  value={visualFormat}
-                  onChange={(event) =>
-                    setVisualFormat(event.target.value as ContentVisualFormat)
-                  }
-                >
-                  {CONTENT_VISUAL_FORMATS.map((format) => (
-                    <option key={format} value={format}>
-                      {CONTENT_VISUAL_FORMAT_LABELS[format]}
-                    </option>
-                  ))}
-                </select>
+              <Select
+                label="Formato visual (IA)"
+                id="content-visual-format"
+                value={visualFormat}
+                onChange={(event) =>
+                  setVisualFormat(event.target.value as ContentVisualFormat)
+                }
+                options={CONTENT_VISUAL_FORMATS.map((format) => ({
+                  value: format,
+                  label: CONTENT_VISUAL_FORMAT_LABELS[format],
+                }))}
+              />
                 <p className="text-xs text-[var(--foreground-muted)]">
                   {CONTENT_VISUAL_FORMAT_HINTS[visualFormat]}
                 </p>

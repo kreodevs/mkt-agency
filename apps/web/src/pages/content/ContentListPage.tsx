@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import {
   ContentVisualActions,
@@ -45,8 +46,13 @@ function statusVariant(status: ContentStatus) {
   return 'neutral';
 }
 
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+
+function productFilterOptions(items: { id: string; name: string }[]) {
+  return [
+    { value: '', label: 'Todos los productos' },
+    ...items.map((product) => ({ value: product.id, label: product.name })),
+  ];
+}
 
 export default function ContentListPage() {
   const [searchParams] = useSearchParams();
@@ -165,6 +171,7 @@ export default function ContentListPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Editorial"
         title="Contenidos"
         description={
           campaignId
@@ -173,7 +180,7 @@ export default function ContentListPage() {
         }
         actions={
           <Link to={newHref}>
-            <Button>
+            <Button variant="brand">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo contenido
             </Button>
@@ -181,45 +188,38 @@ export default function ContentListPage() {
         }
       />
 
-      <Card>
-        <div className="mb-4 flex flex-wrap gap-3">
-          <select
-            className={filterSelectClass}
+      <Card variant="elevated">
+        <div className="filter-row mb-4">
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por estado"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | ContentStatus)}
-            aria-label="Filtrar por estado"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className={filterSelectClass}
+            options={STATUS_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por tipo"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as '' | ContentType)}
-            aria-label="Filtrar por tipo"
-          >
-            {TYPE_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className={filterSelectClass}
+            options={TYPE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem]"
+            aria-label="Filtrar por producto"
             value={productFilter}
             onChange={(e) => setProductFilter(e.target.value)}
-            aria-label="Filtrar por producto"
-          >
-            <option value="">Todos los productos</option>
-            {(productsQuery.data?.items ?? []).map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
+            options={productFilterOptions(productsQuery.data?.items ?? [])}
+          />
         </div>
 
         <div className="space-y-[var(--spacing-md)] md:hidden">

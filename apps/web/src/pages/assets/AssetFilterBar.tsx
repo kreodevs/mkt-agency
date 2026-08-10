@@ -1,5 +1,6 @@
 import { FolderTree } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import { AssetUploader } from '@/components/assets/AssetUploader';
 import { type FolderSelection } from '@/components/assets/AssetFolderTree';
@@ -8,9 +9,6 @@ import { listFoldersByPath } from '@/lib/asset-folder-tree';
 import { type AssetFolder } from '@/types/assets';
 
 type ViewMode = 'grid' | 'table';
-
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 type AssetFilterBarProps = {
   folderFilter: FolderSelection;
@@ -44,23 +42,22 @@ export function AssetFilterBar({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         <Card className="border-0 shadow-none lg:border lg:shadow-sm">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="flex min-w-[200px] flex-1 flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--foreground-muted)]">Carpeta</label>
-              <div className="flex gap-2">
-                <select
-                  className={`${filterSelectClass} min-w-0 flex-1`}
+            <div className="flex min-w-[200px] flex-1 gap-2">
+                <Select
+                  label="Carpeta"
+                  className="min-w-0 flex-1"
                   value={folderFilter}
                   onChange={(e) => onFolderFilterChange(e.target.value as FolderSelection)}
                   aria-label="Carpeta activa"
-                >
-                  <option value="">Todas las carpetas</option>
-                  <option value="__unfiled__">Sin carpeta</option>
-                  {folderOptions.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                      {folder.path}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: 'Todas las carpetas' },
+                    { value: '__unfiled__', label: 'Sin carpeta' },
+                    ...folderOptions.map((folder) => ({
+                      value: folder.id,
+                      label: folder.path,
+                    })),
+                  ]}
+                />
                 <Button
                   type="button"
                   variant="outline"
@@ -72,23 +69,21 @@ export function AssetFilterBar({
                   Organizar
                 </Button>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--foreground-muted)]">Tipo</label>
-              <select
-                className={filterSelectClass}
-                value={typeFilter}
-                onChange={(e) => onTypeFilterChange(e.target.value as '' | AssetType)}
-              >
-                <option value="">Todos</option>
-                {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Tipo"
+              fullWidth={false}
+              className="min-w-[8rem]"
+              value={typeFilter}
+              onChange={(e) => onTypeFilterChange(e.target.value as '' | AssetType)}
+              options={[
+                { value: '', label: 'Todos' },
+                ...Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => ({
+                  value,
+                  label,
+                })),
+              ]}
+            />
 
             <div className="hidden flex-col gap-1 sm:flex">
               <label className="text-xs font-medium text-[var(--foreground-muted)]">Vista</label>

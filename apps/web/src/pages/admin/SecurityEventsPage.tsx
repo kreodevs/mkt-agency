@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
@@ -9,9 +10,6 @@ import { DataTable, type DataTableColumn } from '@/components/organisms/DataTabl
 import { SecurityEventCard } from '@/components/admin/SecurityEventCard';
 import { listSecurityEvents } from '@/services/security';
 import type { SecurityEvent, SecurityEventSeverity } from '@/types/security';
-
-const filterInputClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 const severityOptions: { value: '' | SecurityEventSeverity; label: string }[] = [
   { value: '', label: 'Todas' },
@@ -105,29 +103,21 @@ export default function SecurityEventsPage() {
     <DashboardShell navigationOverride={superadminNavigation}>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Plataforma"
           title="Eventos de seguridad"
           description="Intentos de acceso, bloqueos y alertas de seguridad del sistema."
         />
 
         <Card className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              Severidad
-            </label>
-            <select
-              className={filterInputClass}
-              value={severity}
-              onChange={(event) =>
-                setSeverity(event.target.value as '' | SecurityEventSeverity)
-              }
-            >
-              {severityOptions.map((option) => (
-                <option key={option.value || 'all'} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Severidad"
+            value={severity}
+            onChange={(event) => setSeverity(event.target.value as '' | SecurityEventSeverity)}
+            options={severityOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
           <InputText
             label="Tipo de evento"
             placeholder="auth.login_failed"

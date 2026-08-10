@@ -1,9 +1,7 @@
 import type { SectionFieldConfig } from '@/config/onboarding-sections';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--input-border)] bg-[var(--input)] px-[var(--spacing-md)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 interface SectionStepFormProps {
   fields: SectionFieldConfig[];
@@ -22,10 +20,12 @@ export function SectionStepForm({
     <div className="space-y-4">
       {fields.map((field) => (
         <div key={field.name} className="flex flex-col gap-[var(--spacing-xs)]">
-          <label className="text-sm font-medium text-[var(--foreground)]">
-            {field.label}
-            {field.required && <span className="text-[var(--destructive)]"> *</span>}
-          </label>
+          {field.type !== 'select' && (
+            <label className="text-sm font-medium text-[var(--foreground)]">
+              {field.label}
+              {field.required && <span className="text-[var(--destructive)]"> *</span>}
+            </label>
+          )}
 
           {field.type === 'textarea' ? (
             <Textarea
@@ -35,18 +35,16 @@ export function SectionStepForm({
               rows={field.rows ?? 4}
             />
           ) : field.type === 'select' ? (
-            <select
-              className={selectClass}
+            <Select
+              label={field.label + (field.required ? ' *' : '')}
               value={values[field.name] ?? ''}
               onChange={(e) => onChange(field.name, e.target.value)}
-            >
-              <option value="">Selecciona...</option>
-              {field.options?.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecciona..."
+              options={(field.options ?? []).map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+            />
           ) : (
             <InputText
               type={field.type === 'url' ? 'url' : 'text'}

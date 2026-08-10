@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Plus } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { IconButton } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -20,9 +21,6 @@ import {
   type Report,
   type ReportType,
 } from '@/types/reports';
-
-const filterSelectClass =
-  'h-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 export default function ReportListPage() {
   const queryClient = useQueryClient();
@@ -92,26 +90,22 @@ export default function ReportListPage() {
     <DashboardShell>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Growth"
           title="Reportes"
           description="Informes de rendimiento generados por IA a partir de tus datos."
         />
 
         <Card className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              Tipo de reporte
-            </label>
-            <select
-              className={filterSelectClass}
+            <Select
+              label="Tipo de reporte"
               value={type}
               onChange={(event) => setType(event.target.value as ReportType)}
-            >
-              {Object.entries(REPORT_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              options={Object.entries(REPORT_TYPE_LABELS).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
           </div>
           <Button
             type="button"

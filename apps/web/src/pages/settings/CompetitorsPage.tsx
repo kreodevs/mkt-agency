@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
-import { MentionList, filterSelectClass } from '@/components/competitors/MentionList';
+import { MentionList } from '@/components/competitors/MentionList';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -113,6 +114,7 @@ export default function CompetitorsPage() {
     <DashboardShell>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Inteligencia"
           title="Competidores"
           description="Registra competidores y consulta menciones detectadas en fuentes públicas."
         />
@@ -167,20 +169,20 @@ export default function CompetitorsPage() {
               <h2 className="text-lg font-semibold text-[var(--foreground)]">
                 Menciones — {selected.name}
               </h2>
-              <select
-                className={filterSelectClass}
+              <Select
+                fullWidth={false}
+                className="min-w-[12rem]"
+                aria-label="Filtrar por sentimiento"
                 value={sentimentFilter}
                 onChange={(event) =>
                   setSentimentFilter(event.target.value as '' | MentionSentiment)
                 }
-              >
-                <option value="">Todos los sentimientos</option>
-                {Object.entries(SENTIMENT_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Todos los sentimientos"
+                options={Object.entries(SENTIMENT_LABELS).map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+              />
             </div>
             <MentionList competitorId={selected.id} sentimentFilter={sentimentFilter} />
           </div>

@@ -19,6 +19,7 @@ import {
 import { ApiError } from '@/services/api';
 import { parseImageGenerationMetadata, isVideoGeneration } from '@/lib/image-generation';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import {
@@ -36,6 +37,13 @@ const STYLE_OPTIONS = [
   { label: 'Creativo', value: 'creative artistic' },
   { label: 'Ilustración', value: 'flat illustration vector' },
 ];
+
+const DESTINATION_OPTIONS = IMAGE_DESTINATION_GROUPS.flatMap((group) =>
+  group.formats.map((format) => ({
+    value: format.id,
+    label: `${group.label} — ${formatDestinationOptionLabel(format)}`,
+  })),
+);
 
 export default function ImageGeneratorPage() {
   const [prompt, setPrompt] = useState('');
@@ -136,6 +144,7 @@ export default function ImageGeneratorPage() {
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
       <PageHeader
+        eyebrow="Agente IA"
         title="Image Generator"
         description="Genera imágenes para tus campañas con inteligencia artificial."
         actions={
@@ -298,37 +307,22 @@ export default function ImageGeneratorPage() {
               fullWidth
             />
             <div className="grid gap-4 sm:grid-cols-2">
+              <Select
+                label="Estilo"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                options={STYLE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+              />
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Estilo</label>
-                <select
-                  value={style}
-                  onChange={(e) => setStyle(e.target.value)}
-                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-                >
-                  {STYLE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-                  Destino
-                </label>
-                <select
+                <Select
+                  label="Destino"
                   value={destinationId}
                   onChange={(e) => setDestinationId(e.target.value)}
-                  className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-                >
-                  {IMAGE_DESTINATION_GROUPS.map((group) => (
-                    <optgroup key={group.platform} label={group.label}>
-                      {group.formats.map((format) => (
-                        <option key={format.id} value={format.id}>
-                          {formatDestinationOptionLabel(format)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                  options={DESTINATION_OPTIONS}
+                />
                 <p className="mt-1 text-xs text-[var(--foreground-muted)]">
                   {destination.platform === 'general'
                     ? 'Formato compatible con varias redes del Community Manager.'

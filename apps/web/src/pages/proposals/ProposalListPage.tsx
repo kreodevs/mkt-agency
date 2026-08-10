@@ -102,6 +102,7 @@ export default function ProposalListPage() {
     <DashboardShell>
       <div className="space-y-6">
         <PageHeader
+          eyebrow="Growth"
           title="Propuestas comerciales"
           description="Genera propuestas con IA, revísalas y fírmalas digitalmente."
         />

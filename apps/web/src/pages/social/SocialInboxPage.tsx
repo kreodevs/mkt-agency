@@ -104,6 +104,7 @@ export default function SocialInboxPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={isSoho ? 'Copiloto SOHO' : 'Social'}
         title="Inbox social"
         description={
           isSoho
@@ -116,6 +117,7 @@ export default function SocialInboxPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card
+          variant="elevated"
           title="Registrar interacción"
           subtitle="Pega un comentario o DM que recibiste (modo manual hasta conectar OAuth)"
         >
@@ -134,6 +136,7 @@ export default function SocialInboxPage() {
           />
           <Button
             type="button"
+            variant="brand"
             className="mt-4"
             disabled={!message.trim() || ingestMutation.isPending}
             onClick={() => ingestMutation.mutate()}

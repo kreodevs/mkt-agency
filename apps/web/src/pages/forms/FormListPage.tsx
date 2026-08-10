@@ -5,6 +5,7 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { FormSnippet } from '@/components/forms/FormSnippet';
 import { FormListCard } from '@/components/forms/FormListCard';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -18,8 +19,12 @@ import { listProducts } from '@/services/products';
 import { DEFAULT_FORM_FIELDS } from '@/types/forms';
 import type { DataTableColumn } from '@/components/organisms/DataTable';
 
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
+function productOptions(products: Array<{ id: string; name: string }>) {
+  return [
+    { value: '', label: 'Sin producto' },
+    ...products.map((p) => ({ value: p.id, label: p.name })),
+  ];
+}
 
 export default function FormListPage() {
   const queryClient = useQueryClient();
@@ -158,6 +163,7 @@ export default function FormListPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Captura"
         title="Formularios embebidos"
         description="Captura leads desde tu sitio web con snippet JS — asócialos a un producto"
         actions={
@@ -169,21 +175,12 @@ export default function FormListPage() {
               placeholder="Nombre del formulario"
             />
             <div className="min-w-[180px]">
-              <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">
-                Producto
-              </label>
-              <select
-                className={selectClass}
+              <Select
+                label="Producto"
                 value={newProductId}
                 onChange={(e) => setNewProductId(e.target.value)}
-              >
-                <option value="">Sin producto</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                options={productOptions(products)}
+              />
             </div>
             <Button
               type="button"
@@ -252,22 +249,15 @@ export default function FormListPage() {
               <p className="mb-3 text-xs text-[var(--foreground-muted)]">
                 Los leads capturados heredarán este producto automáticamente.
               </p>
-              <select
-                className={selectClass}
+              <Select
                 value={selectedForm.productId ?? ''}
                 disabled={updateProductMutation.isPending}
                 onChange={(e) => {
                   const productId = e.target.value || null;
                   updateProductMutation.mutate({ id: selectedForm.id, productId });
                 }}
-              >
-                <option value="">Sin producto</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                options={productOptions(products)}
+              />
             </Card>
           )}
           <FormSnippet snippet={snippetQuery.data} loading={snippetQuery.isLoading} />

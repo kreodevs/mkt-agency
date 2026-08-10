@@ -1,5 +1,6 @@
 import { Bookmark, Globe, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import {
   PLATFORM_ICONS,
@@ -49,24 +50,16 @@ export function CmGeneratorForm({
   return (
     <Card className="mb-6">
       <div className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-            Producto a promocionar
-          </label>
-          <select
-            value={productId}
-            onChange={(e) => onProductIdChange(e.target.value)}
-            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-          >
-            <option value="">Selecciona un producto</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-                {product.isPrimary ? ' (principal)' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Producto a promocionar"
+          value={productId}
+          onChange={(e) => onProductIdChange(e.target.value)}
+          placeholder="Selecciona un producto"
+          options={products.map((product) => ({
+            value: product.id,
+            label: `${product.name}${product.isPrimary ? ' (principal)' : ''}`,
+          }))}
+        />
 
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -101,22 +94,15 @@ export function CmGeneratorForm({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-              Posts a generar
-            </label>
-            <select
-              value={count}
-              onChange={(e) => onCountChange(Number(e.target.value))}
-              className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)]"
-            >
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>
-                  {n} {n === 1 ? 'post' : 'posts'}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Posts a generar"
+            value={String(count)}
+            onChange={(e) => onCountChange(Number(e.target.value))}
+            options={[1, 2, 3, 4, 5, 6].map((n) => ({
+              value: String(n),
+              label: `${n} ${n === 1 ? 'post' : 'posts'}`,
+            }))}
+          />
 
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">

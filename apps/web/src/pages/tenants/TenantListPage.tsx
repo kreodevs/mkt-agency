@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, UserRoundSearch } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
+import { Select } from '@/components/atoms/Select';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { TenantListCard } from '@/components/tenants/TenantListCard';
@@ -159,6 +160,7 @@ export default function TenantListPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow="Plataforma"
         title="Tenants"
         description="Gestión de organizaciones registradas en la plataforma"
         actions={
@@ -183,31 +185,29 @@ export default function TenantListPage() {
       />
 
       <Card>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <select
-            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] sm:w-auto"
+        <div className="filter-row mb-4">
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem] sm:w-auto"
+            aria-label="Filtrar por estado"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | TenantStatus)}
-            aria-label="Filtrar por estado"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] sm:w-auto"
+            options={STATUS_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Select
+            fullWidth={false}
+            className="min-w-[11rem] sm:w-auto"
+            aria-label="Filtrar por plan"
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value as '' | TenantPlan)}
-            aria-label="Filtrar por plan"
-          >
-            {PLAN_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            options={PLAN_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
         </div>
 
         <div className="space-y-[var(--spacing-md)] md:hidden">

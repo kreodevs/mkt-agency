@@ -4,7 +4,7 @@
 
 - **Brand accent:** `--brand` / `--color-brand` (terracota `#c2410c`) — CTAs, progreso, acentos
 - **Neutros:** ivory & slate (Anthropic-inspired)
-- Utilidades: `.page-hero`, `.brand-gradient-text`, `.kreo-surface-elevated`
+- Utilidades: `.page-hero`, `.brand-gradient-text`, `.kreo-surface-elevated`, `.page-stack`, `.filter-row`
 
 - **atoms:** Button, IconButton, InputText, Password, Avatar, StatusPill, Checkbox, Textarea, **Select**
 - **molecules:** Card (variants: default, elevated, accent, glass), PageHeader, StatsCard, EmptyState, Stepper, Progress, Sonner, …

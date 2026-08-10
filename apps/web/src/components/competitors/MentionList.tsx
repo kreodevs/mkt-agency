@@ -8,9 +8,6 @@ import {
   type MentionSentiment,
 } from '@/types/competitors';
 
-const filterSelectClass =
-  'h-9 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-2 text-sm text-[var(--foreground)]';
-
 interface MentionListProps {
   competitorId: string;
   sentimentFilter: '' | MentionSentiment;
@@ -71,5 +68,3 @@ export function MentionList({ competitorId, sentimentFilter }: MentionListProps)
     </ul>
   );
 }
-
-export { filterSelectClass };

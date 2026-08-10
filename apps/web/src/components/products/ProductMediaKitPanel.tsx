@@ -3,6 +3,7 @@ import { Film, FolderOpen, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
@@ -20,9 +21,6 @@ import {
   PRODUCT_MEDIA_ROLES,
   type ProductMediaRole,
 } from '@/types/product';
-
-const selectClass =
-  'h-10 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]';
 
 const ACCEPTED_MIME_PREFIXES = ['image/', 'video/'];
 
@@ -163,21 +161,16 @@ export function ProductMediaKitPanel({
   return (
     <div className="space-y-[var(--spacing-lg)]">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-[var(--foreground)]">Tipo de asset</span>
-          <select
-            className={selectClass}
-            value={role}
-            disabled={isBusy}
-            onChange={(e) => setRole(e.target.value as ProductMediaRole)}
-          >
-            {PRODUCT_MEDIA_ROLES.map((value) => (
-              <option key={value} value={value}>
-                {PRODUCT_MEDIA_ROLE_LABELS[value]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Tipo de asset"
+          value={role}
+          disabled={isBusy}
+          onChange={(e) => setRole(e.target.value as ProductMediaRole)}
+          options={PRODUCT_MEDIA_ROLES.map((value) => ({
+            value,
+            label: PRODUCT_MEDIA_ROLE_LABELS[value],
+          }))}
+        />
 
         <InputText
           label="Etiqueta (opcional)"

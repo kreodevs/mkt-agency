@@ -50,6 +50,7 @@ export default function AgencyActivityPage() {
   return (
     <DashboardShell>
       <PageHeader
+        eyebrow={isSoho ? 'Copiloto SOHO' : 'Growth'}
         title="Actividad de agentes"
         description={
           isSoho
