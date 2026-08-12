@@ -569,7 +569,7 @@ export default function BrandInterviewPage() {
             type="button"
             onClick={handleSend}
             disabled={!canAnswer || !answer.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:text-[var(--foreground-muted)] disabled:hover:opacity-100"
           >
             <Send className="h-4 w-4" />
           </button>

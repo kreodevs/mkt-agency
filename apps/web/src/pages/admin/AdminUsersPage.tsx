@@ -292,7 +292,7 @@ export default function AdminUsersPage() {
                 Cancelar
               </button>
               <button
-                className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:text-[var(--foreground-muted)]"
                 disabled={updateMutation.isPending}
                 onClick={() =>
                   updateMutation.mutate({
