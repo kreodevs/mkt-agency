@@ -119,10 +119,16 @@ export default function AgencyHomePage() {
               desc: 'Log del copiloto y analytics lite',
             },
             {
+              to: '/copilot/competitors',
+              icon: Users,
+              title: 'Análisis competidores',
+              desc: 'Rivales, oportunidades y reporte IA',
+            },
+            {
               to: navLinks.agents,
               icon: Sparkles,
               title: 'Agentes IA',
-              desc: 'Brand Analyst, competencia e imágenes',
+              desc: 'Brand Analyst e imágenes',
             },
           ]
         : [

@@ -4,6 +4,7 @@ import type {
   ListTenantsParams,
   PaginatedTenantsResponse,
   Tenant,
+  TenantHealthOverview,
   UpdateTenantPayload,
 } from '@/types/tenant';
 
@@ -64,4 +65,8 @@ export async function updateTenant(id: string, payload: UpdateTenantPayload): Pr
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function getTenantHealthOverview(): Promise<TenantHealthOverview> {
+  return apiFetch('/tenants/health/overview');
 }

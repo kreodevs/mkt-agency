@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCheck,
   ClipboardCheck,
+  Crosshair,
   FolderOpen,
   Layers,
   PartyPopper,
@@ -51,13 +52,19 @@ import {
 import { useActiveProductStore } from '@/store/active-product';
 import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import { withActiveProductQuery } from '@/store/active-product';
+
+const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
 
 export default function PublicationInboxPage() {
   const queryClient = useQueryClient();
   const advancedNav = useAdvancedNav();
+  const { isSoho } = useOperatingProfile();
   const advancedGuideDismissed = useCopilotUiStore((s) => s.advancedGuideDismissed);
   const dismissAdvancedGuide = useCopilotUiStore((s) => s.dismissAdvancedGuide);
   const sohoMode = !advancedNav;
+  const showCopilotAgents = sohoMode || isSoho;
   const [searchParams, setSearchParams] = useSearchParams();
   const activeProductId = useActiveProductStore((s) => s.productId);
   const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
@@ -454,18 +461,31 @@ export default function PublicationInboxPage() {
         <div className="space-y-[var(--spacing-lg)] lg:order-2">
           <CopilotStatusPanel productId={activeProductId ?? undefined} />
 
-          {sohoMode && (
-            <Card title="Agentes IA" subtitle="Complemento manual del copiloto semanal">
+          {showCopilotAgents && (
+            <Card title="Copiloto IA" subtitle="Complemento manual de tu semana">
               <div className="space-y-[var(--spacing-sm)] text-sm">
+                <Link
+                  to={withActiveProductQuery(COPILOT_COMPETITORS_PATH)}
+                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--brand)]/30 bg-[var(--brand-muted)]/50 p-[var(--spacing-md)] transition-colors hover:border-[var(--brand)]"
+                >
+                  <Crosshair className="h-4 w-4 shrink-0 text-[var(--brand)]" />
+                  <span>
+                    <span className="block font-medium text-[var(--foreground)]">
+                      Análisis de competidores
+                    </span>
+                    <span className="text-xs text-[var(--foreground-muted)]">
+                      Descubre rivales y genera el reporte estratégico
+                    </span>
+                  </span>
+                </Link>
                 {[
                   { to: '/agents', label: 'Catálogo de agentes', icon: Bot },
                   { to: '/agents/brand-interview', label: 'Brand Analyst', icon: Bot },
-                  { to: '/agents/competitor-intel', label: 'Competitor Intel', icon: Bot },
                   { to: '/agents/image-generator', label: 'Generador de imágenes', icon: Bot },
                 ].map((item) => (
                   <Link
                     key={item.to}
-                    to={item.to}
+                    to={withActiveProductQuery(item.to)}
                     className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
                   >
                     <item.icon className="h-4 w-4 shrink-0 text-[var(--primary)]" />

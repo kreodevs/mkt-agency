@@ -47,3 +47,26 @@ export interface PaginatedTenantsResponse {
   page: number;
   limit: number;
 }
+
+export interface TenantHealthIssue {
+  code: 'pending_approvals' | 'llm_unavailable' | 'inactive_tenant';
+  severity: 'warning' | 'critical';
+  message: string;
+}
+
+export interface TenantHealthSnapshot {
+  tenantId: string;
+  tenantName: string;
+  tenantSlug: string;
+  status: string;
+  operatingProfile: 'soho' | 'growth';
+  pendingApprovals: number;
+  readyToPublish: number;
+  issues: TenantHealthIssue[];
+}
+
+export interface TenantHealthOverview {
+  llmAvailable: boolean;
+  generatedAt: string;
+  tenants: TenantHealthSnapshot[];
+}

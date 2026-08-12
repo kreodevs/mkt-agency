@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Instagram,
@@ -142,6 +143,26 @@ export default function CopilotSettingsPage() {
         </Card>
 
         <OperatingProfileCard />
+
+        {!isGrowth && (
+          <Card
+            variant="elevated"
+            title="Modo Copiloto SOHO"
+            subtitle="Tú publicas manualmente; la IA prepara copy y análisis"
+          >
+            <ul className="space-y-2 text-sm text-[var(--foreground-muted)]">
+              <li>• Prepara tu semana desde la bandeja de inicio.</li>
+              <li>
+                • Usa{' '}
+                <Link to="/copilot/competitors" className="text-[var(--brand)] hover:underline">
+                  Análisis competidores
+                </Link>{' '}
+                para descubrir rivales antes de generar posts.
+              </li>
+              <li>• Cambia a Growth cuando quieras campañas, estrategia y pauta asistida.</li>
+            </ul>
+          </Card>
+        )}
 
         {isGrowth && (
           <Card variant="elevated" title="Vista Growth" subtitle="Herramientas de agencia activas">

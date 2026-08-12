@@ -24,11 +24,20 @@ import {
   TenantResponseDto,
 } from './dto/tenant.response.dto';
 import { TenantService } from './tenant.service';
+import { TenantHealthService } from './services/tenant-health.service';
 
 @Controller('tenants')
 @UseGuards(SuperadminGuard)
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly tenantHealth: TenantHealthService,
+  ) {}
+
+  @Get('health/overview')
+  getHealthOverview() {
+    return this.tenantHealth.getOverview();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

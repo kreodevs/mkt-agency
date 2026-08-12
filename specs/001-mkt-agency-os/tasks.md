@@ -1044,14 +1044,17 @@ Producto multi-tenant donde el **dueño del negocio** aprueba y publica; sin API
 
 ### E-A6: Escala multi-tenant sin perder control (Fase 4)
 
-- [ ] [P] Perfiles SOHO / Growth más explícitos en onboarding
+- [x] [P] Perfiles SOHO / Growth más explícitos en onboarding
   **Epic:** E-A6
+  **Archivo:** `apps/web/src/pages/settings/CopilotSettingsPage.tsx`
 
-- [ ] [P] Payload n8n enriquecido (arte, copy, UTM, contentId)
+- [x] [P] Payload n8n enriquecido (arte, copy, UTM, contentId)
   **Epic:** E-A6
+  **Archivo:** `apps/backend/src/modules/product/product-publish-webhook.service.ts`
 
-- [ ] [P] Consola superadmin: salud por tenant (sin aprobar, LLM caído)
+- [x] [P] Consola superadmin: salud por tenant (sin aprobar, LLM caído)
   **Epic:** E-A6
+  **Archivo:** `apps/backend/src/modules/tenant/services/tenant-health.service.ts`
 
 ---
 

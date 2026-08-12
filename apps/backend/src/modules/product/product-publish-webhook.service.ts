@@ -20,8 +20,21 @@ import {
 import { ProductPublishIntegrationService } from '../product/product-publish-integration.service';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { toDateKey, todayDateKey } from '../../shared/domain/date-key.util';
+import {
+  buildPublishUtmQuery,
+  buildPublishUtmTags,
+  type PublishUtmTags,
+} from './domain/publish-utm.util';
 
 export type PublishWebhookTrigger = 'content.ready_to_publish' | 'content.manual_publish';
+
+export interface PublishWebhookPrimaryAsset {
+  assetId: string;
+  url: string;
+  mimeType: string | null;
+  fileName: string;
+  expiresIn: number;
+}
 
 export interface PublishWebhookPayload {
   event: PublishWebhookTrigger;
@@ -29,19 +42,18 @@ export interface PublishWebhookPayload {
   productId: string;
   productName: string;
   contentId: string;
+  campaignId: string | null;
   platform: string | null;
   title: string;
   copy: string;
   scheduledDate: string;
   visualFormat: string;
   versionId: string;
-  assets: Array<{
-    assetId: string;
-    url: string;
-    mimeType: string | null;
-    fileName: string;
-    expiresIn: number;
-  }>;
+  signatureHash: string | null;
+  utm: PublishUtmTags;
+  utmQuery: string;
+  primaryAsset: PublishWebhookPrimaryAsset | null;
+  assets: PublishWebhookPrimaryAsset[];
   callbackUrl: string;
   credentials: ProductPlatformCredential | null;
 }
@@ -274,18 +286,32 @@ export class ProductPublishWebhookService {
         ? content.createdAt.toISOString().slice(0, 10)
         : new Date(content.createdAt).toISOString().slice(0, 10));
 
+    const utm = buildPublishUtmTags({
+      tenantId,
+      productId: product.id,
+      contentId: content.id,
+      platform: content.platform,
+      campaignId: content.campaignId,
+      productSlug: product.name,
+    });
+
     return {
       event: trigger,
       tenantId,
       productId: product.id,
       productName: product.name,
       contentId: content.id,
+      campaignId: content.campaignId,
       platform: content.platform,
       title: content.title,
       copy: sanitizePublishableCopy(version.body ?? ''),
       scheduledDate,
       visualFormat: content.visualFormat ?? 'image',
       versionId: version.id,
+      signatureHash: version.signatureHash ?? null,
+      utm,
+      utmQuery: buildPublishUtmQuery(utm),
+      primaryAsset: assets[0] ?? null,
       assets,
       callbackUrl,
       credentials,

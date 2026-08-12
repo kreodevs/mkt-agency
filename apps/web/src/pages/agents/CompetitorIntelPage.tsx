@@ -4,7 +4,7 @@ import { ChevronLeft, Crosshair, Loader2, RefreshCw, Sparkles } from 'lucide-rea
 import { Link, useSearchParams } from 'react-router-dom';
 import { CompetitorAnalysisReport } from '@/components/agents/CompetitorAnalysisReport';
 import { CompetitorIntelHistory } from '@/components/agents/CompetitorIntelHistory';
-import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { EmptyState } from '@/components/molecules/EmptyState';
@@ -16,6 +16,9 @@ import { ApiError } from '@/services/api';
 import { CompetitorDiscoveryPanel } from '@/components/competitors/CompetitorDiscoveryPanel';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import { withActiveProductQuery } from '@/store/active-product';
+import { isImpersonating } from '@/lib/impersonation';
 
 export default function CompetitorIntelPage() {
   const queryClient = useQueryClient();
@@ -23,6 +26,9 @@ export default function CompetitorIntelPage() {
   const [pollId, setPollId] = useState<string | null>(null);
   const selectedAnalysisId = searchParams.get('analysis');
   const resolvedProductId = useResolvedProductId();
+  const { isSoho } = useOperatingProfile();
+  const copilotMode = isSoho || isImpersonating();
+  const withProduct = (href: string) => withActiveProductQuery(href);
 
   const analysesQuery = useQuery({
     queryKey: ['competitor-analyses'],
@@ -85,16 +91,20 @@ export default function CompetitorIntelPage() {
   const latestFailed = analyses.find((a) => a.status === 'failed');
 
   return (
-    <DashboardShell navigationOverride={tenantNavigation}>
+    <DashboardShell>
       <PageHeader
-        eyebrow="Agente IA"
-        title="Competitor Intel"
-        description="Análisis profundo de tus competidores: fortalezas, debilidades y oportunidades de mercado."
+        eyebrow={copilotMode ? 'Copiloto SOHO' : 'Agente IA'}
+        title="Análisis de competidores"
+        description={
+          copilotMode
+            ? 'Descubre rivales, analiza el mercado y alimenta el copy de tu semana — tú apruebas cada publicación.'
+            : 'Análisis profundo de tus competidores: fortalezas, debilidades y oportunidades de mercado.'
+        }
         actions={
-          <Link to="/agents">
+          <Link to={withProduct(copilotMode ? '/' : '/agents')}>
             <Button variant="ghost" size="sm" className="gap-1.5">
               <ChevronLeft className="h-4 w-4" />
-              Agentes
+              {copilotMode ? 'Bandeja' : 'Agentes'}
             </Button>
           </Link>
         }

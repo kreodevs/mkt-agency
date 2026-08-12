@@ -22,6 +22,7 @@ import {
   Shield,
   Sparkles,
   Target,
+  Crosshair,
   Users,
   AlertTriangle,
 } from 'lucide-react';
@@ -115,6 +116,7 @@ export const tenantSohoNavigation = [
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
       { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
+      { label: 'Análisis competidores', href: '/copilot/competitors', icon: Crosshair },
       { label: 'Rendimiento pauta', href: '/agency/performance', icon: BarChart3 },
       { label: 'Agentes IA', href: '/agents', icon: Bot },
       { label: 'Inbox social', href: '/social/inbox', icon: MessagesSquare },

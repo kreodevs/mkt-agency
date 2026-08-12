@@ -17,6 +17,9 @@ import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
 import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPanel';
+import { withActiveProductQuery } from '@/store/active-product';
+
+const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
 
 interface CopilotStatusPanelProps {
   productId?: string;
@@ -161,17 +164,13 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
               icon={Users}
               label={`Competidores (${status.competitorsCount})`}
               done={status.competitorsCount >= 2}
-              href={status.competitorsCount >= 2 ? undefined : '/agents/competitor-intel'}
+              href={withActiveProductQuery(COPILOT_COMPETITORS_PATH)}
             />
             <PipelineRow
               icon={Target}
               label="Análisis de competencia"
               done={status.analysisStatus === 'completed'}
-              href={
-                status.analysisStatus === 'completed' || analysisInFlight
-                  ? undefined
-                  : '/agents/competitor-intel'
-              }
+              href={withActiveProductQuery(COPILOT_COMPETITORS_PATH)}
               detail={
                 analysisInFlight
                   ? 'En progreso...'
@@ -185,6 +184,13 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           {status.prepareBlockedReason && (
             <p className="text-xs text-[var(--warning)]">{status.prepareBlockedReason}</p>
           )}
+
+          <Link to={withActiveProductQuery(COPILOT_COMPETITORS_PATH)} className="block">
+            <Button type="button" variant="outline" className="w-full gap-2">
+              <Target className="h-4 w-4" />
+              Análisis de competidores
+            </Button>
+          </Link>
 
           <Button
             type="button"
@@ -272,7 +278,7 @@ function PipelineRow({
     </span>
   );
 
-  if (href && !done) {
+  if (href) {
     return (
       <li>
         <Link

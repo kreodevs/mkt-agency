@@ -4,6 +4,8 @@ Listado, alta y edición de tenants. Impersonación directa por tenant (estilo K
 
 Página `/tenants` con listado paginado vía `GET /api/v1/tenants`.
 
+**Salud operativa:** tarjeta resumen + columnas «Salud» y «Pend. aprobar» desde `GET /api/v1/tenants/health/overview` (LLM global, piezas sin aprobar por tenant).
+
 ## Componentes Kreo
 
 - `DataTable` — tabla con búsqueda global, orden y paginación cliente

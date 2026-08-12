@@ -4,7 +4,7 @@ UX simplificada para usuarios que solo copian y pegan en redes.
 
 | Archivo | Rol |
 |---------|-----|
-| `CopilotStatusPanel.tsx` | Panel en bandeja: pipeline + plantillas por industria + botón «Preparar mi semana» |
+| `CopilotStatusPanel.tsx` | Panel en bandeja: pipeline + enlace a análisis competidores + plantillas por industria |
 | `CmCharacterSetupPanel.tsx` | Biblioteca CM: polling en generación, retrato visible con fetch autenticado, reset de «lista» al cambiar retrato |
 | `SohoLegacyRedirect.tsx` | Redirige rutas de agencia a `/` en modo copiloto |
 | `PaidProfileRedirect.tsx` | Redirige `/agency/media-intents` si no hay perfil Growth con pauta |

@@ -16,18 +16,23 @@ import { TenantController } from './tenant.controller';
 import { TenantSelfController } from './tenant-self.controller';
 import { TenantService } from './tenant.service';
 import { TenantPlatformAdminService } from './services/tenant-platform-admin.service';
+import { TenantHealthService } from './services/tenant-health.service';
+import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
+import { LlmModule } from '../../shared/ai/llm.module';
 
 @Module({
   imports: [
     CqrsModule,
     AuthSharedModule,
     PackageModule,
-    TypeOrmModule.forFeature([TenantEntity, TenantPlatformAdminEntity, UserEntity]),
+    LlmModule,
+    TypeOrmModule.forFeature([TenantEntity, TenantPlatformAdminEntity, UserEntity, ContentEntity]),
   ],
   controllers: [TenantController, TenantSelfController],
   providers: [
     TenantService,
     TenantPlatformAdminService,
+    TenantHealthService,
     CreateTenantHandler,
     DeleteTenantHandler,
     {

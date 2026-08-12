@@ -11,10 +11,10 @@ import { TenantListCard } from '@/components/tenants/TenantListCard';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
-import { listTenants } from '@/services/tenants';
+import { listTenants, getTenantHealthOverview } from '@/services/tenants';
 import { impersonateTenant } from '@/services/superadmin';
 import { getApiErrorMessage } from '@/services/api';
-import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
+import type { Tenant, TenantPlan, TenantStatus, TenantHealthSnapshot } from '@/types/tenant';
 import { CreateTenantModal } from './CreateTenantModal';
 import { EditTenantModal } from './EditTenantModal';
 
@@ -71,6 +71,20 @@ export default function TenantListPage() {
       }),
   });
 
+  const healthQuery = useQuery({
+    queryKey: ['tenant-health'],
+    queryFn: getTenantHealthOverview,
+    staleTime: 60_000,
+  });
+
+  const healthByTenant = useMemo(() => {
+    const map = new Map<string, TenantHealthSnapshot>();
+    for (const row of healthQuery.data?.tenants ?? []) {
+      map.set(row.tenantId, row);
+    }
+    return map;
+  }, [healthQuery.data]);
+
   const tableData = useMemo(() => tenantsQuery.data?.items ?? [], [tenantsQuery.data?.items]);
 
   const columns: DataTableColumn[] = useMemo(
@@ -110,6 +124,36 @@ export default function TenantListPage() {
             {row.status}
           </StatusPill>
         ),
+      },
+      {
+        field: 'health',
+        header: 'Salud',
+        width: '200px',
+        body: (row: Tenant) => {
+          const health = healthByTenant.get(row.id);
+          if (!health) return <span className="text-xs text-[var(--foreground-muted)]">—</span>;
+          const critical = health.issues.filter((issue) => issue.severity === 'critical');
+          const warning = health.issues.filter((issue) => issue.severity === 'warning');
+          if (critical.length === 0 && warning.length === 0) {
+            return (
+              <StatusPill status="success" size="sm">
+                OK
+              </StatusPill>
+            );
+          }
+          const top = critical[0] ?? warning[0];
+          return (
+            <StatusPill status={top.severity === 'critical' ? 'error' : 'warning'} size="sm">
+              {top.message}
+            </StatusPill>
+          );
+        },
+      },
+      {
+        field: 'pendingApprovals',
+        header: 'Pend. aprobar',
+        width: '110px',
+        body: (row: Tenant) => healthByTenant.get(row.id)?.pendingApprovals ?? '—',
       },
       {
         field: 'maxUsers',
@@ -154,7 +198,7 @@ export default function TenantListPage() {
         ),
       },
     ],
-    [impersonatingId, navigate],
+    [impersonatingId, navigate, healthByTenant],
   );
 
   return (
@@ -170,6 +214,36 @@ export default function TenantListPage() {
           </Button>
         }
       />
+
+      {healthQuery.data && (
+        <Card className="mb-4" title="Salud operativa" subtitle="Aprobaciones pendientes y LLM">
+          <div className="flex flex-wrap gap-4 text-sm">
+            <p>
+              LLM plataforma:{' '}
+              <StatusPill status={healthQuery.data.llmAvailable ? 'success' : 'error'} size="sm">
+                {healthQuery.data.llmAvailable ? 'Disponible' : 'Caído / sin configurar'}
+              </StatusPill>
+            </p>
+            <p className="text-[var(--foreground-muted)]">
+              Tenants con alertas:{' '}
+              <strong>
+                {
+                  healthQuery.data.tenants.filter((tenant) => tenant.issues.length > 0).length
+                }
+              </strong>
+            </p>
+            <p className="text-[var(--foreground-muted)]">
+              Piezas sin aprobar (total):{' '}
+              <strong>
+                {healthQuery.data.tenants.reduce(
+                  (sum, tenant) => sum + tenant.pendingApprovals,
+                  0,
+                )}
+              </strong>
+            </p>
+          </div>
+        </Card>
+      )}
 
       <CreateTenantModal
         visible={createOpen}

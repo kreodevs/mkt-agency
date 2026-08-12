@@ -115,6 +115,7 @@ export function AppRouter() {
             <Route path="/agents/brand-interview" element={<BrandInterviewPage />} />
             <Route path="/agents/brand-interview/:id" element={<BrandInterviewPage />} />
             <Route path="/agents/competitor-intel" element={<CompetitorIntelPage />} />
+            <Route path="/copilot/competitors" element={<CompetitorIntelPage />} />
             <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
             <Route path="/agents/image-generator/:id" element={<ImageGeneratorDetailPage />} />
             <Route

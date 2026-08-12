@@ -111,7 +111,12 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   return (
     <AppLayout
       navigationGroups={navigationGroups}
-      activeHref={location.pathname}
+      activeHref={
+        location.pathname === '/copilot/competitors' ||
+        location.pathname === '/agents/competitor-intel'
+          ? '/copilot/competitors'
+          : location.pathname
+      }
       linkComponent={Link}
       user={user ? { name: user.name, email: user.email } : undefined}
       headerActions={headerActions}
