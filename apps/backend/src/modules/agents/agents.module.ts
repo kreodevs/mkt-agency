@@ -213,6 +213,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     AgentInterviewService,
     CompetitorIntelService,
     ImageGenerationService,
+    ImageBrandingService,
     TalkingHeadComposerService,
     TtsGenerationService,
     IMAGE_GENERATION_ADAPTER,
