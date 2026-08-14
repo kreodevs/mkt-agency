@@ -10,6 +10,12 @@ export interface SocialCopyPost {
   visualDescription: string;
   /** Formato visual a generar: image | carousel (sin video IA). */
   visualFormat: ContentVisualFormat;
+  /** Plantilla de diseño elegida por la IA (visual studio). */
+  visualTemplateId?: string;
+  /** Titular corto para la pieza gráfica (3-8 palabras). */
+  visualHeadline?: string;
+  visualSubline?: string;
+  visualCta?: string;
   bestTime: string;
   targetAudience: string;
   callToAction: string;

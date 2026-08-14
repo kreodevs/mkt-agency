@@ -12,8 +12,11 @@ import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { ContentService } from '../content/content.service';
 import { ImageGenerationService } from '../agents/image-generation.service';
-import { ContentVisualComposerService } from './content-visual-composer.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
+import { VisualTemplateComposerService } from './visual-template-composer.service';
+import { enrichVisualDescriptionForAi } from './domain/visual-prompt-enrichment.util';
+import { resolveVisualBrandKit } from './domain/visual-brand-kit.util';
+import { ProductService } from '../product/product.service';
 import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
 import {
   SOCIAL_COPY_ADAPTER,
@@ -63,8 +66,9 @@ export class CommunityManagerService {
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
     private readonly imageGeneration: ImageGenerationService,
-    private readonly visualComposer: ContentVisualComposerService,
+    private readonly templateComposer: VisualTemplateComposerService,
     private readonly talkingHeadComposer: TalkingHeadPostComposerService,
+    private readonly productService: ProductService,
     private readonly contextFacade: GenerationContextFacade,
   ) {}
 
@@ -183,8 +187,7 @@ export class CommunityManagerService {
     userId: string,
     posts: SocialCopyPost[],
     dto: GenerateSocialCopyDto,
-    effectiveProductId: string | undefined,
-    kit: GenerationContext['kit'],
+    ctx: GenerationContext,
   ): Promise<{ publishedPosts: string[]; imagesAttached: number }> {
     const publishedPosts: string[] = [];
     let imagesAttached = 0;
@@ -193,14 +196,14 @@ export class CommunityManagerService {
       const post = posts[i];
       try {
         const content = await this.saveSinglePost(
-          tenantId, userId, post, dto, effectiveProductId, today, i,
+          tenantId, userId, post, dto, ctx.effectiveProductId, today, i,
         );
         post.contentId = content.id;
         publishedPosts.push(content.id);
 
         if (dto.attachImages === false) continue;
         const attached = await this.attachVisualForPost(
-          tenantId, userId, content.id, post, effectiveProductId, kit, i,
+          tenantId, userId, content.id, post, ctx.effectiveProductId, ctx.kit, i, ctx,
         );
         if (attached) imagesAttached += 1;
       } catch (err) {
@@ -282,7 +285,7 @@ export class CommunityManagerService {
       const ctx = await this.contextFacade.buildGenerationContext(tenantId, dto);
       const result = await this.runAdapterGeneration(tenantId, userId, dto, ctx);
       const { publishedPosts, imagesAttached } = await this.savePostsAsContent(
-        tenantId, userId, result.posts, dto, ctx.effectiveProductId, ctx.kit,
+        tenantId, userId, result.posts, dto, ctx,
       );
       return await this.finalizeGenerationBatch(batch, result, publishedPosts, imagesAttached, dto, tenantId);
     } catch (error) {
@@ -457,7 +460,7 @@ export class CommunityManagerService {
 
     await this.updateContentWithRegeneratedPost(tenantId, userId, contentId, post, feedback);
     await this.handlePostRegenerationVisual(
-      tenantId, userId, contentId, post, content, deps.productContext, deps.kit, currentVersion, feedback,
+      tenantId, userId, contentId, post, content, deps, currentVersion, feedback,
     );
 
     return { contentId, title: post.title, regenerated: true };
@@ -550,16 +553,30 @@ export class CommunityManagerService {
     contentId: string,
     post: SocialCopyPost,
     content: ContentEntity,
-    productContext: GenerationContext['productContext'],
-    kit: GenerationContext['kit'],
+    ctx: GenerationContext,
     currentVersion: { versionNumber?: number } | null,
     feedback: string | undefined,
   ): Promise<void> {
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
+    const productId = content.productId ?? ctx.effectiveProductId;
+
+    if (!feedback && productId) {
+      const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        { resolvedProfile: ctx.resolvedProfile },
+      );
+      if (recomposed) return;
+    }
 
     if (!feedback) {
       await this.regenerateVisualWithoutFeedback(
-        tenantId, userId, contentId, post, productContext,
+        tenantId, userId, contentId, post, ctx,
       );
       return;
     }
@@ -568,7 +585,7 @@ export class CommunityManagerService {
 
     const composed = await this.attachVisualForPost(
       tenantId, userId, contentId, post,
-      content.productId ?? productContext?.id, kit, visualVariantIndex,
+      productId, ctx.kit, visualVariantIndex, ctx,
     );
     if (composed) return;
 
@@ -584,19 +601,31 @@ export class CommunityManagerService {
     userId: string,
     contentId: string,
     post: SocialCopyPost,
-    productContext: GenerationContext['productContext'],
+    ctx: GenerationContext,
   ): Promise<void> {
     try {
-      const productId = post.visualDescription?.trim()
-        ? (productContext?.id ?? undefined)
-        : undefined;
-      if (post.visualDescription?.trim()) {
-        await this.imageGeneration.attachVisualToContent(
-          tenantId, userId, contentId, post.visualDescription, productId,
+      const productId = ctx.effectiveProductId;
+      if (productId) {
+        const templated = await this.attachVisualForPost(
+          tenantId, userId, contentId, post, productId, ctx.kit, 0, ctx,
         );
-      } else {
-        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+        if (templated) return;
       }
+
+      if (!post.visualDescription?.trim()) {
+        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+        return;
+      }
+
+      const enriched = await this.buildEnrichedVisualDescription(
+        tenantId,
+        post.visualDescription,
+        productId,
+        ctx,
+      );
+      await this.imageGeneration.attachVisualToContent(
+        tenantId, userId, contentId, enriched, productId,
+      );
     } catch (error) {
       this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
     }
@@ -610,6 +639,7 @@ export class CommunityManagerService {
     productId: string | null | undefined,
     kit: GenerationContext['kit'],
     postIndex: number,
+    ctx: GenerationContext,
   ): Promise<boolean> {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);
 
@@ -623,8 +653,8 @@ export class CommunityManagerService {
       );
     }
 
-    if (productId && kit.length) {
-      const composed = await this.visualComposer.tryComposeFromKit(
+    if (productId) {
+      const templated = await this.templateComposer.tryComposeFromTemplate(
         tenantId,
         userId,
         contentId,
@@ -632,8 +662,9 @@ export class CommunityManagerService {
         productId,
         kit,
         postIndex,
+        { resolvedProfile: ctx.resolvedProfile },
       );
-      if (composed.attached) {
+      if (templated.attached) {
         return true;
       }
     }
@@ -643,11 +674,17 @@ export class CommunityManagerService {
     }
 
     try {
+      const enriched = await this.buildEnrichedVisualDescription(
+        tenantId,
+        post.visualDescription,
+        productId ?? undefined,
+        ctx,
+      );
       const imageResult = await this.imageGeneration.attachVisualToContent(
         tenantId,
         userId,
         contentId,
-        post.visualDescription,
+        enriched,
         productId ?? undefined,
       );
       return imageResult?.status === 'completed';
@@ -655,5 +692,23 @@ export class CommunityManagerService {
       this.logger.warn(`Image attach failed for content ${contentId}`, error);
       return false;
     }
+  }
+
+  private async buildEnrichedVisualDescription(
+    tenantId: string,
+    visualDescription: string,
+    productId: string | undefined,
+    ctx: GenerationContext,
+  ): Promise<string> {
+    if (!productId) {
+      return visualDescription;
+    }
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const brandKit = resolveVisualBrandKit(product, ctx.resolvedProfile);
+    return enrichVisualDescriptionForAi(
+      visualDescription,
+      brandKit,
+      ctx.competitorIntelBrief,
+    );
   }
 }

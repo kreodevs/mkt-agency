@@ -8,6 +8,8 @@ import { ProductService } from '../product/product.service';
 import { isProductOnboardingCompleted } from '../product/domain/product-onboarding.util';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { CampaignTemplateSuggestionService } from '../agency-agents/services/campaign-template-suggestion.service';
+import { ProductMediaKitService } from '../product/product-media-kit.service';
+import { MEDIA_KIT_RECOMMENDED_MIN_IMAGES } from '../community-manager/domain/visual-template.constants';
 import type { CopilotStatusResponseDto } from './dto/publication-inbox.dto';
 import { PublicationInboxService } from './publication-inbox.service';
 
@@ -22,18 +24,21 @@ export class CopilotService {
     private readonly inboxService: PublicationInboxService,
     private readonly cmCharacter: CmCharacterService,
     private readonly templateSuggestions: CampaignTemplateSuggestionService,
+    private readonly mediaKit: ProductMediaKitService,
   ) {}
 
   async getStatus(tenantId: string, productId?: string): Promise<CopilotStatusResponseDto> {
     const product = await this.resolveProduct(tenantId, productId);
     const onboardingCompleted = isProductOnboardingCompleted(product);
 
-    const [competitors, latestAnalysis, inbox, cmLibrary, campaignTemplates] = await Promise.all([
+    const [competitors, latestAnalysis, inbox, cmLibrary, campaignTemplates, mediaKitImageCount] =
+      await Promise.all([
       this.competitorService.list(tenantId),
       this.competitorIntel.getLatestCompletedAnalysis(tenantId),
       this.inboxService.getInbox(tenantId, product.id),
       this.cmCharacter.listLibrary(tenantId, product.id),
       this.templateSuggestions.suggestForProduct(tenantId, product.id, 2),
+      this.mediaKit.countImageItems(tenantId, product.id),
     ]);
 
     const pendingAnalysis = await this.competitorIntel.listAnalyses(tenantId);
@@ -76,6 +81,11 @@ export class CopilotService {
       nextStep = 'Prepara tu semana con el copiloto';
     }
 
+    const mediaKitLow =
+      mediaKitImageCount < MEDIA_KIT_RECOMMENDED_MIN_IMAGES
+        ? `Sube al menos ${MEDIA_KIT_RECOMMENDED_MIN_IMAGES} fotos reales al media kit (${mediaKitImageCount}/${MEDIA_KIT_RECOMMENDED_MIN_IMAGES}) para diseños menos genéricos.`
+        : null;
+
     return {
       productId: product.id,
       productName: product.name,
@@ -96,6 +106,9 @@ export class CopilotService {
       cmCharactersReadyCount: cmLibrary.readyCount,
       cmCharactersTotalCount: cmLibrary.characters.length,
       prepareBlockedReason,
+      mediaKitImageCount,
+      mediaKitRecommendedMin: MEDIA_KIT_RECOMMENDED_MIN_IMAGES,
+      mediaKitLowWarning: mediaKitLow,
       campaignTemplateSuggestions: campaignTemplates,
     };
   }

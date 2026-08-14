@@ -11,6 +11,9 @@ export interface BrandedImagePromptInput {
   visualDescription?: string;
   hasLogo: boolean;
   visualFormat?: ContentVisualFormat;
+  primaryColor?: string;
+  visualStyle?: string;
+  competitorAngle?: string | null;
 }
 
 export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string {
@@ -29,6 +32,18 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
   if (input.visualFormat === 'carousel') {
     parts.push('Formato visual: carrusel de 3 imágenes relacionadas para redes sociales.');
+  }
+
+  if (input.primaryColor?.trim()) {
+    parts.push(`Usa la paleta de marca con acento en ${input.primaryColor.trim()} (sin texto en la imagen).`);
+  }
+
+  if (input.visualStyle?.trim()) {
+    parts.push(`Estética: ${input.visualStyle.trim()}.`);
+  }
+
+  if (input.competitorAngle?.trim()) {
+    parts.push(`Diferenciación visual frente a competencia: ${input.competitorAngle.trim()}`);
   }
 
   if (input.hasLogo) {

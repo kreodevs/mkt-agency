@@ -1,6 +1,7 @@
 import type { SocialCopyPost } from './social-copy.adapter.port';
 import { inferContentVisualFormat, normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 import { sanitizeVisualPromptForArt } from '../../content/domain/visual-prompt.util';
+import { isVisualTemplateId } from '../domain/visual-brand-kit.util';
 
 const ALLOWED_PLATFORMS = new Set(['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok']);
 
@@ -121,6 +122,30 @@ export function normalizeSocialCopyBatch(
 
       if (cmCharacterId) {
         post.cmCharacterId = cmCharacterId;
+      }
+
+      const visualTemplateId = pickString(row, [
+        'visualTemplateId',
+        'visual_template_id',
+        'plantillaVisual',
+      ]);
+      if (isVisualTemplateId(visualTemplateId)) {
+        post.visualTemplateId = visualTemplateId;
+      }
+
+      const visualHeadline = pickString(row, ['visualHeadline', 'visual_headline', 'titularVisual']);
+      if (visualHeadline) {
+        post.visualHeadline = visualHeadline;
+      }
+
+      const visualSubline = pickString(row, ['visualSubline', 'visual_subline', 'subtituloVisual']);
+      if (visualSubline) {
+        post.visualSubline = visualSubline;
+      }
+
+      const visualCta = pickString(row, ['visualCta', 'visual_cta', 'ctaVisual']);
+      if (visualCta) {
+        post.visualCta = visualCta;
       }
 
       return post;

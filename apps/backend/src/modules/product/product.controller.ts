@@ -24,6 +24,7 @@ import {
   ListProductsQueryDto,
   UpdateProductDto,
 } from './dto/product.request.dto';
+import { UpdateBrandVisualKitDto } from './dto/brand-visual-kit.dto';
 import {
   BulkCreateProductsResponseDto,
   PaginatedProductsResponseDto,
@@ -136,6 +137,23 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ProductLogoResponseDto> {
     return this.productLogoService.removeLogo(user.tenantId!, id);
+  }
+
+  @Get(':id/brand-visual-kit')
+  getBrandVisualKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.productService.getBrandVisualKit(user.tenantId!, id);
+  }
+
+  @Patch(':id/brand-visual-kit')
+  updateBrandVisualKit(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBrandVisualKitDto,
+  ) {
+    return this.productService.updateBrandVisualKit(user.tenantId!, id, dto);
   }
 
   @Get(':id/media-kit')

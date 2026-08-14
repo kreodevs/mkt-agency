@@ -29,6 +29,7 @@ import { CmCharacterController } from './cm-character.controller';
 import { CmCharactersController } from './cm-characters.controller';
 import { CmCharacterService } from './cm-character.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
+import { VisualTemplateComposerService } from './visual-template-composer.service';
 import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
 import { GenerationContextFacade } from './generation-context.facade';
@@ -66,6 +67,7 @@ import { TonePresetController } from './tone-preset.controller';
     CommunityManagerService,
     GenerationContextFacade,
     ContentVisualComposerService,
+    VisualTemplateComposerService,
     CmCharacterService,
     TalkingHeadPostComposerService,
     StubSocialCopyAdapter,

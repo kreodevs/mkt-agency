@@ -73,6 +73,9 @@ export interface CopilotStatus {
   cmCharactersReadyCount: number;
   cmCharactersTotalCount: number;
   prepareBlockedReason: string | null;
+  mediaKitImageCount: number;
+  mediaKitRecommendedMin: number;
+  mediaKitLowWarning: string | null;
   campaignTemplateSuggestions: CampaignTemplateSuggestion[];
 }
 

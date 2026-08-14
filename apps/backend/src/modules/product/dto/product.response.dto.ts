@@ -20,6 +20,13 @@ export class ProductResponseDto {
   logoAssetId!: string | null;
   logoUrl!: string | null;
   logoSourceUrl!: string | null;
+  brandVisualKit!: {
+    style: 'minimal' | 'bold' | 'luxury';
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    updatedAt?: string;
+  } | null;
   createdAt!: string;
   updatedAt!: string;
 }

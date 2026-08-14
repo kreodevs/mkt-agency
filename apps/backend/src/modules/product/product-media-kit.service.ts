@@ -186,6 +186,18 @@ export class ProductMediaKitService {
     });
   }
 
+  async countImageItems(tenantId: string, productId: string): Promise<number> {
+    const kit = await this.listEntitiesForProduct(tenantId, productId);
+    if (!kit.length) {
+      return 0;
+    }
+    const assetIds = kit.map((item) => item.assetId);
+    const assets = await this.assets.find({
+      where: { tenantId, id: In(assetIds), type: 'image' },
+    });
+    return assets.length;
+  }
+
   pickVideoAssetId(
     kit: ProductMediaKitItemEntity[],
     postIndex: number,

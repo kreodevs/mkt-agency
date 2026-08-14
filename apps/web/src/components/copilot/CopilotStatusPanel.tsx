@@ -181,6 +181,10 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             />
           </ul>
 
+          {status.mediaKitLowWarning && (
+            <p className="text-xs text-[var(--warning)]">{status.mediaKitLowWarning}</p>
+          )}
+
           {status.prepareBlockedReason && (
             <p className="text-xs text-[var(--warning)]">{status.prepareBlockedReason}</p>
           )}

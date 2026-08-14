@@ -117,7 +117,12 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             title: 'título o idea principal del post',
             body: 'texto completo del post con saltos de línea y emojis apropiados',
             hashtags: ['hashtag1', 'hashtag2'],
-            visualDescription: 'escena visual para IA: composición, sujetos, ambiente y estilo — SIN repetir el body ni hashtags',
+            visualDescription: 'escena visual para IA (fondo/ambiente si aplica) — SIN repetir el body ni hashtags',
+            visualTemplateId:
+              'product-hero | tip-card | quote-insight | promo-cta | stat-highlight | story-vertical',
+            visualHeadline: 'titular corto para la pieza gráfica (3-8 palabras, sin hashtags)',
+            visualSubline: 'subtítulo opcional para la plantilla (máx 14 palabras)',
+            visualCta: 'CTA corto para botón visual (2-4 palabras)',
             visualFormat:
               'image | carousel | talking-head — talking-head=solo TikTok si hay CM virtual; image=estático; carousel=3 slides',
             bestTime: 'mejor hora para publicar según la plataforma',
@@ -151,7 +156,9 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       context.cmCharacterReady
         ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head con cmCharacterId; resto→image.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
-      'visualDescription = brief de arte para generador de imágenes (escena, luz, encuadre, estilo). NUNCA copies el body, hashtags ni CTA.',
+      'visualDescription = brief de arte (ambiente/fondo). El diseño final lo maqueta el sistema con plantillas.',
+      'visualTemplateId = elige la plantilla gráfica más adecuada por post.',
+      'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
       'body = copy publicable listo para publicar en la red. Son campos independientes.',
     ]
       .filter(Boolean)

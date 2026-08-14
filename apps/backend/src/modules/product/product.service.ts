@@ -23,6 +23,17 @@ import {
   getProductLogoAssetId,
   getProductLogoSourceUrl,
 } from './domain/product-logo.metadata.util';
+import {
+  getProductBrandVisualKit,
+  mergeBrandVisualKitMetadata,
+  normalizeHexColor,
+  DEFAULT_ACCENT,
+  DEFAULT_PRIMARY,
+  DEFAULT_SECONDARY,
+  type ProductBrandVisualKit,
+} from './domain/brand-visual-kit.metadata.util';
+import type { BrandVisualKitResponseDto } from './dto/brand-visual-kit.dto';
+import type { UpdateBrandVisualKitDto } from './dto/brand-visual-kit.dto';
 
 @Injectable()
 export class ProductService {
@@ -74,6 +85,52 @@ export class ProductService {
 
   async findOwnedEntity(tenantId: string, id: string): Promise<ProductEntity> {
     return this.findOwnedProduct(tenantId, id);
+  }
+
+  async getBrandVisualKit(
+    tenantId: string,
+    id: string,
+  ): Promise<BrandVisualKitResponseDto> {
+    const product = await this.findOwnedProduct(tenantId, id);
+    const kit = getProductBrandVisualKit(product.metadata);
+    return {
+      style: kit?.style ?? 'minimal',
+      primaryColor: kit?.primaryColor ?? DEFAULT_PRIMARY,
+      secondaryColor: kit?.secondaryColor ?? DEFAULT_SECONDARY,
+      accentColor: kit?.accentColor ?? DEFAULT_ACCENT,
+      updatedAt: kit?.updatedAt ?? null,
+    };
+  }
+
+  async updateBrandVisualKit(
+    tenantId: string,
+    id: string,
+    dto: UpdateBrandVisualKitDto,
+  ): Promise<BrandVisualKitResponseDto> {
+    const product = await this.findOwnedProduct(tenantId, id);
+    const current = getProductBrandVisualKit(product.metadata);
+    const next: ProductBrandVisualKit = {
+      style: dto.style ?? current?.style ?? 'minimal',
+      primaryColor: normalizeHexColor(
+        dto.primaryColor ?? current?.primaryColor,
+        DEFAULT_PRIMARY,
+      ),
+      secondaryColor: normalizeHexColor(
+        dto.secondaryColor ?? current?.secondaryColor,
+        DEFAULT_SECONDARY,
+      ),
+      accentColor: normalizeHexColor(dto.accentColor ?? current?.accentColor, DEFAULT_ACCENT),
+    };
+    product.metadata = mergeBrandVisualKitMetadata(product.metadata, next);
+    await this.products.save(product);
+    const saved = getProductBrandVisualKit(product.metadata)!;
+    return {
+      style: saved.style,
+      primaryColor: saved.primaryColor,
+      secondaryColor: saved.secondaryColor,
+      accentColor: saved.accentColor,
+      updatedAt: saved.updatedAt ?? new Date().toISOString(),
+    };
   }
 
   async create(tenantId: string, dto: CreateProductDto): Promise<ProductResponseDto> {
@@ -311,6 +368,7 @@ export class ProductService {
         ? `/api/v1/assets/${getProductLogoAssetId(product.metadata)}/file`
         : null,
       logoSourceUrl: getProductLogoSourceUrl(product.metadata),
+      brandVisualKit: getProductBrandVisualKit(product.metadata),
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     };

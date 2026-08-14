@@ -23,6 +23,20 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 
 Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más adecuada por post TikTok.
 
+## Visual Studio (plantillas)
+
+`VisualTemplateComposerService` maqueta piezas con Sharp + SVG antes del fallback IA:
+
+1. **Plantillas** — `product-hero`, `tip-card`, `quote-insight`, `promo-cta`, `stat-highlight`, `story-vertical`
+2. **LLM** — elige `visualTemplateId` + `visualHeadline` / `visualSubline` / `visualCta` por post
+3. **Marca** — colores desde `visual_preferences` del perfil o `product.metadata.brandVisualKit`
+4. **Fotos reales** — prioriza assets del media kit como fondo/hero
+5. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación)
+
+Orden en `attachVisualForPost`: talking-head → plantilla → IA enriquecida (paleta + intel competitiva).
+
+API kit de marca: `GET/PATCH /api/v1/products/:id/brand-visual-kit`
+
 1. **Biblioteca** — varias CMs en `product.metadata.cmCharacters` (migración automática desde `cmCharacter` legacy).
 2. **Retrato** — IA o biblioteca. Cambiar retrato resetea `readyAt` y exige nueva vista previa.
 3. **Vista previa** — TTS + lip-sync para marcar la CM como `ready` (`readyCount`).

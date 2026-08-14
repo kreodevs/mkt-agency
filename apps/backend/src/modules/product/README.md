@@ -13,6 +13,7 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `POST /api/v1/products/:id/logo/from-website` — extrae logo desde la URL del producto (scrape)
 - `POST /api/v1/products/:id/logo` — sube logo manual (multipart `file`)
 - `DELETE /api/v1/products/:id/logo` — quita logo del producto
+- `GET/PATCH /api/v1/products/:id/brand-visual-kit` — kit visual de marca (colores, estilo) para plantillas del copiloto
 - `GET /api/v1/products/:id/media-kit` — lista assets del kit (capturas, demos, eventos…)
 - `POST /api/v1/products/:id/media-kit/upload` — sube archivo al kit (`?role=`, `?label=`, multipart `file`)
 - `POST /api/v1/products/:id/media-kit/link` — enlaza un asset existente (`assetId`, `role`, `label?`)

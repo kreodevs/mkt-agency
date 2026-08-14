@@ -13,8 +13,9 @@ describe('CommunityManagerService — extracted helpers', () => {
       {} as any, // llmProviders
       {} as any, // contentService
       {} as any, // imageGeneration
-      {} as any, // visualComposer
+      {} as any, // templateComposer
       {} as any, // talkingHeadComposer
+      {} as any, // productService
       {} as any, // contextFacade
     );
   });

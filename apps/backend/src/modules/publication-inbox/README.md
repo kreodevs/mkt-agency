@@ -36,7 +36,7 @@ Por cada producto activo:
 1. **Métricas** — leads, contenido y campañas (`DashboardMetricsService`, filtrado por `productId`)
 2. **Estrategia** — `StrategyService.triggerAnalysis` con métricas reales; auto-aplica sugerencias de contenido
 3. **Community Manager** — genera copy usando `topics` de la estrategia
-4. **Image Generator** — adjunta imagen por post (`visualDescription` → asset en versión del contenido)
+4. **Visual Studio** — plantillas de marca (Sharp + titular/CTA) con fotos del media kit; fallback IA con paleta e intel competitiva
 5. **Notificación** — bandeja con resumen (posts + imágenes)
 
 ### Copiloto SOHO (`CopilotService` + `CopilotOrchestrationService`)

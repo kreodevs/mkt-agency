@@ -75,6 +75,7 @@ export function mergeBrandAndProductBrief(
     brandVoice: brand?.brandVoice ?? null,
     website: brand?.website ?? null,
     objectives: brand?.objectives ?? [],
+    visualPreferences: brand?.visualPreferences ?? {},
     focusProduct: product?.name ?? null,
     productDescription: product?.description ?? null,
     valueProposition: product?.valueProposition ?? null,
