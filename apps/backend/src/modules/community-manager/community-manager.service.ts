@@ -17,6 +17,7 @@ import { VisualTemplateComposerService } from './visual-template-composer.servic
 import { enrichVisualDescriptionForAi } from './domain/visual-prompt-enrichment.util';
 import { resolveVisualBrandKit } from './domain/visual-brand-kit.util';
 import { ProductService } from '../product/product.service';
+import { ProductAppCaptureService } from '../product/product-app-capture.service';
 import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
 import {
   SOCIAL_COPY_ADAPTER,
@@ -69,6 +70,7 @@ export class CommunityManagerService {
     private readonly templateComposer: VisualTemplateComposerService,
     private readonly talkingHeadComposer: TalkingHeadPostComposerService,
     private readonly productService: ProductService,
+    private readonly productAppCaptureService: ProductAppCaptureService,
     private readonly contextFacade: GenerationContextFacade,
   ) {}
 
@@ -279,6 +281,15 @@ export class CommunityManagerService {
     dto: GenerateSocialCopyDto,
   ): Promise<GenerateResponse> {
     this.validatePlatforms(dto.platforms);
+    if (dto.productId) {
+      await this.productAppCaptureService
+        .ensureScreenshotsBeforeGenerate(tenantId, dto.productId)
+        .catch((error) => {
+          this.logger.warn(
+            `Auto-captura omitida para producto ${dto.productId}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        });
+    }
     const batch = await this.createBatch(tenantId, dto);
 
     try {

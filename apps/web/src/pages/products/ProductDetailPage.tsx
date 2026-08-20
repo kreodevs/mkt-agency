@@ -14,6 +14,7 @@ import { ProductPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
 import { ProductPublishIntegrationPanel } from '@/components/products/ProductPublishIntegrationPanel';
+import { ProductAppCapturePanel } from '@/components/products/ProductAppCapturePanel';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 import { ApiError } from '@/services/api';
 import { archiveProduct, getProduct, updateProduct } from '@/services/products';
@@ -129,6 +130,12 @@ export default function ProductDetailPage() {
     );
   }
 
+  const product = productQuery.data;
+  const isAppLikeProduct =
+    product.category === 'digital' ||
+    product.category === 'subscription' ||
+    Boolean(product.websiteUrl?.trim());
+
   return (
     <DashboardShell>
       <PageHeader
@@ -188,6 +195,12 @@ export default function ProductDetailPage() {
       {!sohoMode && (
         <div id="publicacion-n8n" className="mb-[var(--spacing-lg)] scroll-mt-6">
           <ProductPublishIntegrationPanel productId={id} />
+        </div>
+      )}
+
+      {isAppLikeProduct && (
+        <div id="app-capture" className="mb-[var(--spacing-lg)] scroll-mt-6">
+          <ProductAppCapturePanel productId={id} />
         </div>
       )}
 

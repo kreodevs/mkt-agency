@@ -17,6 +17,8 @@ import { ProductMediaKitService } from './product-media-kit.service';
 import { ProductPublishIntegrationService } from './product-publish-integration.service';
 import { ProductPublishWebhookController } from './product-publish-webhook.controller';
 import { ProductPublishWebhookService } from './product-publish-webhook.service';
+import { ProductAppCaptureService } from './product-app-capture.service';
+import { AppScreenshotCaptureService } from './app-screenshot-capture.service';
 import { ProductService } from './product.service';
 
 const MAX_LOGO_FILE_SIZE = 2 * 1024 * 1024;
@@ -47,6 +49,8 @@ const MAX_MEDIA_KIT_FILE_SIZE = 52_428_800;
     ProductMediaKitService,
     ProductPublishIntegrationService,
     ProductPublishWebhookService,
+    AppScreenshotCaptureService,
+    ProductAppCaptureService,
   ],
   exports: [
     ProductService,
@@ -54,6 +58,7 @@ const MAX_MEDIA_KIT_FILE_SIZE = 52_428_800;
     ProductMediaKitService,
     ProductPublishIntegrationService,
     ProductPublishWebhookService,
+    ProductAppCaptureService,
   ],
 })
 export class ProductModule {}

@@ -39,11 +39,17 @@ import {
 import { ProductLogoService } from './product-logo.service';
 import { ProductMediaKitService } from './product-media-kit.service';
 import { ProductPublishIntegrationService } from './product-publish-integration.service';
+import { ProductAppCaptureService } from './product-app-capture.service';
 import { ProductService } from './product.service';
 import {
   ProductPublishIntegrationResponseDto,
   UpdateProductPublishIntegrationDto,
 } from './dto/product-publish-integration.dto';
+import {
+  ProductAppCaptureResponseDto,
+  ProductAppCaptureRunResponseDto,
+  UpdateProductAppCaptureDto,
+} from './dto/product-app-capture.dto';
 import type { ProductMediaRole } from './domain/product-media-kit.constants';
 import { PRODUCT_MEDIA_ROLES } from './domain/product-media-kit.constants';
 
@@ -57,6 +63,7 @@ export class ProductController {
     private readonly productLogoService: ProductLogoService,
     private readonly productMediaKitService: ProductMediaKitService,
     private readonly productPublishIntegrationService: ProductPublishIntegrationService,
+    private readonly productAppCaptureService: ProductAppCaptureService,
   ) {}
 
   @Get()
@@ -221,5 +228,31 @@ export class ProductController {
     @Body() body: UpdateProductPublishIntegrationDto,
   ): Promise<ProductPublishIntegrationResponseDto> {
     return this.productPublishIntegrationService.updateIntegration(user.tenantId!, id, body);
+  }
+
+  @Get(':id/app-capture')
+  getAppCapture(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ProductAppCaptureResponseDto> {
+    return this.productAppCaptureService.getConfig(user.tenantId!, id);
+  }
+
+  @Patch(':id/app-capture')
+  updateAppCapture(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateProductAppCaptureDto,
+  ): Promise<ProductAppCaptureResponseDto> {
+    return this.productAppCaptureService.updateConfig(user.tenantId!, id, body);
+  }
+
+  @Post(':id/app-capture/run')
+  @HttpCode(HttpStatus.OK)
+  runAppCapture(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ProductAppCaptureRunResponseDto> {
+    return this.productAppCaptureService.runCapture(user.tenantId!, id);
   }
 }

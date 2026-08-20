@@ -88,6 +88,39 @@ export class ProductMediaKitService {
     });
   }
 
+  async uploadBufferToKit(
+    tenantId: string,
+    productId: string,
+    buffer: Buffer,
+    filename: string,
+    role: ProductMediaRole,
+    label?: string,
+  ): Promise<ProductMediaKitItemResponseDto> {
+    await this.productService.findOwnedEntity(tenantId, productId);
+    this.assertValidRole(role);
+
+    const uploaded = await this.assetService.uploadBuffer(
+      tenantId,
+      buffer,
+      filename,
+      'image/png',
+    );
+    return this.linkAsset(tenantId, productId, {
+      assetId: uploaded.id,
+      role,
+      label,
+    });
+  }
+
+  async countKitItemsByRole(
+    tenantId: string,
+    productId: string,
+    role: ProductMediaRole,
+  ): Promise<number> {
+    await this.productService.findOwnedEntity(tenantId, productId);
+    return this.kitItems.count({ where: { tenantId, productId, role } });
+  }
+
   async linkAsset(
     tenantId: string,
     productId: string,

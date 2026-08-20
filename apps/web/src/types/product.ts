@@ -216,3 +216,54 @@ export interface UpdateProductPublishIntegrationPayload {
   credentialsByPlatform?: Record<string, ProductPlatformCredential>;
 }
 
+export type AppCaptureViewport = 'desktop' | 'mobile' | 'tablet';
+
+export interface ProductAppCaptureScreen {
+  label: string;
+  path?: string;
+  viewport?: AppCaptureViewport;
+  waitMs?: number;
+}
+
+export interface ProductAppCaptureConfig {
+  enabled: boolean;
+  loginUrl: string | null;
+  appUrl: string | null;
+  email: string | null;
+  hasPassword: boolean;
+  password: string | null;
+  emailSelector: string | null;
+  passwordSelector: string | null;
+  submitSelector: string | null;
+  postLoginWaitMs: number;
+  screens: ProductAppCaptureScreen[];
+  autoCaptureBeforeGenerate: boolean;
+  configured: boolean;
+  lastCaptureAt: string | null;
+  lastCaptureStatus: 'success' | 'failed' | null;
+  lastCaptureError: string | null;
+  lastCaptureCount: number;
+  screenshotCountInKit: number;
+}
+
+export interface UpdateProductAppCapturePayload {
+  enabled?: boolean;
+  loginUrl?: string;
+  appUrl?: string;
+  email?: string;
+  password?: string;
+  emailSelector?: string;
+  passwordSelector?: string;
+  submitSelector?: string;
+  postLoginWaitMs?: number;
+  screens?: ProductAppCaptureScreen[];
+  autoCaptureBeforeGenerate?: boolean;
+}
+
+export interface ProductAppCaptureRunResult {
+  status: 'success' | 'failed';
+  capturedCount: number;
+  items: Array<{ id: string; label: string | null; assetId: string }>;
+  error?: string;
+}
+

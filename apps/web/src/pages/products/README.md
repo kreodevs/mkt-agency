@@ -18,6 +18,7 @@ Páginas y servicios del catálogo de productos/servicios por tenant. Hub princi
 - `src/components/products/ProductMediaKitPanel.tsx` — panel drag & drop del kit
 - `src/components/products/ProductLogoPanel.tsx` — logo con tokens `--warning` para avisos
 - `src/components/products/ProductPublishIntegrationPanel.tsx` — webhook n8n por producto (detalle `/products/:id`)
+- `src/components/products/ProductAppCapturePanel.tsx` — credenciales de app y capturas reales para arte social (detalle producto y campañas orgánicas)
 
 ## Publicación n8n
 

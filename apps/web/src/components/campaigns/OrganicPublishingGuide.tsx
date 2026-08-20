@@ -3,6 +3,7 @@ import { CalendarDays, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
 import { CampaignGeneratePosts } from '@/components/campaigns/CampaignGeneratePosts';
+import { ProductAppCapturePanel } from '@/components/products/ProductAppCapturePanel';
 
 interface OrganicPublishingGuideProps {
   strategy: Record<string, unknown>;
@@ -27,6 +28,11 @@ export function OrganicPublishingGuide({
 
   return (
     <Card title="Publicación manual (Copiar y Llevar)">
+      {productId && (
+        <div className="mb-4">
+          <ProductAppCapturePanel productId={productId} compact />
+        </div>
+      )}
       <div className="mb-4">
         <CampaignGeneratePosts
           campaignId={campaignId}

@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/atoms/StatusPill';
 import { BudgetApproval } from '@/components/campaigns/BudgetApproval';
 import { CampaignPlatformEditor } from '@/components/campaigns/CampaignPlatformEditor';
 import { CampaignGeneratePosts } from '@/components/campaigns/CampaignGeneratePosts';
+import { ProductAppCapturePanel } from '@/components/products/ProductAppCapturePanel';
 import { OrganicPublishingGuide } from '@/components/campaigns/OrganicPublishingGuide';
 import { StrategyGeneration } from '@/components/campaigns/StrategyGeneration';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -210,7 +211,11 @@ export default function CampaignDetailPage() {
               platforms={campaign.platforms}
             />
           ) : (
-            <Card title="Contenidos del calendario">
+            <>
+              {campaign.productId && (
+                <ProductAppCapturePanel productId={campaign.productId} compact />
+              )}
+              <Card title="Contenidos del calendario">
               <CampaignGeneratePosts
                 campaignId={campaign.id}
                 productId={campaign.productId}
@@ -222,6 +227,7 @@ export default function CampaignDetailPage() {
                 }
               />
             </Card>
+            </>
           )}
 
           {!isOrganic && (

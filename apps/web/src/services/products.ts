@@ -18,6 +18,9 @@ import type {
   UpdateProductPayload,
   ProductPublishIntegration,
   UpdateProductPublishIntegrationPayload,
+  ProductAppCaptureConfig,
+  UpdateProductAppCapturePayload,
+  ProductAppCaptureRunResult,
 } from '@/types/product';
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -251,5 +254,25 @@ export async function updateProductPublishIntegration(
   return apiFetch<ProductPublishIntegration>(`/products/${productId}/publish-integration`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function getProductAppCapture(productId: string): Promise<ProductAppCaptureConfig> {
+  return apiFetch<ProductAppCaptureConfig>(`/products/${productId}/app-capture`);
+}
+
+export async function updateProductAppCapture(
+  productId: string,
+  payload: UpdateProductAppCapturePayload,
+): Promise<ProductAppCaptureConfig> {
+  return apiFetch<ProductAppCaptureConfig>(`/products/${productId}/app-capture`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function runProductAppCapture(productId: string): Promise<ProductAppCaptureRunResult> {
+  return apiFetch<ProductAppCaptureRunResult>(`/products/${productId}/app-capture/run`, {
+    method: 'POST',
   });
 }

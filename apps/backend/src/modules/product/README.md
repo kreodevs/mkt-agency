@@ -20,6 +20,9 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `DELETE /api/v1/products/:id/media-kit/:itemId` — quita ítem del kit (no borra el asset)
 - `GET /api/v1/products/:id/publish-integration` — config webhook n8n + credenciales por plataforma (metadata)
 - `PATCH /api/v1/products/:id/publish-integration` — guarda integración de publicación automática
+- `GET /api/v1/products/:id/app-capture` — credenciales de login de la app + estado de capturas
+- `PATCH /api/v1/products/:id/app-capture` — guarda URLs, usuario/contraseña de prueba y opciones
+- `POST /api/v1/products/:id/app-capture/run` — login headless (Playwright/Chromium) → screenshots en media kit (`product-screenshot`)
 - `GET /api/v1/products/:id/onboarding` — estado del onboarding (% campos, missing, ready)
 - `POST /api/v1/products/:id/infer-from-page` — scrapea URL e infiere nombre, tipo, descripción, propuesta de valor, audiencia, precio y tags
 - `POST /api/v1/products/:id/suggest-keywords` — scrapea URL del producto, analiza contenido/concepto con IA y devuelve tags semánticos (no copia meta keywords del HTML)
@@ -60,3 +63,12 @@ Payload hacia n8n incluye: `contentId`, `campaignId`, `copy`, `assets[]`, `prima
 Workflow n8n de ejemplo: [`docs/integrations/n8n/mkt-agency-publish-instagram-linkedin.json`](../../../docs/integrations/n8n/mkt-agency-publish-instagram-linkedin.json).
 
 Servicios: `product-publish-integration.service.ts`, `product-publish-webhook.service.ts`.
+
+## Capturas reales de app (Visual Studio)
+
+Para productos tipo app/SaaS: credenciales de acceso de prueba en metadata (`appCapture*`), captura con Playwright/Chromium en el contenedor API y subida automática al media kit con rol `product-screenshot`. El compositor visual del Community Manager prioriza esas imágenes al generar arte.
+
+- Auto-captura opcional antes de `POST /community-manager/generate` si hay &lt;3 screenshots y `appCaptureAutoBeforeGenerate=true`.
+- Requiere Chromium en runtime (`Dockerfile.api`).
+
+Servicios: `product-app-capture.service.ts`, `app-screenshot-capture.service.ts`.

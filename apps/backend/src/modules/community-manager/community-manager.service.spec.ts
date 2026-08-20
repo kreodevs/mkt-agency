@@ -16,6 +16,7 @@ describe('CommunityManagerService — extracted helpers', () => {
       {} as any, // templateComposer
       {} as any, // talkingHeadComposer
       {} as any, // productService
+      { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
       {} as any, // contextFacade
     );
   });
