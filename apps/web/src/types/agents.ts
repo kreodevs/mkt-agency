@@ -84,7 +84,7 @@ export const AGENTS_CATALOG: AgentCatalogItem[] = [
     id: 'competitor_intel',
     name: 'Competitor Intel',
     description:
-      'Analiza en profundidad a tus competidores: fortalezas, debilidades, posicionamiento y oportunidades de mercado.',
+      'Analiza en profundidad a tus competidores: tu posición, ventajas competitivas, fortalezas rivales y oportunidades de mercado.',
     icon: 'Target',
     href: '/agents/competitor-intel',
     status: 'ready',

@@ -12,6 +12,7 @@ import { Button } from '@/components/atoms/Button';
 import { toast } from '@/components/molecules/Sonner';
 import { listCompetitorAnalyses, triggerCompetitorAnalysis, getCompetitorAnalysis } from '@/services/agents';
 import { listCompetitors } from '@/services/competitors';
+import { getCompanyProfile } from '@/services/company-profile';
 import { ApiError } from '@/services/api';
 import { CompetitorDiscoveryPanel } from '@/components/competitors/CompetitorDiscoveryPanel';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
@@ -38,6 +39,11 @@ export default function CompetitorIntelPage() {
   const competitorsQuery = useQuery({
     queryKey: ['competitors'],
     queryFn: listCompetitors,
+  });
+
+  const companyProfileQuery = useQuery({
+    queryKey: ['company-profile'],
+    queryFn: getCompanyProfile,
   });
 
   const analyses = analysesQuery.data ?? [];
@@ -98,7 +104,7 @@ export default function CompetitorIntelPage() {
         description={
           copilotMode
             ? 'Descubre rivales, analiza el mercado y alimenta el copy de tu semana — tú apruebas cada publicación.'
-            : 'Análisis profundo de tus competidores: fortalezas, debilidades y oportunidades de mercado.'
+            : 'Análisis profundo de tus competidores: tu posición, ventajas competitivas, fortalezas rivales y oportunidades de mercado.'
         }
         actions={
           <Link to={withProduct(copilotMode ? '/' : '/agents')}>
@@ -137,7 +143,10 @@ export default function CompetitorIntelPage() {
 
         {selectedAnalysis?.analysis && (
           <Card title="Reporte de análisis competitivo" subtitle="Generado por IA">
-            <CompetitorAnalysisReport analysis={selectedAnalysis.analysis} />
+            <CompetitorAnalysisReport
+              analysis={selectedAnalysis.analysis}
+              companyName={companyProfileQuery.data?.companyName}
+            />
             <p className="px-[var(--spacing-md)] pb-[var(--spacing-md)] text-xs text-[var(--foreground-subtle)]">
               Actualizado:{' '}
               {new Date(selectedAnalysis.updatedAt).toLocaleString('es-MX')}

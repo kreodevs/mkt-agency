@@ -3,6 +3,8 @@ export interface CompetitorIntelSocialCopyBrief {
   generatedAt: string;
   threatLevel: string | null;
   competitorLandscape: string | null;
+  ourPosition: string | null;
+  competitiveAdvantages: string[];
   recommendation: string | null;
   marketGaps: string[];
   keyInsights: string[];
@@ -47,6 +49,8 @@ export function buildCompetitorIntelBriefForSocialCopy(input: {
       generatedAt: input.generatedAt,
       threatLevel: null,
       competitorLandscape: null,
+      ourPosition: null,
+      competitiveAdvantages: [],
       recommendation: null,
       marketGaps: [],
       keyInsights: [],
@@ -75,6 +79,8 @@ export function buildCompetitorIntelBriefForSocialCopy(input: {
     generatedAt: input.generatedAt,
     threatLevel: pickString(analysis.threatLevel),
     competitorLandscape: pickString(analysis.competitorLandscape)?.slice(0, 1200) ?? null,
+    ourPosition: pickString(analysis.ourPosition)?.slice(0, 1200) ?? null,
+    competitiveAdvantages: pickStringArray(analysis.competitiveAdvantages, 6),
     recommendation: pickString(analysis.recommendation)?.slice(0, 1200) ?? null,
     marketGaps: pickStringArray(analysis.marketGaps, 6),
     keyInsights: pickStringArray(analysis.keyInsights, 6),
@@ -84,6 +90,8 @@ export function buildCompetitorIntelBriefForSocialCopy(input: {
 
   const hasSignal =
     !!brief.competitorLandscape ||
+    !!brief.ourPosition ||
+    brief.competitiveAdvantages.length > 0 ||
     !!brief.recommendation ||
     brief.marketGaps.length > 0 ||
     brief.keyInsights.length > 0 ||

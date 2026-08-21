@@ -10,6 +10,7 @@ import { CompetitorsModule } from '../competitors/competitors.module';
 import { ProductModule } from '../product/product.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { AssetsModule } from '../assets/assets.module';
 import { OpenRouterInterviewAdapter } from './adapters/openrouter-interview.adapter';
@@ -68,6 +69,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
       AgentCompetitorAnalysisEntity,
       AgentImageGenerationEntity,
       CompanyProfileEntity,
+      CompanyProfileSectionEntity,
       ProductEntity,
     ]),
     BullModule.registerQueue(

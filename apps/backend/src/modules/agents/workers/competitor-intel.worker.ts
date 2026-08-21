@@ -6,9 +6,15 @@ import { Repository } from 'typeorm';
 import { runWithLlmUsageContext } from '../../../shared/ai/llm-usage.context';
 import { QUEUE_COMPETITOR_INTEL } from '../../../shared/queue/queue.constants';
 import { CompanyProfileEntity } from '../../company-profile/infrastructure/typeorm/company-profile.entity';
+import { CompanyProfileSectionEntity } from '../../company-profile/infrastructure/typeorm/company-profile-section.entity';
+import { ProfileSectionSyncService } from '../../company-profile/services/profile-section-sync.service';
 import { CompetitorService } from '../../competitors/competitor.service';
+import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
+import { toProductContext } from '../../product/domain/product-context.util';
 import { COMPETITOR_INTEL_ADAPTER, CompetitorIntelAdapterPort } from '../adapters/competitor-intel.adapter.port';
+import { buildCompetitorIntelContext } from '../domain/competitor-intel-context.util';
 import { AgentCompetitorAnalysisEntity } from '../domain/agent-competitor-analysis.entity';
+import { AgentInterviewEntity } from '../domain/agent-interview.entity';
 
 export interface CompetitorIntelJobData {
   analysisId: string;
@@ -23,6 +29,13 @@ export class CompetitorIntelWorkerService {
     private readonly analyses: Repository<AgentCompetitorAnalysisEntity>,
     @InjectRepository(CompanyProfileEntity)
     private readonly profiles: Repository<CompanyProfileEntity>,
+    @InjectRepository(CompanyProfileSectionEntity)
+    private readonly profileSections: Repository<CompanyProfileSectionEntity>,
+    @InjectRepository(AgentInterviewEntity)
+    private readonly interviews: Repository<AgentInterviewEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly products: Repository<ProductEntity>,
+    private readonly profileSectionSync: ProfileSectionSyncService,
     private readonly competitorService: CompetitorService,
     @Inject(COMPETITOR_INTEL_ADAPTER)
     private readonly adapter: CompetitorIntelAdapterPort,
@@ -55,21 +68,38 @@ export class CompetitorIntelWorkerService {
       const profile = await this.profiles.findOne({
         where: { tenantId: analysis.tenantId },
       });
+      const sections = profile
+        ? await this.profileSections.find({ where: { profileId: profile.id } })
+        : [];
+      const profileValues = this.profileSectionSync.resolveProfileValues(profile, sections);
+
+      const interview = await this.interviews.findOne({
+        where: { tenantId: analysis.tenantId, agentType: 'brand_interview' },
+        order: { updatedAt: 'DESC' },
+      });
+
+      const product = await this.products.findOne({
+        where: { tenantId: analysis.tenantId, status: 'active' },
+        order: { updatedAt: 'DESC' },
+      });
 
       const fromTable = await this.competitorService.buildCompetitorsText(analysis.tenantId);
       const competitors =
-        analysis.competitorsInput?.trim() || fromTable || profile?.competitors?.trim() || '';
+        analysis.competitorsInput?.trim() || fromTable || profileValues.competitors?.trim() || '';
       if (!competitors) {
         throw new Error(
           'No hay competidores registrados para analizar. Búscalos con IA o regístralos manualmente.',
         );
       }
 
-      const result = await this.adapter.generateAnalysis(competitors, {
-        companyName: profile?.companyName,
-        industry: profile?.industry,
-        targetAudience: profile?.targetAudienceDesc,
+      const tenantContext = buildCompetitorIntelContext({
+        profile: profileValues,
+        product: product ? toProductContext(product) : null,
+        brandBrief: interview?.brandBrief ?? null,
+        brandBriefMarkdown: interview?.brandBriefMarkdown ?? null,
       });
+
+      const result = await this.adapter.generateAnalysis(competitors, tenantContext);
 
       analysis.analysis = result;
       analysis.status = 'completed';
