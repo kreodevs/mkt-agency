@@ -1,30 +1,14 @@
-import { ForbiddenException } from '@nestjs/common';
 import { AuthenticatedUser } from '../../../shared/auth/jwt-payload.interface';
 
-const DESTRUCTIVE_ACTIONS = new Set([
-  'delete_tenant',
-  'delete_asset',
-  'delete_campaign',
-  'delete_user',
-  'delete_content',
-  'purge_inbox',
-  'bulk_delete',
-]);
-
 export class ImpersonationPolicy {
+  /**
+   * Durante impersonación de plataforma se permiten acciones destructivas.
+   * Restricciones pendientes para operación en modo venta (sin superadmin).
+   */
   static assertDestructiveAllowed(
-    user: AuthenticatedUser,
-    action: string,
+    _user: AuthenticatedUser,
+    _action: string,
   ): void {
-    if (!user.impersonating) {
-      return;
-    }
-
-    if (DESTRUCTIVE_ACTIONS.has(action)) {
-      throw new ForbiddenException({
-        error: 'Destructive actions are prohibited during impersonation',
-        code: 'FORBIDDEN',
-      });
-    }
+    // no-op
   }
 }

@@ -15,7 +15,7 @@ Impersonación auditada de tenants (`/api/v1/superadmin/impersonate`).
 
 ## Política
 
-`ImpersonationPolicy.assertDestructiveAllowed()` bloquea acciones destructivas durante impersonación.
+Durante impersonación de plataforma se permiten acciones destructivas. `ImpersonationPolicy.assertDestructiveAllowed()` queda como punto de extensión para futuras restricciones en modo venta.
 
 ## Integraciones
 
