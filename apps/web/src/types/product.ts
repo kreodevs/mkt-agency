@@ -244,6 +244,10 @@ export interface ProductAppCaptureConfig {
   lastCaptureError: string | null;
   lastCaptureCount: number;
   screenshotCountInKit: number;
+  manifestUrl: string | null;
+  resolvedManifestUrl: string | null;
+  manifestUrlConfigured: boolean;
+  usesTutorialManifest: boolean;
 }
 
 export interface UpdateProductAppCapturePayload {
@@ -258,6 +262,7 @@ export interface UpdateProductAppCapturePayload {
   postLoginWaitMs?: number;
   screens?: ProductAppCaptureScreen[];
   autoCaptureBeforeGenerate?: boolean;
+  manifestUrl?: string;
 }
 
 export interface ProductAppCaptureRunResult {

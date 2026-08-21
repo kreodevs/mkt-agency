@@ -95,6 +95,11 @@ export class UpdateProductAppCaptureDto {
   @IsOptional()
   @IsBoolean()
   autoCaptureBeforeGenerate?: boolean;
+
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  @MaxLength(2000)
+  manifestUrl?: string;
 }
 
 export class ProductAppCaptureResponseDto {
@@ -116,6 +121,10 @@ export class ProductAppCaptureResponseDto {
   lastCaptureError!: string | null;
   lastCaptureCount!: number;
   screenshotCountInKit!: number;
+  manifestUrl!: string | null;
+  resolvedManifestUrl!: string | null;
+  manifestUrlConfigured!: boolean;
+  usesTutorialManifest!: boolean;
 }
 
 export class ProductAppCaptureRunResponseDto {

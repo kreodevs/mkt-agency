@@ -21,7 +21,7 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `GET /api/v1/products/:id/publish-integration` — config webhook n8n + credenciales por plataforma (metadata)
 - `PATCH /api/v1/products/:id/publish-integration` — guarda integración de publicación automática
 - `GET /api/v1/products/:id/app-capture` — credenciales de login de la app + estado de capturas
-- `PATCH /api/v1/products/:id/app-capture` — guarda URLs, usuario/contraseña de prueba y opciones
+- `PATCH /api/v1/products/:id/app-capture` — guarda URLs, usuario/contraseña, **`manifestUrl`** (opcional) y opciones
 - `POST /api/v1/products/:id/app-capture/run` — login headless (Playwright/Chromium) → screenshots en media kit (`product-screenshot`)
 - `GET /api/v1/products/:id/onboarding` — estado del onboarding (% campos, missing, ready)
 - `POST /api/v1/products/:id/infer-from-page` — scrapea URL e infiere nombre, tipo, descripción, propuesta de valor, audiencia, precio y tags
@@ -68,7 +68,8 @@ Servicios: `product-publish-integration.service.ts`, `product-publish-webhook.se
 
 Para productos tipo app/SaaS: credenciales de acceso de prueba en metadata (`appCapture*`), captura con Playwright/Chromium en el contenedor API y subida automática al media kit con rol `product-screenshot`. El compositor visual del Community Manager prioriza esas imágenes al generar arte.
 
-- Auto-captura opcional antes de `POST /community-manager/generate` si hay &lt;3 screenshots y `appCaptureAutoBeforeGenerate=true`.
+- Auto-captura opcional antes de `POST /community-manager/generate` si hay &lt;10 screenshots (5 pantallas × desktop/móvil) y `appCaptureAutoBeforeGenerate=true`.
 - Requiere Chromium en runtime (`Dockerfile.api`).
+- Si la app publica un JSON de guía, configura **`manifestUrl`** o deja vacío para `{origin}/tutorial-manifest.json`. Parser genérico: ver [`domain/README.md`](domain/README.md).
 
-Servicios: `product-app-capture.service.ts`, `app-screenshot-capture.service.ts`.
+Servicios: `product-app-capture.service.ts`, `app-screenshot-capture.service.ts`, `tutorial-manifest.util.ts`.

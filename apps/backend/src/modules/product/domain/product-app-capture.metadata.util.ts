@@ -13,8 +13,15 @@ export const PRODUCT_APP_CAPTURE_LAST_AT_KEY = 'appCaptureLastAt';
 export const PRODUCT_APP_CAPTURE_LAST_STATUS_KEY = 'appCaptureLastStatus';
 export const PRODUCT_APP_CAPTURE_LAST_ERROR_KEY = 'appCaptureLastError';
 export const PRODUCT_APP_CAPTURE_LAST_COUNT_KEY = 'appCaptureLastCount';
+export const PRODUCT_APP_CAPTURE_MANIFEST_URL_KEY = 'appCaptureManifestUrl';
+export const PRODUCT_APP_CAPTURE_USES_MANIFEST_KEY = 'appCaptureUsesManifest';
 
 export type AppCaptureViewport = 'desktop' | 'mobile' | 'tablet';
+
+export const APP_CAPTURE_MIN_UNIQUE_SCREENS = 5;
+export const APP_CAPTURE_VIEWPORTS: AppCaptureViewport[] = ['desktop', 'mobile'];
+export const APP_CAPTURE_MIN_KIT_SCREENSHOTS =
+  APP_CAPTURE_MIN_UNIQUE_SCREENS * APP_CAPTURE_VIEWPORTS.length;
 
 export interface ProductAppCaptureScreen {
   label: string;
@@ -39,6 +46,8 @@ export interface ProductAppCaptureConfig {
   lastCaptureStatus: 'success' | 'failed' | null;
   lastCaptureError: string | null;
   lastCaptureCount: number;
+  manifestUrl: string | null;
+  usesTutorialManifest: boolean;
 }
 
 function readScreens(value: unknown): ProductAppCaptureScreen[] {
@@ -68,8 +77,11 @@ function readScreens(value: unknown): ProductAppCaptureScreen[] {
 
 export function getDefaultAppCaptureScreens(): ProductAppCaptureScreen[] {
   return [
-    { label: 'Dashboard desktop', viewport: 'desktop' },
-    { label: 'Dashboard móvil', viewport: 'mobile' },
+    { label: 'Dashboard', waitMs: 2500 },
+    { label: 'Pacientes', path: '/patients', waitMs: 2500 },
+    { label: 'Citas', path: '/appointments', waitMs: 2500 },
+    { label: 'Reportes', path: '/reports', waitMs: 2500 },
+    { label: 'Configuración', path: '/settings', waitMs: 2500 },
   ];
 }
 
@@ -137,6 +149,11 @@ export function getProductAppCaptureConfig(
       typeof metadata?.[PRODUCT_APP_CAPTURE_LAST_COUNT_KEY] === 'number'
         ? metadata[PRODUCT_APP_CAPTURE_LAST_COUNT_KEY]
         : 0,
+    manifestUrl:
+      typeof metadata?.[PRODUCT_APP_CAPTURE_MANIFEST_URL_KEY] === 'string'
+        ? metadata[PRODUCT_APP_CAPTURE_MANIFEST_URL_KEY]
+        : null,
+    usesTutorialManifest: metadata?.[PRODUCT_APP_CAPTURE_USES_MANIFEST_KEY] === true,
   };
 }
 
@@ -171,6 +188,8 @@ export function withProductAppCaptureMetadata(
     lastCaptureStatus: 'success' | 'failed' | null;
     lastCaptureError: string | null;
     lastCaptureCount: number;
+    manifestUrl: string | null;
+    usesTutorialManifest: boolean;
   }>,
 ): Record<string, unknown> {
   const next = { ...metadata };
@@ -229,6 +248,13 @@ export function withProductAppCaptureMetadata(
   }
   if (patch.lastCaptureCount !== undefined) {
     next[PRODUCT_APP_CAPTURE_LAST_COUNT_KEY] = patch.lastCaptureCount;
+  }
+  if (patch.manifestUrl !== undefined) {
+    if (patch.manifestUrl) next[PRODUCT_APP_CAPTURE_MANIFEST_URL_KEY] = patch.manifestUrl;
+    else delete next[PRODUCT_APP_CAPTURE_MANIFEST_URL_KEY];
+  }
+  if (patch.usesTutorialManifest !== undefined) {
+    next[PRODUCT_APP_CAPTURE_USES_MANIFEST_KEY] = patch.usesTutorialManifest;
   }
 
   return next;

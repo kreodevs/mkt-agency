@@ -8,10 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppScreenshotCaptureService } from './app-screenshot-capture.service';
 import {
+  APP_CAPTURE_MIN_KIT_SCREENSHOTS,
+  APP_CAPTURE_MIN_UNIQUE_SCREENS,
   getProductAppCaptureConfig,
   isProductAppCaptureConfigured,
   withProductAppCaptureMetadata,
 } from './domain/product-app-capture.metadata.util';
+import { resolveTutorialManifestUrl } from './domain/tutorial-manifest.util';
 import {
   ProductAppCaptureResponseDto,
   ProductAppCaptureRunResponseDto,
@@ -21,7 +24,6 @@ import { ProductEntity } from './infrastructure/typeorm/product.entity';
 import { ProductMediaKitService } from './product-media-kit.service';
 
 const MASKED_PASSWORD = '••••••••';
-const MIN_SCREENSHOTS_FOR_GENERATE = 3;
 
 @Injectable()
 export class ProductAppCaptureService {
@@ -77,6 +79,7 @@ export class ProductAppCaptureService {
       ...(dto.autoCaptureBeforeGenerate !== undefined
         ? { autoCaptureBeforeGenerate: dto.autoCaptureBeforeGenerate }
         : {}),
+      ...(dto.manifestUrl !== undefined ? { manifestUrl: dto.manifestUrl?.trim() || null } : {}),
     });
 
     await this.products.save(product);
@@ -98,10 +101,10 @@ export class ProductAppCaptureService {
     }
 
     try {
-      const screenshots = await this.captureService.capture(config);
+      const captureResult = await this.captureService.capture(config);
       const items = [];
 
-      for (const shot of screenshots) {
+      for (const shot of captureResult.screenshots) {
         const item = await this.mediaKitService.uploadBufferToKit(
           tenantId,
           productId,
@@ -118,6 +121,7 @@ export class ProductAppCaptureService {
         lastCaptureStatus: 'success',
         lastCaptureError: null,
         lastCaptureCount: items.length,
+        usesTutorialManifest: captureResult.usedTutorialManifest,
       });
       await this.products.save(product);
 
@@ -158,10 +162,10 @@ export class ProductAppCaptureService {
       productId,
       'product-screenshot',
     );
-    if (screenshotCount >= MIN_SCREENSHOTS_FOR_GENERATE) return;
+    if (screenshotCount >= APP_CAPTURE_MIN_KIT_SCREENSHOTS) return;
 
     this.logger.log(
-      `Auto-captura de app para producto ${productId} (${screenshotCount}/${MIN_SCREENSHOTS_FOR_GENERATE} capturas)`,
+      `Auto-captura de app para producto ${productId} (${screenshotCount}/${APP_CAPTURE_MIN_KIT_SCREENSHOTS} capturas; ${APP_CAPTURE_MIN_UNIQUE_SCREENS} pantallas × desktop/móvil)`,
     );
     const result = await this.runCapture(tenantId, productId);
     if (result.status === 'failed') {
@@ -204,6 +208,12 @@ export class ProductAppCaptureService {
       lastCaptureError: config.lastCaptureError,
       lastCaptureCount: config.lastCaptureCount,
       screenshotCountInKit,
+      manifestUrl: config.manifestUrl,
+      resolvedManifestUrl: config.appUrl
+        ? resolveTutorialManifestUrl(config.appUrl, config.manifestUrl)
+        : null,
+      manifestUrlConfigured: Boolean(config.manifestUrl?.trim()),
+      usesTutorialManifest: config.usesTutorialManifest,
     };
   }
 }

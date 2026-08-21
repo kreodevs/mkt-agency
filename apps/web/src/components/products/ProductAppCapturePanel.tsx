@@ -35,6 +35,7 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
   const [emailSelector, setEmailSelector] = useState('');
   const [passwordSelector, setPasswordSelector] = useState('');
   const [submitSelector, setSubmitSelector] = useState('');
+  const [manifestUrl, setManifestUrl] = useState('');
   const [autoCaptureBeforeGenerate, setAutoCaptureBeforeGenerate] = useState(false);
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
     setEmailSelector(data.emailSelector ?? '');
     setPasswordSelector(data.passwordSelector ?? '');
     setSubmitSelector(data.submitSelector ?? '');
+    setManifestUrl(data.manifestUrl ?? '');
     setAutoCaptureBeforeGenerate(data.autoCaptureBeforeGenerate);
   }, [captureQuery.data]);
 
@@ -94,6 +96,7 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
       emailSelector: emailSelector.trim() || undefined,
       passwordSelector: passwordSelector.trim() || undefined,
       submitSelector: submitSelector.trim() || undefined,
+      manifestUrl: manifestUrl.trim() || undefined,
       autoCaptureBeforeGenerate,
     });
   };
@@ -160,6 +163,26 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
           />
         </div>
 
+        <InputText
+          label="URL del manifest de captura (opcional)"
+          type="url"
+          value={manifestUrl}
+          onChange={(event) => setManifestUrl(event.target.value)}
+          placeholder={
+            data?.resolvedManifestUrl ??
+            'https://app.ejemplo.com/tutorial-manifest.json'
+          }
+          fullWidth
+        />
+        <p className="text-xs text-[var(--foreground-muted)]">
+          JSON con login, rutas y selectores. Vacío = prueba{' '}
+          {data?.resolvedManifestUrl ?? '{origen}/tutorial-manifest.json'}. Soporta{' '}
+          <code className="text-[var(--foreground)]">modules</code>,{' '}
+          <code className="text-[var(--foreground)]">pages</code>,{' '}
+          <code className="text-[var(--foreground)]">screens</code> o{' '}
+          <code className="text-[var(--foreground)]">routes</code>.
+        </p>
+
         {!compact && (
           <details className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
             <summary className="cursor-pointer font-medium text-[var(--foreground)]">
@@ -195,8 +218,19 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
             onChange={(event) => setAutoCaptureBeforeGenerate(event.target.checked)}
             className="rounded border-[var(--border)]"
           />
-          Capturar automáticamente antes de generar posts si hay menos de 3 screenshots en el kit
+          Capturar automáticamente antes de generar posts si hay menos de 10 screenshots en el kit
+          (5 pantallas distintas en escritorio y móvil)
         </label>
+
+        {data?.resolvedManifestUrl && (
+          <p className="text-xs text-[var(--foreground-muted)]">
+            {data.usesTutorialManifest
+              ? `Última captura usó manifest (${data.resolvedManifestUrl}).`
+              : data.manifestUrlConfigured
+                ? `Manifest configurado: ${data.resolvedManifestUrl}`
+                : `Sin URL propia: se intentará ${data.resolvedManifestUrl} al capturar.`}
+          </p>
+        )}
 
         {data?.lastCaptureAt && (
           <p className="text-xs text-[var(--foreground-muted)]">
@@ -210,9 +244,11 @@ export function ProductAppCapturePanel({ productId, compact = false }: ProductAp
         )}
 
         <p className="text-sm text-[var(--foreground-muted)]">
-          {screenshotCount} captura(s) en el kit de medios. El compositor visual prioriza el rol{' '}
-          <strong className="text-[var(--foreground)]">product-screenshot</strong> al crear arte
-          para redes.
+          {screenshotCount} captura(s) en el kit de medios. Cada ejecución intenta{' '}
+          <strong className="text-[var(--foreground)]">5 pantallas distintas</strong> en{' '}
+          <strong className="text-[var(--foreground)]">escritorio y móvil</strong> (hasta 10
+          imágenes). El compositor visual prioriza el rol{' '}
+          <strong className="text-[var(--foreground)]">product-screenshot</strong>.
         </p>
 
         <div className="flex flex-wrap gap-2">
