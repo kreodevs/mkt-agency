@@ -21,7 +21,7 @@ const buttonVariants = cva(
           'bg-[var(--destructive)] text-[var(--destructive-foreground)] hover:bg-[var(--destructive)]/90 disabled:bg-[var(--muted)] disabled:text-[var(--foreground-muted)]',
         link: 'bg-transparent text-[var(--primary)] hover:underline underline-offset-4 disabled:text-[var(--foreground-muted)] disabled:no-underline',
         brand:
-          'border border-transparent bg-[var(--gradient-brand)] text-[var(--brand-foreground)] shadow-[var(--shadow-sm)] hover:opacity-95 disabled:bg-[var(--brand-muted)] disabled:text-[var(--brand-deep)] disabled:border-[color-mix(in_srgb,var(--brand)_28%,var(--border))] disabled:shadow-none disabled:hover:opacity-100',
+          'border border-transparent bg-[var(--brand)] text-[var(--brand-foreground)] shadow-[var(--shadow-sm)] [background-image:var(--gradient-brand)] hover:opacity-95 disabled:pointer-events-none disabled:border-[color-mix(in_srgb,var(--brand)_35%,var(--border))] disabled:bg-[var(--brand-muted)] disabled:[background-image:none] disabled:text-[var(--brand-deep)] disabled:shadow-none disabled:opacity-100 disabled:hover:opacity-100',
         action:
           'border border-[var(--action-border)] bg-[var(--action-bg)] text-[var(--action-fg)] hover:bg-[var(--action-bg-hover)] hover:border-[var(--action-border-hover)] hover:text-[var(--action-fg-hover)] active:border-[var(--action-border-hover)] active:text-[var(--action-fg-hover)] disabled:bg-[var(--muted)] disabled:text-[var(--foreground-muted)] disabled:border-[var(--border)]',
         'action-primary':

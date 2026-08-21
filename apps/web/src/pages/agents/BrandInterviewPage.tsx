@@ -238,7 +238,7 @@ export default function BrandInterviewPage() {
             <div className="flex flex-col items-center gap-4 py-4 text-center sm:py-6">
               {brandInterviews.length === 0 && !selectedProductNeedsOnboarding && (
                 <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-md)] border border-[var(--accent)]/20 bg-[var(--accent)]/10 shadow-sm">
-                  <Bot className="h-8 w-8 text-white" />
+                  <Bot className="h-8 w-8 text-[var(--brand)]" />
                 </div>
               )}
               {!selectedProductNeedsOnboarding ? (
@@ -485,7 +485,7 @@ export default function BrandInterviewPage() {
               >
                 {isAgent && (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10">
-                    <Bot className="h-4 w-4 text-white" />
+                    <Bot className="h-4 w-4 text-[var(--brand)]" />
                   </div>
                 )}
                 <div
