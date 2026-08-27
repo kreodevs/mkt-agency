@@ -6,6 +6,7 @@ import { ContentService } from '../content/content.service';
 import { AgentImageGenerationEntity } from '../agents/domain/agent-image-generation.entity';
 import { ImageBrandingService } from '../agents/image-branding.service';
 import { resolveImageSizeForPlatform } from '../../shared/social/image-destination-formats.util';
+import type { ContentImageDestination } from '../content/domain/content.constants';
 import { normalizeContentVisualFormat, visualFormatToFrameCount } from '../content/domain/content-visual-format.util';
 import type { ResolvedProfileValues } from '../company-profile/services/profile-section-sync.service';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
@@ -60,7 +61,11 @@ export class VisualTemplateComposerService {
     kit: ProductMediaKitItemEntity[],
     postIndex: number,
     ctx: VisualTemplateComposeContext,
-    options?: { forceTemplateId?: VisualTemplateId; variationSeed?: number },
+    options?: {
+      forceTemplateId?: VisualTemplateId;
+      variationSeed?: number;
+      imageDestination?: ContentImageDestination;
+    },
   ): Promise<VisualTemplateComposeResult> {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);
     if (visualFormat === 'talking-head') {
@@ -76,11 +81,14 @@ export class VisualTemplateComposerService {
       }
 
       const templateId = options?.forceTemplateId ?? resolveVisualTemplateId(post);
-      const size = resolveImageSizeForPlatform(post.platform);
+      const size = resolveImageSizeForPlatform(
+        post.platform,
+        options?.imageDestination ?? post.imageDestination,
+      );
       const frameCount =
         visualFormat === 'carousel' ? visualFormatToFrameCount('carousel') : 1;
 
-      const imageAssetIds = await this.mediaKit.pickImageAssetIdsForCompose(
+      const imagePicks = await this.mediaKit.pickComposeImagePicks(
         tenantId,
         kit,
         visualFormat,
@@ -96,8 +104,9 @@ export class VisualTemplateComposerService {
       const frames: Array<{ assetId: string; index: number }> = [];
 
       for (let slideIndex = 0; slideIndex < frameCount; slideIndex += 1) {
-        const photoAssetId =
-          imageAssetIds[slideIndex % Math.max(imageAssetIds.length, 1)] ?? imageAssetIds[0];
+        const pick =
+          imagePicks[slideIndex % Math.max(imagePicks.length, 1)] ?? imagePicks[0];
+        const photoAssetId = pick?.assetId;
         const photoFile = photoAssetId
           ? await this.assetService.readFile(tenantId, photoAssetId).catch(() => null)
           : null;
@@ -130,6 +139,7 @@ export class VisualTemplateComposerService {
           photoBuffer: photoFile?.buffer ?? null,
           logoBuffer: logoFile?.buffer ?? null,
           logoMimeType: logoFile?.mimeType ?? null,
+          screenshotDevice: pick?.device ?? null,
         });
 
         if (brandKit.logoAssetId && !logoFile) {
@@ -173,6 +183,7 @@ export class VisualTemplateComposerService {
             headline: post.visualHeadline ?? null,
             subline: post.visualSubline ?? null,
             cta: post.visualCta ?? null,
+            imageDestination: options?.imageDestination ?? post.imageDestination ?? 'feed',
             brandKit: {
               style: brandKit.style,
               primaryColor: brandKit.primaryColor,

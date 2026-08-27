@@ -22,6 +22,13 @@ export const LEGACY_VIDEO_VISUAL_FORMAT = 'video' as const;
 
 export const DEFAULT_CONTENT_VISUAL_FORMAT: ContentVisualFormat = 'image';
 
+/** Destino de imagen en red social: feed cuadrado vs story/reel vertical. */
+export const CONTENT_IMAGE_DESTINATIONS = ['feed', 'story'] as const;
+
+export type ContentImageDestination = (typeof CONTENT_IMAGE_DESTINATIONS)[number];
+
+export const DEFAULT_CONTENT_IMAGE_DESTINATION: ContentImageDestination = 'feed';
+
 export const CAROUSEL_FRAME_COUNT = 3;
 
 export const APPROVAL_STATUSES = ['approved', 'rejected', 'pending'] as const;

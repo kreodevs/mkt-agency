@@ -11,6 +11,7 @@ describe('ContentService — validation & routing', () => {
       {} as any, // versions repo
       {} as any, // approvals repo
       {} as any, // campaigns repo
+      {} as any, // imageGenerations repo
       {} as any, // productService
       {} as any, // dataSource
       {} as any, // signatureService

@@ -15,6 +15,11 @@ export interface PublicationInboxItem {
   body: string;
   platform: string | null;
   visualFormat: string;
+  visualTemplateId?: string | null;
+  visualHeadline?: string | null;
+  visualSubline?: string | null;
+  visualCta?: string | null;
+  imageDestination?: string;
   assets: unknown[];
   publishedAt?: string | null;
   canPublishWithN8n?: boolean;

@@ -1,13 +1,17 @@
 import sharp from '@/shared/media/sharp.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
+import type { AssetDeviceHint } from '../../assets/domain/asset-folder.util';
+import { normalizeBrandFontFamily } from '../../product/domain/brand-visual-kit.metadata.util';
 import {
   buildDeviceShadow,
   renderDeviceFrame,
+  renderMiniDeviceThumbnail,
   resolveDeviceFrameType,
   resolveDevicePlacement,
   resolveVisualAspectRatio,
   type VisualAspectRatio,
 } from './device-frame-render.util';
+import { resizeScreenshotCover } from './screenshot-crop.util';
 import type { ResolvedVisualBrandKit } from './visual-brand-kit.util';
 import type { VisualTemplateId } from './visual-template.constants';
 
@@ -30,11 +34,13 @@ export interface RenderVisualTemplateInput {
   photoBuffer?: Buffer | null;
   logoBuffer?: Buffer | null;
   logoMimeType?: string | null;
+  screenshotDevice?: AssetDeviceHint | null;
 }
 
 export interface VisualLayoutContext {
   platform?: string | null;
   aspectRatio: VisualAspectRatio;
+  screenshotDevice?: AssetDeviceHint | null;
 }
 
 export type VisualLayoutMode =
@@ -49,8 +55,21 @@ export type VisualLayoutMode =
 
 const TEXT_PRIMARY = '#faf9f5';
 const TEXT_MUTED = '#e8e6df';
-const FONT_SANS = '"Helvetica Neue", Arial, sans-serif';
-const FONT_DISPLAY = '"Helvetica Neue", Arial, sans-serif';
+
+function resolveTextFonts(
+  kit: ResolvedVisualBrandKit,
+  isQuote: boolean,
+): { sans: string; display: string } {
+  if (kit.fontFamily) {
+    const brandFont = normalizeBrandFontFamily(kit.fontFamily);
+    return { sans: brandFont, display: brandFont };
+  }
+  if (isQuote || kit.style === 'luxury') {
+    return { sans: 'Georgia, serif', display: 'Georgia, serif' };
+  }
+  const base = '"Helvetica Neue", Arial, sans-serif';
+  return { sans: base, display: base };
+}
 
 export function parseImageSize(size: ImageGenerationSize): { width: number; height: number } {
   const [widthRaw, heightRaw] = size.split('x');
@@ -314,6 +333,7 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
   const isStat = variant === 'stat-solid' || templateId === 'stat-highlight';
   const isQuote = variant === 'quote-editorial' || templateId === 'quote-insight';
   const isHook = variant === 'gradient-hook';
+  const fonts = resolveTextFonts(kit, isQuote);
 
   const headlineSize = isStat
     ? Math.round(width * 0.11)
@@ -367,13 +387,13 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
 
   const slideBadge =
     slideCount > 1
-      ? `<text x="${width - padding}" y="${padding + 26}" text-anchor="end" fill="${TEXT_MUTED}" font-family="${FONT_SANS}" font-size="20" font-weight="600" opacity="0.9">${slideIndex + 1}/${slideCount}</text>`
+      ? `<text x="${width - padding}" y="${padding + 26}" text-anchor="end" fill="${TEXT_MUTED}" font-family="${fonts.sans}" font-size="20" font-weight="600" opacity="0.9">${slideIndex + 1}/${slideCount}</text>`
       : '';
 
   const promoBadge =
     templateId === 'promo-cta' && variant !== 'cta-solid'
       ? `<rect x="${padding}" y="${padding}" rx="16" ry="16" width="${Math.min(width * 0.28, 200)}" height="44" fill="${kit.accentColor}"/>
-         <text x="${padding + 18}" y="${padding + 30}" fill="${kit.secondaryColor}" font-family="${FONT_SANS}" font-size="18" font-weight="700">NUEVO</text>`
+         <text x="${padding + 18}" y="${padding + 30}" fill="${kit.secondaryColor}" font-family="${fonts.sans}" font-size="18" font-weight="700">NUEVO</text>`
       : '';
 
   const ctaY = isCtaFocus
@@ -383,18 +403,18 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
 
   const ctaBlock = slots.cta
     ? `<rect x="${padding}" y="${ctaY}" rx="28" ry="28" width="${ctaWidth}" height="56" fill="${kit.primaryColor}"/>
-       <text x="${padding + 28}" y="${ctaY + 36}" fill="${TEXT_PRIMARY}" font-family="${FONT_SANS}" font-size="${ctaSize}" font-weight="700">${escapeXml(slots.cta)}</text>`
+       <text x="${padding + 28}" y="${ctaY + 36}" fill="${TEXT_PRIMARY}" font-family="${fonts.sans}" font-size="${ctaSize}" font-weight="700">${escapeXml(slots.cta)}</text>`
     : '';
 
   const statBlock =
     isStat && slots.statValue
-      ? `<text x="${padding}" y="${contentY}" fill="${kit.accentColor}" font-family="${FONT_SANS}" font-size="${statSize}" font-weight="800" letter-spacing="-2">${escapeXml(slots.statValue)}</text>`
+      ? `<text x="${padding}" y="${contentY}" fill="${kit.accentColor}" font-family="${fonts.sans}" font-size="${statSize}" font-weight="800" letter-spacing="-2">${escapeXml(slots.statValue)}</text>`
       : '';
 
-  const headlineFont = isQuote ? 'Georgia, serif' : FONT_DISPLAY;
+  const headlineFont = isQuote ? fonts.display : fonts.display;
   const headlineY = statBlock ? contentY + statSize * 0.95 : contentY;
   const headlineBlock = statBlock
-    ? `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" font-family="${FONT_SANS}" font-size="${Math.round(headlineSize * 0.72)}" font-weight="600">${headlineTspans}</text>`
+    ? `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" font-family="${fonts.sans}" font-size="${Math.round(headlineSize * 0.72)}" font-weight="600">${headlineTspans}</text>`
     : `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" font-family="${headlineFont}" font-size="${headlineSize}" font-weight="700">${headlineTspans}</text>`;
 
   const sublineY =
@@ -417,7 +437,7 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
     ${quoteMark}
     ${statBlock}
     ${statBlock ? '' : headlineBlock}
-    <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" font-family="${FONT_SANS}" font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
+    <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" font-family="${fonts.sans}" font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
     ${ctaBlock}
   </svg>`;
 }
@@ -457,10 +477,7 @@ async function renderSplitScreenshotTop(
   const panelHeight = height - photoHeight;
   const fadeHeight = Math.min(56, Math.round(photoHeight * 0.14));
 
-  const screenshot = await sharp(photoBuffer)
-    .resize(width, photoHeight, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
+  const screenshot = await resizeScreenshotCover(photoBuffer, width, photoHeight);
 
   const fadeSvg = Buffer.from(
     `<svg width="${width}" height="${fadeHeight}">
@@ -522,7 +539,11 @@ async function renderDeviceMockup(
   layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
   const base = await renderGradientBase(width, height, kit);
-  const frameType = resolveDeviceFrameType(layoutContext.platform, layoutContext.aspectRatio);
+  const frameType = resolveDeviceFrameType(
+    layoutContext.platform,
+    layoutContext.aspectRatio,
+    layoutContext.screenshotDevice,
+  );
   const placement = resolveDevicePlacement(width, height, frameType, layoutContext.aspectRatio);
   const deviceImage = await renderDeviceFrame(photoBuffer, placement);
   const shadow = await buildDeviceShadow(
@@ -571,10 +592,7 @@ async function renderStoryBleed(
   const photoHeight = Math.round(height * resolveStoryPhotoRatio(layoutContext.aspectRatio));
   const panelHeight = height - photoHeight;
 
-  const screenshot = await sharp(photoBuffer)
-    .resize(width, photoHeight, { fit: 'cover', position: 'centre' })
-    .png()
-    .toBuffer();
+  const screenshot = await resizeScreenshotCover(photoBuffer, width, photoHeight);
 
   const textSvg = Buffer.from(
     buildTextBlockSvg({
@@ -616,19 +634,22 @@ async function renderQuoteEditorial(
   photoBuffer: Buffer,
   slideIndex: number,
   slideCount: number,
+  layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
   const base = await renderGradientBase(width, height, kit);
   const thumbW = Math.round(width * 0.34);
   const thumbH = Math.round(height * 0.22);
   const thumbLeft = width - thumbW - Math.round(width * 0.06);
   const thumbTop = Math.round(height * 0.06);
-  const radius = 14;
 
-  let thumb = await sharp(photoBuffer)
-    .resize(thumbW, thumbH, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
-  thumb = await applyRoundedCorners(thumb, thumbW, thumbH, radius);
+  const thumb = await renderMiniDeviceThumbnail(
+    photoBuffer,
+    thumbW,
+    thumbH,
+    layoutContext.platform,
+    layoutContext.screenshotDevice,
+    layoutContext.aspectRatio,
+  );
 
   const textSvg = Buffer.from(
     buildTextBlockSvg({
@@ -645,7 +666,7 @@ async function renderQuoteEditorial(
 
   const thumbBorder = Buffer.from(
     `<svg width="${thumbW + 4}" height="${thumbH + 4}">
-      <rect x="1" y="1" width="${thumbW + 2}" height="${thumbH + 2}" rx="${radius}" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+      <rect x="1" y="1" width="${thumbW + 2}" height="${thumbH + 2}" rx="12" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
     </svg>`,
   );
 
@@ -668,6 +689,7 @@ async function renderStatSolid(
   photoBuffer: Buffer,
   slideIndex: number,
   slideCount: number,
+  layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
   const base = await renderGradientBase(width, height, kit);
   const thumbW = Math.round(width * 0.28);
@@ -675,11 +697,14 @@ async function renderStatSolid(
   const thumbLeft = width - thumbW - Math.round(width * 0.06);
   const thumbTop = Math.round(height * 0.06);
 
-  let thumb = await sharp(photoBuffer)
-    .resize(thumbW, thumbH, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
-  thumb = await applyRoundedCorners(thumb, thumbW, thumbH, 10);
+  const thumb = await renderMiniDeviceThumbnail(
+    photoBuffer,
+    thumbW,
+    thumbH,
+    layoutContext.platform,
+    layoutContext.screenshotDevice,
+    layoutContext.aspectRatio,
+  );
 
   const textSvg = Buffer.from(
     buildTextBlockSvg({
@@ -760,6 +785,7 @@ export async function renderVisualTemplateFrame(
   const layoutContext: VisualLayoutContext = {
     platform: input.platform,
     aspectRatio: resolveVisualAspectRatio(input.size),
+    screenshotDevice: input.screenshotDevice,
   };
   const layout = resolveVisualLayoutMode(
     input.templateId,
@@ -821,6 +847,7 @@ export async function renderVisualTemplateFrame(
         input.photoBuffer!,
         slideIndex,
         slideCount,
+        layoutContext,
       );
       break;
     case 'stat-solid':
@@ -833,6 +860,7 @@ export async function renderVisualTemplateFrame(
         input.photoBuffer!,
         slideIndex,
         slideCount,
+        layoutContext,
       );
       break;
     case 'gradient-hook':

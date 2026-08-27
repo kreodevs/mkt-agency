@@ -279,6 +279,7 @@ export interface BrandVisualKit {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  fontFamily: string | null;
   updatedAt: string | null;
 }
 
@@ -287,5 +288,6 @@ export interface UpdateBrandVisualKitPayload {
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
+  fontFamily?: string | null;
 }
 

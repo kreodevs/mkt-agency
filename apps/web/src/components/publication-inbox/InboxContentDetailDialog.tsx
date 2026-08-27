@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
+import { ContentVisualDesignPanel } from '@/components/content/ContentVisualDesignPanel';
+import { ContentVisualPanel } from '@/components/content/ContentVisualPanel';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { Button } from '@/components/atoms/Button';
 import { Dialog } from '@/components/molecules/Dialog';
@@ -117,6 +119,26 @@ export function InboxContentDetailDialog({
 
         <InboxItemVisualPreview item={item} variant="detail" />
         <InboxArtPublishBar item={item} />
+
+        {item.productId ? (
+          <>
+            <ContentVisualDesignPanel
+              contentId={item.contentId}
+              visualTemplateId={item.visualTemplateId}
+              visualHeadline={item.visualHeadline}
+              visualSubline={item.visualSubline}
+              visualCta={item.visualCta}
+              imageDestination={item.imageDestination === 'story' ? 'story' : 'feed'}
+            />
+            <ContentVisualPanel
+              contentId={item.contentId}
+              productId={item.productId}
+              versionAssets={item.assets}
+              platform={item.platform}
+              visualFormat={item.visualFormat as 'image' | 'carousel' | 'talking-head'}
+            />
+          </>
+        ) : null}
 
         <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]">
           <p className="mb-[var(--spacing-sm)] text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">

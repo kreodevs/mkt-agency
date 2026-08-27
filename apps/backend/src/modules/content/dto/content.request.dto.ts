@@ -11,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { CONTENT_STATUSES, CONTENT_TYPES, CONTENT_VISUAL_FORMATS } from '../domain/content.constants';
+import { CONTENT_IMAGE_DESTINATIONS } from '../domain/content.constants';
 import { CM_PLATFORMS } from '../../community-manager/domain/cm-platforms.constants';
 import { VISUAL_TEMPLATE_IDS } from '../../community-manager/domain/visual-template.constants';
 
@@ -77,6 +78,11 @@ export class CreateContentDto {
   @IsString()
   @MaxLength(80)
   visualCta?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CONTENT_IMAGE_DESTINATIONS])
+  imageDestination?: string;
 }
 
 export class UpdateContentDto {
@@ -140,6 +146,11 @@ export class UpdateContentDto {
   @IsString()
   @MaxLength(80)
   visualCta?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...CONTENT_IMAGE_DESTINATIONS])
+  imageDestination?: string;
 }
 
 export class ListContentsQueryDto {

@@ -27,6 +27,11 @@ import { KnowledgeIndexService } from '../knowledge/services/knowledge-index.ser
 import { ProductService } from './product.service';
 import type { ContentVisualFormat } from '../content/domain/content.constants';
 
+export type ComposeImagePick = {
+  assetId: string;
+  device: AssetDeviceHint | null;
+};
+
 export type MediaKitLlmItem = {
   role: string;
   label: string | null;
@@ -249,6 +254,23 @@ export class ProductMediaKitService {
     postIndex: number,
     platform?: string,
   ): Promise<string[]> {
+    const picks = await this.pickComposeImagePicks(
+      tenantId,
+      kit,
+      visualFormat,
+      postIndex,
+      platform,
+    );
+    return picks.map((pick) => pick.assetId);
+  }
+
+  async pickComposeImagePicks(
+    tenantId: string,
+    kit: ProductMediaKitItemEntity[],
+    visualFormat: ContentVisualFormat,
+    postIndex: number,
+    platform?: string,
+  ): Promise<ComposeImagePick[]> {
     const assetIds = kit.map((item) => item.assetId);
     const assets = assetIds.length
       ? await this.assets.find({ where: { tenantId, id: In(assetIds) } })
@@ -266,17 +288,20 @@ export class ProductMediaKitService {
       imageAssetIds.has(item.assetId),
     );
 
+    const resolveDevice = (assetId: string): AssetDeviceHint | null => {
+      const asset = assetMap.get(assetId);
+      const folderMeta = this.assetFolderService.resolveFolderPath(
+        folders,
+        asset?.folderId ?? null,
+      );
+      return folderMeta.device;
+    };
+
     if (platform && images.length > 1) {
       const preferredDevices = preferredDevicesForPlatform(platform);
       const withDevice = images.map((item) => {
-        const asset = assetMap.get(item.assetId);
-        const folderMeta = this.assetFolderService.resolveFolderPath(
-          folders,
-          asset?.folderId ?? null,
-        );
-        const deviceRank = folderMeta.device
-          ? preferredDevices.indexOf(folderMeta.device)
-          : preferredDevices.length;
+        const device = resolveDevice(item.assetId);
+        const deviceRank = device ? preferredDevices.indexOf(device) : preferredDevices.length;
         return { item, deviceRank };
       });
       withDevice.sort((a, b) => a.deviceRank - b.deviceRank);
@@ -289,14 +314,16 @@ export class ProductMediaKitService {
 
     if (visualFormat === 'carousel') {
       const start = postIndex % images.length;
-      const picked: string[] = [];
+      const picked: ComposeImagePick[] = [];
       for (let i = 0; i < Math.min(3, images.length); i += 1) {
-        picked.push(images[(start + i) % images.length].assetId);
+        const assetId = images[(start + i) % images.length].assetId;
+        picked.push({ assetId, device: resolveDevice(assetId) });
       }
       return picked;
     }
 
-    return [images[postIndex % images.length].assetId];
+    const assetId = images[postIndex % images.length].assetId;
+    return [{ assetId, device: resolveDevice(assetId) }];
   }
 
   private filterByRoles(

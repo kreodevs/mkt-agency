@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Select } from '@/components/atoms/Select';
@@ -11,8 +12,10 @@ import {
   VISUAL_TEMPLATE_LABELS,
   type VisualTemplateId,
 } from '@/lib/visual-template';
+import { validateVisualTemplateText } from '@/lib/visual-template-text';
 import { ApiError } from '@/services/api';
 import { updateContent } from '@/services/content';
+import type { ContentImageDestination } from '@/types/content';
 
 interface ContentVisualDesignPanelProps {
   contentId: string;
@@ -20,6 +23,7 @@ interface ContentVisualDesignPanelProps {
   visualHeadline?: string | null;
   visualSubline?: string | null;
   visualCta?: string | null;
+  imageDestination?: ContentImageDestination | null;
   onSaved?: () => void;
 }
 
@@ -29,6 +33,7 @@ export function ContentVisualDesignPanel({
   visualHeadline = null,
   visualSubline = null,
   visualCta = null,
+  imageDestination = 'feed',
   onSaved,
 }: ContentVisualDesignPanelProps) {
   const queryClient = useQueryClient();
@@ -36,6 +41,7 @@ export function ContentVisualDesignPanel({
   const [headline, setHeadline] = useState('');
   const [subline, setSubline] = useState('');
   const [cta, setCta] = useState('');
+  const [destination, setDestination] = useState<ContentImageDestination>('feed');
 
   useEffect(() => {
     setTemplateId(
@@ -46,7 +52,19 @@ export function ContentVisualDesignPanel({
     setHeadline(visualHeadline ?? '');
     setSubline(visualSubline ?? '');
     setCta(visualCta ?? '');
-  }, [visualTemplateId, visualHeadline, visualSubline, visualCta]);
+    setDestination(imageDestination === 'story' ? 'story' : 'feed');
+  }, [visualTemplateId, visualHeadline, visualSubline, visualCta, imageDestination]);
+
+  const warnings = useMemo(
+    () =>
+      validateVisualTemplateText({
+        headline,
+        subline,
+        cta,
+        templateId: templateId || null,
+      }),
+    [headline, subline, cta, templateId],
+  );
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -55,9 +73,11 @@ export function ContentVisualDesignPanel({
         visualHeadline: headline.trim() || null,
         visualSubline: subline.trim() || null,
         visualCta: cta.trim() || null,
+        imageDestination: destination,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['content', contentId] });
+      void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
       toast.success('Diseño visual guardado');
       onSaved?.();
     },
@@ -68,6 +88,14 @@ export function ContentVisualDesignPanel({
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (warnings.length > 0) {
+      const proceed = window.confirm(
+        'Hay avisos de longitud en los textos. ¿Guardar igualmente? La imagen puede truncar titulares o subtítulos.',
+      );
+      if (!proceed) {
+        return;
+      }
+    }
     saveMutation.mutate();
   };
 
@@ -80,13 +108,29 @@ export function ContentVisualDesignPanel({
         <Select
           label="Plantilla gráfica"
           value={templateId}
-          onChange={(event) => setTemplateId(event.target.value as VisualTemplateId | '')}
+          onChange={(event) => {
+            const next = event.target.value as VisualTemplateId | '';
+            setTemplateId(next);
+            if (next === 'story-vertical') {
+              setDestination('story');
+            }
+          }}
           options={[
             { value: '', label: 'Automática (según tipo de post)' },
             ...VISUAL_TEMPLATE_IDS.map((id) => ({
               value: id,
               label: VISUAL_TEMPLATE_LABELS[id],
             })),
+          ]}
+        />
+
+        <Select
+          label="Formato de imagen"
+          value={destination}
+          onChange={(event) => setDestination(event.target.value as ContentImageDestination)}
+          options={[
+            { value: 'feed', label: 'Feed cuadrado (1:1)' },
+            { value: 'story', label: 'Story / Reel vertical (9:16)' },
           ]}
         />
 
@@ -116,6 +160,20 @@ export function ContentVisualDesignPanel({
           placeholder="2–4 palabras"
           maxLength={80}
         />
+
+        {warnings.length > 0 ? (
+          <div className="space-y-1 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 p-[var(--spacing-sm)]">
+            {warnings.map((warning) => (
+              <p
+                key={`${warning.field}-${warning.message}`}
+                className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-200"
+              >
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {warning.message}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         <p className="text-xs text-[var(--foreground-muted)]">
           Tras guardar, usa <strong>Recomponer plantilla</strong> en el panel de imagen para aplicar

@@ -393,6 +393,7 @@ export default function ContentEditPage() {
             visualHeadline={content.visualHeadline}
             visualSubline={content.visualSubline}
             visualCta={content.visualCta}
+            imageDestination={content.imageDestination}
           />
 
           <ContentVisualPanel

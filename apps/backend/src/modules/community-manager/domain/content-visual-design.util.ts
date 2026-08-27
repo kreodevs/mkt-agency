@@ -1,7 +1,19 @@
-import type { ContentVisualFormat } from '../../content/domain/content.constants';
+import type { ContentImageDestination, ContentVisualFormat } from '../../content/domain/content.constants';
 import { normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 import { CM_PLATFORMS, type CmPlatform } from './cm-platforms.constants';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
+
+export function resolveContentImageDestination(
+  post: Pick<SocialCopyPost, 'imageDestination' | 'visualTemplateId'>,
+): ContentImageDestination {
+  if (post.imageDestination === 'story') {
+    return 'story';
+  }
+  if (post.visualTemplateId === 'story-vertical') {
+    return 'story';
+  }
+  return 'feed';
+}
 
 export interface ContentVisualDesignSource {
   id: string;
@@ -12,6 +24,7 @@ export interface ContentVisualDesignSource {
   visualHeadline: string | null;
   visualSubline: string | null;
   visualCta: string | null;
+  imageDestination?: string | null;
 }
 
 export interface ContentVersionCopySource {
@@ -43,6 +56,8 @@ export function socialCopyPostFromContent(
     visualHeadline: content.visualHeadline ?? undefined,
     visualSubline: content.visualSubline ?? undefined,
     visualCta: content.visualCta ?? undefined,
+    imageDestination:
+      content.imageDestination === 'story' ? 'story' : ('feed' as ContentImageDestination),
     bestTime: '',
     targetAudience: '',
     callToAction: content.visualCta?.trim() || 'Ver más',

@@ -16,6 +16,8 @@ export interface SocialCopyPost {
   visualHeadline?: string;
   visualSubline?: string;
   visualCta?: string;
+  /** feed (1:1) o story (9:16) para tamaño de composición. */
+  imageDestination?: 'feed' | 'story';
   bestTime: string;
   targetAudience: string;
   callToAction: string;

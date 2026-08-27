@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Bookmark, MessageSquare, Sparkles } from 'lucide-react';
 import { CommunityManagerPrerequisites } from '@/components/community/CommunityManagerPrerequisites';
+import { VisualTemplateGallery } from '@/components/community/VisualTemplateGallery';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -22,6 +23,7 @@ import {
   type GenerateSocialCopyResponse,
 } from '@/services/community-manager';
 import { listProducts } from '@/services/products';
+import { getProductBrandVisualKit } from '@/services/products';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
 import { CmGeneratorForm } from './CmGeneratorForm';
 import { CmPostCard } from './CmPostCard';
@@ -54,6 +56,12 @@ export default function CommunityManagerPage() {
   const productsQuery = useQuery({
     queryKey: ['products'],
     queryFn: () => listProducts({ status: 'active', limit: 100 }),
+  });
+
+  const brandKitQuery = useQuery({
+    queryKey: ['product-brand-visual-kit', productId],
+    queryFn: () => getProductBrandVisualKit(productId),
+    enabled: Boolean(productId),
   });
 
   useEffect(() => {
@@ -241,6 +249,16 @@ export default function CommunityManagerPage() {
         tonePresets={tonePresetsQuery.data ?? []}
         onSavePreset={(name) => saveToneMutation.mutate(name)}
       />
+
+      {productId ? (
+        <Card className="mb-6">
+          <VisualTemplateGallery
+            primaryColor={brandKitQuery.data?.primaryColor}
+            secondaryColor={brandKitQuery.data?.secondaryColor}
+            accentColor={brandKitQuery.data?.accentColor}
+          />
+        </Card>
+      ) : null}
 
       {batchesQuery.isLoading ? (
         <ListPageSkeleton />

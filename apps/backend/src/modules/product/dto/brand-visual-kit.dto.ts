@@ -22,6 +22,10 @@ export class UpdateBrandVisualKitDto {
   @IsString()
   @Matches(/^#[0-9a-fA-F]{6}$/)
   accentColor?: string;
+
+  @IsOptional()
+  @IsString()
+  fontFamily?: string;
 }
 
 export class BrandVisualKitResponseDto {
@@ -29,5 +33,6 @@ export class BrandVisualKitResponseDto {
   primaryColor!: string;
   secondaryColor!: string;
   accentColor!: string;
+  fontFamily!: string | null;
   updatedAt!: string | null;
 }

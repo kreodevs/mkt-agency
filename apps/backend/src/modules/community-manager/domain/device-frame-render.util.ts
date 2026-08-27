@@ -1,9 +1,11 @@
 import sharp from '@/shared/media/sharp.util';
 import { isCmPlatform } from '../../../shared/social/image-destination-formats.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
+import type { AssetDeviceHint } from '../../assets/domain/asset-folder.util';
+import { resizeScreenshotCover } from './screenshot-crop.util';
 
 export type VisualAspectRatio = 'square' | 'vertical';
-export type DeviceFrameType = 'macbook' | 'iphone';
+export type DeviceFrameType = 'macbook' | 'iphone' | 'ipad';
 
 export interface DevicePlacement {
   frameType: DeviceFrameType;
@@ -26,11 +28,22 @@ export function resolveVisualAspectRatio(size: ImageGenerationSize): VisualAspec
   return height > width * 1.12 ? 'vertical' : 'square';
 }
 
-/** MacBook para desktop/LinkedIn; iPhone para mobile, TikTok e Instagram. */
+/** Marco según captura del media kit; si no hay hint, por plataforma. */
 export function resolveDeviceFrameType(
   platform: string | null | undefined,
   aspectRatio: VisualAspectRatio,
+  screenshotDevice?: AssetDeviceHint | null,
 ): DeviceFrameType {
+  if (screenshotDevice === 'pc') {
+    return 'macbook';
+  }
+  if (screenshotDevice === 'ipad') {
+    return 'ipad';
+  }
+  if (screenshotDevice === 'ios') {
+    return 'iphone';
+  }
+
   if (platform === 'linkedin' || platform === 'twitter') {
     return 'macbook';
   }
@@ -64,6 +77,21 @@ export function resolveDevicePlacement(
       frameHeight: scaledHeight,
       left: Math.round((canvasWidth - scaledWidth) / 2),
       top: Math.round(canvasHeight * (aspectRatio === 'vertical' ? 0.07 : 0.05)),
+    };
+  }
+
+  if (frameType === 'ipad') {
+    const frameWidth = Math.round(canvasWidth * (aspectRatio === 'vertical' ? 0.72 : 0.56));
+    const frameHeight = Math.round(frameWidth * 1.35);
+    const maxHeight = Math.round(canvasHeight * (aspectRatio === 'vertical' ? 0.5 : 0.44));
+    const scaledHeight = Math.min(frameHeight, maxHeight);
+    const scaledWidth = Math.round(scaledHeight / 1.35);
+    return {
+      frameType: 'ipad',
+      frameWidth: scaledWidth,
+      frameHeight: scaledHeight,
+      left: Math.round((canvasWidth - scaledWidth) / 2),
+      top: Math.round(canvasHeight * (aspectRatio === 'vertical' ? 0.06 : 0.05)),
     };
   }
 
@@ -105,10 +133,7 @@ async function renderIphoneFrame(
   const bodyRadius = Math.round(frameWidth * 0.13);
   const screenRadius = Math.round(bodyRadius * 0.72);
 
-  let screen = await sharp(photoBuffer)
-    .resize(screenW, screenH, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
+  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const bodySvg = Buffer.from(
@@ -163,10 +188,7 @@ async function renderMacbookFrame(
   const lidRadius = Math.round(frameWidth * 0.022);
   const screenRadius = Math.round(lidRadius * 0.65);
 
-  let screen = await sharp(photoBuffer)
-    .resize(screenW, screenH, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
+  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const lidSvg = Buffer.from(
@@ -217,6 +239,42 @@ async function renderMacbookFrame(
     .toBuffer();
 }
 
+async function renderIpadFrame(
+  photoBuffer: Buffer,
+  frameWidth: number,
+  frameHeight: number,
+): Promise<Buffer> {
+  const bezelX = Math.round(frameWidth * 0.05);
+  const bezelTop = Math.round(frameHeight * 0.04);
+  const bezelBottom = Math.round(frameHeight * 0.04);
+  const screenW = frameWidth - bezelX * 2;
+  const screenH = frameHeight - bezelTop - bezelBottom;
+  const bodyRadius = Math.round(frameWidth * 0.06);
+  const screenRadius = Math.round(bodyRadius * 0.55);
+
+  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
+  screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
+
+  const bodySvg = Buffer.from(
+    `<svg width="${frameWidth}" height="${frameHeight}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ipadBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#48484a"/>
+          <stop offset="100%" stop-color="#2c2c2e"/>
+        </linearGradient>
+      </defs>
+      <rect width="${frameWidth}" height="${frameHeight}" rx="${bodyRadius}" fill="url(#ipadBody)"/>
+      <rect x="${bezelX - 1}" y="${bezelTop - 1}" width="${screenW + 2}" height="${screenH + 2}" rx="${screenRadius + 1}" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <circle cx="${Math.round(frameWidth / 2)}" cy="${Math.round(frameHeight * 0.97)}" r="3" fill="rgba(255,255,255,0.35)"/>
+    </svg>`,
+  );
+
+  return sharp(bodySvg)
+    .composite([{ input: screen, top: bezelTop, left: bezelX }])
+    .png()
+    .toBuffer();
+}
+
 export async function buildDeviceShadow(
   width: number,
   height: number,
@@ -237,5 +295,27 @@ export async function renderDeviceFrame(
   if (placement.frameType === 'macbook') {
     return renderMacbookFrame(photoBuffer, placement.frameWidth, placement.frameHeight);
   }
+  if (placement.frameType === 'ipad') {
+    return renderIpadFrame(photoBuffer, placement.frameWidth, placement.frameHeight);
+  }
   return renderIphoneFrame(photoBuffer, placement.frameWidth, placement.frameHeight);
+}
+
+/** Miniatura con marco de dispositivo para layouts quote/stat. */
+export async function renderMiniDeviceThumbnail(
+  photoBuffer: Buffer,
+  thumbW: number,
+  thumbH: number,
+  platform: string | null | undefined,
+  screenshotDevice?: AssetDeviceHint | null,
+  aspectRatio: VisualAspectRatio = 'square',
+): Promise<Buffer> {
+  const frameType = resolveDeviceFrameType(platform, aspectRatio, screenshotDevice);
+  return renderDeviceFrame(photoBuffer, {
+    frameType,
+    frameWidth: thumbW,
+    frameHeight: thumbH,
+    left: 0,
+    top: 0,
+  });
 }

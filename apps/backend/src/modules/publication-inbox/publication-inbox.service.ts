@@ -45,6 +45,11 @@ interface InboxRow {
   signatureHash: string | null;
   platform: string | null;
   visualFormat: string | null;
+  visualTemplateId: string | null;
+  visualHeadline: string | null;
+  visualSubline: string | null;
+  visualCta: string | null;
+  imageDestination: string | null;
   assets: unknown;
   publishedAt: Date | null;
   productMetadata: Record<string, unknown> | null;
@@ -343,6 +348,11 @@ export class PublicationInboxService {
         'v.assets AS assets',
         'c.platform AS platform',
         'c.visual_format AS "visualFormat"',
+        'c.visual_template_id AS "visualTemplateId"',
+        'c.visual_headline AS "visualHeadline"',
+        'c.visual_subline AS "visualSubline"',
+        'c.visual_cta AS "visualCta"',
+        'c.image_destination AS "imageDestination"',
         'c.published_at AS "publishedAt"',
         'prod.metadata AS "productMetadata"',
       ])
@@ -380,6 +390,11 @@ export class PublicationInboxService {
       body,
       platform: row.platform,
       visualFormat: row.visualFormat ?? 'image',
+      visualTemplateId: row.visualTemplateId,
+      visualHeadline: row.visualHeadline,
+      visualSubline: row.visualSubline,
+      visualCta: row.visualCta,
+      imageDestination: row.imageDestination ?? 'feed',
       assets,
       publishedAt: row.publishedAt
         ? row.publishedAt instanceof Date

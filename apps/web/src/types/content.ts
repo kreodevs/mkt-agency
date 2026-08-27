@@ -2,6 +2,8 @@ export type ContentStatus = 'draft' | 'in_review' | 'in_changes' | 'approved' | 
 
 export type ContentType = 'ad' | 'social' | 'email' | 'blog' | 'landing';
 
+export type ContentImageDestination = 'feed' | 'story';
+
 export type ContentVisualFormat = 'image' | 'carousel' | 'talking-head';
 
 export interface ContentVersion {
@@ -36,6 +38,7 @@ export interface Content {
   visualHeadline: string | null;
   visualSubline: string | null;
   visualCta: string | null;
+  imageDestination: ContentImageDestination;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +78,7 @@ export interface UpdateContentPayload {
   visualHeadline?: string | null;
   visualSubline?: string | null;
   visualCta?: string | null;
+  imageDestination?: ContentImageDestination;
   platform?: string | null;
   assets?: unknown[];
   reason?: string;

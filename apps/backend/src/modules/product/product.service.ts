@@ -98,6 +98,7 @@ export class ProductService {
       primaryColor: kit?.primaryColor ?? DEFAULT_PRIMARY,
       secondaryColor: kit?.secondaryColor ?? DEFAULT_SECONDARY,
       accentColor: kit?.accentColor ?? DEFAULT_ACCENT,
+      fontFamily: kit?.fontFamily ?? null,
       updatedAt: kit?.updatedAt ?? null,
     };
   }
@@ -120,6 +121,10 @@ export class ProductService {
         DEFAULT_SECONDARY,
       ),
       accentColor: normalizeHexColor(dto.accentColor ?? current?.accentColor, DEFAULT_ACCENT),
+      fontFamily:
+        dto.fontFamily !== undefined
+          ? dto.fontFamily?.trim() || undefined
+          : current?.fontFamily,
     };
     product.metadata = mergeBrandVisualKitMetadata(product.metadata, next);
     await this.products.save(product);
@@ -129,6 +134,7 @@ export class ProductService {
       primaryColor: saved.primaryColor,
       secondaryColor: saved.secondaryColor,
       accentColor: saved.accentColor,
+      fontFamily: saved.fontFamily ?? null,
       updatedAt: saved.updatedAt ?? new Date().toISOString(),
     };
   }

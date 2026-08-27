@@ -248,7 +248,10 @@ export class ImageGenerationService implements OnModuleInit {
 
     const visualFormat = normalizeContentVisualFormat(content.visualFormat);
     const effectiveProductId = productId ?? content.productId ?? undefined;
-    const size = resolveImageSizeForPlatform(content.platform);
+    const size = resolveImageSizeForPlatform(
+      content.platform,
+      content.imageDestination === 'story' ? 'story' : 'feed',
+    );
     const style = resolveImageStyleForPlatform(content.platform);
 
     return this.generate(
@@ -743,7 +746,10 @@ export class ImageGenerationService implements OnModuleInit {
       },
       version.body,
     );
-    const size = resolveImageSizeForPlatform(content.platform);
+    const size = resolveImageSizeForPlatform(
+      content.platform,
+      content.imageDestination === 'story' ? 'story' : 'feed',
+    );
     const style = resolveImageStyleForPlatform(content.platform);
     return this.generate(tenantId, userId, prompt, {
       contentId,

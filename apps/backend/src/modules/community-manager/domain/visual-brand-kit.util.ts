@@ -5,6 +5,7 @@ import {
   DEFAULT_SECONDARY,
   getProductBrandVisualKit,
   mergeBrandVisualKitMetadata,
+  normalizeBrandFontFamily,
   normalizeBrandVisualStyle,
   normalizeHexColor,
   type BrandVisualStyle,
@@ -41,6 +42,9 @@ export function resolveVisualBrandKit(
     primaryColor,
     secondaryColor,
     accentColor,
+    fontFamily: fromProduct?.fontFamily
+      ? normalizeBrandFontFamily(fromProduct.fontFamily)
+      : undefined,
     productName: product?.name?.trim() || resolvedProfile?.companyName?.trim() || 'Tu marca',
     logoAssetId: product?.metadata?.logoAssetId
       ? String(product.metadata.logoAssetId)

@@ -44,7 +44,7 @@ import {
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
-import { socialCopyPostFromContent } from './domain/content-visual-design.util';
+import { resolveContentImageDestination, socialCopyPostFromContent } from './domain/content-visual-design.util';
 import { isVisualTemplateId } from './domain/visual-brand-kit.util';
 import type { VisualTemplateId } from './domain/visual-template.constants';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
@@ -245,6 +245,7 @@ export class CommunityManagerService {
     contentDto.visualHeadline = post.visualHeadline ?? null;
     contentDto.visualSubline = post.visualSubline ?? null;
     contentDto.visualCta = post.visualCta ?? null;
+    contentDto.imageDestination = resolveContentImageDestination(post);
     return this.contentService.create(tenantId, userId, contentDto);
   }
 
@@ -526,7 +527,7 @@ export class CommunityManagerService {
       ctx.kit,
       visualVariantIndex,
       { resolvedProfile: ctx.resolvedProfile },
-      forceTemplateId ? { forceTemplateId } : undefined,
+      forceTemplateId ? { forceTemplateId, imageDestination: post.imageDestination } : { imageDestination: post.imageDestination },
     );
 
     if (!result.attached) {
@@ -615,6 +616,7 @@ export class CommunityManagerService {
       visualHeadline: post.visualHeadline ?? null,
       visualSubline: post.visualSubline ?? null,
       visualCta: post.visualCta ?? null,
+      imageDestination: resolveContentImageDestination(post),
     });
   }
 

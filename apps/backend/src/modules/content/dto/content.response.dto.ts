@@ -31,6 +31,7 @@ export class ContentResponseDto {
   visualHeadline!: string | null;
   visualSubline!: string | null;
   visualCta!: string | null;
+  imageDestination!: string;
   currentVersion?: ContentVersionResponseDto;
   createdAt!: string;
   updatedAt!: string;

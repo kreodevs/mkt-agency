@@ -60,6 +60,10 @@ export class ContentEntity {
   @Column({ name: 'visual_cta', type: 'varchar', length: 80, nullable: true })
   visualCta!: string | null;
 
+  /** feed (1:1) o story (9:16) para composición y generación de imagen. */
+  @Column({ name: 'image_destination', type: 'varchar', length: 10, default: 'feed' })
+  imageDestination!: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

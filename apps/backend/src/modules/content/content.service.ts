@@ -10,8 +10,9 @@ import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
 import { OutboxEntity } from '../company-profile/infrastructure/typeorm/outbox.entity';
 import { CampaignEntity } from '../campaign/infrastructure/typeorm/campaign.entity';
 import { ProductService } from '../product/product.service';
-import { ContentStatus } from './domain/content.constants';
+import { ContentStatus, DEFAULT_CONTENT_IMAGE_DESTINATION } from './domain/content.constants';
 import { normalizeContentVisualFormat } from './domain/content-visual-format.util';
+import { backfillVisualDesignFromGeneration } from './domain/content-visual-design-backfill.util';
 import {
   CreateContentDto,
   FeedbackDto,
@@ -31,6 +32,7 @@ import { ContentEntity } from './infrastructure/typeorm/content.entity';
 import { KnowledgeIndexService } from '../knowledge/services/knowledge-index.service';
 import { ContentEventSourcingService } from './services/content-event-sourcing.service';
 import { DigitalSignatureService } from './services/digital-signature.service';
+import { AgentImageGenerationEntity } from '../agents/domain/agent-image-generation.entity';
 
 @Injectable()
 export class ContentService {
@@ -45,6 +47,8 @@ export class ContentService {
     private readonly approvals: Repository<ContentApprovalEntity>,
     @InjectRepository(CampaignEntity)
     private readonly campaigns: Repository<CampaignEntity>,
+    @InjectRepository(AgentImageGenerationEntity)
+    private readonly imageGenerations: Repository<AgentImageGenerationEntity>,
     private readonly productService: ProductService,
     private readonly dataSource: DataSource,
     private readonly signatureService: DigitalSignatureService,
@@ -119,6 +123,7 @@ export class ContentService {
           visualHeadline: dto.visualHeadline ?? null,
           visualSubline: dto.visualSubline ?? null,
           visualCta: dto.visualCta ?? null,
+          imageDestination: dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
         }),
       );
 
@@ -151,7 +156,12 @@ export class ContentService {
   }
 
   async findOne(tenantId: string, id: string): Promise<ContentResponseDto> {
-    const content = await this.findOwnedContent(tenantId, id);
+    let content = await this.findOwnedContent(tenantId, id);
+    content = await backfillVisualDesignFromGeneration(
+      content,
+      this.imageGenerations,
+      this.contents,
+    );
     return this.toContentResponse(content);
   }
 
@@ -182,7 +192,8 @@ export class ContentService {
       dto.visualTemplateId !== undefined ||
       dto.visualHeadline !== undefined ||
       dto.visualSubline !== undefined ||
-      dto.visualCta !== undefined;
+      dto.visualCta !== undefined ||
+      dto.imageDestination !== undefined;
     const hasMetadataOnly = hasMetadataFields && !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
@@ -213,6 +224,9 @@ export class ContentService {
     if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
     if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
     if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
+    if (dto.imageDestination !== undefined) {
+      content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
+    }
 
     const saved = await this.contents.save(content);
     return this.toContentResponse(saved);
@@ -272,6 +286,9 @@ export class ContentService {
     if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
     if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
     if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
+    if (dto.imageDestination !== undefined) {
+      content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
+    }
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -782,6 +799,7 @@ export class ContentService {
       visualHeadline: content.visualHeadline ?? null,
       visualSubline: content.visualSubline ?? null,
       visualCta: content.visualCta ?? null,
+      imageDestination: content.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

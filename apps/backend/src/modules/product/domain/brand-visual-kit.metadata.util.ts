@@ -2,11 +2,15 @@ export const BRAND_VISUAL_KIT_METADATA_KEY = 'brandVisualKit';
 
 export type BrandVisualStyle = 'minimal' | 'bold' | 'luxury';
 
+const DEFAULT_FONT_FAMILY = '"Helvetica Neue", Arial, sans-serif';
+
 export interface ProductBrandVisualKit {
   style: BrandVisualStyle;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  /** Familia tipográfica CSS para titulares en plantillas SVG. */
+  fontFamily?: string;
   updatedAt?: string;
 }
 
@@ -40,13 +44,27 @@ export function getProductBrandVisualKit(
     return null;
   }
   const record = raw as Record<string, unknown>;
+  const fontFamily =
+    typeof record.fontFamily === 'string' && record.fontFamily.trim().length > 0
+      ? record.fontFamily.trim().slice(0, 120)
+      : undefined;
+
   return {
     style: normalizeBrandVisualStyle(record.style),
     primaryColor: normalizeHexColor(record.primaryColor, DEFAULT_PRIMARY),
     secondaryColor: normalizeHexColor(record.secondaryColor, DEFAULT_SECONDARY),
     accentColor: normalizeHexColor(record.accentColor, DEFAULT_ACCENT),
+    fontFamily,
     updatedAt: typeof record.updatedAt === 'string' ? record.updatedAt : undefined,
   };
+}
+
+export function normalizeBrandFontFamily(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) {
+    return DEFAULT_FONT_FAMILY;
+  }
+  const sanitized = value.trim().replace(/[^a-zA-Z0-9 ,'"-]/g, '').slice(0, 120);
+  return sanitized || DEFAULT_FONT_FAMILY;
 }
 
 export function mergeBrandVisualKitMetadata(

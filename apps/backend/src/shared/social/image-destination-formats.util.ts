@@ -2,6 +2,7 @@ import {
   CM_PLATFORMS,
   type CmPlatform,
 } from '../../modules/community-manager/domain/cm-platforms.constants';
+import type { ContentImageDestination } from '../../modules/content/domain/content.constants';
 import {
   type ImageGenerationSize,
   normalizeImageGenerationSize,
@@ -29,7 +30,11 @@ export function isCmPlatform(value: string | null | undefined): value is CmPlatf
 
 export function resolveImageSizeForPlatform(
   platform: string | null | undefined,
+  imageDestination?: ContentImageDestination | null,
 ): ImageGenerationSize {
+  if (imageDestination === 'story') {
+    return '1440x2560';
+  }
   if (isCmPlatform(platform)) {
     return DEFAULT_SIZE_BY_PLATFORM[platform];
   }
