@@ -45,7 +45,9 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 
 Orden en `attachVisualForPost`: talking-head → plantilla → IA enriquecida (paleta + intel competitiva).
 
-API kit de marca: `GET/PATCH /api/v1/products/:id/brand-visual-kit`
+API kit de marca: `GET/PATCH /api/v1/products/:id/brand-visual-kit` (UI en detalle de producto)
+
+Recomponer plantilla desde editor: `POST /api/v1/community-manager/contents/:contentId/recompose-visual`
 
 1. **Biblioteca** — varias CMs en `product.metadata.cmCharacters` (migración automática desde `cmCharacter` legacy).
 2. **Retrato** — IA o biblioteca. Cambiar retrato resetea `readyAt` y exige nueva vista previa.

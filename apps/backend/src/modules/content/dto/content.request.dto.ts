@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { CONTENT_STATUSES, CONTENT_TYPES, CONTENT_VISUAL_FORMATS } from '../domain/content.constants';
 import { CM_PLATFORMS } from '../../community-manager/domain/cm-platforms.constants';
+import { VISUAL_TEMPLATE_IDS } from '../../community-manager/domain/visual-template.constants';
 
 export class CreateContentDto {
   @IsString()
@@ -56,6 +57,26 @@ export class CreateContentDto {
   @IsString()
   @MaxLength(4000)
   visualPrompt?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...VISUAL_TEMPLATE_IDS])
+  visualTemplateId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  visualHeadline?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  visualSubline?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  visualCta?: string | null;
 }
 
 export class UpdateContentDto {
@@ -99,6 +120,26 @@ export class UpdateContentDto {
   @IsString()
   @MaxLength(4000)
   visualPrompt?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...VISUAL_TEMPLATE_IDS])
+  visualTemplateId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  visualHeadline?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  visualSubline?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  visualCta?: string | null;
 }
 
 export class ListContentsQueryDto {

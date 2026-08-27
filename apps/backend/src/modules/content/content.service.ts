@@ -115,6 +115,10 @@ export class ContentService {
           platform: dto.platform ?? null,
           visualFormat: normalizeContentVisualFormat(dto.visualFormat),
           visualPrompt: dto.visualPrompt ?? null,
+          visualTemplateId: dto.visualTemplateId ?? null,
+          visualHeadline: dto.visualHeadline ?? null,
+          visualSubline: dto.visualSubline ?? null,
+          visualCta: dto.visualCta ?? null,
         }),
       );
 
@@ -170,9 +174,16 @@ export class ContentService {
     const hasVersionFields =
       dto.title !== undefined || dto.body !== undefined ||
       dto.assets !== undefined || dto.reason !== undefined || dto.changeSummary !== undefined;
-    const hasMetadataOnly =
-      (dto.scheduledDate !== undefined || dto.visualFormat !== undefined ||
-        dto.platform !== undefined || dto.visualPrompt !== undefined) && !hasVersionFields;
+    const hasMetadataFields =
+      dto.scheduledDate !== undefined ||
+      dto.visualFormat !== undefined ||
+      dto.platform !== undefined ||
+      dto.visualPrompt !== undefined ||
+      dto.visualTemplateId !== undefined ||
+      dto.visualHeadline !== undefined ||
+      dto.visualSubline !== undefined ||
+      dto.visualCta !== undefined;
+    const hasMetadataOnly = hasMetadataFields && !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
       throw new BadRequestException({
@@ -198,6 +209,10 @@ export class ContentService {
     if (dto.visualFormat !== undefined) content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
     if (dto.platform !== undefined) content.platform = dto.platform ?? null;
     if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
+    if (dto.visualTemplateId !== undefined) content.visualTemplateId = dto.visualTemplateId ?? null;
+    if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
+    if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
+    if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
 
     const saved = await this.contents.save(content);
     return this.toContentResponse(saved);
@@ -253,6 +268,10 @@ export class ContentService {
     if (dto.visualFormat !== undefined) content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
     if (dto.platform !== undefined) content.platform = dto.platform ?? null;
     if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
+    if (dto.visualTemplateId !== undefined) content.visualTemplateId = dto.visualTemplateId ?? null;
+    if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
+    if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
+    if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -759,6 +778,10 @@ export class ContentService {
       platform: content.platform ?? null,
       visualFormat: normalizeContentVisualFormat(content.visualFormat),
       visualPrompt: content.visualPrompt ?? null,
+      visualTemplateId: content.visualTemplateId ?? null,
+      visualHeadline: content.visualHeadline ?? null,
+      visualSubline: content.visualSubline ?? null,
+      visualCta: content.visualCta ?? null,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

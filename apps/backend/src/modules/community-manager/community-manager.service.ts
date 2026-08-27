@@ -44,6 +44,9 @@ import {
 import { ContentEntity } from '../content/infrastructure/typeorm/content.entity';
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
+import { socialCopyPostFromContent } from './domain/content-visual-design.util';
+import { isVisualTemplateId } from './domain/visual-brand-kit.util';
+import type { VisualTemplateId } from './domain/visual-template.constants';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { toLocalDateKey } from '../../shared/domain/date-key.util';
 import {
@@ -236,6 +239,12 @@ export class CommunityManagerService {
     contentDto.platform = post.platform;
     contentDto.visualFormat = post.visualFormat;
     contentDto.visualPrompt = sanitizeVisualPromptForArt(post.visualDescription, post.body) || null;
+    contentDto.visualTemplateId = isVisualTemplateId(post.visualTemplateId)
+      ? post.visualTemplateId
+      : null;
+    contentDto.visualHeadline = post.visualHeadline ?? null;
+    contentDto.visualSubline = post.visualSubline ?? null;
+    contentDto.visualCta = post.visualCta ?? null;
     return this.contentService.create(tenantId, userId, contentDto);
   }
 
@@ -477,6 +486,64 @@ export class CommunityManagerService {
     return { contentId, title: post.title, regenerated: true };
   }
 
+  async recomposeVisualForContent(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+  ): Promise<{ contentId: string; attached: boolean; templateId?: string; assetIds: string[] }> {
+    const content = await this.contentService.findOne(tenantId, contentId);
+    const version = content.currentVersion;
+    if (!version) {
+      throw new BadRequestException({
+        error: 'El contenido no tiene versión actual',
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const productId = content.productId;
+    if (!productId) {
+      throw new BadRequestException({
+        error: 'Asocia un producto al contenido para recomponer la plantilla visual',
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const ctx = await this.contextFacade.buildGenerationContext(tenantId, { productId });
+    const post = socialCopyPostFromContent(content, version);
+    const visualVariantIndex = version.versionNumber ?? 0;
+    const forceTemplateId: VisualTemplateId | undefined = isVisualTemplateId(
+      content.visualTemplateId ?? undefined,
+    )
+      ? (content.visualTemplateId as VisualTemplateId)
+      : undefined;
+
+    const result = await this.templateComposer.tryComposeFromTemplate(
+      tenantId,
+      userId,
+      contentId,
+      post,
+      productId,
+      ctx.kit,
+      visualVariantIndex,
+      { resolvedProfile: ctx.resolvedProfile },
+      forceTemplateId ? { forceTemplateId } : undefined,
+    );
+
+    if (!result.attached) {
+      throw new BadRequestException({
+        error: 'No se pudo recomponer la plantilla. Verifica el kit de medios y la configuración visual del producto.',
+        code: 'VISUAL_RECOMPOSE_FAILED',
+      });
+    }
+
+    return {
+      contentId,
+      attached: true,
+      templateId: result.templateId,
+      assetIds: result.assetIds,
+    };
+  }
+
   private async prepareRegeneration(
     tenantId: string, userId: string, contentId: string,
     options?: { feedback?: string; versionId?: string; visualFormat?: string },
@@ -544,6 +611,10 @@ export class CommunityManagerService {
       visualFormat: post.visualFormat,
       platform: post.platform,
       visualPrompt: sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
+      visualTemplateId: isVisualTemplateId(post.visualTemplateId) ? post.visualTemplateId : null,
+      visualHeadline: post.visualHeadline ?? null,
+      visualSubline: post.visualSubline ?? null,
+      visualCta: post.visualCta ?? null,
     });
   }
 

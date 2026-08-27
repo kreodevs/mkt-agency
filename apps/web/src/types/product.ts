@@ -272,3 +272,20 @@ export interface ProductAppCaptureRunResult {
   error?: string;
 }
 
+export type BrandVisualStyle = 'minimal' | 'bold' | 'luxury';
+
+export interface BrandVisualKit {
+  style: BrandVisualStyle;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  updatedAt: string | null;
+}
+
+export interface UpdateBrandVisualKitPayload {
+  style?: BrandVisualStyle;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+}
+

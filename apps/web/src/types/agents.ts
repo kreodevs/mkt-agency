@@ -44,6 +44,8 @@ export interface ImageGenerationMetadata {
   duration?: number;
   frameCount?: number;
   frames: ImageGenerationFrameMeta[];
+  pipeline?: string;
+  templateId?: string;
 }
 
 export interface ImageGeneration {

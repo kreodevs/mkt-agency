@@ -27,6 +27,10 @@ export class ContentResponseDto {
   platform!: string | null;
   visualFormat!: string;
   visualPrompt!: string | null;
+  visualTemplateId!: string | null;
+  visualHeadline!: string | null;
+  visualSubline!: string | null;
+  visualCta!: string | null;
   currentVersion?: ContentVersionResponseDto;
   createdAt!: string;
   updatedAt!: string;

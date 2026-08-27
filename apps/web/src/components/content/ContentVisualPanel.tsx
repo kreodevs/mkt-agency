@@ -12,12 +12,15 @@ import {
   resolveContentVisualAssetIds,
   isVideoGeneration,
   isStaleImageGeneration,
+  isVisualTemplateGeneration,
+  resolveGenerationTemplateLabel,
 } from '@/lib/image-generation';
 import {
   generateImageForContent,
   getImageGenerationByContentId,
   regenerateImageForContent,
 } from '@/services/agents';
+import { recomposeContentVisual } from '@/services/community-manager';
 import { getApiErrorMessage } from '@/services/api';
 import {
   getDefaultFormatForPlatform,
@@ -35,6 +38,7 @@ import type { ImageGeneration } from '@/types/agents';
 
 type ContentVisualPanelProps = {
   contentId: string;
+  productId?: string | null;
   versionAssets?: unknown[];
   platform?: string | null;
   visualFormat?: ContentVisualFormat;
@@ -42,6 +46,7 @@ type ContentVisualPanelProps = {
 
 export function ContentVisualPanel({
   contentId,
+  productId = null,
   versionAssets,
   platform = null,
   visualFormat = 'image',
@@ -69,6 +74,8 @@ export function ContentVisualPanel({
   const generation = generationQuery.data?.generation ?? null;
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const frameMeta = parseImageGenerationMetadata(generation?.metadata);
+  const isTemplateVisual = isVisualTemplateGeneration(generation?.metadata);
+  const templateLabel = resolveGenerationTemplateLabel(generation?.metadata);
   const isVideo = isVideoGeneration(generation?.metadata);
   const frameCount = frameMeta ? frameMeta.frameCount ?? frameMeta.frames.length : 0;
   const hasVisual = assetIds.length > 0;
@@ -109,17 +116,30 @@ export function ContentVisualPanel({
     onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo regenerar la imagen')),
   });
 
+  const recomposeMutation = useMutation({
+    mutationFn: () => recomposeContentVisual(contentId),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Plantilla recomponida con los textos y colores actuales');
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo recomponer la plantilla')),
+  });
+
+  const visualSourceLabel = isTemplateVisual
+    ? `Plantilla visual${templateLabel ? `: ${templateLabel}` : ''}`
+    : isVideo
+      ? `Video · ${frameMeta?.duration ?? '?'}s · ${formatLabel}`
+      : frameCount > 1
+        ? `${frameCount} frames · carrusel`
+        : `Image Generator · ${formatLabel}`;
+
   return (
     <Card
       title={isVideo ? 'Video del contenido (legacy)' : 'Imagen del contenido'}
       subtitle={
         platformLabel
-          ? `Formato ${destinationFormat.label} · ${formatLabel} · ${destinationFormat.aspectLabel} (${platformLabel})`
-          : isVideo
-            ? `Video · ${frameMeta?.duration ?? '?'}s · ${formatLabel}`
-            : frameCount > 1
-              ? `${frameCount} frames · carrusel`
-              : `Generado con Image Generator · ${formatLabel}`
+          ? `Formato ${destinationFormat.label} · ${formatLabel} · ${destinationFormat.aspectLabel} (${platformLabel}) · ${visualSourceLabel}`
+          : visualSourceLabel
       }
     >
       {generationQuery.isLoading ? (
@@ -241,6 +261,17 @@ export function ContentVisualPanel({
                 Ver detalle
               </Button>
             </Link>
+            {productId ? (
+              <Button
+                variant="outline"
+                className="gap-2"
+                loading={recomposeMutation.isPending}
+                onClick={() => recomposeMutation.mutate()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Recomponer plantilla
+              </Button>
+            ) : null}
             <Button
               variant="ghost"
               className="gap-2"
@@ -248,9 +279,21 @@ export function ContentVisualPanel({
               onClick={() => regenerateMutation.mutate()}
             >
               <RefreshCw className="h-4 w-4" />
-              Regenerar
+              {isTemplateVisual ? 'Regenerar con IA' : 'Regenerar'}
             </Button>
           </>
+        ) : null}
+
+        {!hasVisual && !isProcessing && productId ? (
+          <Button
+            variant="outline"
+            className="gap-2"
+            loading={recomposeMutation.isPending}
+            onClick={() => recomposeMutation.mutate()}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Componer plantilla
+          </Button>
         ) : null}
       </div>
     </Card>

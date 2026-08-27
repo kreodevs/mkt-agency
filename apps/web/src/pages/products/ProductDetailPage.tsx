@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { ProductPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { toast } from '@/components/molecules/Sonner';
 import { ProductLogoPanel } from '@/components/products/ProductLogoPanel';
+import { ProductBrandVisualKitPanel } from '@/components/products/ProductBrandVisualKitPanel';
 import { ProductPublishIntegrationPanel } from '@/components/products/ProductPublishIntegrationPanel';
 import { ProductAppCapturePanel } from '@/components/products/ProductAppCapturePanel';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
@@ -190,6 +191,10 @@ export default function ProductDetailPage() {
             void queryClient.invalidateQueries({ queryKey: ['product', id] });
           }}
         />
+      </div>
+
+      <div id="brand-visual-kit" className="mb-[var(--spacing-lg)] scroll-mt-6">
+        <ProductBrandVisualKitPanel productId={id} />
       </div>
 
       {!sohoMode && (

@@ -21,6 +21,8 @@ import type {
   ProductAppCaptureConfig,
   UpdateProductAppCapturePayload,
   ProductAppCaptureRunResult,
+  BrandVisualKit,
+  UpdateBrandVisualKitPayload,
 } from '@/types/product';
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -274,5 +276,19 @@ export async function updateProductAppCapture(
 export async function runProductAppCapture(productId: string): Promise<ProductAppCaptureRunResult> {
   return apiFetch<ProductAppCaptureRunResult>(`/products/${productId}/app-capture/run`, {
     method: 'POST',
+  });
+}
+
+export async function getProductBrandVisualKit(productId: string): Promise<BrandVisualKit> {
+  return apiFetch<BrandVisualKit>(`/products/${productId}/brand-visual-kit`);
+}
+
+export async function updateProductBrandVisualKit(
+  productId: string,
+  payload: UpdateBrandVisualKitPayload,
+): Promise<BrandVisualKit> {
+  return apiFetch<BrandVisualKit>(`/products/${productId}/brand-visual-kit`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   });
 }

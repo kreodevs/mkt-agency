@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseUUIDPipe,
   Post,
   Put,
   UseGuards,
@@ -62,5 +64,14 @@ export class CommunityManagerController {
     @Body() dto: GenerateSocialCopyDto,
   ): Promise<GenerateResponse> {
     return this.cmService.generate(user.tenantId!, user.id, dto);
+  }
+
+  @Post('contents/:contentId/recompose-visual')
+  @HttpCode(HttpStatus.OK)
+  recomposeVisual(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId', ParseUUIDPipe) contentId: string,
+  ) {
+    return this.cmService.recomposeVisualForContent(user.tenantId!, user.id, contentId);
   }
 }

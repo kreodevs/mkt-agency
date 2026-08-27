@@ -1,4 +1,5 @@
 import type { ImageGenerationMetadata } from '@/types/agents';
+import { visualTemplateLabel } from '@/lib/visual-template';
 
 export function parseImageGenerationMetadata(
   metadata: unknown,
@@ -21,7 +22,24 @@ export function parseImageGenerationMetadata(
       (frame): frame is { assetId: string; index: number } =>
         typeof frame?.assetId === 'string' && typeof frame?.index === 'number',
     ),
+    pipeline: typeof record.pipeline === 'string' ? record.pipeline : undefined,
+    templateId: typeof record.templateId === 'string' ? record.templateId : undefined,
   };
+}
+
+export function isVisualTemplateGeneration(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object') {
+    return false;
+  }
+  return (metadata as ImageGenerationMetadata).pipeline === 'visual-template';
+}
+
+export function resolveGenerationTemplateLabel(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== 'object') {
+    return null;
+  }
+  const record = metadata as ImageGenerationMetadata;
+  return visualTemplateLabel(record.templateId ?? null);
 }
 
 export function isVideoGeneration(metadata: unknown): boolean {

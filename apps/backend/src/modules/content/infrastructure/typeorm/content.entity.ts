@@ -48,6 +48,18 @@ export class ContentEntity {
   @Column({ name: 'visual_prompt', type: 'text', nullable: true })
   visualPrompt!: string | null;
 
+  @Column({ name: 'visual_template_id', type: 'varchar', length: 40, nullable: true })
+  visualTemplateId!: string | null;
+
+  @Column({ name: 'visual_headline', type: 'varchar', length: 200, nullable: true })
+  visualHeadline!: string | null;
+
+  @Column({ name: 'visual_subline', type: 'varchar', length: 300, nullable: true })
+  visualSubline!: string | null;
+
+  @Column({ name: 'visual_cta', type: 'varchar', length: 80, nullable: true })
+  visualCta!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/atoms/Textarea';
 import { StatusBadge } from '@/components/content/StatusBadge';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentVisualPanel } from '@/components/content/ContentVisualPanel';
+import { ContentVisualDesignPanel } from '@/components/content/ContentVisualDesignPanel';
 import { ContentPublishPanel } from '@/components/content/ContentPublishPanel';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { SignatureBadge } from '@/components/content/SignatureBadge';
@@ -386,8 +387,17 @@ export default function ContentEditPage() {
             savingPlatform={platformMutation.isPending}
           />
 
+          <ContentVisualDesignPanel
+            contentId={content.id}
+            visualTemplateId={content.visualTemplateId}
+            visualHeadline={content.visualHeadline}
+            visualSubline={content.visualSubline}
+            visualCta={content.visualCta}
+          />
+
           <ContentVisualPanel
             contentId={content.id}
+            productId={content.productId}
             versionAssets={currentVersion.assets}
             platform={content.platform}
             visualFormat={visualFormat}

@@ -63,3 +63,17 @@ export async function generateSocialCopy(
     body: JSON.stringify(payload),
   });
 }
+
+export interface RecomposeVisualResponse {
+  contentId: string;
+  attached: boolean;
+  templateId?: string;
+  assetIds: string[];
+}
+
+export async function recomposeContentVisual(contentId: string): Promise<RecomposeVisualResponse> {
+  return apiFetch<RecomposeVisualResponse>(
+    `/community-manager/contents/${contentId}/recompose-visual`,
+    { method: 'POST' },
+  );
+}
