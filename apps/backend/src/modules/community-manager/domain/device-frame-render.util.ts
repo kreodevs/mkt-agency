@@ -2,7 +2,7 @@ import sharp from '@/shared/media/sharp.util';
 import { isCmPlatform } from '../../../shared/social/image-destination-formats.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
 import type { AssetDeviceHint } from '../../assets/domain/asset-folder.util';
-import { resizeScreenshotCover } from './screenshot-crop.util';
+import { resizeScreenshotContain, DEVICE_SCREEN_BACKGROUND } from './screenshot-crop.util';
 
 export type VisualAspectRatio = 'square' | 'vertical';
 export type DeviceFrameType = 'macbook' | 'iphone' | 'ipad';
@@ -133,7 +133,7 @@ async function renderIphoneFrame(
   const bodyRadius = Math.round(frameWidth * 0.13);
   const screenRadius = Math.round(bodyRadius * 0.72);
 
-  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
+  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const bodySvg = Buffer.from(
@@ -188,7 +188,7 @@ async function renderMacbookFrame(
   const lidRadius = Math.round(frameWidth * 0.022);
   const screenRadius = Math.round(lidRadius * 0.65);
 
-  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
+  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const lidSvg = Buffer.from(
@@ -252,7 +252,7 @@ async function renderIpadFrame(
   const bodyRadius = Math.round(frameWidth * 0.06);
   const screenRadius = Math.round(bodyRadius * 0.55);
 
-  let screen = await resizeScreenshotCover(photoBuffer, screenW, screenH);
+  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const bodySvg = Buffer.from(

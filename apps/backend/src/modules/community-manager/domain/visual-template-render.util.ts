@@ -11,7 +11,7 @@ import {
   resolveVisualAspectRatio,
   type VisualAspectRatio,
 } from './device-frame-render.util';
-import { resizeScreenshotCover } from './screenshot-crop.util';
+import { resizeScreenshotForSlot } from './screenshot-crop.util';
 import type { ResolvedVisualBrandKit } from './visual-brand-kit.util';
 import type { VisualTemplateId } from './visual-template.constants';
 
@@ -477,7 +477,9 @@ async function renderSplitScreenshotTop(
   const panelHeight = height - photoHeight;
   const fadeHeight = Math.min(56, Math.round(photoHeight * 0.14));
 
-  const screenshot = await resizeScreenshotCover(photoBuffer, width, photoHeight);
+  const screenshot = await resizeScreenshotForSlot(photoBuffer, width, photoHeight, {
+    background: { ...hexToRgb(kit.secondaryColor), alpha: 255 },
+  });
 
   const fadeSvg = Buffer.from(
     `<svg width="${width}" height="${fadeHeight}">
@@ -592,7 +594,9 @@ async function renderStoryBleed(
   const photoHeight = Math.round(height * resolveStoryPhotoRatio(layoutContext.aspectRatio));
   const panelHeight = height - photoHeight;
 
-  const screenshot = await resizeScreenshotCover(photoBuffer, width, photoHeight);
+  const screenshot = await resizeScreenshotForSlot(photoBuffer, width, photoHeight, {
+    background: { ...hexToRgb(kit.secondaryColor), alpha: 255 },
+  });
 
   const textSvg = Buffer.from(
     buildTextBlockSvg({

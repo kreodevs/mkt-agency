@@ -17,6 +17,15 @@ export function inferDeviceFromFolderName(name: string): AssetDeviceHint | null 
   return null;
 }
 
+/** Fallback cuando la captura no está en carpeta con hint (p. ej. auto-captura Playwright). */
+export function inferDeviceFromAssetMetadata(
+  assetName: string,
+  label?: string | null,
+): AssetDeviceHint | null {
+  const combined = [label, assetName].filter(Boolean).join(' ');
+  return inferDeviceFromFolderName(combined);
+}
+
 export function buildFolderPathMap(
   folders: Pick<AssetFolderEntity, 'id' | 'name' | 'parentId'>[],
 ): Map<string, string> {

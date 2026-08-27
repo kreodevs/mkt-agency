@@ -28,6 +28,7 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 `VisualTemplateComposerService` maqueta piezas con Sharp + SVG antes del fallback IA:
 
 1. **Plantillas** — `product-hero`, `tip-card`, `quote-insight`, `promo-cta`, `stat-highlight`, `story-vertical`
+2. **Capturas del media kit** — `resizeScreenshotForSlot` usa `contain` (no `cover`) para capturas portrait/móvil; mockups de dispositivo muestran la pantalla completa con letterbox.
 2. **Layouts** — cada plantilla usa una composición distinta (no overlay semitransparente sobre toda la captura):
    - `product-hero` / carrusel slide 2 → **split**: captura arriba (~52 %), texto en panel sólido abajo
    - `tip-card` / `promo-cta` → **mockup**: captura en marco de dispositivo (iPhone o MacBook) sobre gradiente

@@ -9,6 +9,7 @@ import { AssetService } from '../assets/asset.service';
 import { AssetFolderService } from '../assets/asset-folder.service';
 import {
   preferredDevicesForPlatform,
+  inferDeviceFromAssetMetadata,
   type AssetDeviceHint,
 } from '../assets/domain/asset-folder.util';
 import { AssetEntity } from '../assets/infrastructure/typeorm/asset.entity';
@@ -294,7 +295,15 @@ export class ProductMediaKitService {
         folders,
         asset?.folderId ?? null,
       );
-      return folderMeta.device;
+      if (folderMeta.device) {
+        return folderMeta.device;
+      }
+
+      const kitItem = kit.find((item) => item.assetId === assetId);
+      return inferDeviceFromAssetMetadata(
+        asset?.name ?? '',
+        kitItem?.label ?? null,
+      );
     };
 
     if (platform && images.length > 1) {
