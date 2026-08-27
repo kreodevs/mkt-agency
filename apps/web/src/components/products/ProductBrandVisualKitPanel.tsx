@@ -9,6 +9,7 @@ import {
   buildBrandGradient,
   contrastingTextColor,
   DEFAULT_BRAND_COLORS,
+  getStylePreviewPresentation,
   hexForColorInput,
   isValidHexColor,
   normalizeHexColor,
@@ -118,7 +119,12 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
     { style, primaryColor, secondaryColor, accentColor },
     kitQuery.data ?? DEFAULT_BRAND_COLORS,
   );
-  const previewGradient = buildBrandGradient(previewKit, kitQuery.data ?? DEFAULT_BRAND_COLORS);
+  const presentation = getStylePreviewPresentation(style, fontFamily);
+  const previewGradient = buildBrandGradient(
+    previewKit,
+    kitQuery.data ?? DEFAULT_BRAND_COLORS,
+    presentation,
+  );
   const previewTextColor = contrastingTextColor(previewKit.secondaryColor);
 
   return (
@@ -127,61 +133,6 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
       subtitle="Colores y estilo que usan las plantillas sociales (split, mockup, carrusel) al generar piezas."
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-3">
-          <div
-            className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]"
-            style={{ background: previewGradient }}
-          >
-            <div className="p-[var(--spacing-md)]" style={{ color: previewTextColor }}>
-              <p className="text-lg font-semibold">Vista previa de marca</p>
-              <p className="mt-1 text-sm opacity-80">
-                Así se verán fondos y paneles en Instagram, LinkedIn y TikTok.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                ['Primario', previewKit.primaryColor],
-                ['Secundario', previewKit.secondaryColor],
-                ['Acento', previewKit.accentColor],
-              ] as const
-            ).map(([label, color]) => (
-              <div
-                key={label}
-                className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]"
-              >
-                <div className="h-10" style={{ backgroundColor: color }} aria-hidden />
-                <div className="px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
-                    {label}
-                  </p>
-                  <p className="font-mono text-[11px] text-[var(--foreground)]">{color}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="rounded-[var(--radius-md)] border border-[var(--border)] p-4"
-            style={{ backgroundColor: previewKit.secondaryColor, color: previewKit.primaryColor }}
-          >
-            <p className="text-xs uppercase tracking-wide opacity-70">Ejemplo de post</p>
-            <p className="mt-2 text-base font-semibold">Tu mensaje en redes</p>
-            <p className="mt-1 text-sm opacity-80">Texto sobre fondo secundario con color primario.</p>
-            <span
-              className="mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                backgroundColor: previewKit.accentColor,
-                color: contrastingTextColor(previewKit.accentColor),
-              }}
-            >
-              Ver más
-            </span>
-          </div>
-        </div>
-
         <Select
           label="Estilo"
           value={style}
@@ -265,6 +216,108 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
               />
             </div>
           </label>
+        </div>
+
+        <div className="space-y-3 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--muted)]/30 p-[var(--spacing-md)]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-[var(--foreground)]">Vista previa en vivo</p>
+            <span className="rounded-full bg-[var(--card)] px-2.5 py-1 text-xs font-medium text-[var(--foreground-muted)] ring-1 ring-[var(--border)]">
+              {presentation.styleLabel}
+            </span>
+          </div>
+
+          <div
+            className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]"
+            style={{ background: previewGradient }}
+          >
+            <div className="p-[var(--spacing-md)]" style={{ color: previewTextColor }}>
+              <p
+                className="text-lg font-semibold"
+                style={{
+                  fontFamily: presentation.headlineFontFamily,
+                  fontWeight: presentation.headlineFontWeight,
+                  letterSpacing: presentation.headlineLetterSpacing,
+                }}
+              >
+                Vista previa de marca
+              </p>
+              <p className="mt-1 text-sm opacity-80">
+                Así se verán fondos y paneles en Instagram, LinkedIn y TikTok.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ['Primario', previewKit.primaryColor],
+                ['Secundario', previewKit.secondaryColor],
+                ['Acento', previewKit.accentColor],
+              ] as const
+            ).map(([label, color]) => (
+              <div
+                key={label}
+                className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)]"
+              >
+                <div className="h-10" style={{ backgroundColor: color }} aria-hidden />
+                <div className="px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
+                    {label}
+                  </p>
+                  <p className="font-mono text-[11px] text-[var(--foreground)]">{color}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="relative overflow-hidden border border-[var(--border)]"
+            style={{
+              backgroundColor: previewKit.secondaryColor,
+              color: previewKit.primaryColor,
+              padding: presentation.postPadding,
+              borderRadius: presentation.postBorderRadius,
+              borderLeft: presentation.showAccentStripe
+                ? `6px solid ${previewKit.accentColor}`
+                : presentation.postBorderLeft,
+            }}
+          >
+            <p
+              className="text-xs uppercase tracking-wide opacity-70"
+              style={{ fontFamily: presentation.headlineFontFamily }}
+            >
+              Ejemplo de post
+            </p>
+            <p
+              className="mt-2 text-base"
+              style={{
+                fontFamily: presentation.headlineFontFamily,
+                fontWeight: presentation.headlineFontWeight,
+                letterSpacing: presentation.headlineLetterSpacing,
+              }}
+            >
+              Tu mensaje en redes
+            </p>
+            <p
+              className="mt-1 text-sm opacity-80"
+              style={{ fontFamily: presentation.headlineFontFamily }}
+            >
+              Texto sobre fondo secundario con color primario.
+            </p>
+            <span
+              className="mt-3 inline-block px-3 py-1 text-xs"
+              style={{
+                backgroundColor: previewKit.accentColor,
+                color: contrastingTextColor(previewKit.accentColor),
+                borderRadius: presentation.ctaBorderRadius,
+                fontFamily: presentation.headlineFontFamily,
+                fontWeight: presentation.ctaFontWeight,
+                textTransform: presentation.ctaTextTransform,
+              }}
+            >
+              Ver más
+            </span>
+          </div>
         </div>
 
         <p className="text-xs text-[var(--foreground-muted)]">
