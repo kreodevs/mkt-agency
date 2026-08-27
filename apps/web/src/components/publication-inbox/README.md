@@ -5,7 +5,7 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | Archivo | Rol |
 |---------|-----|
 | `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
-| `InboxContentDetailDialog.tsx` | Ficha completa en modal ancho con scroll y acciones de aprobación |
+| `InboxContentDetailDialog.tsx` | Ficha en modal; diseño de plantilla (`ContentVisualDesignPanel`), recomponer imagen (`ContentVisualPanel`), aprobación formal |
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; marco centrado (`max-w` + `mx-auto`), `object-contain` sin recortar textos del creative |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
@@ -16,7 +16,6 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | `InboxQuickPublishActions.tsx` | Copiar, Abrir red, menú «Más»; n8n primario va en `InboxArtPublishBar` |
 | `InboxContentDeleteDialog.tsx` | Confirmación de borrado individual o en lote |
 | `InboxPurgeDialog.tsx` | Limpiar bandeja por alcance (todo / por aprobar / listas / …) |
-| `InboxContentDetailDialog.tsx` | Ficha en modal; aprobación formal sin duplicar acciones rápidas |
 | `InboxKitPanel.tsx` | Kit Copiar y Llevar (aprobadas) |
 | `InboxRejectFollowUpDialog.tsx` | Tras rechazar (SOHO): elegir otro formato o archivar |
 | `RejectedInboxActions.tsx` | Acciones en tarjetas rechazadas (otro formato / archivar) |

@@ -45,6 +45,7 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
   const [primaryColor, setPrimaryColor] = useState<string>(DEFAULT_BRAND_COLORS.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState<string>(DEFAULT_BRAND_COLORS.secondaryColor);
   const [accentColor, setAccentColor] = useState<string>(DEFAULT_BRAND_COLORS.accentColor);
+  const [fontFamily, setFontFamily] = useState('');
 
   useEffect(() => {
     hasInitializedRef.current = false;
@@ -57,6 +58,7 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
     setPrimaryColor(kit.primaryColor);
     setSecondaryColor(kit.secondaryColor);
     setAccentColor(kit.accentColor);
+    setFontFamily(kit.fontFamily ?? '');
     hasInitializedRef.current = true;
   }, [kitQuery.data]);
 
@@ -68,6 +70,7 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
       setPrimaryColor(savedKit.primaryColor);
       setSecondaryColor(savedKit.secondaryColor);
       setAccentColor(savedKit.accentColor);
+      setFontFamily(savedKit.fontFamily ?? '');
       void queryClient.invalidateQueries({ queryKey: ['product-brand-visual-kit', productId] });
       void queryClient.invalidateQueries({ queryKey: ['product', productId] });
       toast.success('Kit visual de marca guardado');
@@ -99,6 +102,7 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
       primaryColor: normalized.primaryColor,
       secondaryColor: normalized.secondaryColor,
       accentColor: normalized.accentColor,
+      fontFamily: fontFamily.trim() || null,
     });
   };
 
@@ -187,6 +191,16 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
             label: option.label,
           }))}
         />
+
+        <InputText
+          label="Tipografía de marca (opcional)"
+          value={fontFamily}
+          onChange={(event) => setFontFamily(event.target.value)}
+          placeholder='"Helvetica Neue", Arial, sans-serif'
+        />
+        <p className="text-xs text-[var(--foreground-muted)]">
+          Se aplica a titulares en plantillas SVG. Vacío = estilo por defecto del kit.
+        </p>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="flex flex-col gap-2 text-sm">
