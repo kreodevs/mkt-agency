@@ -28,7 +28,7 @@ const HORIZON_OPTIONS: Array<{
   label: string;
   hint: string;
 }> = [
-  { value: 'day', label: 'Día', hint: '1 post · validar pipeline' },
+  { value: 'day', label: 'Día', hint: '2 posts/red · validar' },
   { value: 'week', label: 'Semana', hint: '5 posts · producción' },
 ];
 
@@ -269,7 +269,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
           <p className="text-xs text-[var(--foreground-subtle)]">
             El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
-            solo copies y pegues. Día = 1 post para validar; Semana = tanda completa para producción.
+            solo copies y pegues. Día = 2 publicaciones por red seleccionada; Semana = tanda completa para producción.
           </p>
 
           {status.campaignTemplateSuggestions?.length > 0 && (

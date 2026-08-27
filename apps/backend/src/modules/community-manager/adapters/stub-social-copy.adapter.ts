@@ -17,10 +17,13 @@ export class StubSocialCopyAdapter implements SocialCopyAdapterPort {
       tiktok: 'TikTok',
     };
 
-    for (let i = 0; i < context.count; i++) {
-      const platform = context.platforms[i % context.platforms.length];
+    const postsPerPlatform =
+      context.postsPerPlatform ?? Math.max(1, Math.ceil(context.count / context.platforms.length));
+
+    for (const platform of context.platforms) {
+      for (let i = 0; i < postsPerPlatform; i += 1) {
       posts.push({
-        id: `post-${i + 1}`,
+        id: `post-${posts.length + 1}`,
         platform: platform as SocialCopyBatch['posts'][0]['platform'],
         title: `Tips de marketing digital para ${platformLabels[platform] ?? platform}`,
         body:
@@ -39,10 +42,11 @@ export class StubSocialCopyAdapter implements SocialCopyAdapterPort {
         callToAction: 'Comparte tu experiencia en los comentarios',
         tone: 'Educativo y cercano',
       });
+      }
     }
 
     return {
-      summary: `Tanda de ${context.count} publicaciones para ${context.platforms.join(', ')}. Contenido educativo enfocado en tips de marketing digital.`,
+      summary: `Tanda de ${posts.length} publicaciones para ${context.platforms.join(', ')}. Contenido educativo enfocado en tips de marketing digital.`,
       posts,
       publishingGuide:
         'Estrategia: Publicaciones educativas para posicionar a la marca como autoridad. ' +

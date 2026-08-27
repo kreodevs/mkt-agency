@@ -6,6 +6,7 @@ import { CommunityManagerService } from '../community-manager/community-manager.
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { StrategyService } from '../strategy/strategy.service';
 import {
+  DAILY_CM_POSTS_PER_PLATFORM,
   postCountForHorizon,
   type CopilotPrepareHorizon,
 } from './domain/publication-inbox.constants';
@@ -36,7 +37,10 @@ export class AgencyOrchestrationService {
     product: ProductEntity,
     horizon: CopilotPrepareHorizon = 'week',
   ): Promise<WeeklyProductRunResult> {
-    const postCount = postCountForHorizon(horizon);
+    const prefs = await this.communityManager.getPreferences(tenantId);
+    const platforms =
+      prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS];
+    const postCount = postCountForHorizon(horizon, platforms.length);
     const result: WeeklyProductRunResult = {
       productId: product.id,
       productName: product.name,
@@ -76,8 +80,6 @@ export class AgencyOrchestrationService {
       this.logger.warn(`Strategy step failed for product ${product.id}`, error);
     }
 
-    const prefs = await this.communityManager.getPreferences(tenantId);
-
     if (result.topicsUsed.length > 0) {
       await this.agentEvents.logIfAgentActive(AgentRole.STRATEGIST, {
         tenantId,
@@ -87,15 +89,16 @@ export class AgencyOrchestrationService {
         eventType: 'ContentBrief',
         payload: {
           topics: result.topicsUsed,
-          platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
+          platforms,
         },
       });
     }
 
     try {
       const cmResult = await this.communityManager.generate(tenantId, userId, {
-        platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
+        platforms,
         count: postCount,
+        postsPerPlatform: horizon === 'day' ? DAILY_CM_POSTS_PER_PLATFORM : undefined,
         productId: product.id,
         topics: result.topicsUsed.length > 0 ? result.topicsUsed : undefined,
         attachImages: true,

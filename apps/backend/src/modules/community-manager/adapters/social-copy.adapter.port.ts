@@ -41,6 +41,8 @@ export interface SocialCopyContext {
   focusProductName?: string | null;
   platforms: string[];
   count: number;
+  /** Cantidad objetivo por plataforma (p. ej. copiloto «día» = 2 por red). */
+  postsPerPlatform?: number;
   campaignId?: string;
   productId?: string;
   tone?: string;

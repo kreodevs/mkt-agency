@@ -12,6 +12,13 @@ export class GenerateSocialCopyDto {
   @Min(1)
   count!: number;
 
+  /** Si se define, el LLM debe generar esta cantidad por cada plataforma en `platforms`. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(6)
+  postsPerPlatform?: number;
+
   @IsOptional()
   @IsString()
   campaignId?: string;

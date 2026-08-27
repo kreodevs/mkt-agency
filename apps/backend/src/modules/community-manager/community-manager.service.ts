@@ -332,6 +332,7 @@ export class CommunityManagerService {
         tenantId,
         platforms: dto.platforms,
         count: dto.count,
+        postsPerPlatform: dto.postsPerPlatform,
         campaignId: dto.campaignId,
         productId: ctx.effectiveProductId,
         tone: dto.tone,

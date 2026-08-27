@@ -43,7 +43,7 @@ Por cada producto activo:
 
 - `GET copilot-status` — siguiente paso sugerido y flags (`canPrepareWeek`)
 - `POST prepare-week` — mismo pipeline que el cron semanal, disparado por el usuario. Body `horizon`:
-  - `day` — 1 post (validación rápida del pipeline)
+  - `day` — 2 posts por red social configurada (validación rápida del pipeline)
   - `week` — 5 posts (producción; default)
   1. Descubre competidores si hay &lt; 2
   2. Competitor Intel (espera hasta 120 s)

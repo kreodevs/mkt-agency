@@ -138,9 +138,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         generatedAt: 'ISO8601',
       });
 
+    const countInstruction = context.postsPerPlatform
+      ? `Genera exactamente ${context.postsPerPlatform} posts para CADA plataforma (${context.platforms.join(', ')}), ${context.count} posts en total. Cada plataforma debe aparecer ${context.postsPerPlatform} veces en el array posts con contenido distinto.`
+      : `Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`;
+
     const userPrompt = [
       `Plataformas objetivo: ${context.platforms.join(', ')}`,
-      `Cantidad de posts: ${context.count}`,
+      context.postsPerPlatform
+        ? `Cantidad: ${context.postsPerPlatform} posts por plataforma (${context.count} en total)`
+        : `Cantidad de posts: ${context.count}`,
       platformGuides,
       toneGuide,
       topicsGuide,
@@ -152,7 +158,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       mediaKitGuide,
       libraryFoldersGuide,
       cmCharacterGuide,
-      `Instrucción: Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`,
+      `Instrucción: ${countInstruction}`,
       context.cmCharacterReady
         ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head con cmCharacterId; resto→image.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
