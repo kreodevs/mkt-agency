@@ -158,6 +158,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
       'visualDescription = brief de arte (ambiente/fondo). El diseño final lo maqueta el sistema con plantillas.',
       'visualTemplateId = elige la plantilla gráfica más adecuada por post.',
+      'Plantillas: product-hero (lanzamiento, split app+texto); tip-card/promo-cta (tips y promos, mockup); quote-insight (cita larga); stat-highlight (dato numérico); story-vertical (TikTok/Reels).',
+      'Carrusel (3 slides): slide 1 = hook sin depender de la app; slide 2 = feature con captura; slide 3 = CTA claro. visualHeadline máx 6 palabras por slide.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
       'body = copy publicable listo para publicar en la red. Son campos independientes.',
     ]
