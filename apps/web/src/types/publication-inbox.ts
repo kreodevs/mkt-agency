@@ -95,9 +95,12 @@ export interface CampaignTemplateSuggestion {
   matchScore: number;
 }
 
+export type CopilotPrepareHorizon = 'day' | 'week';
+
 export interface PrepareWeekResult {
   status: 'completed' | 'empty' | 'blocked';
   message: string;
+  horizon: CopilotPrepareHorizon;
   productId: string;
   productName: string;
   postsGenerated: number;

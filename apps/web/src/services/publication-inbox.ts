@@ -2,6 +2,7 @@ import { apiFetch, ApiError } from './api';
 import type {
   BulkApproveResult,
   BulkDeleteInboxResult,
+  CopilotPrepareHorizon,
   CopilotStatus,
   InboxPurgeScope,
   PrepareWeekJobStatus,
@@ -82,14 +83,21 @@ export function getPrepareWeekJob(jobId: string): Promise<PrepareWeekJobStatus> 
   return apiFetch<PrepareWeekJobStatus>(`/publication-inbox/prepare-week/jobs/${jobId}`);
 }
 
-export async function prepareWeek(productId?: string): Promise<PrepareWeekResult> {
+export async function prepareWeek(
+  productId?: string,
+  horizon: CopilotPrepareHorizon = 'week',
+): Promise<PrepareWeekResult> {
   const started = await apiFetch<{ jobId: string; status: 'processing' }>(
     '/publication-inbox/prepare-week',
     {
       method: 'POST',
-      body: JSON.stringify(productId ? { productId } : {}),
+      body: JSON.stringify(
+        productId ? { productId, horizon } : { horizon },
+      ),
     },
   );
+
+  const horizonLabel = horizon === 'day' ? 'día' : 'semana';
 
   for (let attempt = 0; attempt < PREPARE_WEEK_POLL_MAX_ATTEMPTS; attempt += 1) {
     if (attempt > 0) {
@@ -101,12 +109,12 @@ export async function prepareWeek(productId?: string): Promise<PrepareWeekResult
       return status.result;
     }
     if (status.status === 'failed') {
-      throw new ApiError(status.error ?? 'No se pudo preparar la semana', 500);
+      throw new ApiError(status.error ?? `No se pudo preparar tu ${horizonLabel}`, 500);
     }
   }
 
   throw new ApiError(
-    'El copiloto sigue preparando tu semana. Revisa la bandeja en unos minutos.',
+    `El copiloto sigue preparando tu ${horizonLabel}. Revisa la bandeja en unos minutos.`,
     504,
   );
 }

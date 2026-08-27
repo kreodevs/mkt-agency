@@ -76,6 +76,11 @@ export class PrepareWeekDto {
   @IsOptional()
   @IsUUID()
   productId?: string;
+
+  /** `day` = 1 post (validación); `week` = tanda semanal (producción). */
+  @IsOptional()
+  @IsIn(['day', 'week'])
+  horizon?: 'day' | 'week';
 }
 
 export class CopilotStatusResponseDto {
@@ -117,6 +122,7 @@ export class CopilotStatusResponseDto {
 export class PrepareWeekResponseDto {
   status!: 'completed' | 'empty' | 'blocked';
   message!: string;
+  horizon!: 'day' | 'week';
   productId!: string;
   productName!: string;
   postsGenerated!: number;

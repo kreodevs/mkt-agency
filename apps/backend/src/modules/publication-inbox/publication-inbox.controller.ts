@@ -104,6 +104,7 @@ export class PublicationInboxController {
       user.tenantId!,
       user.id,
       body.productId,
+      body.horizon ?? 'week',
     );
     return { jobId, status: 'processing' };
   }

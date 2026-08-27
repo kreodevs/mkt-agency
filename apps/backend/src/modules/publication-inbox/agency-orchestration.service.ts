@@ -5,7 +5,10 @@ import { DEFAULT_CM_PLATFORMS } from '../community-manager/domain/cm-platforms.c
 import { CommunityManagerService } from '../community-manager/community-manager.service';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
 import { StrategyService } from '../strategy/strategy.service';
-import { WEEKLY_CM_POST_COUNT } from './domain/publication-inbox.constants';
+import {
+  postCountForHorizon,
+  type CopilotPrepareHorizon,
+} from './domain/publication-inbox.constants';
 
 export interface WeeklyProductRunResult {
   productId: string;
@@ -31,7 +34,9 @@ export class AgencyOrchestrationService {
     tenantId: string,
     userId: string,
     product: ProductEntity,
+    horizon: CopilotPrepareHorizon = 'week',
   ): Promise<WeeklyProductRunResult> {
+    const postCount = postCountForHorizon(horizon);
     const result: WeeklyProductRunResult = {
       productId: product.id,
       productName: product.name,
@@ -90,7 +95,7 @@ export class AgencyOrchestrationService {
     try {
       const cmResult = await this.communityManager.generate(tenantId, userId, {
         platforms: prefs.platforms.length > 0 ? prefs.platforms : [...DEFAULT_CM_PLATFORMS],
-        count: WEEKLY_CM_POST_COUNT,
+        count: postCount,
         productId: product.id,
         topics: result.topicsUsed.length > 0 ? result.topicsUsed : undefined,
         attachImages: true,

@@ -74,11 +74,11 @@ export class CopilotService {
     } else if (inbox.stats.pendingCount > 0) {
       nextStep = `Aprueba ${inbox.stats.pendingCount} borrador(es) sugeridos`;
     } else if (competitors.items.length < 2) {
-      nextStep = 'Prepara tu semana (descubrirá competidores y generará posts)';
+      nextStep = 'Elige día o semana y pulsa Preparar (descubrirá competidores y generará posts)';
     } else if (!latestAnalysis || latestAnalysis.status !== 'completed') {
-      nextStep = 'Prepara tu semana (analizará competencia y generará posts)';
+      nextStep = 'Elige día o semana y pulsa Preparar (analizará competencia y generará posts)';
     } else if (inbox.stats.upcomingCount === 0 && inbox.stats.pendingCount === 0) {
-      nextStep = 'Prepara tu semana con el copiloto';
+      nextStep = 'Elige día (validar) o semana (producción) y pulsa Preparar';
     }
 
     const mediaKitLow =

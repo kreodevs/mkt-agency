@@ -7,11 +7,13 @@ import type {
   PrepareWeekResponseDto,
 } from '../dto/publication-inbox.dto';
 import { CopilotOrchestrationService } from '../copilot-orchestration.service';
+import type { CopilotPrepareHorizon } from '../domain/publication-inbox.constants';
 
 export interface CopilotPrepareWeekJobData {
   tenantId: string;
   userId: string;
   productId?: string;
+  horizon: CopilotPrepareHorizon;
 }
 
 @Injectable()
@@ -28,8 +30,9 @@ export class CopilotPrepareWeekWorkerService {
     tenantId: string,
     userId: string,
     productId?: string,
+    horizon: CopilotPrepareHorizon = 'week',
   ): Promise<string> {
-    const dedupKey = `prepare-week:${tenantId}:${productId ?? 'primary'}`;
+    const dedupKey = `prepare-${horizon}:${tenantId}:${productId ?? 'primary'}`;
     const existing = await this.queue.getJob(dedupKey);
     if (existing) {
       const state = await existing.getState();
@@ -41,7 +44,7 @@ export class CopilotPrepareWeekWorkerService {
 
     const job = await this.queue.add(
       'prepare-week',
-      { tenantId, userId, productId },
+      { tenantId, userId, productId, horizon },
       {
         jobId: dedupKey,
         removeOnComplete: true,
@@ -83,8 +86,13 @@ export class CopilotPrepareWeekWorkerService {
 
   async processPrepareWeek(data: CopilotPrepareWeekJobData): Promise<PrepareWeekResponseDto> {
     this.logger.log(
-      `Processing prepare-week for tenant ${data.tenantId} product ${data.productId ?? 'primary'}`,
+      `Processing prepare-${data.horizon} for tenant ${data.tenantId} product ${data.productId ?? 'primary'}`,
     );
-    return this.copilotOrchestration.prepareWeek(data.tenantId, data.userId, data.productId);
+    return this.copilotOrchestration.prepareWeek(
+      data.tenantId,
+      data.userId,
+      data.productId,
+      data.horizon,
+    );
   }
 }

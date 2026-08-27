@@ -13,6 +13,10 @@ import { AGENCY_NOTIFICATION_TYPES } from './domain/publication-inbox.constants'
 import { OwnerNotificationService } from './services/owner-notification.service';
 import { PublicationInboxService } from './publication-inbox.service';
 import type { PrepareWeekResponseDto } from './dto/publication-inbox.dto';
+import {
+  copilotHorizonLabel,
+  type CopilotPrepareHorizon,
+} from './domain/publication-inbox.constants';
 import { todayDateKey } from '../../shared/domain/date-key.util';
 
 const COPILOT_INTEL_WAIT_MS = 120_000;
@@ -38,14 +42,17 @@ export class CopilotOrchestrationService {
     tenantId: string,
     userId: string,
     productId?: string,
+    horizon: CopilotPrepareHorizon = 'week',
   ): Promise<PrepareWeekResponseDto> {
     const product = await this.resolveProduct(tenantId, productId);
     const warnings: string[] = [];
+    const horizonLabel = copilotHorizonLabel(horizon);
 
     if (!isProductOnboardingCompleted(product)) {
       return {
         status: 'blocked',
-        message: 'Completa el onboarding del producto antes de preparar la semana.',
+        horizon,
+        message: `Completa el onboarding del producto antes de preparar tu ${horizonLabel}.`,
         productId: product.id,
         productName: product.name,
         postsGenerated: 0,
@@ -57,8 +64,9 @@ export class CopilotOrchestrationService {
     if (!(await this.cmCharacter.hasAnyReadyCharacter(tenantId, product.id))) {
       return {
         status: 'blocked',
+        horizon,
         message:
-          'Configura al menos una CM virtual (retrato + vista previa) antes de preparar la semana.',
+          `Configura al menos una CM virtual (retrato + vista previa) antes de preparar tu ${horizonLabel}.`,
         productId: product.id,
         productName: product.name,
         postsGenerated: 0,
@@ -133,33 +141,49 @@ export class CopilotOrchestrationService {
       }
     }
 
-    const run = await this.agencyOrchestration.runWeeklyForProduct(tenantId, userId, product);
+    const run = await this.agencyOrchestration.runWeeklyForProduct(
+      tenantId,
+      userId,
+      product,
+      horizon,
+    );
 
     if (run.postsGenerated > 0) {
+      const readyTitle =
+        horizon === 'day' ? 'Tu día está listo' : 'Tu semana está lista';
+      const readyBody =
+        horizon === 'day'
+          ? `Tu copiloto generó ${run.postsGenerated} publicación(es) de prueba${run.imagesAttached > 0 ? ` con ${run.imagesAttached} visual(es)` : ''} para validar el pipeline.`
+          : `Tu copiloto generó ${run.postsGenerated} publicación(es)${run.imagesAttached > 0 ? ` con ${run.imagesAttached} visual(es)` : ''} para revisar y copiar.`;
+
       await this.inboxService.createNotification({
         tenantId,
         productId: product.id,
         type: AGENCY_NOTIFICATION_TYPES.WEEK_READY,
-        title: 'Tu semana está lista',
-        body: `Tu copiloto generó ${run.postsGenerated} publicación(es)${run.imagesAttached > 0 ? ` con ${run.imagesAttached} visual(es)` : ''} para revisar y copiar.`,
+        title: readyTitle,
+        body: readyBody,
         metadata: {
           postsGenerated: run.postsGenerated,
           imagesAttached: run.imagesAttached,
           source: 'copilot-prepare-week',
+          horizon,
           strategyId: run.strategyId,
         },
-        dedupKey: `copilot-week-${product.id}-${this.todayKey()}`,
+        dedupKey: `copilot-${horizon}-${product.id}-${this.todayKey()}`,
       });
 
-      await this.ownerNotifications.notifyWeekReady(
-        tenantId,
-        run.postsGenerated,
-        product.name,
-      );
+      if (horizon === 'week') {
+        await this.ownerNotifications.notifyWeekReady(
+          tenantId,
+          run.postsGenerated,
+          product.name,
+        );
+      }
     }
 
     return {
       status: run.postsGenerated > 0 ? 'completed' : 'empty',
+      horizon,
       message:
         run.postsGenerated > 0
           ? `${run.postsGenerated} publicación(es) lista(s) para revisar.`

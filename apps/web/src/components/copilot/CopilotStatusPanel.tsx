@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
   CheckCircle2,
   Loader2,
@@ -16,10 +17,24 @@ import { Progress } from '@/components/molecules/Progress';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
+import type { CopilotPrepareHorizon } from '@/types/publication-inbox';
 import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPanel';
 import { withActiveProductQuery } from '@/store/active-product';
 
 const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
+
+const HORIZON_OPTIONS: Array<{
+  value: CopilotPrepareHorizon;
+  label: string;
+  hint: string;
+}> = [
+  { value: 'day', label: 'Día', hint: '1 post · validar pipeline' },
+  { value: 'week', label: 'Semana', hint: '5 posts · producción' },
+];
+
+function horizonLabel(horizon: CopilotPrepareHorizon): string {
+  return horizon === 'day' ? 'día' : 'semana';
+}
 
 interface CopilotStatusPanelProps {
   productId?: string;
@@ -45,6 +60,7 @@ function pipelineProgressPercent(activeIndex: number): number {
 export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [horizon, setHorizon] = useState<CopilotPrepareHorizon>('day');
 
   const statusQuery = useQuery({
     queryKey: ['copilot-status', productId],
@@ -57,7 +73,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   });
 
   const prepareMutation = useMutation({
-    mutationFn: () => prepareWeek(productId),
+    mutationFn: () => prepareWeek(productId, horizon),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['copilot-status'] });
       void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
@@ -80,7 +96,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
       const message =
         error instanceof ApiError
           ? error.message
-          : 'No se pudo preparar la semana';
+          : `No se pudo preparar tu ${horizonLabel(horizon)}`;
       toast.error(message);
     },
   });
@@ -196,6 +212,41 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             </Button>
           </Link>
 
+          <div className="space-y-[var(--spacing-xs)]">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+              Alcance
+            </p>
+            <div className="grid grid-cols-2 gap-[var(--spacing-xs)]">
+              {HORIZON_OPTIONS.map((option) => {
+                const selected = horizon === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    disabled={isPreparing || analysisInFlight}
+                    onClick={() => setHorizon(option.value)}
+                    className={`rounded-[var(--radius-md)] border px-[var(--spacing-sm)] py-[var(--spacing-sm)] text-left transition-[var(--transition-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60 ${
+                      selected
+                        ? 'border-[var(--brand)] bg-[var(--brand-muted)]/70'
+                        : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--brand)]/40'
+                    }`}
+                  >
+                    <span
+                      className={`block text-sm font-semibold ${
+                        selected ? 'text-[var(--brand)]' : 'text-[var(--foreground)]'
+                      }`}
+                    >
+                      {option.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-[var(--foreground-muted)]">
+                      {option.hint}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <Button
             type="button"
             variant="brand"
@@ -206,19 +257,19 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             {isPreparing || analysisInFlight ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Preparando tu semana...
+                Preparando tu {horizonLabel(horizon)}...
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Preparar mi semana
+                Preparar mi {horizonLabel(horizon)}
               </>
             )}
           </Button>
 
           <p className="text-xs text-[var(--foreground-subtle)]">
             El copiloto descubre competidores, analiza el mercado y genera publicaciones para que tú
-            solo copies y pegues.
+            solo copies y pegues. Día = 1 post para validar; Semana = tanda completa para producción.
           </p>
 
           {status.campaignTemplateSuggestions?.length > 0 && (

@@ -28,9 +28,9 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 | `components/publication-inbox/RejectedInboxActions.tsx` | Acciones en sección Rechazadas |
 | `components/publication-inbox/InboxItemVisualPreview.tsx` | Imagen/video/carrusel antes de aprobar |
 | `components/publication-inbox/InboxKitPanel.tsx` | Kit Copiar y Llevar multi-día |
-| `components/copilot/CopilotStatusPanel.tsx` | Estado pipeline + preparar semana |
+| `components/copilot/CopilotStatusPanel.tsx` | Estado pipeline + selector día/semana + preparar contenido |
 | `components/copilot/CmCharacterSetupPanel.tsx` | Biblioteca de CMs virtuales (varias por producto) |
-| `services/publication-inbox.ts` | Cliente API (incl. copilot-status, prepare-week, delete, bulk-delete, purge) |
+| `services/publication-inbox.ts` | Cliente API (incl. copilot-status, prepare-week con `horizon`, delete, bulk-delete, purge) |
 | `store/copilot-ui.ts` | Persistencia modo avanzado |
 | `lib/tenant-navigation.ts` | Nav SOHO vs avanzado |
 

@@ -8,7 +8,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 |--------|------|-------------|
 | GET | `/publication-inbox?productId=` | Bandeja: pendientes, listas, próximas, **rechazadas** + notificaciones |
 | GET | `/publication-inbox/copilot-status?productId=` | Estado del copiloto (producto, competidores, análisis, bandeja) |
-| POST | `/publication-inbox/prepare-week` | Encola orquestación (competidores → intel → estrategia → CM); responde `202` + `jobId` |
+| POST | `/publication-inbox/prepare-week` | Encola orquestación (competidores → intel → estrategia → CM); body opcional `{ productId?, horizon?: 'day' \| 'week' }`; responde `202` + `jobId` |
 | GET | `/publication-inbox/prepare-week/jobs/:jobId` | Estado del job (`processing` / `completed` / `failed`) |
 | POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual; body opcional `{ visualFormat?, feedback? }` |
 | POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }` |
@@ -42,11 +42,13 @@ Por cada producto activo:
 ### Copiloto SOHO (`CopilotService` + `CopilotOrchestrationService`)
 
 - `GET copilot-status` — siguiente paso sugerido y flags (`canPrepareWeek`)
-- `POST prepare-week` — mismo pipeline que el cron semanal, disparado por el usuario:
+- `POST prepare-week` — mismo pipeline que el cron semanal, disparado por el usuario. Body `horizon`:
+  - `day` — 1 post (validación rápida del pipeline)
+  - `week` — 5 posts (producción; default)
   1. Descubre competidores si hay &lt; 2
   2. Competitor Intel (espera hasta 120 s)
-  3. `AgencyOrchestrationService.runWeeklyForProduct`
-  4. Notificación `week_ready`
+  3. `AgencyOrchestrationService.runWeeklyForProduct` con el conteo según `horizon`
+  4. Notificación `week_ready` (email solo en `week`)
 
 ## Notificaciones
 
