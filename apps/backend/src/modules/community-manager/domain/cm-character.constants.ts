@@ -16,10 +16,17 @@ export interface CmCharacterAppearance {
   notes?: string;
 }
 
+export type CmLipSyncProvider = 'replicate' | 'elevenlabs';
+
+export const CM_LIP_SYNC_PROVIDERS: CmLipSyncProvider[] = ['replicate', 'elevenlabs'];
+
+export const DEFAULT_CM_LIP_SYNC_PROVIDER: CmLipSyncProvider = 'replicate';
+
 export interface CmCharacterConfig {
   appearance?: CmCharacterAppearance;
   voiceId?: string;
   voiceName?: string;
+  lipSyncProvider?: CmLipSyncProvider;
   portraitAssetId?: string | null;
   previewVideoAssetId?: string | null;
   readyAt?: string | null;

@@ -8,6 +8,8 @@ export type CmCharacterAppearance = {
   notes?: string;
 };
 
+export type CmLipSyncProvider = 'replicate' | 'elevenlabs';
+
 export type CmCharacterStatus = {
   characterId: string;
   name: string;
@@ -19,6 +21,7 @@ export type CmCharacterStatus = {
   appearance: CmCharacterAppearance | null;
   voiceId: string | null;
   voiceName: string | null;
+  lipSyncProvider: CmLipSyncProvider;
   errorMessage: string | null;
   isDefault: boolean;
 };
@@ -34,6 +37,7 @@ export type UpdateCmCharacterPayload = CmCharacterAppearance & {
   name?: string;
   voiceId?: string;
   voiceName?: string;
+  lipSyncProvider?: CmLipSyncProvider;
 };
 
 export type CmCharacterGenerateResult = {
@@ -55,6 +59,7 @@ export type ElevenLabsVoiceOption = {
 
 export const DEFAULT_CM_VOICE_ID = 'XrExE9yKIg1WjnnlVkGX';
 export const DEFAULT_CM_VOICE_NAME = 'Matilda';
+export const DEFAULT_CM_LIP_SYNC_PROVIDER: CmLipSyncProvider = 'replicate';
 
 export function listCmCharacters(productId: string): Promise<CmCharactersLibrary> {
   return apiFetch<CmCharactersLibrary>(`/products/${productId}/cm-characters`);

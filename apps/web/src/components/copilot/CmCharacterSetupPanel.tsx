@@ -124,6 +124,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         notes: appearance.notes ?? '',
         voiceId: draft.voiceId ?? undefined,
         voiceName: draft.voiceName ?? undefined,
+        lipSyncProvider: draft.lipSyncProvider,
       });
     },
     onSuccess: (created) => {
@@ -152,6 +153,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
         notes: appearance.notes ?? '',
         voiceId: editDraft.voiceId ?? undefined,
         voiceName: editDraft.voiceName ?? undefined,
+        lipSyncProvider: editDraft.lipSyncProvider,
       });
     },
     onSuccess: (updated) => {
@@ -303,8 +305,8 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
           </div>
 
           <p className="text-xs text-[var(--foreground-subtle)]">
-            Requiere API keys de OpenRouter (retrato), ElevenLabs (voz) y Replicate (lip-sync) en
-            Superadmin → Proveedores.
+            Requiere API keys en Superadmin → Proveedores: OpenRouter (retrato), ElevenLabs (voz y
+            opcionalmente lip-sync Aurora) y Replicate (lip-sync p-video-avatar si lo eliges).
           </p>
         </div>
       </Card>

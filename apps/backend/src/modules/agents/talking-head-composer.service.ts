@@ -7,6 +7,9 @@ import {
   ReplicateTalkingHeadAdapter,
   StubTalkingHeadAdapter,
 } from './adapters/replicate-talking-head.adapter';
+import { ElevenLabsTalkingHeadAdapter } from './adapters/elevenlabs-talking-head.adapter';
+import type { CmLipSyncProvider } from '../community-manager/domain/cm-character.constants';
+import { DEFAULT_CM_LIP_SYNC_PROVIDER } from '../community-manager/domain/cm-character.constants';
 import {
   TALKING_HEAD_ADAPTER,
   TalkingHeadAdapterPort,
@@ -19,6 +22,7 @@ export interface ComposeTalkingHeadOptions {
   portraitAssetId: string;
   script: string;
   voiceId?: string;
+  lipSyncProvider?: CmLipSyncProvider;
   tenantId: string;
   userId?: string;
   accessUser?: { id: string; tenantId: string; email?: string; role?: string };
@@ -43,6 +47,7 @@ export class TalkingHeadComposerService {
     private readonly llmConfig: LlmConfigService,
     private readonly llmProviders: LlmProviderService,
     private readonly replicate: ReplicateTalkingHeadAdapter,
+    private readonly elevenLabs: ElevenLabsTalkingHeadAdapter,
     @Inject(TALKING_HEAD_ADAPTER)
     private readonly stub: TalkingHeadAdapterPort,
   ) {}
@@ -79,11 +84,14 @@ export class TalkingHeadComposerService {
       audioAsset.id,
       options.accessUser,
     );
-    const talkingHead = await this.generateTalkingHead({
-      imageUrl: portraitUrl,
-      audioUrl,
-      resolution: '720p',
-    });
+    const talkingHead = await this.generateTalkingHead(
+      {
+        imageUrl: portraitUrl,
+        audioUrl,
+        resolution: '720p',
+      },
+      options.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER,
+    );
 
     const videoAsset = await this.uploadBuffer(
       options.tenantId,
@@ -108,7 +116,18 @@ export class TalkingHeadComposerService {
     };
   }
 
-  private async generateTalkingHead(input: TalkingHeadInput): Promise<TalkingHeadResult> {
+  private async generateTalkingHead(
+    input: TalkingHeadInput,
+    lipSyncProvider: CmLipSyncProvider = DEFAULT_CM_LIP_SYNC_PROVIDER,
+  ): Promise<TalkingHeadResult> {
+    if (lipSyncProvider === 'elevenlabs') {
+      const provider = await this.llmProviders.findEntityBySlug('elevenlabs');
+      if (!provider?.apiKey?.trim() || !provider.isActive) {
+        return this.stub.generate(input);
+      }
+      return this.elevenLabs.generate(input);
+    }
+
     const task = (await this.llmConfig.listAll()).find(
       (row) => row.taskType === 'talking_head_generation',
     );

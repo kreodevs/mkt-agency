@@ -44,6 +44,10 @@ export class UpdateCmCharacterAppearanceDto {
   voiceName?: string;
 
   @IsOptional()
+  @IsIn(['replicate', 'elevenlabs'])
+  lipSyncProvider?: 'replicate' | 'elevenlabs';
+
+  @IsOptional()
   @IsString()
   @MaxLength(120)
   name?: string;
@@ -77,6 +81,7 @@ export class CmCharacterStatusResponseDto {
   appearance!: CmCharacterAppearance | null;
   voiceId!: string | null;
   voiceName!: string | null;
+  lipSyncProvider!: 'replicate' | 'elevenlabs';
   errorMessage!: string | null;
   isDefault!: boolean;
 }
