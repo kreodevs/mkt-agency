@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IMAGE_GENERATION_ADAPTER, ImageGenerationAdapterPort } from '../agents/adapters/image-generation.adapter.port';
 import { TalkingHeadComposerService } from '../agents/talking-head-composer.service';
+import { TtsGenerationService } from '../agents/tts-generation.service';
 import { AssetService } from '../assets/asset.service';
 import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/company-profile.entity';
 import { ProductEntity } from '../product/infrastructure/typeorm/product.entity';
@@ -41,6 +42,7 @@ import type {
   CmCharacterGenerateResponseDto,
   CmCharacterStatusResponseDto,
   CmCharactersLibraryResponseDto,
+  ElevenLabsVoicesListResponseDto,
   UpdateCmCharacterAppearanceDto,
 } from './dto/cm-character.dto';
 
@@ -56,6 +58,7 @@ export class CmCharacterService {
     private readonly productService: ProductService,
     private readonly assetService: AssetService,
     private readonly talkingHeadComposer: TalkingHeadComposerService,
+    private readonly tts: TtsGenerationService,
     @Inject(IMAGE_GENERATION_ADAPTER)
     private readonly imageAdapter: ImageGenerationAdapterPort,
   ) {}
@@ -128,6 +131,16 @@ export class CmCharacterService {
     return this.toStatusResponse(product.id, entry, library.defaultCharacterId);
   }
 
+  async listElevenLabsVoices(_tenantId: string): Promise<ElevenLabsVoicesListResponseDto> {
+    try {
+      const voices = await this.tts.listElevenLabsVoices();
+      return { voices };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudieron cargar las voces';
+      throw new BadRequestException({ error: message, code: 'ELEVENLABS_VOICES_FAILED' });
+    }
+  }
+
   async getStatus(
     tenantId: string,
     productId: string,
@@ -162,6 +175,10 @@ export class CmCharacterService {
       throw new NotFoundException({ error: 'CM no encontrada', code: 'NOT_FOUND' });
     }
 
+    const nextVoiceId = dto.voiceId?.trim() || entry.voiceId || DEFAULT_CM_VOICE_ID;
+    const nextVoiceName = dto.voiceName?.trim() || entry.voiceName || DEFAULT_CM_VOICE_NAME;
+    const voiceChanged = nextVoiceId !== entry.voiceId;
+
     const next = mergeCmCharacterEntry(entry, {
       name: dto.name?.trim() || entry.name,
       appearance: {
@@ -172,9 +189,17 @@ export class CmCharacterService {
         background: dto.background ?? entry.appearance?.background,
         notes: dto.notes ?? entry.appearance?.notes,
       },
-      voiceId: dto.voiceId?.trim() || entry.voiceId || DEFAULT_CM_VOICE_ID,
-      voiceName: dto.voiceName?.trim() || entry.voiceName || DEFAULT_CM_VOICE_NAME,
-      status: entry.status === 'ready' ? 'ready' : 'pending',
+      voiceId: nextVoiceId,
+      voiceName: nextVoiceName,
+      ...(voiceChanged
+        ? {
+            status: 'pending' as const,
+            readyAt: null,
+            previewVideoAssetId: null,
+          }
+        : {
+            status: entry.status === 'ready' ? 'ready' : 'pending',
+          }),
       errorMessage: null,
     });
 

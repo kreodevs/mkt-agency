@@ -20,6 +20,7 @@ import {
   CmCharacterStatusResponseDto,
   CmCharactersLibraryResponseDto,
   CreateCmCharacterDto,
+  ElevenLabsVoicesListResponseDto,
   SelectCmPortraitDto,
   SetDefaultCmCharacterDto,
   UpdateCmCharacterAppearanceDto,
@@ -55,6 +56,14 @@ export class CmCharactersController {
     @Body() dto: SetDefaultCmCharacterDto,
   ): Promise<CmCharacterStatusResponseDto> {
     return this.cmCharacter.setDefaultCharacter(user.tenantId!, productId, dto.characterId);
+  }
+
+  @Get('voices')
+  listElevenLabsVoices(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('productId', ParseUUIDPipe) _productId: string,
+  ): Promise<ElevenLabsVoicesListResponseDto> {
+    return this.cmCharacter.listElevenLabsVoices(user.tenantId!);
   }
 
   @Get(':characterId')

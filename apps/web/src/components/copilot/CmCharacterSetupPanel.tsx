@@ -267,6 +267,7 @@ export function CmCharacterSetupPanel({ productId }: CmCharacterSetupPanelProps)
               <CreateForm
                 draft={createDraft}
                 onChange={setCreateDraft}
+                productId={productId}
                 onSubmit={() => createMutation.mutate(createDraft)}
                 isPending={createMutation.isPending}
               />
@@ -379,11 +380,13 @@ function CharacterTabs({
 function CreateForm({
   draft,
   onChange,
+  productId,
   onSubmit,
   isPending,
 }: {
   draft: AppearanceDraft;
   onChange: (draft: AppearanceDraft) => void;
+  productId: string;
   onSubmit: () => void;
   isPending: boolean;
 }) {
@@ -395,7 +398,7 @@ function CreateForm({
           Define nombre y apariencia antes de crearla.
         </p>
       </div>
-      <AppearanceForm draft={draft} onChange={onChange} />
+      <AppearanceForm draft={draft} onChange={onChange} productId={productId} />
       <Button
         type="button"
         disabled={!draft.name.trim() || isPending}
@@ -517,7 +520,7 @@ function EditPanel({
 
       <div className="space-y-3 border-t border-[var(--border)] pt-4">
         <p className="text-sm font-medium text-[var(--foreground)]">Apariencia</p>
-        <AppearanceForm draft={draft} onChange={onChange} />
+        <AppearanceForm draft={draft} onChange={onChange} productId={character.productId} />
       </div>
 
       {character.status === 'failed' && character.errorMessage && (

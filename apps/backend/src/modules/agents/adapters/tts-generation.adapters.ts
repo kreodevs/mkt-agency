@@ -5,6 +5,7 @@ import {
   DEFAULT_KOKORO_SPANISH_VOICE,
 } from '../../community-manager/domain/cm-character.constants';
 import {
+  ElevenLabsVoiceOption,
   TtsGenerationAdapterPort,
   TtsGenerationInput,
   TtsGenerationResult,
@@ -13,6 +14,53 @@ import {
 @Injectable()
 export class ElevenLabsTtsAdapter implements TtsGenerationAdapterPort {
   constructor(private readonly llmConfig: LlmConfigService) {}
+
+  async listVoices(): Promise<ElevenLabsVoiceOption[]> {
+    const resolved = await this.llmConfig.resolve('tts_generation');
+    const baseUrl = resolved.apiUrl.replace(/\/$/, '');
+    const response = await fetch(`${baseUrl}/voices`, {
+      headers: {
+        'xi-api-key': resolved.apiKey,
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`ElevenLabs voices failed (${response.status}): ${err}`);
+    }
+
+    const payload = (await response.json()) as {
+      voices?: Array<{
+        voice_id?: string;
+        name?: string;
+        category?: string;
+        labels?: Record<string, string>;
+        preview_url?: string;
+      }>;
+    };
+
+    const voices: ElevenLabsVoiceOption[] = [];
+
+    for (const voice of payload.voices ?? []) {
+      const id = voice.voice_id?.trim();
+      const name = voice.name?.trim();
+      if (!id || !name) {
+        continue;
+      }
+
+      voices.push({
+        id,
+        name,
+        category: voice.category,
+        gender: voice.labels?.gender ?? null,
+        accent: voice.labels?.accent ?? null,
+        previewUrl: voice.preview_url ?? null,
+      });
+    }
+
+    return voices.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }
 
   async synthesize(input: TtsGenerationInput): Promise<TtsGenerationResult> {
     const resolved = await this.llmConfig.resolve('tts_generation');

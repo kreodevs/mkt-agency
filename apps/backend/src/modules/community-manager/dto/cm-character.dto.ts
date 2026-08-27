@@ -95,3 +95,16 @@ export class CmCharacterGenerateResponseDto {
   status!: string;
   message!: string;
 }
+
+export class ElevenLabsVoiceOptionDto {
+  id!: string;
+  name!: string;
+  category?: string;
+  gender?: string | null;
+  accent?: string | null;
+  previewUrl?: string | null;
+}
+
+export class ElevenLabsVoicesListResponseDto {
+  voices!: ElevenLabsVoiceOptionDto[];
+}

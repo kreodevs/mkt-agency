@@ -44,6 +44,18 @@ export type CmCharacterGenerateResult = {
   message: string;
 };
 
+export type ElevenLabsVoiceOption = {
+  id: string;
+  name: string;
+  category?: string;
+  gender?: string | null;
+  accent?: string | null;
+  previewUrl?: string | null;
+};
+
+export const DEFAULT_CM_VOICE_ID = 'XrExE9yKIg1WjnnlVkGX';
+export const DEFAULT_CM_VOICE_NAME = 'Matilda';
+
 export function listCmCharacters(productId: string): Promise<CmCharactersLibrary> {
   return apiFetch<CmCharactersLibrary>(`/products/${productId}/cm-characters`);
 }
@@ -132,6 +144,14 @@ export function generateCmPreview(
   return apiFetch<CmCharacterGenerateResult>(
     `/products/${productId}/cm-characters/${characterId}/generate-preview`,
     { method: 'POST' },
+  );
+}
+
+export function listElevenLabsVoices(
+  productId: string,
+): Promise<{ voices: ElevenLabsVoiceOption[] }> {
+  return apiFetch<{ voices: ElevenLabsVoiceOption[] }>(
+    `/products/${productId}/cm-characters/voices`,
   );
 }
 

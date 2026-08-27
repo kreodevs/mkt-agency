@@ -1,3 +1,12 @@
+export interface ElevenLabsVoiceOption {
+  id: string;
+  name: string;
+  category?: string;
+  gender?: string | null;
+  accent?: string | null;
+  previewUrl?: string | null;
+}
+
 export interface TtsGenerationInput {
   text: string;
   voiceId?: string;

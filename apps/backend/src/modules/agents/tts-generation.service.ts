@@ -7,6 +7,7 @@ import {
   StubTtsAdapter,
 } from './adapters/tts-generation.adapters';
 import {
+  ElevenLabsVoiceOption,
   TTS_GENERATION_ADAPTER,
   TtsGenerationAdapterPort,
   TtsGenerationInput,
@@ -25,6 +26,24 @@ export class TtsGenerationService {
     @Inject(TTS_GENERATION_ADAPTER)
     private readonly stub: TtsGenerationAdapterPort,
   ) {}
+
+  async listElevenLabsVoices(): Promise<ElevenLabsVoiceOption[]> {
+    const task = (await this.llmConfig.listAll()).find((row) => row.taskType === 'tts_generation');
+    if (!task?.enabled || !task.providerId) {
+      throw new Error('TTS no configurado. Habilita la tarea en Superadmin → Configuración LLM.');
+    }
+
+    const provider = await this.llmProviders.findEntityById(task.providerId);
+    if (!provider?.apiKey?.trim() || !provider.isActive) {
+      throw new Error('ElevenLabs no configurado. Añade API key en Superadmin → Proveedores LLM.');
+    }
+
+    if (provider.slug !== 'elevenlabs') {
+      throw new Error('La tarea TTS debe usar el proveedor ElevenLabs para listar voces.');
+    }
+
+    return this.elevenLabs.listVoices();
+  }
 
   async synthesize(input: TtsGenerationInput): Promise<TtsGenerationResult> {
     const task = (await this.llmConfig.listAll()).find((row) => row.taskType === 'tts_generation');

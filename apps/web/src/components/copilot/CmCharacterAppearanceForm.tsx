@@ -1,7 +1,12 @@
 import { InputText } from '@/components/atoms/InputText';
 import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
-import type { CmCharacterStatus } from '@/services/cm-character';
+import {
+  DEFAULT_CM_VOICE_ID,
+  DEFAULT_CM_VOICE_NAME,
+  type CmCharacterStatus,
+} from '@/services/cm-character';
+import { CmCharacterVoiceSelect } from './CmCharacterVoiceSelect';
 
 export type AppearanceDraft = {
   name: string;
@@ -14,8 +19,8 @@ export function emptyDraft(): AppearanceDraft {
   return {
     name: '',
     appearance: { gender: 'female' },
-    voiceId: null,
-    voiceName: null,
+    voiceId: DEFAULT_CM_VOICE_ID,
+    voiceName: DEFAULT_CM_VOICE_NAME,
   };
 }
 
@@ -31,9 +36,11 @@ export function appearanceDraftFromCharacter(character: CmCharacterStatus): Appe
 export function AppearanceForm({
   draft,
   onChange,
+  productId,
 }: {
   draft: AppearanceDraft;
   onChange: (next: AppearanceDraft) => void;
+  productId: string;
 }) {
   const appearance = draft.appearance;
 
@@ -99,6 +106,13 @@ export function AppearanceForm({
           }
         />
       </div>
+
+      <CmCharacterVoiceSelect
+        productId={productId}
+        voiceId={draft.voiceId}
+        voiceName={draft.voiceName}
+        onChange={(voiceId, voiceName) => onChange({ ...draft, voiceId, voiceName })}
+      />
 
       <label className="block space-y-1 text-sm">
         <span className="text-[var(--foreground-muted)]">Notas adicionales</span>

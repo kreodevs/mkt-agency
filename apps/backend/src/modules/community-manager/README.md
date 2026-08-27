@@ -55,6 +55,7 @@ Recomponer plantilla desde editor: `POST /api/v1/community-manager/contents/:con
 3. **Vista previa** — TTS + lip-sync para marcar la CM como `ready` (`readyCount`).
 4. Posts TikTok `talking-head` incluyen `cmCharacterId` elegido por el LLM.
 5. El `body` del guion se limpia de marcadores de tiempo `(0:00-0:05)` antes de TTS y en la UI (`sanitizePublishableCopy` / `sanitizeSpanishNarrationScript`).
+6. Cada CM guarda `voiceId` / `voiceName` de ElevenLabs; la biblioteca expone `GET /products/:id/cm-characters/voices` para el selector en UI.
 
 Replicate y otros proveedores externos no pueden resolver hostnames internos de Docker (`minio:9000`). El pipeline de lip-sync usa URLs públicas de la API (`API_PUBLIC_URL`) con JWT de corta duración (`GET /assets/:id/file?access_token=...`) en lugar de presigned MinIO. En producción, `API_PUBLIC_URL` debe ser alcanzable desde internet; en local puede requerir túnel (ngrok, etc.) para probar lip-sync.
 
