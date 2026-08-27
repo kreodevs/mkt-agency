@@ -14,4 +14,4 @@ Componentes UI reutilizables del eje producto-first. Tokens Kreo y moléculas `C
 | `ProductListCard` | Tarjeta SOHO/mobile en listado de productos (`/products`) — acciones esenciales sin n8n/campañas |
 | `ProductPublishIntegrationPanel` | Webhook n8n por producto, auto-dispatch y credenciales Meta/LinkedIn (detalle producto, solo Growth) |
 | `ProductAppCapturePanel` | Credenciales de app + captura Playwright → kit `product-screenshot` (producto digital y campañas) |
-| `ProductMediaKitPanel` | Kit de medios reales (capturas, eventos, demos) — subida directa o **Desde librería** (carpetas PC/iPad/iOS) en `/products/:id/media-kit` |
+| `ProductMediaKitPanel` | Kit de medios reales (capturas, eventos, demos) — subida directa o **Desde librería** (carpetas PC/iPad/iOS) en `/products/:id/media-kit`. Cada asset: clic en miniatura o **Ver** → `AssetPreviewDialog` a tamaño completo + descarga. |

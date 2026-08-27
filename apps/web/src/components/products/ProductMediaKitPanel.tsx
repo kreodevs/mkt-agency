@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Film, FolderOpen, ImageIcon, Trash2, Upload } from 'lucide-react';
+import { Eye, Film, FolderOpen, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
@@ -8,7 +8,8 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
 import { AssetLibraryPickerDialog } from '@/components/assets/AssetLibraryPickerDialog';
-import { getAssetFileUrl } from '@/services/assets';
+import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
+import { getAssetDownloadUrl, getAssetFileUrl } from '@/services/assets';
 import { ApiError } from '@/services/api';
 import {
   linkProductMediaKit,
@@ -16,9 +17,11 @@ import {
   removeProductMediaKitItem,
   uploadProductMediaKit,
 } from '@/services/products';
+import type { Asset, AssetType } from '@/types/assets';
 import {
   PRODUCT_MEDIA_ROLE_LABELS,
   PRODUCT_MEDIA_ROLES,
+  type ProductMediaKitItem,
   type ProductMediaRole,
 } from '@/types/product';
 
@@ -38,6 +41,35 @@ function isAcceptedFile(file: File): boolean {
   return ACCEPTED_MIME_PREFIXES.some((prefix) => file.type.startsWith(prefix));
 }
 
+function toPreviewAsset(item: ProductMediaKitItem): Asset {
+  const assetType: AssetType =
+    item.assetType === 'video' ||
+    item.assetType === 'audio' ||
+    item.assetType === 'document' ||
+    item.assetType === 'other'
+      ? item.assetType
+      : 'image';
+
+  return {
+    id: item.assetId,
+    tenantId: '',
+    folderId: null,
+    name: item.label ?? item.assetName,
+    type: assetType,
+    mimeType: item.mimeType,
+    fileKey: '',
+    fileSize: 0,
+    url: item.url,
+    thumbnailUrl: null,
+    metadata: {},
+    referenceCount: 0,
+    isInUse: false,
+    tags: [],
+    createdAt: item.createdAt,
+    updatedAt: item.createdAt,
+  };
+}
+
 export function ProductMediaKitPanel({
   productId,
   productName,
@@ -49,6 +81,7 @@ export function ProductMediaKitPanel({
   const [label, setLabel] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [libraryPickerOpen, setLibraryPickerOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<ProductMediaKitItem | null>(null);
 
   const kitQuery = useQuery({
     queryKey: ['product-media-kit', productId],
@@ -157,6 +190,15 @@ export function ProductMediaKitPanel({
   const isBusy =
     disabled || uploadMutation.isPending || removeMutation.isPending || linkMutation.isPending;
   const items = kitQuery.data?.items ?? [];
+
+  const handleDownloadPreview = async (asset: Asset) => {
+    try {
+      const { url } = await getAssetDownloadUrl(asset.id);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo descargar el archivo');
+    }
+  };
 
   return (
     <div className="space-y-[var(--spacing-lg)]">
@@ -291,25 +333,32 @@ export function ProductMediaKitPanel({
                   key={item.id}
                   className="overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)]"
                 >
-                  <div className="relative flex aspect-video items-center justify-center bg-[var(--background-secondary)]">
+                  <button
+                    type="button"
+                    className="group relative flex aspect-video w-full cursor-zoom-in items-center justify-center bg-[var(--background-secondary)]"
+                    aria-label={`Ver ${item.label ?? item.assetName}`}
+                    onClick={() => setPreviewItem(item)}
+                  >
                     {isVideo && previewUrl ? (
                       <video
                         src={previewUrl}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                         muted
                         playsInline
                         preload="metadata"
-                        controls
                       />
                     ) : previewUrl ? (
                       <img
                         src={previewUrl}
                         alt={item.label ?? item.assetName}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                       />
                     ) : (
                       <ImageIcon className="h-8 w-8 text-[var(--foreground-muted)]" />
                     )}
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--foreground)]/0 transition-colors group-hover:bg-[var(--foreground)]/10">
+                      <Eye className="h-6 w-6 text-[var(--background)] opacity-0 drop-shadow transition-opacity group-hover:opacity-100" />
+                    </span>
                     <StatusPill
                       status="neutral"
                       size="sm"
@@ -324,7 +373,7 @@ export function ProductMediaKitPanel({
                         'Imagen'
                       )}
                     </StatusPill>
-                  </div>
+                  </button>
 
                   <div className="space-y-1 p-3">
                     <p className="text-xs font-medium text-[var(--foreground)]">
@@ -338,21 +387,31 @@ export function ProductMediaKitPanel({
                     <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.assetName}>
                       {item.assetName}
                     </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 w-full gap-2"
-                      disabled={isBusy}
-                      loading={removeMutation.isPending && removeMutation.variables === item.id}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        removeMutation.mutate(item.id);
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Eliminar
-                    </Button>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        disabled={isBusy}
+                        onClick={() => setPreviewItem(item)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        disabled={isBusy}
+                        loading={removeMutation.isPending && removeMutation.variables === item.id}
+                        onClick={() => removeMutation.mutate(item.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Eliminar
+                      </Button>
+                    </div>
                   </div>
                 </li>
               );
@@ -369,6 +428,12 @@ export function ProductMediaKitPanel({
         typeFilter={role === 'product-demo' ? 'video' : 'image'}
         isPending={linkMutation.isPending}
         onSelect={(asset) => linkMutation.mutate(asset.id)}
+      />
+
+      <AssetPreviewDialog
+        asset={previewItem ? toPreviewAsset(previewItem) : null}
+        onClose={() => setPreviewItem(null)}
+        onDownload={(asset) => void handleDownloadPreview(asset)}
       />
     </div>
   );
