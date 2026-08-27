@@ -92,14 +92,14 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             'Para TikTok con visualFormat talking-head elige cmCharacterId de la biblioteca según tono del post (ej. más formal → CM ejecutiva, más cercana → CM juvenil).',
             'Si ninguna CM encaja, usa la de nombre más genérico o la primera de la lista.',
             'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM elegida.',
-            'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
+            'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta), sin marcadores de tiempo ni direcciones de escena (prohibido: "(0:00-0:05)", "[0:10]", "mostrar...", etc.).',
           ].join('\n')
         : context.cmCharacterReady
           ? [
               'La marca tiene al menos una CM virtual lista (retrato + lip-sync en español).',
               'Para TikTok asigna visualFormat: talking-head (la CM hablará el body del post).',
               'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM.',
-              'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta).',
+              'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta), sin marcadores de tiempo ni direcciones de escena (prohibido: "(0:00-0:05)", "[0:10]", "mostrar...", etc.).',
             ].join('\n')
           : 'No hay CM virtual lista: NO uses visualFormat talking-head. TikTok→image vertical.';
 
@@ -161,7 +161,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       'Plantillas: product-hero (lanzamiento, split app+texto); tip-card/promo-cta (tips y promos, mockup); quote-insight (cita larga); stat-highlight (dato numérico); story-vertical (TikTok/Reels).',
       'Carrusel (3 slides): slide 1 = hook sin depender de la app; slide 2 = feature con captura; slide 3 = CTA claro. visualHeadline máx 6 palabras por slide.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
-      'body = copy publicable listo para publicar en la red. Son campos independientes.',
+      'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]
       .filter(Boolean)
       .join('\n\n');

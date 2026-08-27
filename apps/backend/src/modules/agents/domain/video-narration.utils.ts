@@ -1,3 +1,5 @@
+import { stripVideoTimeMarkers } from '../../../shared/domain/sanitize-publishable-copy.util';
+
 export const SPANISH_WORDS_PER_SECOND = 2.35;
 
 export interface NarrationSegment {
@@ -34,7 +36,7 @@ export function estimateSpeechDurationSeconds(text: string): number {
 }
 
 export function sanitizeSpanishNarrationScript(body: string): string {
-  return body
+  return stripVideoTimeMarkers(body)
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
     .replace(/[#*_`]/g, '')
     .replace(/\s+/g, ' ')

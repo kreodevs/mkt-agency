@@ -1,10 +1,26 @@
 /** Espejo frontend de sanitize-publishable-copy.util.ts (backend). */
+export function stripVideoTimeMarkers(text: string): string {
+  return text
+    .replace(
+      /\s*\(\s*\d{1,2}:\d{2}(?::\d{2})?\s*[-–—]\s*\d{1,2}:\d{2}(?::\d{2})?\s*\)\s*/g,
+      ' ',
+    )
+    .replace(
+      /\s*\[\s*\d{1,2}:\d{2}(?::\d{2})?\s*[-–—]\s*\d{1,2}:\d{2}(?::\d{2})?\s*\]\s*/g,
+      ' ',
+    )
+    .replace(
+      /(?:^|\n)\s*\d{1,2}:\d{2}(?::\d{2})?\s*[-–—]\s*\d{1,2}:\d{2}(?::\d{2})?\s*/g,
+      (match) => (match.startsWith('\n') ? '\n' : ''),
+    );
+}
+
 export function sanitizePublishableCopy(text: string): string {
   if (!text?.trim()) {
     return '';
   }
 
-  let result = text;
+  let result = stripVideoTimeMarkers(text);
 
   result = result.replace(
     /\s*\((?:mostrar|ver|insertar|colocar|poner|agregar|añadir|incluir|usar)[^)]{0,120}\)/gi,
