@@ -42,9 +42,9 @@ export function ProductBrandVisualKitPanel({ productId }: ProductBrandVisualKitP
   });
 
   const [style, setStyle] = useState<BrandVisualStyle>('minimal');
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_BRAND_COLORS.primaryColor);
-  const [secondaryColor, setSecondaryColor] = useState(DEFAULT_BRAND_COLORS.secondaryColor);
-  const [accentColor, setAccentColor] = useState(DEFAULT_BRAND_COLORS.accentColor);
+  const [primaryColor, setPrimaryColor] = useState<string>(DEFAULT_BRAND_COLORS.primaryColor);
+  const [secondaryColor, setSecondaryColor] = useState<string>(DEFAULT_BRAND_COLORS.secondaryColor);
+  const [accentColor, setAccentColor] = useState<string>(DEFAULT_BRAND_COLORS.accentColor);
 
   useEffect(() => {
     hasInitializedRef.current = false;

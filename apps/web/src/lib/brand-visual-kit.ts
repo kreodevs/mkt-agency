@@ -1,4 +1,4 @@
-import type { BrandVisualKit, BrandVisualStyle } from '@/types/product';
+import type { BrandVisualKit } from '@/types/product';
 
 const HEX_6 = /^#[0-9a-fA-F]{6}$/;
 const HEX_3 = /^#[0-9a-fA-F]{3}$/;
