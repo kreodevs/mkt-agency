@@ -1,5 +1,13 @@
 import sharp from '@/shared/media/sharp.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
+import {
+  buildDeviceShadow,
+  renderDeviceFrame,
+  resolveDeviceFrameType,
+  resolveDevicePlacement,
+  resolveVisualAspectRatio,
+  type VisualAspectRatio,
+} from './device-frame-render.util';
 import type { ResolvedVisualBrandKit } from './visual-brand-kit.util';
 import type { VisualTemplateId } from './visual-template.constants';
 
@@ -16,11 +24,17 @@ export interface RenderVisualTemplateInput {
   brandKit: ResolvedVisualBrandKit;
   slots: VisualTemplateSlots;
   size: ImageGenerationSize;
+  platform?: string | null;
   slideIndex?: number;
   slideCount?: number;
   photoBuffer?: Buffer | null;
   logoBuffer?: Buffer | null;
   logoMimeType?: string | null;
+}
+
+export interface VisualLayoutContext {
+  platform?: string | null;
+  aspectRatio: VisualAspectRatio;
 }
 
 export type VisualLayoutMode =
@@ -148,13 +162,17 @@ export function buildVisualTemplateSlots(
   return { headline, subline, cta };
 }
 
-/** Elige composición según plantilla, slide de carrusel y si hay captura real. */
+/** Elige composición según plantilla, plataforma, aspecto y slide de carrusel. */
 export function resolveVisualLayoutMode(
   templateId: VisualTemplateId,
   slideIndex: number,
   slideCount: number,
   hasPhoto: boolean,
+  layoutContext?: VisualLayoutContext,
 ): VisualLayoutMode {
+  const aspect = layoutContext?.aspectRatio ?? 'square';
+  const platform = layoutContext?.platform;
+
   if (!hasPhoto) {
     return 'gradient-only';
   }
@@ -166,14 +184,19 @@ export function resolveVisualLayoutMode(
     if (slideIndex === slideCount - 1) {
       return 'cta-solid';
     }
-    return 'split-screenshot-top';
+    return aspect === 'vertical' ? 'device-mockup' : 'split-screenshot-top';
   }
 
   switch (templateId) {
     case 'product-hero':
-      return 'split-screenshot-top';
+      if (aspect === 'vertical' || platform === 'instagram' || platform === 'tiktok') {
+        return 'device-mockup';
+      }
+      if (platform === 'linkedin' || platform === 'twitter') {
+        return 'device-mockup';
+      }
+      return aspect === 'square' ? 'split-screenshot-top' : 'device-mockup';
     case 'tip-card':
-      return 'device-mockup';
     case 'promo-cta':
       return 'device-mockup';
     case 'quote-insight':
@@ -181,10 +204,18 @@ export function resolveVisualLayoutMode(
     case 'stat-highlight':
       return 'stat-solid';
     case 'story-vertical':
-      return 'story-bleed';
+      return aspect === 'vertical' ? 'story-bleed' : 'device-mockup';
     default:
-      return 'split-screenshot-top';
+      return aspect === 'vertical' ? 'story-bleed' : 'split-screenshot-top';
   }
+}
+
+export function resolveSplitPhotoRatio(aspectRatio: VisualAspectRatio): number {
+  return aspectRatio === 'vertical' ? 0.48 : 0.52;
+}
+
+export function resolveStoryPhotoRatio(aspectRatio: VisualAspectRatio): number {
+  return aspectRatio === 'vertical' ? 0.64 : 0.58;
 }
 
 function escapeXml(value: string): string {
@@ -403,15 +434,6 @@ async function applyRoundedCorners(
   return sharp(input).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
 }
 
-async function buildDeviceShadow(width: number, height: number, radius: number): Promise<Buffer> {
-  const svg = Buffer.from(
-    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="12" width="${width - 16}" height="${height - 12}" rx="${radius}" ry="${radius}" fill="rgba(0,0,0,0.35)"/>
-    </svg>`,
-  );
-  return sharp(svg).blur(8).png().toBuffer();
-}
-
 async function renderGradientBase(
   width: number,
   height: number,
@@ -429,8 +451,9 @@ async function renderSplitScreenshotTop(
   photoBuffer: Buffer,
   slideIndex: number,
   slideCount: number,
+  layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
-  const photoHeight = Math.round(height * 0.52);
+  const photoHeight = Math.round(height * resolveSplitPhotoRatio(layoutContext.aspectRatio));
   const panelHeight = height - photoHeight;
   const fadeHeight = Math.min(56, Math.round(photoHeight * 0.14));
 
@@ -496,28 +519,20 @@ async function renderDeviceMockup(
   photoBuffer: Buffer,
   slideIndex: number,
   slideCount: number,
+  layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
   const base = await renderGradientBase(width, height, kit);
-  const frameW = Math.round(width * 0.84);
-  const frameH = Math.round(height * 0.4);
-  const frameLeft = Math.round((width - frameW) / 2);
-  const frameTop = Math.round(height * 0.05);
-  const radius = Math.round(width * 0.022);
-
-  let screen = await sharp(photoBuffer)
-    .resize(frameW, frameH, { fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
-  screen = await applyRoundedCorners(screen, frameW, frameH, radius);
-
-  const shadow = await buildDeviceShadow(frameW + 24, frameH + 24, radius);
-  const borderSvg = Buffer.from(
-    `<svg width="${frameW + 4}" height="${frameH + 4}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="${frameW + 2}" height="${frameH + 2}" rx="${radius + 2}" ry="${radius + 2}" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
-    </svg>`,
+  const frameType = resolveDeviceFrameType(layoutContext.platform, layoutContext.aspectRatio);
+  const placement = resolveDevicePlacement(width, height, frameType, layoutContext.aspectRatio);
+  const deviceImage = await renderDeviceFrame(photoBuffer, placement);
+  const shadow = await buildDeviceShadow(
+    placement.frameWidth + 28,
+    placement.frameHeight + 28,
+    Math.round(placement.frameWidth * 0.08),
   );
 
-  const textAreaTop = frameTop + frameH + Math.round(height * 0.04);
+  const textAreaTop =
+    placement.top + placement.frameHeight + Math.round(height * 0.035);
   const textAreaHeight = height - textAreaTop;
   const textSvg = Buffer.from(
     buildTextBlockSvg({
@@ -534,9 +549,8 @@ async function renderDeviceMockup(
 
   return sharp(base)
     .composite([
-      { input: shadow, top: frameTop + 6, left: frameLeft - 12 },
-      { input: screen, top: frameTop, left: frameLeft },
-      { input: borderSvg, top: frameTop - 2, left: frameLeft - 2 },
+      { input: shadow, top: placement.top + 8, left: placement.left - 14 },
+      { input: deviceImage, top: placement.top, left: placement.left },
       { input: textSvg, top: textAreaTop, left: 0 },
     ])
     .png()
@@ -552,8 +566,9 @@ async function renderStoryBleed(
   photoBuffer: Buffer,
   slideIndex: number,
   slideCount: number,
+  layoutContext: VisualLayoutContext,
 ): Promise<Buffer> {
-  const photoHeight = Math.round(height * 0.58);
+  const photoHeight = Math.round(height * resolveStoryPhotoRatio(layoutContext.aspectRatio));
   const panelHeight = height - photoHeight;
 
   const screenshot = await sharp(photoBuffer)
@@ -742,11 +757,16 @@ export async function renderVisualTemplateFrame(
   const slideIndex = input.slideIndex ?? 0;
   const slideCount = input.slideCount ?? 1;
   const hasPhoto = Boolean(input.photoBuffer);
+  const layoutContext: VisualLayoutContext = {
+    platform: input.platform,
+    aspectRatio: resolveVisualAspectRatio(input.size),
+  };
   const layout = resolveVisualLayoutMode(
     input.templateId,
     slideIndex,
     slideCount,
     hasPhoto,
+    layoutContext,
   );
 
   let composed: Buffer;
@@ -762,6 +782,7 @@ export async function renderVisualTemplateFrame(
         input.photoBuffer!,
         slideIndex,
         slideCount,
+        layoutContext,
       );
       break;
     case 'device-mockup':
@@ -774,6 +795,7 @@ export async function renderVisualTemplateFrame(
         input.photoBuffer!,
         slideIndex,
         slideCount,
+        layoutContext,
       );
       break;
     case 'story-bleed':
@@ -786,6 +808,7 @@ export async function renderVisualTemplateFrame(
         input.photoBuffer!,
         slideIndex,
         slideCount,
+        layoutContext,
       );
       break;
     case 'quote-editorial':

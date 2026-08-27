@@ -124,6 +124,7 @@ export class VisualTemplateComposerService {
           brandKit,
           slots,
           size,
+          platform: post.platform,
           slideIndex,
           slideCount: frameCount,
           photoBuffer: photoFile?.buffer ?? null,

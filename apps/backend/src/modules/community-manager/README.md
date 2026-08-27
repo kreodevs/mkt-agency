@@ -30,11 +30,14 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 1. **Plantillas** — `product-hero`, `tip-card`, `quote-insight`, `promo-cta`, `stat-highlight`, `story-vertical`
 2. **Layouts** — cada plantilla usa una composición distinta (no overlay semitransparente sobre toda la captura):
    - `product-hero` / carrusel slide 2 → **split**: captura arriba (~52 %), texto en panel sólido abajo
-   - `tip-card` / `promo-cta` → **mockup**: captura en marco redondeado sobre gradiente de marca
+   - `tip-card` / `promo-cta` → **mockup**: captura en marco de dispositivo (iPhone o MacBook) sobre gradiente
    - `quote-insight` → **editorial**: texto dominante + miniatura de app en esquina
    - `stat-highlight` → **stat**: cifra grande + thumbnail pequeño
-   - `story-vertical` → **bleed**: captura superior + panel inferior opaco
+   - `story-vertical` → **bleed**: captura superior + panel inferior opaco (proporciones 9:16 vs 1:1)
    - Carrusel slide 1 → hook solo con gradiente; slide 3 → CTA en fondo sólido de marca
+3. **Dispositivo y plataforma** — `device-frame-render.util.ts` elige marco según red y formato:
+   - LinkedIn / X → MacBook; Instagram / TikTok / Facebook → iPhone
+   - TikTok (9:16) ajusta proporciones de split/bleed y prioriza mockup en carrusel
 3. **LLM** — elige `visualTemplateId` + `visualHeadline` / `visualSubline` / `visualCta` por post
 4. **Marca** — colores desde `visual_preferences` del perfil o `product.metadata.brandVisualKit`
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca

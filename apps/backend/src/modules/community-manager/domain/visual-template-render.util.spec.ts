@@ -1,5 +1,11 @@
 import sharp from '@/shared/media/sharp.util';
 import {
+  resolveDeviceFrameType,
+  resolveVisualAspectRatio,
+  renderDeviceFrame,
+  resolveDevicePlacement,
+} from './device-frame-render.util';
+import {
   buildVisualTemplateSlots,
   parseImageSize,
   resolveVisualLayoutMode,
@@ -31,16 +37,47 @@ const brandKit: ResolvedVisualBrandKit = {
   logoAssetId: null,
 };
 
+const squareContext = { aspectRatio: 'square' as const };
+const verticalContext = { aspectRatio: 'vertical' as const };
+
 describe('visual-template-render.util', () => {
   describe('resolveVisualLayoutMode', () => {
-    it('uses split layout for product-hero with screenshot', () => {
-      expect(resolveVisualLayoutMode('product-hero', 0, 1, true)).toBe('split-screenshot-top');
+    it('uses split layout for product-hero square without mobile platform', () => {
+      expect(
+        resolveVisualLayoutMode('product-hero', 0, 1, true, squareContext),
+      ).toBe('split-screenshot-top');
+    });
+
+    it('uses device mockup for product-hero on Instagram', () => {
+      expect(
+        resolveVisualLayoutMode('product-hero', 0, 1, true, {
+          ...squareContext,
+          platform: 'instagram',
+        }),
+      ).toBe('device-mockup');
+    });
+
+    it('uses device mockup for product-hero on LinkedIn', () => {
+      expect(
+        resolveVisualLayoutMode('product-hero', 0, 1, true, {
+          ...squareContext,
+          platform: 'linkedin',
+        }),
+      ).toBe('device-mockup');
     });
 
     it('varies carousel slides: hook, feature, cta', () => {
-      expect(resolveVisualLayoutMode('tip-card', 0, 3, true)).toBe('gradient-hook');
-      expect(resolveVisualLayoutMode('tip-card', 1, 3, true)).toBe('split-screenshot-top');
-      expect(resolveVisualLayoutMode('tip-card', 2, 3, true)).toBe('cta-solid');
+      expect(resolveVisualLayoutMode('tip-card', 0, 3, true, squareContext)).toBe('gradient-hook');
+      expect(resolveVisualLayoutMode('tip-card', 1, 3, true, squareContext)).toBe(
+        'split-screenshot-top',
+      );
+      expect(resolveVisualLayoutMode('tip-card', 2, 3, true, squareContext)).toBe('cta-solid');
+    });
+
+    it('uses device mockup on carousel middle slide for vertical', () => {
+      expect(resolveVisualLayoutMode('tip-card', 1, 3, true, verticalContext)).toBe(
+        'device-mockup',
+      );
     });
 
     it('falls back to gradient when there is no photo', () => {
@@ -48,7 +85,34 @@ describe('visual-template-render.util', () => {
     });
 
     it('uses device mockup for promo posts with screenshot', () => {
-      expect(resolveVisualLayoutMode('promo-cta', 0, 1, true)).toBe('device-mockup');
+      expect(resolveVisualLayoutMode('promo-cta', 0, 1, true, squareContext)).toBe(
+        'device-mockup',
+      );
+    });
+  });
+
+  describe('device-frame-render.util', () => {
+    it('detects vertical aspect ratio from size', () => {
+      expect(resolveVisualAspectRatio('1440x2560')).toBe('vertical');
+      expect(resolveVisualAspectRatio('1920x1920')).toBe('square');
+    });
+
+    it('picks macbook for LinkedIn and iphone for TikTok', () => {
+      expect(resolveDeviceFrameType('linkedin', 'square')).toBe('macbook');
+      expect(resolveDeviceFrameType('tiktok', 'vertical')).toBe('iphone');
+      expect(resolveDeviceFrameType('instagram', 'square')).toBe('iphone');
+    });
+
+    it('renders iphone and macbook device frames', async () => {
+      const photo = await createTestPhoto(640, 480);
+      const iphonePlacement = resolveDevicePlacement(1080, 1080, 'iphone', 'square');
+      const macPlacement = resolveDevicePlacement(1080, 1080, 'macbook', 'square');
+
+      const iphone = await renderDeviceFrame(photo, iphonePlacement);
+      const macbook = await renderDeviceFrame(photo, macPlacement);
+
+      expect(iphone.length).toBeGreaterThan(500);
+      expect(macbook.length).toBeGreaterThan(500);
     });
   });
 
@@ -96,6 +160,43 @@ describe('visual-template-render.util', () => {
           cta: 'Demo gratis',
         },
         size: '1024x1024',
+        platform: 'facebook',
+        photoBuffer,
+      });
+
+      expect(output.length).toBeGreaterThan(500);
+    });
+
+    it('renders device mockup for LinkedIn promo', async () => {
+      const photoBuffer = await createTestPhoto(1200, 800);
+      const output = await renderVisualTemplateFrame({
+        templateId: 'promo-cta',
+        brandKit,
+        slots: {
+          headline: 'Optimiza tu consultorio con IA',
+          subline: 'Guía gratuita para la gestión dental moderna',
+          cta: 'Descargar guía',
+        },
+        size: '1920x1920',
+        platform: 'linkedin',
+        photoBuffer,
+      });
+
+      expect(output.length).toBeGreaterThan(500);
+    });
+
+    it('renders vertical TikTok layout', async () => {
+      const photoBuffer = await createTestPhoto(800, 1200);
+      const output = await renderVisualTemplateFrame({
+        templateId: 'story-vertical',
+        brandKit,
+        slots: {
+          headline: 'Del caos al control total',
+          subline: 'La transición digital que tu consultorio merece',
+          cta: 'Ver Oraltrack',
+        },
+        size: '1440x2560',
+        platform: 'tiktok',
         photoBuffer,
       });
 
