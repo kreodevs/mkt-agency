@@ -11,19 +11,32 @@ export interface StepperItem {
 export interface StepperProps {
   model: StepperItem[];
   activeIndex?: number;
+  /** When set, each step's completed state is independent (non-linear pipelines). */
+  completedSteps?: boolean[];
   readOnly?: boolean;
   onSelect?: (e: { index: number; item: StepperItem }) => void;
   className?: string;
 }
 
 export const Stepper = forwardRef<HTMLDivElement, StepperProps>(
-  ({ model, activeIndex = 0, readOnly = true, onSelect, className }, ref) => (
-    <div ref={ref} className={cn('w-full py-[var(--spacing-lg)]', className)}>
-      <div className="relative flex w-full items-start justify-between overflow-x-auto">
+  (
+    { model, activeIndex = 0, completedSteps, readOnly = true, onSelect, className },
+    ref,
+  ) => (
+    <div
+      ref={ref}
+      className={cn(
+        'w-full overflow-visible px-[var(--spacing-xs)] pb-[var(--spacing-lg)] pt-[var(--spacing-md)]',
+        className,
+      )}
+    >
+      <div className="relative flex w-full items-start justify-between overflow-x-auto overflow-y-visible">
         {model.map((item, index) => {
-          const isCompleted = index < activeIndex;
-          const isActive = index === activeIndex;
-          const isPending = index > activeIndex;
+          const isCompleted = completedSteps?.[index] ?? index < activeIndex;
+          const isActive = completedSteps
+            ? index === activeIndex && !completedSteps[index]
+            : index === activeIndex;
+          const isPending = !isCompleted && !isActive;
           const isLast = index === model.length - 1;
 
           return (
@@ -42,7 +55,8 @@ export const Stepper = forwardRef<HTMLDivElement, StepperProps>(
                   <div
                     className={cn(
                       'h-full transition-all duration-500',
-                      isCompleted
+                      isCompleted &&
+                        (completedSteps?.[index + 1] ?? true)
                         ? 'bg-[var(--brand)] opacity-90'
                         : 'bg-[var(--border)]',
                     )}

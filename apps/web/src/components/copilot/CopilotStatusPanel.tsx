@@ -40,21 +40,28 @@ interface CopilotStatusPanelProps {
   productId?: string;
 }
 
-function pipelineActiveIndex(status: {
+function pipelineStepCompletion(status: {
   onboardingCompleted: boolean;
   cmCharacterReady: boolean;
   competitorsCount: number;
   analysisStatus: string;
-}): number {
-  if (!status.onboardingCompleted) return 0;
-  if (!status.cmCharacterReady) return 1;
-  if (status.competitorsCount < 2) return 2;
-  if (status.analysisStatus !== 'completed') return 3;
-  return 4;
+}): boolean[] {
+  return [
+    status.onboardingCompleted,
+    status.cmCharacterReady,
+    status.competitorsCount >= 2,
+    status.analysisStatus === 'completed',
+  ];
 }
 
-function pipelineProgressPercent(activeIndex: number): number {
-  return Math.round((activeIndex / 4) * 100);
+function pipelineActiveIndex(completedSteps: boolean[]): number {
+  const firstIncomplete = completedSteps.findIndex((done) => !done);
+  return firstIncomplete === -1 ? completedSteps.length : firstIncomplete;
+}
+
+function pipelineProgressPercent(completedSteps: boolean[]): number {
+  const done = completedSteps.filter(Boolean).length;
+  return Math.round((done / completedSteps.length) * 100);
 }
 
 export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
@@ -116,8 +123,9 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
   if (!status) return null;
 
-  const activeIndex = pipelineActiveIndex(status);
-  const progress = pipelineProgressPercent(activeIndex);
+  const completedSteps = pipelineStepCompletion(status);
+  const activeIndex = pipelineActiveIndex(completedSteps);
+  const progress = pipelineProgressPercent(completedSteps);
 
   return (
     <div className="space-y-[var(--spacing-md)]">
@@ -140,7 +148,8 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           <Stepper
             readOnly
             activeIndex={activeIndex}
-            className="py-[var(--spacing-sm)]"
+            completedSteps={completedSteps}
+            className="py-[var(--spacing-xs)]"
             model={[
               { label: 'Producto', description: 'Onboarding', icon: <Package className="h-4 w-4" /> },
               { label: 'CMs', description: 'Retrato + preview', icon: <UserCircle2 className="h-4 w-4" /> },
