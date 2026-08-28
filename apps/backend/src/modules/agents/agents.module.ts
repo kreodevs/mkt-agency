@@ -38,7 +38,6 @@ import {
   ReplicateTalkingHeadAdapter,
   StubTalkingHeadAdapter,
 } from './adapters/replicate-talking-head.adapter';
-import { ElevenLabsTalkingHeadAdapter } from './adapters/elevenlabs-talking-head.adapter';
 import { TALKING_HEAD_ADAPTER } from './adapters/talking-head.adapter.port';
 import { TtsGenerationService } from './tts-generation.service';
 import { TalkingHeadComposerService } from './talking-head-composer.service';
@@ -108,7 +107,6 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     OpenRouterTtsAdapter,
     StubTtsAdapter,
     ReplicateTalkingHeadAdapter,
-    ElevenLabsTalkingHeadAdapter,
     StubTalkingHeadAdapter,
     TtsGenerationService,
     TalkingHeadComposerService,

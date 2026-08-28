@@ -8,7 +8,7 @@ import { normalizeContentVisualFormat } from '../content/domain/content-visual-f
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import type { SocialCopyPost } from './adapters/social-copy.adapter.port';
 import { CmCharacterService } from './cm-character.service';
-import { DEFAULT_CM_VOICE_ID, DEFAULT_CM_LIP_SYNC_PROVIDER } from './domain/cm-character.constants';
+import { DEFAULT_CM_VOICE_ID } from './domain/cm-character.constants';
 
 @Injectable()
 export class TalkingHeadPostComposerService {
@@ -68,7 +68,6 @@ export class TalkingHeadPostComposerService {
         portraitAssetId: config.portraitAssetId!,
         script,
         voiceId: config.voiceId ?? DEFAULT_CM_VOICE_ID,
-        lipSyncProvider: config.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER,
         accessUser: { id: userId, tenantId },
         metadata: {
           source: 'copilot-week',

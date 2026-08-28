@@ -22,8 +22,6 @@ import {
   CM_PREVIEW_SCRIPT,
   DEFAULT_CM_VOICE_ID,
   DEFAULT_CM_VOICE_NAME,
-  DEFAULT_CM_LIP_SYNC_PROVIDER,
-  type CmLipSyncProvider,
   type CmCharacterEntry,
   type CmCharacterLlmOption,
   type CmCharactersLibrary,
@@ -180,11 +178,7 @@ export class CmCharacterService {
 
     const nextVoiceId = dto.voiceId?.trim() || entry.voiceId || DEFAULT_CM_VOICE_ID;
     const nextVoiceName = dto.voiceName?.trim() || entry.voiceName || DEFAULT_CM_VOICE_NAME;
-    const nextLipSyncProvider: CmLipSyncProvider =
-      dto.lipSyncProvider ?? entry.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER;
     const voiceChanged = nextVoiceId !== entry.voiceId;
-    const lipSyncChanged = nextLipSyncProvider !== (entry.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER);
-    const previewInvalidated = voiceChanged || lipSyncChanged;
 
     const next = mergeCmCharacterEntry(entry, {
       name: dto.name?.trim() || entry.name,
@@ -198,8 +192,7 @@ export class CmCharacterService {
       },
       voiceId: nextVoiceId,
       voiceName: nextVoiceName,
-      lipSyncProvider: nextLipSyncProvider,
-      ...(previewInvalidated
+      ...(voiceChanged
         ? {
             status: 'pending' as const,
             readyAt: null,
@@ -392,7 +385,6 @@ export class CmCharacterService {
         portraitAssetId: entry.portraitAssetId,
         script: CM_PREVIEW_SCRIPT,
         voiceId: entry.voiceId ?? DEFAULT_CM_VOICE_ID,
-        lipSyncProvider: entry.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER,
         accessUser: {
           id: user.id,
           tenantId: user.tenantId!,
@@ -518,7 +510,6 @@ export class CmCharacterService {
       appearance: entry.appearance ?? null,
       voiceId: entry.voiceId ?? DEFAULT_CM_VOICE_ID,
       voiceName: entry.voiceName ?? DEFAULT_CM_VOICE_NAME,
-      lipSyncProvider: entry.lipSyncProvider ?? DEFAULT_CM_LIP_SYNC_PROVIDER,
       errorMessage: entry.errorMessage ?? null,
       isDefault: entry.id === defaultCharacterId,
     };

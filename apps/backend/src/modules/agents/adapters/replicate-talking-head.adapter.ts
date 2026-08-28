@@ -118,7 +118,7 @@ export class ReplicateTalkingHeadAdapter implements TalkingHeadAdapterPort {
 export class StubTalkingHeadAdapter implements TalkingHeadAdapterPort {
   async generate(_input: TalkingHeadInput): Promise<TalkingHeadResult> {
     throw new Error(
-      'Avatar hablante no configurado. Configura Replicate o ElevenLabs en Superadmin → Proveedores LLM.',
+      'Avatar hablante no configurado. Añade API key de Replicate en Superadmin → Proveedores LLM.',
     );
   }
 }

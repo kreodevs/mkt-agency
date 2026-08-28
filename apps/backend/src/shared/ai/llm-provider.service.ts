@@ -52,12 +52,6 @@ export class LlmProviderService {
     return this.providers.findOne({ where: { id } });
   }
 
-  async findEntityBySlug(slug: string): Promise<LlmProviderEntity | null> {
-    return this.providers.findOne({
-      where: { slug: slug.trim().toLowerCase(), isActive: true },
-    });
-  }
-
   async hasActiveConfigured(): Promise<boolean> {
     const count = await this.providers
       .createQueryBuilder('p')
