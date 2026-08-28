@@ -80,16 +80,23 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   });
 
   const prepareMutation = useMutation({
+    mutationKey: ['copilot-prepare-week', productId ?? 'primary'],
     mutationFn: () => prepareWeek(productId, horizon),
-    onSuccess: (result) => {
-      void queryClient.invalidateQueries({ queryKey: ['copilot-status'] });
-      void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
-      void queryClient.invalidateQueries({ queryKey: ['soho-summary'] });
+    onSuccess: async (result) => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['publication-inbox'] }),
+        queryClient.refetchQueries({ queryKey: ['soho-summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['copilot-status'] }),
+      ]);
+
       if (result.status === 'completed') {
         toast.success(
           `${result.postsGenerated} publicación(es) en «Por aprobar». Revísalas arriba en la bandeja.`,
         );
         navigate('/?welcome=1', { replace: true });
+        requestAnimationFrame(() => {
+          document.getElementById('inbox-pending')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       } else if (result.status === 'blocked') {
         toast.error(result.message);
       } else {

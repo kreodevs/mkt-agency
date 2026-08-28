@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
   Bot,
@@ -81,10 +81,19 @@ export default function PublicationInboxPage() {
     }
   }, [urlProductId, setActiveProduct]);
 
+  const prepareWeekInFlight = useIsMutating({ mutationKey: ['copilot-prepare-week'] }) > 0;
+
   const inboxQuery = useQuery({
     queryKey: ['publication-inbox', activeProductId],
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
+    refetchInterval: prepareWeekInFlight ? 5000 : false,
   });
+
+  useEffect(() => {
+    if (!welcome) return;
+    void queryClient.refetchQueries({ queryKey: ['publication-inbox'] });
+    void queryClient.refetchQueries({ queryKey: ['soho-summary'] });
+  }, [welcome, queryClient]);
 
   useEffect(() => {
     if (inboxQuery.isSuccess && window.location.hash === '#inbox-notifications') {
@@ -365,6 +374,8 @@ export default function PublicationInboxPage() {
           />
 
           <Card
+            id="inbox-pending"
+            className="scroll-mt-24"
             title={todayIds.size > 0 ? 'Resto por aprobar' : 'Por aprobar'}
             subtitle={`${pendingRest.length} pieza(s) sugerida(s) por la agencia`}
           >

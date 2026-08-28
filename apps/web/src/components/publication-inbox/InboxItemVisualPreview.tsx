@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImageIcon, Layers, Loader2 } from 'lucide-react';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
@@ -18,23 +18,40 @@ interface InboxItemVisualPreviewProps {
   variant?: 'card' | 'detail';
 }
 
+const VISUAL_PENDING_POLL_MS = 4_000;
+const VISUAL_PENDING_MAX_MS = 120_000;
+
 export function InboxItemVisualPreview({ item, variant = 'card' }: InboxItemVisualPreviewProps) {
   const queryClient = useQueryClient();
   const versionAssets = item.assets ?? [];
+  const mountedAtRef = useRef(Date.now());
 
   const generationQuery = useQuery({
     queryKey: ['image-generation-by-content', item.contentId],
     queryFn: () => getImageGenerationByContentId(item.contentId),
     staleTime: 5_000,
     refetchInterval: (query) => {
-      const generation = query.state.data?.generation;
-      if (!generation || generation.status !== 'processing') {
-        return false;
+      const generation = query.state.data?.generation ?? null;
+      const assetIds = resolveContentVisualAssetIds({
+        generation,
+        versionAssets,
+      });
+
+      if (generation?.status === 'processing' && !isStaleImageGeneration(generation)) {
+        return 3000;
       }
-      if (isStaleImageGeneration(generation)) {
-        return false;
+
+      const withinPendingWindow = Date.now() - mountedAtRef.current < VISUAL_PENDING_MAX_MS;
+      if (
+        withinPendingWindow &&
+        assetIds.length === 0 &&
+        item.type === 'social' &&
+        (!generation || generation.status === 'processing')
+      ) {
+        return VISUAL_PENDING_POLL_MS;
       }
-      return 3000;
+
+      return false;
     },
   });
 
