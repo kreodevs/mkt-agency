@@ -11,4 +11,5 @@
 - **llm-usage-cost.util** — cálculo de costo por tokens; estimación por segundo para video.
 
 Migración `1730000000016-AddLlmTaskFallbackModel.ts`: columna `fallback_model` en `llm_task_configs`.
+Migración `1740000000046-SeedRecommendedLlmTaskModels.ts`: aplica modelos económicos recomendados (`llm-task-recommended-models.ts`).
 Migración `1730000000027-CreateLlmUsageEvents.ts`: tabla `llm_usage_events`.

@@ -38,15 +38,21 @@ export class LlmConfigService {
     const missing = LLM_TASK_TYPES.filter((t) => !existingTypes.has(t));
     if (missing.length > 0) {
       const defaultProviderId = await this.resolveDefaultProviderId();
+      const providers = await this.providerService.list(true);
+      const providerIdBySlug = new Map(providers.map((provider) => [provider.slug, provider.id]));
+
       const newRows = this.configs.create(
         missing.map((taskType) => {
           const meta = LLM_TASK_METADATA[taskType];
+          const providerId =
+            providerIdBySlug.get(meta.providerSlug) ?? defaultProviderId;
           return {
             taskType,
             label: meta.label,
             description: meta.description,
-            providerId: defaultProviderId,
+            providerId,
             model: meta.defaultModel,
+            fallbackModel: meta.defaultFallbackModel ?? null,
             temperature: meta.temperature,
             enabled: true,
           };
