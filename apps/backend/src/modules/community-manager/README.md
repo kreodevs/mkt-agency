@@ -44,7 +44,7 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
 6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación)
 
-Orden en `attachVisualForPost`: talking-head → plantilla → IA enriquecida (paleta + intel competitiva).
+Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
 
 API kit de marca: `GET/PATCH /api/v1/products/:id/brand-visual-kit` (UI en detalle de producto)
 

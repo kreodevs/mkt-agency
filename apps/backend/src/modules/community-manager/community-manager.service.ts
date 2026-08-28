@@ -729,13 +729,34 @@ export class CommunityManagerService {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);
 
     if (visualFormat === 'talking-head' && productId) {
-      return this.talkingHeadComposer.attachToContent(
+      const talkingHeadAttached = await this.talkingHeadComposer.attachToContent(
         tenantId,
         userId,
         contentId,
         post,
         productId,
       );
+      if (talkingHeadAttached) {
+        return true;
+      }
+      this.logger.log(
+        `Talking-head falló para content ${contentId}; reintentando con plantilla y capturas del media kit`,
+      );
+
+      const staticPost: SocialCopyPost = { ...post, visualFormat: 'image' };
+      const templatedAfterTalkingHead = await this.templateComposer.tryComposeFromTemplate(
+        tenantId,
+        userId,
+        contentId,
+        staticPost,
+        productId,
+        kit,
+        postIndex,
+        { resolvedProfile: ctx.resolvedProfile },
+      );
+      if (templatedAfterTalkingHead.attached) {
+        return true;
+      }
     }
 
     if (productId) {

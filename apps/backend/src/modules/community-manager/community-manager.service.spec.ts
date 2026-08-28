@@ -99,4 +99,87 @@ describe('CommunityManagerService — extracted helpers', () => {
       expect(result).toEqual(expect.arrayContaining(['instagram', 'linkedin']));
     });
   });
+
+  describe('attachVisualForPost (private)', () => {
+    const talkingHeadComposer = { attachToContent: jest.fn() };
+    const templateComposer = { tryComposeFromTemplate: jest.fn() };
+    const imageGeneration = { attachVisualToContent: jest.fn() };
+
+    beforeEach(() => {
+      service = new CommunityManagerService(
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        imageGeneration as any,
+        templateComposer as any,
+        talkingHeadComposer as any,
+        {} as any,
+        { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
+        {} as any,
+      );
+      talkingHeadComposer.attachToContent.mockReset();
+      templateComposer.tryComposeFromTemplate.mockReset();
+      imageGeneration.attachVisualToContent.mockReset();
+    });
+
+    const attach = (
+      post: Record<string, unknown>,
+      kit: unknown[] = [{ assetId: 'asset-1', role: 'product-screenshot' }],
+    ) =>
+      (service as any).attachVisualForPost(
+        'tenant-1',
+        'user-1',
+        'content-1',
+        post,
+        'product-1',
+        kit,
+        0,
+        { resolvedProfile: null },
+      );
+
+    it('falls back to template compose when talking-head fails', async () => {
+      talkingHeadComposer.attachToContent.mockResolvedValue(false);
+      templateComposer.tryComposeFromTemplate.mockResolvedValue({
+        attached: true,
+        assetIds: ['rendered-1'],
+      });
+
+      const result = await attach({
+        platform: 'tiktok',
+        visualFormat: 'talking-head',
+        body: 'Copy del post',
+        title: 'Título',
+      });
+
+      expect(result).toBe(true);
+      expect(talkingHeadComposer.attachToContent).toHaveBeenCalled();
+      expect(templateComposer.tryComposeFromTemplate).toHaveBeenCalledWith(
+        'tenant-1',
+        'user-1',
+        'content-1',
+        expect.objectContaining({ visualFormat: 'image', platform: 'tiktok' }),
+        'product-1',
+        expect.any(Array),
+        0,
+        { resolvedProfile: null },
+      );
+    });
+
+    it('returns true when talking-head succeeds without template fallback', async () => {
+      talkingHeadComposer.attachToContent.mockResolvedValue(true);
+
+      const result = await attach({
+        platform: 'tiktok',
+        visualFormat: 'talking-head',
+        body: 'Copy del post',
+        title: 'Título',
+      });
+
+      expect(result).toBe(true);
+      expect(templateComposer.tryComposeFromTemplate).not.toHaveBeenCalled();
+    });
+  });
 });

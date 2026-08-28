@@ -33,11 +33,20 @@ export class TalkingHeadPostComposerService {
       return false;
     }
 
-    const config = await this.cmCharacter.assertReadyForTalkingHead(
-      tenantId,
-      productId,
-      post.cmCharacterId,
-    );
+    let config;
+    try {
+      config = await this.cmCharacter.assertReadyForTalkingHead(
+        tenantId,
+        productId,
+        post.cmCharacterId,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Talking-head omitido para content ${contentId}: CM no lista`,
+        error,
+      );
+      return false;
+    }
     const content = await this.contentService.findOne(tenantId, contentId);
     const script = sanitizePublishableCopy(post.body || content.currentVersion?.body || '');
     if (!script.trim()) {
