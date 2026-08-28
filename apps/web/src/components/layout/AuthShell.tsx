@@ -40,7 +40,7 @@ export function AuthShell({ children, headline, tagline, className }: AuthShellP
         aria-hidden
       />
 
-      <header className="relative mb-[var(--spacing-lg)] flex flex-col items-center gap-[var(--spacing-sm)] text-center">
+      <header className="relative mb-[var(--spacing-lg)] flex animate-fade-in flex-col items-center gap-[var(--spacing-sm)] text-center motion-reduce:animate-none">
         <div
           className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--brand)]/25 bg-[var(--brand-muted)] text-[var(--brand)] shadow-[var(--shadow-sm)]"
           aria-hidden
@@ -58,7 +58,9 @@ export function AuthShell({ children, headline, tagline, className }: AuthShellP
         ) : null}
       </header>
 
-      <div className="relative w-full max-w-md">{children}</div>
+      <div className="relative w-full max-w-md animate-fade-in motion-reduce:animate-none [animation-delay:80ms]">
+        {children}
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import type { Product } from '@/types/product';
 
 export interface ProductListCardProps {
@@ -21,7 +22,7 @@ export function ProductListCard({ product, sohoMode = false }: ProductListCardPr
   const done = product.onboardingCompleted;
 
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)] transition-colors hover:border-[var(--border-hover)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start justify-between gap-[var(--spacing-sm)]">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-[var(--spacing-xs)]">

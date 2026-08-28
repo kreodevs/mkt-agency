@@ -1,6 +1,7 @@
 import { Code2, FileInput, Trash2 } from 'lucide-react';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import type { Form } from '@/types/forms';
 
 export interface FormListCardProps {
@@ -22,11 +23,11 @@ export function FormListCard({
 }: FormListCardProps) {
   return (
     <article
-      className={`rounded-[var(--radius-md)] border p-[var(--spacing-md)] transition-colors ${
+      className={listCardClassName(
         selected
-          ? 'border-[var(--primary)]/40 bg-[var(--primary)]/5'
-          : 'border-[var(--border)] bg-[var(--card)] hover:border-[var(--border-hover)]'
-      }`}
+          ? 'border-[var(--primary)]/40 bg-[var(--primary)]/5 hover:border-[var(--primary)]/50'
+          : undefined,
+      )}
     >
       <div className="flex items-start justify-between gap-[var(--spacing-sm)]">
         <div className="min-w-0 flex-1">

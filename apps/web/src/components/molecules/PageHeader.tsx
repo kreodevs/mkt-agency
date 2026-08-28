@@ -20,7 +20,7 @@ export const PageHeader = ({
 }: PageHeaderProps) => (
   <div
     className={cn(
-      'mb-[var(--spacing-xl)] flex flex-col justify-between gap-[var(--spacing-md)] md:flex-row md:items-start',
+      'mb-[var(--spacing-xl)] flex flex-col justify-between gap-[var(--spacing-md)] animate-fade-in md:flex-row md:items-start motion-reduce:animate-none',
       className,
     )}
   >

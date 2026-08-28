@@ -1,5 +1,6 @@
 import { ShieldAlert } from 'lucide-react';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import type { SecurityEvent, SecurityEventSeverity } from '@/types/security';
 
 function formatDate(value: string) {
@@ -33,7 +34,7 @@ export function SecurityEventCard({ event }: SecurityEventCardProps) {
       : null;
 
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start gap-[var(--spacing-sm)]">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--warning)]" aria-hidden />
         <div className="min-w-0 flex-1">

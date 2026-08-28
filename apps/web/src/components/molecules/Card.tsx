@@ -13,9 +13,15 @@ const cardVariants = cva(
           'border-[color-mix(in_srgb,var(--brand)_22%,var(--card-border))] shadow-[var(--shadow-sm)]',
         glass: 'material-sheet border-[var(--border)]/80',
       },
+      interactive: {
+        true:
+          'transition-[transform,box-shadow,border-color] duration-[var(--transition-base)] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 focus-within:border-[var(--border-hover)] focus-within:shadow-[var(--shadow-sm)]',
+        false: '',
+      },
     },
     defaultVariants: {
       variant: 'default',
+      interactive: false,
     },
   },
 );
@@ -30,11 +36,11 @@ export interface CardProps
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ title, subtitle, footer, variant, className = '', children, ...props }, ref) => {
+  ({ title, subtitle, footer, variant, interactive, className = '', children, ...props }, ref) => {
     const hasHeader = title || subtitle;
 
     return (
-      <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props}>
+      <div ref={ref} className={cn(cardVariants({ variant, interactive }), className)} {...props}>
         {variant === 'accent' && (
           <div className="h-1 w-full bg-[var(--gradient-brand)]" aria-hidden />
         )}

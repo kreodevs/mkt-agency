@@ -1,4 +1,5 @@
 import { ScrollText } from 'lucide-react';
+import { listCardClassName } from '@/lib/list-card';
 import type { AuditLog } from '@/types/audit';
 
 function formatDate(value: string) {
@@ -18,7 +19,7 @@ export function AuditLogCard({ log }: AuditLogCardProps) {
       : log.resourceType ?? '—';
 
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start gap-[var(--spacing-sm)]">
         <ScrollText className="mt-0.5 h-4 w-4 shrink-0 text-[var(--foreground-muted)]" aria-hidden />
         <div className="min-w-0 flex-1">

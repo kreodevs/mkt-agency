@@ -1,6 +1,6 @@
 # Layout
 
-- `AuthShell` — layout centrado para `/login` y `/setup`: branding Mkt Agency OS, gradiente sutil con tokens Kreo, safe-area iOS.
+- `AuthShell` — layout centrado para `/login` y `/setup`: branding Mkt Agency OS, gradiente sutil con tokens Kreo, safe-area iOS. Header y formulario entran con `animate-fade-in` (stagger 80ms en el panel).
 - `DashboardShell` — envuelve páginas autenticadas con `AppLayout` Kreo, navegación superadmin/tenant, selector de impersonación en header, campana de avisos (tenant) y logout.
 - `ImpersonationContextBar` — barra sticky bajo el header al impersonar (`role="status"`, «Viendo como {tenant}» + volver a consola).
 - Impersonación fuerza menú SOHO del tenant (no la vista growth del operador).

@@ -35,6 +35,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipInputProps>(
           sideOffset={sideOffset}
           className={cn(
             'z-[var(--z-tooltip)] rounded-[var(--radius)] bg-[var(--foreground)] px-[var(--spacing-md)] py-1.5 text-xs font-medium text-[var(--background)] shadow-lg',
+            'animate-in fade-in zoom-in-95 duration-200',
+            'data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150',
             className,
           )}
         >

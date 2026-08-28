@@ -1,6 +1,7 @@
 import { Building2, Pencil, UserRoundSearch } from 'lucide-react';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import type { Tenant, TenantPlan, TenantStatus } from '@/types/tenant';
 
 function statusVariant(status: TenantStatus) {
@@ -35,7 +36,7 @@ export function TenantListCard({
   onImpersonate,
 }: TenantListCardProps) {
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start justify-between gap-[var(--spacing-sm)]">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-[var(--spacing-xs)]">

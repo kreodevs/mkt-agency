@@ -1,6 +1,7 @@
 import { BarChart3, Eye } from 'lucide-react';
 import { IconButton } from '@/components/atoms/IconButton';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import {
   REPORT_STATUS_LABELS,
   REPORT_TYPE_LABELS,
@@ -19,7 +20,7 @@ export interface ReportListCardProps {
 
 export function ReportListCard({ report, onView }: ReportListCardProps) {
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start justify-between gap-[var(--spacing-sm)]">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-[var(--spacing-xs)]">

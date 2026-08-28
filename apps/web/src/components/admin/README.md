@@ -21,3 +21,5 @@ En pantallas &lt; md, las tablas de admin usan cards en lugar de scroll horizont
 | `AuditLogCard` | `/admin/audit-logs` |
 | `SecurityEventCard` | `/admin/security-events` |
 | `PackageListCard` | `/admin/packages` |
+
+Las tarjetas de lista usan `listCardClassName()` de `@/lib/list-card` (hover border, sombra y lift).

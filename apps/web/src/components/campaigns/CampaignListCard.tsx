@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight, Megaphone } from 'lucide-react';
 import { StatusPill } from '@/components/atoms/StatusPill';
+import { listCardClassName } from '@/lib/list-card';
 import type { Campaign, CampaignStatus } from '@/types/campaign';
 
 const STATUS_LABELS: Record<CampaignStatus, string> = {
@@ -29,7 +30,7 @@ export interface CampaignListCardProps {
 
 export function CampaignListCard({ campaign, productLabel }: CampaignListCardProps) {
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-md)] transition-colors hover:border-[var(--border-hover)]">
+    <article className={listCardClassName()}>
       <div className="flex items-start justify-between gap-[var(--spacing-sm)]">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-[var(--spacing-xs)]">

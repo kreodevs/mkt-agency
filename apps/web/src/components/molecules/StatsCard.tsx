@@ -20,7 +20,12 @@ const iconToneClass: Record<NonNullable<StatsCardProps['iconTone']>, string> = {
 
 export const StatsCard = forwardRef<HTMLDivElement, StatsCardProps>(
   ({ title, value, description, icon, iconTone = 'primary', className }, ref) => (
-    <Card ref={ref} variant="elevated" className={cn('relative overflow-hidden', className)}>
+    <Card
+      ref={ref}
+      variant="elevated"
+      interactive
+      className={cn('relative overflow-hidden', className)}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[var(--gradient-brand)] opacity-80" />
       <div className="flex items-start justify-between gap-[var(--spacing-md)]">
         <div className="space-y-[var(--spacing-xs)]">
