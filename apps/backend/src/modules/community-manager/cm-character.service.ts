@@ -38,6 +38,7 @@ import {
   listReadyCharacters,
   mergeCmCharacterEntry,
   parseCmCharactersLibrary,
+  sanitizeCmCharacterErrorMessage,
   summarizeCharacterForLlm,
 } from './domain/cm-character.util';
 import type {
@@ -347,7 +348,9 @@ export class CmCharacterService {
         message: 'Retrato generado. Genera la vista previa para activar esta CM.',
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error al generar retrato';
+      const message = sanitizeCmCharacterErrorMessage(
+        error instanceof Error ? error.message : 'Error al generar retrato',
+      );
       this.logger.error(`CM portrait failed for product ${productId}`, error);
       this.replaceEntry(
         library,
@@ -416,7 +419,9 @@ export class CmCharacterService {
         message: `${entry.name} lista. El copiloto elegirá entre tus CMs según el post.`,
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error al generar vista previa';
+      const message = sanitizeCmCharacterErrorMessage(
+        error instanceof Error ? error.message : 'Error al generar vista previa',
+      );
       this.logger.error(`CM preview failed for product ${productId}`, error);
       this.replaceEntry(
         library,

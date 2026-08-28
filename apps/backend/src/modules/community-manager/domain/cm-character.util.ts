@@ -189,3 +189,10 @@ export function mergeCmCharacterEntry(
     },
   };
 }
+
+/** Evita persistir blobs base64 enormes en metadata de la CM cuando falla un proveedor IA. */
+export function sanitizeCmCharacterErrorMessage(message: string): string {
+  const compact = message.replace(/\s+/g, ' ').trim();
+  const withoutBase64 = compact.replace(/[A-Za-z0-9+/]{120,}={0,2}/g, '[dato binario omitido]');
+  return withoutBase64.length > 500 ? `${withoutBase64.slice(0, 500)}…` : withoutBase64;
+}

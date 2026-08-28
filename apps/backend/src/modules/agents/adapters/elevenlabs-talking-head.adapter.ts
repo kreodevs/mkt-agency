@@ -6,7 +6,7 @@ import {
   TalkingHeadResult,
 } from './talking-head.adapter.port';
 
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 5000;
 const MAX_POLL_ATTEMPTS = 120;
 
 const IMAGE_MIME_TYPES = new Set([
@@ -18,6 +18,16 @@ const IMAGE_MIME_TYPES = new Set([
 ]);
 
 const AUDIO_MIME_TYPES = new Set(['audio/mpeg', 'audio/wav']);
+
+type ElevenLabsPollPayload = {
+  status?: string;
+  content_url?: string;
+  contentUrl?: string;
+  content_mime_type?: string;
+  contentMimeType?: string;
+  error_message?: string;
+  errorMessage?: string;
+};
 
 @Injectable()
 export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
@@ -47,7 +57,7 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        modelId: 'creatify-aurora',
+        model_id: 'creatify-aurora',
         image: imagePayload,
         audio: audioPayload,
         resolution: input.resolution ?? '720p',
@@ -56,7 +66,7 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
 
     if (!createResponse.ok) {
       const err = await createResponse.text();
-      throw new Error(`ElevenLabs lip-sync failed (${createResponse.status}): ${err}`);
+      throw new Error(this.sanitizeApiError(`ElevenLabs lip-sync failed (${createResponse.status})`, err));
     }
 
     const created = (await createResponse.json()) as { id?: string; status?: string };
@@ -85,21 +95,19 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
       });
       if (!pollResponse.ok) {
         const err = await pollResponse.text();
-        throw new Error(`ElevenLabs lip-sync poll failed (${pollResponse.status}): ${err}`);
+        throw new Error(
+          this.sanitizeApiError(`ElevenLabs lip-sync poll failed (${pollResponse.status})`, err),
+        );
       }
 
-      const polled = (await pollResponse.json()) as {
-        status?: string;
-        contentUrl?: string;
-        contentMimeType?: string;
-        errorMessage?: string;
-      };
+      const polled = (await pollResponse.json()) as ElevenLabsPollPayload;
       status = polled.status ?? status;
-      contentUrl = polled.contentUrl ?? contentUrl;
-      contentMimeType = polled.contentMimeType ?? contentMimeType;
+      contentUrl = polled.content_url ?? polled.contentUrl ?? contentUrl;
+      contentMimeType = polled.content_mime_type ?? polled.contentMimeType ?? contentMimeType;
 
       if (status === 'failed') {
-        throw new Error(polled.errorMessage?.trim() || 'ElevenLabs lip-sync failed');
+        const errorMessage = polled.error_message ?? polled.errorMessage;
+        throw new Error(errorMessage?.trim() || 'ElevenLabs lip-sync failed');
       }
     }
 
@@ -108,12 +116,7 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
     }
 
     this.logger.log(`ElevenLabs talking-head ready: ${generationId}`);
-    const videoResponse = await fetch(contentUrl);
-    if (!videoResponse.ok) {
-      throw new Error(`Failed to download ElevenLabs video (${videoResponse.status})`);
-    }
-
-    const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+    const videoBuffer = await this.downloadVideo(contentUrl);
     return {
       videoBuffer,
       mimeType: contentMimeType || 'video/mp4',
@@ -121,9 +124,26 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
     };
   }
 
+  private async downloadVideo(contentUrl: string): Promise<Buffer> {
+    if (contentUrl.startsWith('data:')) {
+      const match = /^data:([^;]+);base64,(.+)$/i.exec(contentUrl);
+      if (!match?.[2]) {
+        throw new Error('ElevenLabs devolvió un data URL de video inválido');
+      }
+      return Buffer.from(match[2], 'base64');
+    }
+
+    const videoResponse = await fetch(contentUrl);
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to download ElevenLabs video (${videoResponse.status})`);
+    }
+
+    return Buffer.from(await videoResponse.arrayBuffer());
+  }
+
   private async loadInlineImage(
     url: string,
-  ): Promise<{ type: 'inline_base64'; contentBase64: string; mimeType: string }> {
+  ): Promise<{ type: 'inline_base64'; content_base64: string; mime_type: string }> {
     const { buffer, mimeType } = await this.fetchMedia(url);
     const normalized = this.normalizeImageMime(mimeType);
     if (!IMAGE_MIME_TYPES.has(normalized)) {
@@ -131,14 +151,14 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
     }
     return {
       type: 'inline_base64',
-      contentBase64: buffer.toString('base64'),
-      mimeType: normalized,
+      content_base64: buffer.toString('base64'),
+      mime_type: normalized,
     };
   }
 
   private async loadInlineAudio(
     url: string,
-  ): Promise<{ type: 'inline_base64'; contentBase64: string; mimeType: string }> {
+  ): Promise<{ type: 'inline_base64'; content_base64: string; mime_type: string }> {
     const { buffer, mimeType } = await this.fetchMedia(url);
     const normalized = this.normalizeAudioMime(mimeType);
     if (!AUDIO_MIME_TYPES.has(normalized)) {
@@ -146,8 +166,8 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
     }
     return {
       type: 'inline_base64',
-      contentBase64: buffer.toString('base64'),
-      mimeType: normalized,
+      content_base64: buffer.toString('base64'),
+      mime_type: normalized,
     };
   }
 
@@ -156,7 +176,8 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
     if (!response.ok) {
       throw new Error(`No se pudo descargar el archivo para lip-sync (${response.status})`);
     }
-    const mimeType = response.headers.get('content-type')?.split(';')[0]?.trim() || 'application/octet-stream';
+    const mimeType =
+      response.headers.get('content-type')?.split(';')[0]?.trim() || 'application/octet-stream';
     const buffer = Buffer.from(await response.arrayBuffer());
     return { buffer, mimeType };
   }
@@ -175,6 +196,13 @@ export class ElevenLabsTalkingHeadAdapter implements TalkingHeadAdapterPort {
       return 'audio/mpeg';
     }
     return base;
+  }
+
+  private sanitizeApiError(prefix: string, raw: string): string {
+    const compact = raw.replace(/\s+/g, ' ').trim();
+    const withoutBase64 = compact.replace(/[A-Za-z0-9+/]{120,}={0,2}/g, '[base64 omitido]');
+    const message = withoutBase64 || 'respuesta vacía';
+    return `${prefix}: ${message.slice(0, 400)}`;
   }
 
   private sleep(ms: number): Promise<void> {
