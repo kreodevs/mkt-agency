@@ -8947,6 +8947,11 @@ thenify-all@^1.0.0:
   dependencies:
     any-promise "^1.0.0"
 
+thinking-orbs@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/thinking-orbs/-/thinking-orbs-0.3.1.tgz#2da2c6ff4a451375d576c17d41bbff2d2f3c633c"
+  integrity sha512-3BG1aeB1RUTxItCml/BBuIz5JRM4kZqGuyx+vouv0fXTtcR9ZNoKjWGneHPx94y74GxgArwJZ1qbJR5dt54kSw==
+
 through@^2.3.6:
   version "2.3.8"
   resolved "https://registry.npmjs.org/through/-/through-2.3.8.tgz"

@@ -1,13 +1,11 @@
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/atoms/Skeleton';
 
 export function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'animate-pulse rounded-[var(--radius-md)] bg-[var(--secondary)]',
-        className,
-      )}
-      aria-hidden
+    <Skeleton
+      animation="shimmer"
+      className={cn('rounded-[var(--radius-md)]', className)}
     />
   );
 }

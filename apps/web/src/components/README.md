@@ -1,4 +1,4 @@
-# Componentes UI (Kreo)
+# Componentes UI (Kreo v5.5)
 
 ## Paleta de marca (2026)
 
@@ -6,12 +6,37 @@
 - **Neutros:** ivory & slate (Anthropic-inspired)
 - Utilidades: `.page-hero`, `.brand-gradient-text`, `.kreo-surface-elevated`, `.page-stack`, `.filter-row`
 
-- **atoms:** Button, IconButton, InputText, Password, Avatar, StatusPill, Checkbox, Textarea, **Select**
-- **molecules:** Card (variants: default, elevated, accent, glass), PageHeader, StatsCard, EmptyState, Stepper, Progress, Sonner, …
-- **organisms:** AppLayout, SidebarModern (cabecera lateral y header principal con altura fija `h-header`; versión de deploy en tooltip del brand), DataTable, KanbanBoard
+## Capas Kreo (registry vendored)
 
-**Alturas de controles:** la escala `spacing` Letter redefine valores numéricos (`h-8` → 8px, `max-h-64` → 64px). Usar tokens `h-control-*`, `max-h-panel-*` y `--action-*` (ver `theme/README.md`).
+### atoms (13)
 
-**Acciones en tablas:** `IconButton` con `tone` + `ACTION_BUTTON_GROUP_CLASS`; no estilos ad-hoc.
+Button, IconButton, InputText, Password, Avatar, StatusPill, Checkbox, Textarea, Select, **Skeleton**, **Loader**, **thinking-orb/**
+
+- `Button`: variantes `default`, `brand`, `tactile`, `action-*`, `link` (underline draw), `asChild`
+- `InputText`: `floatingLabel`, shake en `error`
+- `Loader`: `spinner` | `orb` (IA) | `skeleton`
+
+### molecules (14)
+
+Card, PageHeader, StatsCard, EmptyState, Stepper, Progress, Sonner, Tooltip, MarkdownEditor, PageSkeleton, **Reveal**, **FocusRingGroup**
+
+- `Reveal` / `StaggerGroup`: motion scroll Kreo
+- `PageHeader`: reveal escalonado por bloque (`static` para desactivar)
+- `FocusRingGroup`: anillo de foco spring en formularios
+
+### organisms (4)
+
+AppLayout, SidebarModern, DataTable, KanbanBoard
+
+### layout (3)
+
+DashboardShell, AuthShell, ImpersonationContextBar
+
+## Motion system
+
+Tokens en `theme/vars.css`: `--ease-spring-*`, `--press-fast`, `--stagger-step`  
+Utilidades en `index.css`: `.kreo-floating-*`, `.kreo-focus-ring`, `.kreo-underline-draw`, `animate-kreo-*`
+
+Auditoría completa: [`docs/UI-UX-AUDIT.md`](../docs/UI-UX-AUDIT.md)
 
 Fuente: MCP Kreo workflow DEV (`pull_source_code_from_registry`).

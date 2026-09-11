@@ -38,6 +38,17 @@ Utilidades en `index.css`: `.type-display-xl`, `.type-ui-sans-semibold`, `.type-
 ## Breakpoints (Tailwind)
 
 - `tablet`: 768px
+
+## Motion (Kreo v5.5)
+
+Tokens en `vars.css`:
+
+- `--ease-spring-snappy`, `--ease-spring-settle`, `--ease-spring-glide`, `--ease-spring-overshoot`
+- `--press-fast` (80ms), `--stagger-step` (90ms)
+
+Utilidades en `index.css`: `.kreo-floating-field`, `.kreo-focus-ring`, `.kreo-underline-draw`, clases `animate-kreo-*`.
+
+Ver auditoría: [`docs/UI-UX-AUDIT.md`](../docs/UI-UX-AUDIT.md).
 - `desktop`: 992px
 
 ## Action buttons

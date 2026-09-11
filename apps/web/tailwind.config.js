@@ -113,6 +113,56 @@ export default {
         tablet: '768px',
         desktop: '992px',
       },
+      keyframes: {
+        'kreo-shake-x': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-4px)' },
+          '40%, 80%': { transform: 'translateX(4px)' },
+        },
+        'kreo-fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'kreo-fade-up': {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'kreo-fade-down': {
+          from: { opacity: '0', transform: 'translateY(-16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'kreo-fade-left': {
+          from: { opacity: '0', transform: 'translateX(16px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'kreo-fade-right': {
+          from: { opacity: '0', transform: 'translateX(-16px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'kreo-zoom-in': {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'kreo-blur-in': {
+          from: { opacity: '0', filter: 'blur(8px)' },
+          to: { opacity: '1', filter: 'blur(0)' },
+        },
+        'kreo-shimmer': {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+      },
+      animation: {
+        'kreo-shake-x': 'kreo-shake-x 0.4s var(--ease-spring-snappy)',
+        'kreo-fade-in': 'kreo-fade-in 0.5s var(--ease-spring-glide) both',
+        'kreo-fade-up': 'kreo-fade-up 0.6s var(--ease-spring-glide) both',
+        'kreo-fade-down': 'kreo-fade-down 0.6s var(--ease-spring-glide) both',
+        'kreo-fade-left': 'kreo-fade-left 0.6s var(--ease-spring-glide) both',
+        'kreo-fade-right': 'kreo-fade-right 0.6s var(--ease-spring-glide) both',
+        'kreo-zoom-in': 'kreo-zoom-in 0.5s var(--ease-spring-settle) both',
+        'kreo-blur-in': 'kreo-blur-in 0.7s var(--ease-spring-glide) both',
+        'kreo-shimmer': 'kreo-shimmer 1.8s linear infinite',
+      },
     },
   },
   plugins: [require('@tailwindcss/typography'), require('tailwindcss-animate')],

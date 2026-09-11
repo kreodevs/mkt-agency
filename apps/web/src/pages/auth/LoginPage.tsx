@@ -5,6 +5,7 @@ import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Password } from '@/components/atoms/Password';
 import { Card } from '@/components/molecules/Card';
+import { FocusRingGroup } from '@/components/molecules/FocusRingGroup';
 import { AuthShell } from '@/components/layout/AuthShell';
 import { ApiError } from '@/services/api';
 import { login } from '@/services/auth';
@@ -39,31 +40,33 @@ export default function LoginPage() {
       tagline="Tu copiloto de marketing — aprueba, publica y mide resultados."
     >
       <Card title="Accede a tu cuenta" variant="elevated" className="w-full">
-        <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
-          <InputText
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-            fullWidth
-          />
-          <div className="flex flex-col gap-[var(--spacing-xs)]">
-            <label htmlFor="login-password" className="text-sm font-medium text-[var(--foreground)]">
-              Contraseña
-            </label>
-            <Password
-              id="login-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+        <FocusRingGroup>
+          <form className="flex flex-col gap-[var(--spacing-md)]" onSubmit={onSubmit} noValidate>
+            <InputText
+              label="Email"
+              floatingLabel
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
+              fullWidth
             />
-          </div>
-          <Button type="submit" variant="brand" loading={loading} className="w-full">
-            Entrar
-          </Button>
+            <div className="flex flex-col gap-[var(--spacing-xs)]">
+              <label htmlFor="login-password" className="text-sm font-medium text-[var(--foreground)]">
+                Contraseña
+              </label>
+              <Password
+                id="login-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            <Button type="submit" variant="tactile" loading={loading} className="w-full">
+              Entrar
+            </Button>
           <p className="text-center text-sm text-[var(--foreground-muted)]">
             ¿Primera instalación?{' '}
             <Link
@@ -73,7 +76,8 @@ export default function LoginPage() {
               Configurar superadmin
             </Link>
           </p>
-        </form>
+          </form>
+        </FocusRingGroup>
       </Card>
     </AuthShell>
   );
