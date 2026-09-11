@@ -9,6 +9,12 @@ export interface CommunityManagerPreferences {
   autoWeeklyGenerationEnabled: boolean;
 }
 
+export type UpdateCommunityManagerPreferencesPayload = {
+  platforms: CmPlatform[];
+  count: number;
+  autoWeeklyGenerationEnabled?: boolean;
+};
+
 export interface CommunityManagerReadinessItem {
   key: string;
   label: string;
@@ -28,7 +34,7 @@ export async function getCommunityManagerPreferences(): Promise<CommunityManager
 }
 
 export async function saveCommunityManagerPreferences(
-  payload: CommunityManagerPreferences,
+  payload: UpdateCommunityManagerPreferencesPayload,
 ): Promise<CommunityManagerPreferences> {
   return apiFetch<CommunityManagerPreferences>('/community-manager/preferences', {
     method: 'PUT',
