@@ -137,8 +137,8 @@
 | P | Item | Esfuerzo |
 |---|------|----------|
 | P1 | Unificar DataTable (Kreo puro vs PrimeReact) | Alto |
-| P2 | ThinkingOrb en flujos IA (BrandInterview, ImageGenerator, Copilot) | Medio |
-| P3 | StaggerGroup en listas home/inbox | Medio |
+| P2 | ThinkingOrb en flujos IA (BrandInterview, ImageGenerator, Copilot) | ~~Medio~~ Hecho |
+| P3 | StaggerGroup en listas home/inbox | ~~Medio~~ Hecho |
 | P4 | Sincronizar `ux-ui-guide.md` con tokens reales | Bajo |
 | P5 | MetalFx en pricing/planes admin (opcional premium) | Bajo |
 

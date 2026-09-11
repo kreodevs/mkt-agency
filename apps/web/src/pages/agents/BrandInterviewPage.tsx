@@ -13,6 +13,7 @@ import { Select } from '@/components/atoms/Select';
 import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
 import { Progress } from '@/components/molecules/Progress';
+import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
 import { listProducts, getProduct } from '@/services/products';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
@@ -203,11 +204,16 @@ export default function BrandInterviewPage() {
   if (!id && (createMutation.isPending || createMutation.isSuccess)) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <div className="py-20 text-center text-[var(--foreground-muted)]">
-          {selectedProductCanGenerateBrief
-            ? 'Generando Brand Brief desde onboarding...'
-            : 'Preparando...'}
-        </div>
+        <AiThinkingPanel
+          variant="centered"
+          state="composing"
+          title={
+            selectedProductCanGenerateBrief
+              ? 'Generando Brand Brief desde onboarding'
+              : 'Preparando Brand Analyst'
+          }
+          description="La IA analiza tu producto y redacta el perfil de marca."
+        />
       </DashboardShell>
     );
   }
@@ -343,9 +349,12 @@ export default function BrandInterviewPage() {
   if (interviewQuery.isLoading) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <div className="py-20 text-center text-[var(--foreground-muted)]">
-          Cargando entrevista...
-        </div>
+        <AiThinkingPanel
+          variant="centered"
+          state="working"
+          title="Cargando entrevista"
+          description="Recuperando mensajes y progreso del Brand Analyst."
+        />
       </DashboardShell>
     );
   }
@@ -502,21 +511,16 @@ export default function BrandInterviewPage() {
           })}
 
           {(isProcessing || isSending) && (
-            <div className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent)]/5 p-[var(--spacing-md)]">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--primary)]">
-                <Sparkles className="h-4 w-4 animate-pulse text-[var(--primary-foreground)]" />
-              </div>
-              <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {isSending ? 'Enviando tu respuesta...' : 'Generando Brand Brief'}
-                </p>
-                <p className="text-xs leading-relaxed text-[var(--foreground-muted)]">
-                  {isSending
-                    ? 'Un momento mientras registro tu respuesta.'
-                    : 'La IA está analizando tus respuestas y actualizando tu perfil de marca. Suele tardar unos segundos.'}
-                </p>
-              </div>
-            </div>
+            <AiThinkingPanel
+              variant="inline"
+              state={isSending ? 'listening' : 'composing'}
+              title={isSending ? 'Enviando tu respuesta…' : 'Generando Brand Brief'}
+              description={
+                isSending
+                  ? 'Un momento mientras registro tu respuesta.'
+                  : 'La IA analiza tus respuestas y actualiza tu perfil de marca. Suele tardar unos segundos.'
+              }
+            />
           )}
 
           <div ref={chatEndRef} />

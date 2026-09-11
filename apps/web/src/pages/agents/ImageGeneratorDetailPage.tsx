@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, RefreshCw, RotateCcw, Trash2, ZoomIn } from 'lucide-react';
+import { ArrowLeft, RefreshCw, RotateCcw, Trash2, ZoomIn } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
@@ -8,6 +8,7 @@ import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
+import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { Dialog } from '@/components/molecules/Dialog';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { toast } from '@/components/molecules/Sonner';
@@ -117,9 +118,11 @@ export default function ImageGeneratorDetailPage() {
   if (generationQuery.isLoading) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
-        </div>
+        <AiThinkingPanel
+          variant="centered"
+          state="working"
+          title="Cargando generación"
+        />
       </DashboardShell>
     );
   }
@@ -171,12 +174,12 @@ export default function ImageGeneratorDetailPage() {
 
         {generation.status === 'processing' ? (
           <Card title="Generando">
-            <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {frameCount > 1
-                ? `Generando ${frameCount} frames… puede tardar unos minutos.`
-                : 'Generando imagen con IA…'}
-            </div>
+            <AiThinkingPanel
+              variant="inline"
+              state="shaping"
+              title={frameCount > 1 ? `Generando ${frameCount} frames…` : 'Generando imagen con IA…'}
+              description="Puede tardar unos minutos según formato y destino."
+            />
           </Card>
         ) : null}
 

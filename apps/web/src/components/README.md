@@ -18,7 +18,7 @@ Button, IconButton, InputText, Password, Avatar, StatusPill, Checkbox, Textarea,
 
 ### molecules (14)
 
-Card, PageHeader, StatsCard, EmptyState, Stepper, Progress, Sonner, Tooltip, MarkdownEditor, PageSkeleton, **Reveal**, **FocusRingGroup**
+Card, PageHeader, StatsCard, EmptyState, Stepper, Progress, Sonner, Tooltip, MarkdownEditor, PageSkeleton, **Reveal**, **FocusRingGroup**, **AiThinkingPanel**
 
 - `Reveal` / `StaggerGroup`: motion scroll Kreo
 - `PageHeader`: reveal escalonado por bloque (`static` para desactivar)

@@ -34,6 +34,8 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { StatsCard } from '@/components/molecules/StatsCard';
 import { InboxPageSkeleton } from '@/components/molecules/PageSkeleton';
+import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
+import { StaggerGroup } from '@/components/molecules/Reveal';
 import { toast } from '@/components/molecules/Sonner';
 import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import { useInboxKeyboardHints } from '@/hooks/useInboxKeyboardHints';
@@ -274,6 +276,16 @@ export default function PublicationInboxPage() {
         </div>
       )}
 
+      {prepareWeekInFlight && (
+        <div className="mb-[var(--spacing-lg)]">
+          <AiThinkingPanel
+            state="weaving"
+            title="Tu copiloto está generando publicaciones"
+            description="Analiza competencia, redacta copy y prepara visuales. Aparecerán en «Por aprobar» en unos momentos."
+          />
+        </div>
+      )}
+
       {summary && sohoMode && (
         <SohoResultsBanner
           leadsToday={summary.leadsToday}
@@ -423,19 +435,21 @@ export default function PublicationInboxPage() {
                   </div>
                 )}
 
-                {pendingRest.map((item) => (
-                  <InboxItemCard
-                    key={item.contentId}
-                    item={item}
-                    selectable={!sohoMode}
-                    selected={selectedIds.has(item.contentId)}
-                    onToggleSelect={toggleSelect}
-                    showApproval
-                    showEditorLink={advancedNav}
-                    sohoMode
-                    onRejected={handleRejected}
-                  />
-                ))}
+                <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
+                  {pendingRest.map((item) => (
+                    <InboxItemCard
+                      key={item.contentId}
+                      item={item}
+                      selectable={!sohoMode}
+                      selected={selectedIds.has(item.contentId)}
+                      onToggleSelect={toggleSelect}
+                      showApproval
+                      showEditorLink={advancedNav}
+                      sohoMode
+                      onRejected={handleRejected}
+                    />
+                  ))}
+                </StaggerGroup>
               </div>
             )}
           </Card>
@@ -445,7 +459,7 @@ export default function PublicationInboxPage() {
               title="Rechazadas"
               subtitle={`${rejected.length} pieza(s) — prueba otro formato o archívalas`}
             >
-              <div className="space-y-[var(--spacing-md)]">
+              <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
                 {rejected.map((item) => (
                   <InboxItemCard
                     key={item.contentId}
@@ -454,17 +468,17 @@ export default function PublicationInboxPage() {
                     onRejected={handleRejected}
                   />
                 ))}
-              </div>
+              </StaggerGroup>
             </Card>
           )}
 
           {upcoming.length > 0 && (
             <Card title="Próximas" subtitle="Programadas a futuro">
-              <div className="space-y-[var(--spacing-md)]">
+              <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
                 {upcoming.map((item) => (
                   <InboxItemCard key={item.contentId} item={item} sohoMode />
                 ))}
-              </div>
+              </StaggerGroup>
             </Card>
           )}
         </div>

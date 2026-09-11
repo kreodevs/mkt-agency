@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CalendarCheck, Sparkles } from 'lucide-react';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
 import { Card } from '@/components/molecules/Card';
+import { StaggerGroup } from '@/components/molecules/Reveal';
 import { isInboxItemToday } from '@/lib/inbox-today.util';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
@@ -52,7 +53,7 @@ export function TodayPublishPanel({
         Aprueba si hace falta; luego publica cada arte (n8n o copiar/pegar).
       </div>
 
-      <div className="space-y-4">
+      <StaggerGroup className="space-y-4" stagger={80} variant="fade-up">
         {todayItems.map((item) => (
           <InboxItemCard
             key={item.contentId}
@@ -61,7 +62,7 @@ export function TodayPublishPanel({
             sohoMode
           />
         ))}
-      </div>
+      </StaggerGroup>
     </Card>
   );
 }

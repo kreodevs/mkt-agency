@@ -1,6 +1,8 @@
 # Bandeja — componentes
 
-Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y moléculas `StatsCard`, `EmptyState`, `PageHeader`, `StatusPill`.
+Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y moléculas `StatsCard`, `EmptyState`, `PageHeader`, `StatusPill`, `StaggerGroup`, `AiThinkingPanel`.
+
+La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, próximas) en `StaggerGroup` y muestra banner `AiThinkingPanel` mientras el copiloto prepara la semana.
 
 | Archivo | Rol |
 |---------|-----|
@@ -8,7 +10,7 @@ Alineados a tokens Kreo (`--spacing-*`, `--radius-*`, `--warning`, etc.) y molé
 | `InboxContentDetailDialog.tsx` | Ficha en modal; diseño de plantilla (`ContentVisualDesignPanel`), recomponer imagen (`ContentVisualPanel`), aprobación formal |
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; marco centrado (`max-w` + `mx-auto`), `object-contain` sin recortar textos del creative |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
-| `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día |
+| `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día; entradas con `StaggerGroup` |
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |

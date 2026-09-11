@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
   CheckCircle2,
-  Loader2,
   Package,
   Sparkles,
   Target,
@@ -11,7 +10,9 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/atoms/Button';
+import { Loader } from '@/components/atoms/Loader';
 import { Card } from '@/components/molecules/Card';
+import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { Stepper } from '@/components/molecules/Stepper';
 import { Progress } from '@/components/molecules/Progress';
 import { toast } from '@/components/molecules/Sonner';
@@ -123,7 +124,11 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   if (statusQuery.isLoading) {
     return (
       <Card variant="accent" title="Tu copiloto" subtitle="Estado del pipeline">
-        <p className="text-sm text-[var(--foreground-muted)]">Cargando estado...</p>
+        <AiThinkingPanel
+          variant="inline"
+          state="working"
+          title="Cargando estado del copiloto"
+        />
       </Card>
     );
   }
@@ -263,6 +268,22 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
             </div>
           </div>
 
+          {(isPreparing || analysisInFlight) && (
+            <AiThinkingPanel
+              state={isPreparing ? 'weaving' : 'searching'}
+              title={
+                isPreparing
+                  ? `Preparando tu ${horizonLabel(horizon)}…`
+                  : 'Analizando competencia…'
+              }
+              description={
+                isPreparing
+                  ? 'Generando copy y visuales para tu bandeja de aprobación.'
+                  : 'El copiloto investiga rivales y actualiza la estrategia.'
+              }
+            />
+          )}
+
           <Button
             type="button"
             variant="brand"
@@ -272,8 +293,8 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           >
             {isPreparing || analysisInFlight ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Preparando tu {horizonLabel(horizon)}...
+                <Loader variant="orb" state={isPreparing ? 'weaving' : 'searching'} size="sm" />
+                Preparando tu {horizonLabel(horizon)}…
               </>
             ) : (
               <>

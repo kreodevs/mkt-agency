@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ImageIcon, Loader2, Sparkles, Trash2, RotateCcw, RefreshCw, Eye } from 'lucide-react';
+import { ChevronLeft, ImageIcon, Sparkles, Trash2, RotateCcw, RefreshCw, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
+import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { Button } from '@/components/atoms/Button';
+import { Loader } from '@/components/atoms/Loader';
 import { toast } from '@/components/molecules/Sonner';
 import { AuthenticatedAssetImage } from '@/components/assets/AuthenticatedAssetImage';
 import { AuthenticatedAssetVideo } from '@/components/assets/AuthenticatedAssetVideo';
@@ -179,7 +181,7 @@ export default function ImageGeneratorPage() {
                 >
                   <div className="flex aspect-square items-center justify-center bg-[var(--background-secondary)]">
                     {img.status === 'processing' ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-[var(--foreground-muted)]" />
+                      <Loader variant="orb" state="shaping" size="md" />
                     ) : img.assetId ? (
                       isVideoGeneration(img.metadata) ? (
                         <AuthenticatedAssetVideo
@@ -330,6 +332,13 @@ export default function ImageGeneratorPage() {
                 </p>
               </div>
             </div>
+            {generateMutation.isPending && (
+              <AiThinkingPanel
+                state="shaping"
+                title="Generando imagen con IA"
+                description="Componiendo visuales según tu prompt y destino seleccionado."
+              />
+            )}
             <Button
               onClick={() => generateMutation.mutate()}
               loading={generateMutation.isPending}
