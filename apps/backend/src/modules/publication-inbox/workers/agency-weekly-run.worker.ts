@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { QUEUE_AGENCY_WEEKLY_RUN } from '../../../shared/queue/queue.constants';
+import { isAutoWeeklyGenerationEnabled } from '../../community-manager/domain/copilot-generation-settings.util';
 import { isProductOnboardingCompleted } from '../../product/domain/product-onboarding.util';
 import { ProductEntity } from '../../product/infrastructure/typeorm/product.entity';
 import { UserEntity } from '../../../shared/infrastructure/typeorm/user.entity';
@@ -56,6 +57,13 @@ export class AgencyWeeklyRunWorkerService implements OnModuleInit {
     let processed = 0;
 
     for (const tenant of activeTenants) {
+      if (!isAutoWeeklyGenerationEnabled(tenant.settings)) {
+        this.logger.debug(
+          `Skipping weekly agency run for tenant ${tenant.id} (auto generation disabled)`,
+        );
+        continue;
+      }
+
       try {
         const didRun = await this.runForTenant(tenant.id);
         if (didRun) processed += 1;

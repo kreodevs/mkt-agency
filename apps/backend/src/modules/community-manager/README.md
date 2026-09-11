@@ -7,8 +7,8 @@ Generación de copy para redes sociales con IA.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/community-manager/batches` | Historial de batches |
-| GET | `/api/v1/community-manager/preferences` | Plataformas y count guardados por tenant |
-| PUT | `/api/v1/community-manager/preferences` | Persistir selección de plataformas |
+| GET | `/api/v1/community-manager/preferences` | Plataformas, count y `autoWeeklyGenerationEnabled` (default `false`) |
+| PUT | `/api/v1/community-manager/preferences` | Persistir preferencias del copiloto por tenant |
 | GET | `/api/v1/community-manager/readiness` | Prerrequisitos (producto + marca) |
 | POST | `/api/v1/community-manager/generate` | Generar copy (`productId` opcional); guarda `platform` en cada contenido e imágenes con formato por red |
 

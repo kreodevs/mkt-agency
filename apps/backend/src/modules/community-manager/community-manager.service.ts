@@ -32,6 +32,11 @@ import {
   type CmPlatform,
 } from './domain/cm-platforms.constants';
 import {
+  CM_AUTO_WEEKLY_GENERATION_KEY,
+  isAutoWeeklyGenerationEnabled,
+  readCommunityManagerSettings,
+} from './domain/copilot-generation-settings.util';
+import {
   CommunityManagerPreferencesResponse,
   CommunityManagerReadinessResponse,
   GenerateResponse,
@@ -83,14 +88,18 @@ export class CommunityManagerService {
       throw new NotFoundException({ error: 'Tenant not found', code: 'NOT_FOUND' });
     }
 
-    const stored = (tenant.settings?.communityManager ?? {}) as Record<string, unknown>;
+    const stored = readCommunityManagerSettings(tenant.settings);
     const platforms = this.normalizePlatforms(stored.platforms);
     const count =
       typeof stored.count === 'number' && stored.count >= 1 && stored.count <= 6
         ? stored.count
         : DEFAULT_CM_POST_COUNT;
 
-    return { platforms, count };
+    return {
+      platforms,
+      count,
+      autoWeeklyGenerationEnabled: isAutoWeeklyGenerationEnabled(tenant.settings),
+    };
   }
 
   async updatePreferences(
@@ -102,16 +111,25 @@ export class CommunityManagerService {
       throw new NotFoundException({ error: 'Tenant not found', code: 'NOT_FOUND' });
     }
 
+    const stored = readCommunityManagerSettings(tenant.settings);
     const platforms = this.normalizePlatforms(dto.platforms);
     const count = dto.count ?? DEFAULT_CM_POST_COUNT;
+    const autoWeeklyGenerationEnabled =
+      dto.autoWeeklyGenerationEnabled ??
+      (stored[CM_AUTO_WEEKLY_GENERATION_KEY] === true);
 
     tenant.settings = {
       ...tenant.settings,
-      communityManager: { platforms, count },
+      communityManager: {
+        ...stored,
+        platforms,
+        count,
+        [CM_AUTO_WEEKLY_GENERATION_KEY]: autoWeeklyGenerationEnabled,
+      },
     };
     await this.tenants.save(tenant);
 
-    return { platforms, count };
+    return { platforms, count, autoWeeklyGenerationEnabled };
   }
 
   async getReadiness(tenantId: string): Promise<CommunityManagerReadinessResponse> {

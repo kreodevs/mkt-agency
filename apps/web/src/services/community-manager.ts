@@ -5,6 +5,8 @@ export type CmPlatform = 'instagram' | 'linkedin' | 'twitter' | 'facebook' | 'ti
 export interface CommunityManagerPreferences {
   platforms: CmPlatform[];
   count: number;
+  /** Cron lunes 06:00; desactivado por defecto. Preparar semana manual no se ve afectado. */
+  autoWeeklyGenerationEnabled: boolean;
 }
 
 export interface CommunityManagerReadinessItem {

@@ -36,6 +36,8 @@ export interface GenerateResponse {
 export interface CommunityManagerPreferencesResponse {
   platforms: string[];
   count: number;
+  /** Cron lunes 06:00 — desactivado por defecto; Preparar semana manual sigue disponible. */
+  autoWeeklyGenerationEnabled: boolean;
 }
 
 export interface CommunityManagerReadinessItem {

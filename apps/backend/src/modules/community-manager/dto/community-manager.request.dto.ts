@@ -53,4 +53,8 @@ export class UpdateCommunityManagerPreferencesDto {
   @Min(1)
   @Max(6)
   count?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  autoWeeklyGenerationEnabled?: boolean;
 }

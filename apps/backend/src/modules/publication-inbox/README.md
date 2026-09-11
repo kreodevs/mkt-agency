@@ -26,7 +26,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 
 | Cola | Cron | Acción |
 |------|------|--------|
-| `agency-weekly-run` | Lunes 06:00 | **Orquestación inteligente** por producto onboarded |
+| `agency-weekly-run` | Lunes 06:00 | **Orquestación inteligente** por producto onboarded (solo tenants con `settings.communityManager.autoWeeklyGenerationEnabled === true`; default desactivado) |
 | `approval-reminder` | 09:00 + 23:00 UTC | Aprobación pendiente + **Hoy toca publicar** (`publish_reminder`) |
 
 ### Pipeline semanal (`AgencyOrchestrationService`)

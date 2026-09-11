@@ -68,7 +68,7 @@ Pipeline ejecutado:
 
 Consulta progreso: `GET /publication-inbox/prepare-week/jobs/:jobId`
 
-También corre automáticamente **lunes 06:00** (cron `agency-weekly-run`).
+También puede correr automáticamente **lunes 06:00** (cron `agency-weekly-run`) si activas **Preparar mi semana automáticamente** en **Ajustes del copiloto** (`/settings/copilot`). Por defecto está **desactivado** por tenant; el botón manual en Inicio no se ve afectado.
 
 ### Acciones por arte
 

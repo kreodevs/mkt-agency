@@ -45,6 +45,7 @@ export default function CopilotSettingsPage() {
   const { isGrowth } = useOperatingProfile();
   const [platforms, setPlatforms] = useState<CmPlatform[]>(['instagram', 'linkedin']);
   const [count, setCount] = useState(7);
+  const [autoWeeklyGenerationEnabled, setAutoWeeklyGenerationEnabled] = useState(false);
   const [prefsReady, setPrefsReady] = useState(false);
 
   const preferencesQuery = useQuery({
@@ -56,6 +57,7 @@ export default function CopilotSettingsPage() {
     if (!preferencesQuery.data || prefsReady) return;
     setPlatforms(preferencesQuery.data.platforms);
     setCount(preferencesQuery.data.count);
+    setAutoWeeklyGenerationEnabled(preferencesQuery.data.autoWeeklyGenerationEnabled ?? false);
     setPrefsReady(true);
   }, [preferencesQuery.data, prefsReady]);
 
@@ -82,7 +84,7 @@ export default function CopilotSettingsPage() {
   };
 
   const handleSave = () => {
-    saveMutation.mutate({ platforms, count });
+    saveMutation.mutate({ platforms, count, autoWeeklyGenerationEnabled });
   };
 
   return (
@@ -90,10 +92,34 @@ export default function CopilotSettingsPage() {
       <PageHeader
         eyebrow="Copiloto SOHO"
         title="Ajustes del copiloto"
-        description="Redes donde publicas y cuántos posts generar por semana"
+        description="Redes, volumen semanal y generación automática del copiloto"
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <Card
+          variant="elevated"
+          title="Generación automática"
+          subtitle="Cron semanal (lunes 06:00). Desactivado por defecto para pruebas y control manual."
+        >
+          <label className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]">
+            <input
+              type="checkbox"
+              checked={autoWeeklyGenerationEnabled}
+              onChange={(event) => setAutoWeeklyGenerationEnabled(event.target.checked)}
+              className="mt-0.5 rounded border-[var(--border)]"
+            />
+            <span className="text-sm">
+              <span className="block font-medium text-[var(--foreground)]">
+                Preparar mi semana automáticamente
+              </span>
+              <span className="mt-1 block text-[var(--foreground-muted)]">
+                Si está activo, cada lunes el copiloto genera posts sin que pulses el botón en
+                Inicio. Siempre puedes usar «Preparar mi día/semana» de forma manual.
+              </span>
+            </span>
+          </label>
+        </Card>
+
         <Card variant="elevated" title="Redes sociales" subtitle="El copiloto generará copy para estas plataformas">
           <div className="flex flex-wrap gap-2">
             {ALL_PLATFORMS.map((platform) => {
@@ -151,7 +177,8 @@ export default function CopilotSettingsPage() {
             subtitle="Tú publicas manualmente; la IA prepara copy y análisis"
           >
             <ul className="space-y-2 text-sm text-[var(--foreground-muted)]">
-              <li>• Prepara tu semana desde la bandeja de inicio.</li>
+              <li>• Prepara tu semana desde la bandeja de inicio (manual por defecto).</li>
+              <li>• Activa la generación automática en Ajustes si quieres el cron del lunes.</li>
               <li>
                 • Usa{' '}
                 <Link to="/copilot/competitors" className="text-[var(--brand)] hover:underline">
