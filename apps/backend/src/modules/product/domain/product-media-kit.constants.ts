@@ -29,3 +29,11 @@ export const COMPOSE_IMAGE_ROLE_PRIORITY: ProductMediaRole[] = [
   'b-roll',
   'other',
 ];
+
+export function kitHasComposeImageRoles(
+  kit: ReadonlyArray<{ role: string }>,
+): boolean {
+  return kit.some((item) =>
+    COMPOSE_IMAGE_ROLE_PRIORITY.includes(item.role as ProductMediaRole),
+  );
+}

@@ -17,6 +17,7 @@ Catálogo de productos/servicios por tenant. Es la entidad central del pivot pro
 - `GET /api/v1/products/:id/media-kit` — lista assets del kit (capturas, demos, eventos…)
 - `POST /api/v1/products/:id/media-kit/upload` — sube archivo al kit (`?role=`, `?label=`, multipart `file`)
 - `POST /api/v1/products/:id/media-kit/link` — enlaza un asset existente (`assetId`, `role`, `label?`)
+- `PATCH /api/v1/products/:id/media-kit/:itemId` — actualiza rol y/o etiqueta de un ítem existente
 - `DELETE /api/v1/products/:id/media-kit/:itemId` — quita ítem del kit (no borra el asset)
 - `GET /api/v1/products/:id/publish-integration` — config webhook n8n + credenciales por plataforma (metadata)
 - `PATCH /api/v1/products/:id/publish-integration` — guarda integración de publicación automática

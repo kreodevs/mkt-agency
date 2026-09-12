@@ -11,7 +11,7 @@ Hub operativo de la agencia autónoma: contenido sugerido por IA, aprobación de
 | POST | `/publication-inbox/prepare-week` | Encola orquestación (competidores → intel → estrategia → CM); body opcional `{ productId?, horizon?: 'day' \| 'week' }`; responde `202` + `jobId` |
 | GET | `/publication-inbox/prepare-week/jobs/:jobId` | Estado del job (`processing` / `completed` / `failed`) |
 | POST | `/publication-inbox/regenerate/:contentId` | Regenera copy + visual; body opcional `{ visualFormat?, feedback? }` |
-| POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }` |
+| POST | `/publication-inbox/request-changes/:contentId` | Regenera con feedback `{ versionId, feedback }`. Si el producto tiene media kit, prioriza plantillas con capturas reales y **no** cae a imagen IA salvo que el feedback pida explícitamente una imagen generada. |
 | POST | `/publication-inbox/dismiss/:contentId` | Archiva pieza **rechazada** (alias de delete con validación de status) |
 | POST | `/publication-inbox/delete/:contentId` | Elimina pieza (cualquier status, incl. aprobada y multi-versión) |
 | POST | `/publication-inbox/bulk-delete` | Elimina múltiples `{ contentIds[] }` |

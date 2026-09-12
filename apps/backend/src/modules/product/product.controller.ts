@@ -35,6 +35,7 @@ import {
   AddProductMediaKitItemDto,
   ProductMediaKitItemResponseDto,
   ProductMediaKitListResponseDto,
+  UpdateProductMediaKitItemDto,
 } from './dto/product-media-kit.dto';
 import { ProductLogoService } from './product-logo.service';
 import { ProductMediaKitService } from './product-media-kit.service';
@@ -201,6 +202,16 @@ export class ProductController {
     @Body() body: AddProductMediaKitItemDto,
   ): Promise<ProductMediaKitItemResponseDto> {
     return this.productMediaKitService.linkAsset(user.tenantId!, id, body);
+  }
+
+  @Patch(':id/media-kit/:itemId')
+  updateMediaKitItem(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body() body: UpdateProductMediaKitItemDto,
+  ): Promise<ProductMediaKitItemResponseDto> {
+    return this.productMediaKitService.updateKitItem(user.tenantId!, id, itemId, body);
   }
 
   @Delete(':id/media-kit/:itemId')

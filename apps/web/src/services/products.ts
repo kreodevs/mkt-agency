@@ -237,6 +237,17 @@ export async function linkProductMediaKit(
   });
 }
 
+export async function updateProductMediaKitItem(
+  productId: string,
+  itemId: string,
+  payload: { role?: ProductMediaRole; label?: string | null },
+): Promise<ProductMediaKitItem> {
+  return apiFetch<ProductMediaKitItem>(`/products/${productId}/media-kit/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function removeProductMediaKitItem(productId: string, itemId: string): Promise<void> {
   await apiFetch<void>(`/products/${productId}/media-kit/${itemId}`, {
     method: 'DELETE',

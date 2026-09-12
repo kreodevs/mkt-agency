@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Eye, Film, FolderOpen, ImageIcon, Trash2, Upload } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { InputText } from '@/components/atoms/InputText';
 import { Select } from '@/components/atoms/Select';
@@ -15,6 +15,7 @@ import {
   linkProductMediaKit,
   listProductMediaKit,
   removeProductMediaKitItem,
+  updateProductMediaKitItem,
   uploadProductMediaKit,
 } from '@/services/products';
 import type { Asset, AssetType } from '@/types/assets';
@@ -26,6 +27,20 @@ import {
 } from '@/types/product';
 
 const ACCEPTED_MIME_PREFIXES = ['image/', 'video/'];
+const FILTER_ALL = 'all' as const;
+const MEDIA_KIT_RECOMMENDED_MIN_IMAGES = 3;
+
+type RoleFilter = typeof FILTER_ALL | ProductMediaRole;
+
+const MEDIA_KIT_SUMMARY_SEGMENTS: Array<{ role: ProductMediaRole; shortLabel: string }> = [
+  { role: 'product-screenshot', shortLabel: 'capturas' },
+  { role: 'event-photo', shortLabel: 'eventos' },
+  { role: 'team-photo', shortLabel: 'equipo' },
+  { role: 'product-demo', shortLabel: 'videos' },
+  { role: 'testimonial', shortLabel: 'testimonios' },
+  { role: 'b-roll', shortLabel: 'b-roll' },
+  { role: 'other', shortLabel: 'otros' },
+];
 
 interface ProductMediaKitPanelProps {
   productId: string;
@@ -77,8 +92,9 @@ export function ProductMediaKitPanel({
 }: ProductMediaKitPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
-  const [role, setRole] = useState<ProductMediaRole>('product-screenshot');
-  const [label, setLabel] = useState('');
+  const [uploadRole, setUploadRole] = useState<ProductMediaRole>('product-screenshot');
+  const [filterRole, setFilterRole] = useState<RoleFilter>(FILTER_ALL);
+  const [uploadLabel, setUploadLabel] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [libraryPickerOpen, setLibraryPickerOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<ProductMediaKitItem | null>(null);
@@ -90,7 +106,7 @@ export function ProductMediaKitPanel({
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => uploadProductMediaKit(productId, file, role, label),
+    mutationFn: (file: File) => uploadProductMediaKit(productId, file, uploadRole, uploadLabel),
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo subir el archivo');
     },
@@ -107,9 +123,31 @@ export function ProductMediaKitPanel({
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({
+      itemId,
+      role,
+      label,
+    }: {
+      itemId: string;
+      role?: ProductMediaRole;
+      label?: string | null;
+    }) => updateProductMediaKitItem(productId, itemId, { role, label }),
+    onSuccess: () => {
+      void kitQuery.refetch();
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo actualizar');
+    },
+  });
+
   const linkMutation = useMutation({
     mutationFn: (assetId: string) =>
-      linkProductMediaKit(productId, { assetId, role, label: label || undefined }),
+      linkProductMediaKit(productId, {
+        assetId,
+        role: uploadRole,
+        label: uploadLabel || undefined,
+      }),
     onSuccess: () => {
       toast.success('Archivo enlazado desde la librería');
       setLibraryPickerOpen(false);
@@ -142,7 +180,7 @@ export function ProductMediaKitPanel({
         toast.success(
           uploaded === 1 ? 'Archivo añadido al kit' : `${uploaded} archivos añadidos al kit`,
         );
-        setLabel('');
+        setUploadLabel('');
         void kitQuery.refetch();
       }
     },
@@ -188,8 +226,58 @@ export function ProductMediaKitPanel({
   };
 
   const isBusy =
-    disabled || uploadMutation.isPending || removeMutation.isPending || linkMutation.isPending;
+    disabled ||
+    uploadMutation.isPending ||
+    removeMutation.isPending ||
+    linkMutation.isPending ||
+    updateMutation.isPending;
   const items = kitQuery.data?.items ?? [];
+
+  const roleCounts = useMemo(() => {
+    const counts = new Map<ProductMediaRole, number>();
+    for (const role of PRODUCT_MEDIA_ROLES) {
+      counts.set(role, 0);
+    }
+    for (const item of items) {
+      counts.set(item.role, (counts.get(item.role) ?? 0) + 1);
+    }
+    return counts;
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    if (filterRole === FILTER_ALL) {
+      return items;
+    }
+    return items.filter((item) => item.role === filterRole);
+  }, [filterRole, items]);
+
+  const filterOptions = useMemo(
+    () => [
+      { value: FILTER_ALL, label: `Todos (${items.length})` },
+      ...PRODUCT_MEDIA_ROLES.map((role) => ({
+        value: role,
+        label: `${PRODUCT_MEDIA_ROLE_LABELS[role]} (${roleCounts.get(role) ?? 0})`,
+      })),
+    ],
+    [items.length, roleCounts],
+  );
+
+  const imageCount = useMemo(
+    () =>
+      items.filter(
+        (item) => item.assetType === 'image' || item.mimeType?.startsWith('image/'),
+      ).length,
+    [items],
+  );
+
+  const summarySegments = useMemo(
+    () =>
+      MEDIA_KIT_SUMMARY_SEGMENTS.map((segment) => ({
+        ...segment,
+        count: roleCounts.get(segment.role) ?? 0,
+      })),
+    [roleCounts],
+  );
 
   const handleDownloadPreview = async (asset: Asset) => {
     try {
@@ -200,14 +288,104 @@ export function ProductMediaKitPanel({
     }
   };
 
+  const handleRoleChange = (item: ProductMediaKitItem, nextRole: ProductMediaRole) => {
+    if (nextRole === item.role) {
+      return;
+    }
+    updateMutation.mutate(
+      { itemId: item.id, role: nextRole },
+      {
+        onSuccess: () => {
+          toast.success('Rol actualizado');
+        },
+      },
+    );
+  };
+
+  const handleLabelBlur = (item: ProductMediaKitItem, nextLabel: string) => {
+    const trimmed = nextLabel.trim();
+    const current = item.label?.trim() ?? '';
+    if (trimmed === current) {
+      return;
+    }
+    updateMutation.mutate(
+      { itemId: item.id, label: trimmed || null },
+      {
+        onSuccess: () => {
+          toast.message('Etiqueta actualizada');
+        },
+      },
+    );
+  };
+
   return (
     <div className="space-y-[var(--spacing-lg)]">
+      {!kitQuery.isLoading && items.length > 0 && (
+        <div
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background-secondary)] p-[var(--spacing-md)]"
+          aria-label="Resumen del media kit"
+        >
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-medium text-[var(--foreground)]">Resumen del kit</p>
+            <p className="text-xs text-[var(--foreground-muted)]">
+              {items.length} asset{items.length === 1 ? '' : 's'} · {imageCount} imagen
+              {imageCount === 1 ? '' : 'es'}
+            </p>
+          </div>
+
+          <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-[var(--foreground)]">
+            {summarySegments.map((segment, index) => (
+              <span key={segment.role} className="inline-flex items-center">
+                {index > 0 && (
+                  <span className="mx-1 text-[var(--foreground-muted)]" aria-hidden="true">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className={[
+                    'rounded-[var(--radius-sm)] px-1.5 py-0.5 transition-colors',
+                    'hover:bg-[var(--background)] hover:text-[var(--primary)]',
+                    filterRole === segment.role
+                      ? 'bg-[var(--background)] font-medium text-[var(--primary)]'
+                      : '',
+                  ].join(' ')}
+                  title={`Filtrar: ${PRODUCT_MEDIA_ROLE_LABELS[segment.role]}`}
+                  onClick={() => setFilterRole(segment.role)}
+                >
+                  <span className="tabular-nums">{segment.count}</span>{' '}
+                  <span className="text-[var(--foreground-muted)]">{segment.shortLabel}</span>
+                </button>
+              </span>
+            ))}
+          </p>
+
+          {imageCount < MEDIA_KIT_RECOMMENDED_MIN_IMAGES && (
+            <p className="mt-2 text-xs text-[var(--warning)]">
+              Sube al menos {MEDIA_KIT_RECOMMENDED_MIN_IMAGES} imágenes ({imageCount}/
+              {MEDIA_KIT_RECOMMENDED_MIN_IMAGES}) para diseños menos genéricos en el copiloto.
+            </p>
+          )}
+
+          {filterRole !== FILTER_ALL && (
+            <button
+              type="button"
+              className="mt-2 text-xs text-[var(--primary)] hover:underline"
+              onClick={() => setFilterRole(FILTER_ALL)}
+            >
+              Ver todos los assets
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
         <Select
-          label="Tipo de asset"
-          value={role}
+          label="Rol al subir"
+          hint="Solo aplica a archivos nuevos (subida o desde librería)"
+          value={uploadRole}
           disabled={isBusy}
-          onChange={(e) => setRole(e.target.value as ProductMediaRole)}
+          onChange={(e) => setUploadRole(e.target.value as ProductMediaRole)}
           options={PRODUCT_MEDIA_ROLES.map((value) => ({
             value,
             label: PRODUCT_MEDIA_ROLE_LABELS[value],
@@ -215,11 +393,11 @@ export function ProductMediaKitPanel({
         />
 
         <InputText
-          label="Etiqueta (opcional)"
-          value={label}
+          label="Etiqueta al subir (opcional)"
+          value={uploadLabel}
           disabled={isBusy}
           placeholder="Ej. Demo onboarding v2"
-          onChange={(e) => setLabel(e.target.value)}
+          onChange={(e) => setUploadLabel(e.target.value)}
         />
 
         <Button
@@ -300,13 +478,28 @@ export function ProductMediaKitPanel({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <p className="text-sm font-medium text-[var(--foreground)]">
             Assets subidos
             {!kitQuery.isLoading && (
-              <span className="ml-2 text-[var(--foreground-muted)]">({items.length})</span>
+              <span className="ml-2 text-[var(--foreground-muted)]">
+                ({filteredItems.length}
+                {filterRole !== FILTER_ALL ? ` de ${items.length}` : ''})
+              </span>
             )}
           </p>
+
+          {items.length > 0 && (
+            <div className="w-full sm:max-w-xs">
+              <Select
+                label="Filtrar por rol"
+                value={filterRole}
+                disabled={kitQuery.isLoading || isBusy}
+                onChange={(e) => setFilterRole(e.target.value as RoleFilter)}
+                options={filterOptions}
+              />
+            </div>
+          )}
         </div>
 
         {kitQuery.isLoading ? (
@@ -322,11 +515,24 @@ export function ProductMediaKitPanel({
               onClick: () => fileInputRef.current?.click(),
             }}
           />
+        ) : filteredItems.length === 0 ? (
+          <EmptyState
+            compact
+            icon={ImageIcon}
+            title="Ningún asset con este rol"
+            description={`No hay archivos con rol «${PRODUCT_MEDIA_ROLE_LABELS[filterRole as ProductMediaRole]}». Cambia el filtro o sube nuevos archivos.`}
+            action={{
+              label: 'Ver todos',
+              onClick: () => setFilterRole(FILTER_ALL),
+            }}
+          />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => {
+            {filteredItems.map((item) => {
               const previewUrl = getAssetFileUrl(item.assetId, 'thumb');
               const isVideo = isVideoMime(item.mimeType);
+              const isUpdatingThisItem =
+                updateMutation.isPending && updateMutation.variables?.itemId === item.id;
 
               return (
                 <li
@@ -375,19 +581,37 @@ export function ProductMediaKitPanel({
                     </StatusPill>
                   </button>
 
-                  <div className="space-y-1 p-3">
-                    <p className="text-xs font-medium text-[var(--foreground)]">
-                      {PRODUCT_MEDIA_ROLE_LABELS[item.role] ?? item.role}
-                    </p>
-                    {item.label && (
-                      <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.label}>
-                        {item.label}
-                      </p>
-                    )}
-                    <p className="truncate text-xs text-[var(--foreground-muted)]" title={item.assetName}>
+                  <div className="space-y-2 p-3">
+                    <Select
+                      label="Rol"
+                      value={item.role}
+                      disabled={isBusy}
+                      onChange={(e) =>
+                        handleRoleChange(item, e.target.value as ProductMediaRole)
+                      }
+                      options={PRODUCT_MEDIA_ROLES.map((value) => ({
+                        value,
+                        label: PRODUCT_MEDIA_ROLE_LABELS[value],
+                      }))}
+                    />
+
+                    <InputText
+                      key={`label-${item.id}-${item.label ?? ''}`}
+                      label="Etiqueta"
+                      defaultValue={item.label ?? ''}
+                      disabled={isBusy}
+                      placeholder="Sin etiqueta"
+                      onBlur={(e) => handleLabelBlur(item, e.target.value)}
+                    />
+
+                    <p
+                      className="truncate text-xs text-[var(--foreground-muted)]"
+                      title={item.assetName}
+                    >
                       {item.assetName}
                     </p>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
+
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -412,6 +636,10 @@ export function ProductMediaKitPanel({
                         Eliminar
                       </Button>
                     </div>
+
+                    {isUpdatingThisItem && (
+                      <p className="text-xs text-[var(--primary)]">Guardando...</p>
+                    )}
                   </div>
                 </li>
               );
@@ -425,7 +653,7 @@ export function ProductMediaKitPanel({
         onClose={() => setLibraryPickerOpen(false)}
         title="Enlazar desde librería"
         description="Elige capturas organizadas por carpeta (PC, iPad, iOS). El copiloto CM las usará al generar posts."
-        typeFilter={role === 'product-demo' ? 'video' : 'image'}
+        typeFilter={uploadRole === 'product-demo' ? 'video' : 'image'}
         isPending={linkMutation.isPending}
         onSelect={(asset) => linkMutation.mutate(asset.id)}
       />

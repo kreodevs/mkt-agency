@@ -14,6 +14,17 @@ export class AddProductMediaKitItemDto {
   label?: string;
 }
 
+export class UpdateProductMediaKitItemDto {
+  @IsOptional()
+  @IsIn(PRODUCT_MEDIA_ROLES)
+  role?: (typeof PRODUCT_MEDIA_ROLES)[number];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  label?: string | null;
+}
+
 export class ProductMediaKitItemResponseDto {
   id!: string;
   productId!: string;

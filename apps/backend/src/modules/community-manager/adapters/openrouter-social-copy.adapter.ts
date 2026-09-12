@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { feedbackRequestsMediaKit } from '../domain/feedback-visual-intent.util';
 import { LlmClient } from '../../../shared/ai/llm.client';
 import {
   SocialCopyAdapterPort,
@@ -53,6 +54,9 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ].join('\n')
       : '';
 
+    const revisionWantsMediaKit =
+      feedbackRequestsMediaKit(context.revisionBrief) || (context.mediaKit?.length ?? 0) > 0;
+
     const revisionGuide = context.revisionBrief?.trim()
       ? [
           'REVISIÓN DE POST EXISTENTE — el usuario pidió cambios. NO reutilices el copy anterior tal cual.',
@@ -60,8 +64,10 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           context.previousPost
             ? `Post anterior (${context.previousPost.platform ?? 'red social'}):\nTítulo: ${context.previousPost.title}\nCuerpo: ${context.previousPost.body}`
             : '',
-          'Genera una versión nueva que incorpore el feedback (tono, nicho, tipo de visual en visualDescription).',
-          'Si el feedback critica la imagen, describe en visualDescription una escena acorde al nicho y al comentario.',
+          'Genera una versión nueva que incorpore el feedback (tono, titular visual, CTA).',
+          revisionWantsMediaKit
+            ? 'NO inventes escenas, empaques, productos físicos ni logos ficticios. El sistema usará capturas/fotos REALES del media kit con plantillas. visualDescription = cómo se verá el asset real (ej. captura desktop en MacBook).'
+            : 'Si el feedback critica la imagen y NO hay media kit, describe en visualDescription una escena acorde al nicho y al comentario.',
         ]
           .filter(Boolean)
           .join('\n')

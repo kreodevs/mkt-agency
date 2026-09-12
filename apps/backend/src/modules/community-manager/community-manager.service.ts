@@ -14,8 +14,14 @@ import { ContentService } from '../content/content.service';
 import { ImageGenerationService } from '../agents/image-generation.service';
 import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
 import { VisualTemplateComposerService } from './visual-template-composer.service';
+import {
+  buildMediaKitRevisionHint,
+  feedbackRequestsAiImage,
+  feedbackRequestsMediaKit,
+} from './domain/feedback-visual-intent.util';
 import { enrichVisualDescriptionForAi } from './domain/visual-prompt-enrichment.util';
 import { resolveVisualBrandKit } from './domain/visual-brand-kit.util';
+import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
 import { ProductService } from '../product/product.service';
 import { ProductAppCaptureService } from '../product/product-app-capture.service';
 import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
@@ -643,11 +649,15 @@ export class CommunityManagerService {
     feedback: string | undefined,
     forcedVisualFormat: string | null,
   ): string | undefined {
+    const parts = [feedback?.trim(), buildMediaKitRevisionHint(feedback)].filter(Boolean);
+
     if (!forcedVisualFormat) {
-      return feedback;
+      return parts.length ? parts.join('\n\n') : undefined;
     }
+
     const formatHint = `Regenera el post con formato visual "${forcedVisualFormat}" (adapta copy y escena visual al nuevo formato).`;
-    return feedback ? `${feedback}\n\n${formatHint}` : formatHint;
+    parts.push(formatHint);
+    return parts.join('\n\n');
   }
 
   private async handlePostRegenerationVisual(
@@ -662,8 +672,13 @@ export class CommunityManagerService {
   ): Promise<void> {
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
     const productId = content.productId ?? ctx.effectiveProductId;
+    const hasKitImages = kitHasComposeImageRoles(ctx.kit);
+    const wantsMediaKit = feedbackRequestsMediaKit(feedback) || hasKitImages;
+    const allowAiFallback =
+      feedbackRequestsAiImage(feedback) ||
+      (!hasKitImages && !feedbackRequestsMediaKit(feedback));
 
-    if (!feedback && productId) {
+    if (productId && hasKitImages) {
       const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
         tenantId,
         userId,
@@ -674,7 +689,40 @@ export class CommunityManagerService {
         visualVariantIndex,
         { resolvedProfile: ctx.resolvedProfile },
       );
-      if (recomposed) return;
+      if (recomposed) {
+        return;
+      }
+
+      const composed = await this.attachVisualForPost(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        ctx,
+      );
+      if (composed) {
+        return;
+      }
+
+      if (feedback) {
+        const varied = await this.templateComposer.tryComposeFromTemplate(
+          tenantId,
+          userId,
+          contentId,
+          post,
+          productId,
+          ctx.kit,
+          visualVariantIndex,
+          { resolvedProfile: ctx.resolvedProfile },
+          { variationSeed: visualVariantIndex + 1 },
+        );
+        if (varied.attached) {
+          return;
+        }
+      }
     }
 
     if (!feedback) {
@@ -684,13 +732,30 @@ export class CommunityManagerService {
       return;
     }
 
-    if (!post.visualDescription?.trim()) return;
+    if (wantsMediaKit && hasKitImages && !feedbackRequestsAiImage(feedback)) {
+      this.logger.warn(
+        `Media kit compose failed for content ${contentId} despite kit items; skipping AI fallback`,
+      );
+      return;
+    }
 
-    const composed = await this.attachVisualForPost(
-      tenantId, userId, contentId, post,
-      productId, ctx.kit, visualVariantIndex, ctx,
-    );
-    if (composed) return;
+    if (!post.visualDescription?.trim()) {
+      return;
+    }
+
+    if (productId) {
+      const composed = await this.attachVisualForPost(
+        tenantId, userId, contentId, post,
+        productId, ctx.kit, visualVariantIndex, ctx,
+      );
+      if (composed) {
+        return;
+      }
+    }
+
+    if (!allowAiFallback) {
+      return;
+    }
 
     try {
       await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);

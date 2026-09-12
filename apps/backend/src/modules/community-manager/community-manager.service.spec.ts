@@ -182,4 +182,86 @@ describe('CommunityManagerService — extracted helpers', () => {
       expect(templateComposer.tryComposeFromTemplate).not.toHaveBeenCalled();
     });
   });
+
+  describe('handlePostRegenerationVisual (private)', () => {
+    const templateComposer = {
+      recomposeFromStoredTemplate: jest.fn(),
+      tryComposeFromTemplate: jest.fn(),
+      tryComposeFromKit: jest.fn(),
+    };
+    const imageGeneration = { regenerateForContent: jest.fn() };
+
+    const kitItem = { assetId: 'asset-1', role: 'product-screenshot' };
+
+    beforeEach(() => {
+      service = new CommunityManagerService(
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        imageGeneration as any,
+        templateComposer as any,
+        { attachToContent: jest.fn() } as any,
+        {} as any,
+        { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
+        {} as any,
+      );
+      templateComposer.recomposeFromStoredTemplate.mockReset();
+      templateComposer.tryComposeFromTemplate.mockReset();
+      imageGeneration.regenerateForContent.mockReset();
+      templateComposer.tryComposeFromTemplate.mockResolvedValue({ attached: false, assetIds: [] });
+    });
+
+    const handleVisual = (feedback?: string) =>
+      (service as any).handlePostRegenerationVisual(
+        'tenant-1',
+        'user-1',
+        'content-1',
+        {
+          title: 'Título',
+          body: 'Cuerpo',
+          platform: 'twitter',
+          visualFormat: 'image',
+          visualDescription: 'empaque de producto en mostrador',
+        },
+        { productId: 'product-1' },
+        { kit: [kitItem], resolvedProfile: null, effectiveProductId: 'product-1' },
+        { versionNumber: 2 },
+        feedback,
+      );
+
+    it('skips AI fallback when feedback requests media kit and kit has images', async () => {
+      templateComposer.recomposeFromStoredTemplate.mockResolvedValue(false);
+      jest.spyOn(service as any, 'attachVisualForPost').mockResolvedValue(false);
+
+      await handleVisual('usa imágenes de mi media kit, no inventes escenas');
+
+      expect(imageGeneration.regenerateForContent).not.toHaveBeenCalled();
+    });
+
+    it('falls back to AI when there is no media kit and feedback changes the visual', async () => {
+      jest.spyOn(service as any, 'attachVisualForPost').mockResolvedValue(false);
+
+      await (service as any).handlePostRegenerationVisual(
+        'tenant-1',
+        'user-1',
+        'content-1',
+        {
+          title: 'Título',
+          body: 'Cuerpo',
+          platform: 'twitter',
+          visualFormat: 'image',
+          visualDescription: 'escena de oficina moderna',
+        },
+        { productId: 'product-1' },
+        { kit: [], resolvedProfile: null, effectiveProductId: 'product-1' },
+        { versionNumber: 1 },
+        'haz la imagen más corporativa',
+      );
+
+      expect(imageGeneration.regenerateForContent).toHaveBeenCalled();
+    });
+  });
 });

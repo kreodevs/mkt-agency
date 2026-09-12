@@ -42,7 +42,7 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 3. **LLM** — elige `visualTemplateId` + `visualHeadline` / `visualSubline` / `visualCta` por post
 4. **Marca** — colores desde `visual_preferences` del perfil o `product.metadata.brandVisualKit`
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
-6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación)
+6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación). Con feedback del copiloto (“usa mi media kit”, “fotos reales”), no se invoca imagen IA aunque falle el copy del LLM; se recomponen capturas del kit.
 
 Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
 

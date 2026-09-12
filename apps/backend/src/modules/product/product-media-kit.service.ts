@@ -22,6 +22,7 @@ import {
   AddProductMediaKitItemDto,
   ProductMediaKitItemResponseDto,
   ProductMediaKitListResponseDto,
+  UpdateProductMediaKitItemDto,
 } from './dto/product-media-kit.dto';
 import { ProductMediaKitItemEntity } from './infrastructure/typeorm/product-media-kit-item.entity';
 import { KnowledgeIndexService } from '../knowledge/services/knowledge-index.service';
@@ -167,6 +168,48 @@ export class ProductMediaKitService {
     void this.knowledgeIndex
       .indexMediaKitItem(tenantId, productId, saved.id, saved.role, saved.label)
       .catch(() => undefined);
+
+    return this.toResponse(saved, asset)!;
+  }
+
+  async updateKitItem(
+    tenantId: string,
+    productId: string,
+    itemId: string,
+    dto: UpdateProductMediaKitItemDto,
+  ): Promise<ProductMediaKitItemResponseDto> {
+    await this.productService.findOwnedEntity(tenantId, productId);
+
+    if (dto.role !== undefined) {
+      this.assertValidRole(dto.role);
+    }
+
+    const item = await this.kitItems.findOne({
+      where: { id: itemId, tenantId, productId },
+    });
+    if (!item) {
+      throw new NotFoundException({ error: 'Kit item not found', code: 'NOT_FOUND' });
+    }
+
+    if (dto.role !== undefined) {
+      item.role = dto.role;
+    }
+    if (dto.label !== undefined) {
+      item.label = dto.label?.trim() || null;
+    }
+
+    const saved = await this.kitItems.save(item);
+    const asset = await this.assets.findOne({
+      where: { id: saved.assetId, tenantId },
+    });
+
+    void this.knowledgeIndex
+      .indexMediaKitItem(tenantId, productId, saved.id, saved.role, saved.label)
+      .catch(() => undefined);
+
+    if (!asset) {
+      throw new NotFoundException({ error: 'Asset not found', code: 'NOT_FOUND' });
+    }
 
     return this.toResponse(saved, asset)!;
   }
