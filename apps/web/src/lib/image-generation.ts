@@ -103,6 +103,11 @@ export function resolveContentVisualAssetIds(input: {
   generation?: { assetId: string | null; metadata?: unknown; status?: string } | null;
   versionAssets?: unknown[];
 }): string[] {
+  const versionAssetIds = extractContentAssetIds(input.versionAssets);
+  if (versionAssetIds.length > 0) {
+    return versionAssetIds;
+  }
+
   const generation = input.generation;
 
   if (generation?.status === 'processing') {
@@ -110,11 +115,8 @@ export function resolveContentVisualAssetIds(input: {
   }
 
   if (generation?.status === 'completed') {
-    const fromGeneration = listGenerationAssetIds(generation);
-    if (fromGeneration.length) {
-      return fromGeneration;
-    }
+    return listGenerationAssetIds(generation);
   }
 
-  return extractContentAssetIds(input.versionAssets);
+  return [];
 }

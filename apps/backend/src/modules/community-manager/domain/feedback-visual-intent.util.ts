@@ -3,6 +3,7 @@ const MEDIA_KIT_FEEDBACK_PATTERNS: RegExp[] = [
   /\bkit\s+de\s+medios\b/i,
   /\bfotos?\s+reales?\b/i,
   /\bcapturas?\b/i,
+  /\busa(r)?\s+(las\s+|mis\s+|del\s+)?(im[aá]genes|fotos|capturas)\b/i,
   /\busar\s+(las\s+|mis\s+|del\s+)?(im[aá]genes|fotos)\b/i,
   /\bdel\s+kit\b/i,
   /\bde\s+la\s+librer[ií]a\b/i,

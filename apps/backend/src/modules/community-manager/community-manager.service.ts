@@ -858,6 +858,13 @@ export class CommunityManagerService {
       }
     }
 
+    if (kitHasComposeImageRoles(kit)) {
+      this.logger.warn(
+        `Media kit disponible pero la plantilla falló para content ${contentId}; no se usará imagen IA`,
+      );
+      return false;
+    }
+
     if (!post.visualDescription?.trim()) {
       return false;
     }

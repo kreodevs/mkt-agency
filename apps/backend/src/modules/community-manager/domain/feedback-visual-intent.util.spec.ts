@@ -7,6 +7,7 @@ import {
 describe('feedback-visual-intent.util', () => {
   it('detects media kit intent in Spanish feedback', () => {
     expect(feedbackRequestsMediaKit('usa imágenes de mi media kit')).toBe(true);
+    expect(feedbackRequestsMediaKit('usa capturas del producto')).toBe(true);
     expect(feedbackRequestsMediaKit('quiero fotos reales del producto')).toBe(true);
     expect(feedbackRequestsMediaKit('no generes un logo ficticio')).toBe(true);
   });

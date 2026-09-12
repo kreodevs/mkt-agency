@@ -63,6 +63,8 @@ import {
 import {
   getProductLogoAssetId,
 } from '../product/domain/product-logo.metadata.util';
+import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
+import { ProductMediaKitService } from '../product/product-media-kit.service';
 import { ProductService } from '../product/product.service';
 import { ImageBrandingService } from './image-branding.service';
 import {
@@ -131,6 +133,7 @@ export class ImageGenerationService implements OnModuleInit {
     private readonly assetService: AssetService,
     private readonly contentService: ContentService,
     private readonly productService: ProductService,
+    private readonly mediaKitService: ProductMediaKitService,
     private readonly imageBranding: ImageBrandingService,
     private readonly llmConfig: LlmConfigService,
     private readonly llmUsage: LlmUsageService,
@@ -235,6 +238,8 @@ export class ImageGenerationService implements OnModuleInit {
     if (!trimmed) {
       return null;
     }
+
+    await this.assertAiGenerationAllowedForContent(tenantId, contentId);
 
     const content = await this.contentService.findOne(tenantId, contentId);
     const publishableBody = content.currentVersion?.body;
@@ -724,6 +729,8 @@ export class ImageGenerationService implements OnModuleInit {
     userId: string,
     contentId: string,
   ): Promise<GenerateImageResult> {
+    await this.assertAiGenerationAllowedForContent(tenantId, contentId);
+
     const content = await this.contentService.findOne(tenantId, contentId);
     const version = content.currentVersion;
     if (!version) {
@@ -767,6 +774,8 @@ export class ImageGenerationService implements OnModuleInit {
     userId: string,
     contentId: string,
   ): Promise<GenerateImageResult> {
+    await this.assertAiGenerationAllowedForContent(tenantId, contentId);
+
     const existing = await this.findByContentId(tenantId, contentId);
     if (existing) {
       await this.refreshBrandedPrompt(tenantId, existing);
@@ -774,6 +783,27 @@ export class ImageGenerationService implements OnModuleInit {
     }
 
     return this.generateForContent(tenantId, userId, contentId);
+  }
+
+  private async assertAiGenerationAllowedForContent(
+    tenantId: string,
+    contentId: string,
+  ): Promise<void> {
+    const content = await this.contentService.findOne(tenantId, contentId);
+    if (!content.productId) {
+      return;
+    }
+
+    const kit = await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId);
+    if (!kitHasComposeImageRoles(kit)) {
+      return;
+    }
+
+    throw new BadRequestException({
+      error:
+        'Este producto tiene fotos en el media kit. Usa plantillas con capturas reales en lugar de imagen IA.',
+      code: 'MEDIA_KIT_COMPOSE_REQUIRED',
+    });
   }
 
   async regenerate(

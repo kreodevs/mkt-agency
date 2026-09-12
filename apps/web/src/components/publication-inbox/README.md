@@ -8,7 +8,7 @@ La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, pró
 |---------|-----|
 | `InboxItemCard.tsx` | Tarjeta resumida + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
 | `InboxContentDetailDialog.tsx` | Ficha en modal; diseño de plantilla (`ContentVisualDesignPanel`), recomponer imagen (`ContentVisualPanel`), aprobación formal |
-| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; marco centrado (`max-w` + `mx-auto`), `object-contain` sin recortar textos del creative |
+| `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; prioriza `content.assets` (plantilla + media kit) sobre generaciones IA antiguas |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
 | `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día; entradas con `StaggerGroup` |
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
