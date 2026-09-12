@@ -1,4 +1,8 @@
-import { normalizeAppCaptureManifest } from './tutorial-manifest.util';
+import {
+  getCaptureRoutesFromManifest,
+  normalizeAppCaptureManifest,
+  resolveCaptureReadySelector,
+} from './tutorial-manifest.util';
 
 describe('normalizeAppCaptureManifest', () => {
   const context = {
@@ -78,5 +82,41 @@ describe('normalizeAppCaptureManifest', () => {
 
     expect(manifest?.baseUrl).toBe('https://other.app');
     expect(manifest?.modules[0]?.waitSelector).toBe('#dashboard-root');
+  });
+
+  it('resuelve selector de captura antes del primer fill y sin modales', () => {
+    const selector = resolveCaptureReadySelector([
+      { action: 'click', selector: '#nav-agenda' },
+      { action: 'wait', selector: '[data-testid="page-agenda"]' },
+      { action: 'click', selector: '#action-agendar-cita' },
+      { action: 'wait', selector: '[data-testid="agenda-form-cita-dialog"]' },
+      { action: 'fill', selector: '#field-cita-paciente', value: 'María' },
+    ]);
+
+    expect(selector).toBe('[data-testid="page-agenda"]');
+  });
+
+  it('incluye flow en rutas de captura del manifest', () => {
+    const manifest = normalizeAppCaptureManifest(
+      {
+        baseUrl: 'https://app.example.com',
+        modules: [
+          {
+            navId: 'page-odontograma',
+            title: 'Odontograma',
+            path: '/agenda',
+            flow: [
+              { action: 'click', selector: '[data-testid="agenda-cita-item"]' },
+              { action: 'wait', selector: '[data-testid="sesion-clinica-odontograma-panel"]' },
+            ],
+          },
+        ],
+      },
+      context,
+    );
+
+    const routes = getCaptureRoutesFromManifest(manifest!, 5);
+    expect(routes[0]?.flow).toHaveLength(2);
+    expect(routes[0]?.waitSelector).toBe('[data-testid="sesion-clinica-odontograma-panel"]');
   });
 });

@@ -12,8 +12,10 @@ import {
   fetchAppCaptureManifest,
   getCaptureRoutesFromManifest,
   getLoginModule,
+  resolveCaptureReadySelector,
   resolveTutorialManifestUrl,
   type AppCaptureManifest,
+  type TutorialManifestFlowStep,
 } from './domain/tutorial-manifest.util';
 
 export type CapturedScreenshot = {
@@ -34,6 +36,7 @@ type CaptureRoute = {
   waitMs?: number;
   waitSelector?: string;
   viewports?: AppCaptureViewport[];
+  flow?: TutorialManifestFlowStep[];
 };
 
 const VIEWPORT_SIZES: Record<AppCaptureViewport, { width: number; height: number }> = {
@@ -154,23 +157,13 @@ export class AppScreenshotCaptureService {
 
         for (const viewport of viewports) {
           await page.setViewportSize(VIEWPORT_SIZES[viewport]);
-          await page.goto(route.url, { waitUntil: 'networkidle', timeout: 45_000 });
+          await this.prepareRouteForCapture(page, route);
 
           if (await this.isLoginFormVisible(page)) {
             throw new ServiceUnavailableException({
               error: `Sesión perdida al abrir "${route.label}". Verifica que la URL post-login sea correcta.`,
               code: 'CAPTURE_SESSION_LOST',
             });
-          }
-
-          const waitMs = route.waitMs ?? 2000;
-          if (route.waitSelector) {
-            await page
-              .waitForSelector(route.waitSelector, { state: 'visible', timeout: 25_000 })
-              .catch(() => undefined);
-          }
-          if (waitMs > 0) {
-            await page.waitForTimeout(waitMs);
           }
 
           const buffer = await page.screenshot({ type: 'png', fullPage: false });
@@ -346,6 +339,7 @@ export class AppScreenshotCaptureService {
           url: route.url,
           waitMs: route.waitMs,
           waitSelector: route.waitSelector,
+          flow: route.flow,
         }));
       }
     }
@@ -358,6 +352,7 @@ export class AppScreenshotCaptureService {
           url: route.url,
           waitMs: route.waitMs,
           waitSelector: route.waitSelector,
+          flow: route.flow,
         }))
       : [];
     const merged = mergeUniqueRoutes(configured, [...manifestFallback, ...discovered], APP_CAPTURE_MIN_UNIQUE_SCREENS);
@@ -367,6 +362,104 @@ export class AppScreenshotCaptureService {
     }
 
     return merged.slice(0, APP_CAPTURE_MIN_UNIQUE_SCREENS);
+  }
+
+  private async prepareRouteForCapture(page: Page, route: CaptureRoute): Promise<void> {
+    await page.goto(route.url, { waitUntil: 'networkidle', timeout: 45_000 });
+
+    if (route.flow?.length) {
+      await this.executeCaptureFlow(page, route.flow, route.waitSelector);
+    } else if (route.waitSelector) {
+      await page
+        .waitForSelector(route.waitSelector, { state: 'visible', timeout: 25_000 })
+        .catch(() => undefined);
+    }
+
+    const waitMs = route.waitMs ?? 2000;
+    if (waitMs > 0) {
+      await page.waitForTimeout(waitMs);
+    }
+  }
+
+  private async executeCaptureFlow(
+    page: Page,
+    flow: TutorialManifestFlowStep[],
+    readySelector?: string,
+  ): Promise<void> {
+    const firstFillIndex = flow.findIndex((step) => step.action === 'fill');
+    const steps = firstFillIndex >= 0 ? flow.slice(0, firstFillIndex) : flow;
+    const stopSelector = readySelector ?? resolveCaptureReadySelector(flow);
+
+    for (const step of steps) {
+      if (stopSelector && await this.isSelectorVisible(page, stopSelector)) {
+        await page.waitForTimeout(400);
+        return;
+      }
+
+      await this.executeFlowStep(page, step);
+
+      if (stopSelector && step.action === 'wait' && step.selector === stopSelector) {
+        await page
+          .waitForSelector(stopSelector, { state: 'visible', timeout: 25_000 })
+          .catch(() => undefined);
+        return;
+      }
+    }
+
+    if (stopSelector) {
+      await page
+        .waitForSelector(stopSelector, { state: 'visible', timeout: 25_000 })
+        .catch(() => undefined);
+    }
+  }
+
+  private async executeFlowStep(page: Page, step: TutorialManifestFlowStep): Promise<void> {
+    switch (step.action) {
+      case 'wait':
+        if (step.selector) {
+          await page
+            .waitForSelector(step.selector, { state: 'visible', timeout: 20_000 })
+            .catch(() => undefined);
+        }
+        return;
+      case 'click':
+        if (!step.selector) return;
+        await page.click(step.selector, { timeout: 10_000 }).catch(() => undefined);
+        await page.waitForTimeout(400);
+        return;
+      case 'scroll':
+        if (!step.selector) return;
+        await page.locator(step.selector).first().scrollIntoViewIfNeeded().catch(() => undefined);
+        if (step.value === 'down') {
+          await page.mouse.wheel(0, 420);
+        } else if (step.value === 'up') {
+          await page.mouse.wheel(0, -420);
+        }
+        return;
+      case 'hover':
+        if (!step.selector) return;
+        await page.hover(step.selector, { timeout: 10_000 }).catch(() => undefined);
+        return;
+      case 'navigate': {
+        const targetUrl = step.url ?? step.value;
+        if (!targetUrl) return;
+        const resolved = /^https?:\/\//i.test(targetUrl)
+          ? targetUrl
+          : new URL(targetUrl, page.url()).toString();
+        await page.goto(resolved, { waitUntil: 'networkidle', timeout: 45_000 }).catch(() => undefined);
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  private async isSelectorVisible(page: Page, selector: string): Promise<boolean> {
+    try {
+      return await page.locator(selector).first().isVisible();
+    } catch {
+      return false;
+    }
   }
 
   private async discoverCaptureTargets(

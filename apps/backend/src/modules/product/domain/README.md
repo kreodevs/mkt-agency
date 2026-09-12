@@ -47,6 +47,8 @@ Cada pantalla:
 
 `https://app.oraltrack.com.mx/tutorial-manifest.json` encaja sin adaptación: `modules[]`, `flow`, `coverageNotes.microTutorialesActivos`.
 
+Varias pantallas comparten la misma `path` (p. ej. `/agenda`) y dependen del `flow` para llegar al estado visible (odontograma, sesión clínica). Playwright ejecuta ese flujo antes de cada captura (omite `fill` y para en el último `wait` útil antes del primer `fill`, excluyendo modales).
+
 ## Ejemplo mínimo (otra app)
 
 ```json

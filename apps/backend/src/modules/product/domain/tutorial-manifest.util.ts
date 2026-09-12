@@ -3,6 +3,7 @@ export interface TutorialManifestFlowStep {
   action: string;
   selector?: string;
   value?: string;
+  url?: string;
 }
 
 export interface NormalizedManifestModule {
@@ -32,6 +33,7 @@ export type ManifestCaptureRoute = {
   url: string;
   waitSelector?: string;
   waitMs?: number;
+  flow?: TutorialManifestFlowStep[];
 };
 
 const DEFAULT_AUTH_PATHS = [
@@ -185,9 +187,33 @@ export function getCaptureRoutesFromManifest(
   return ordered.slice(0, maxRoutes).map((module) => ({
     label: module.title,
     url: module.fullUrl ?? joinManifestUrl(manifest.baseUrl, module.path),
-    waitSelector: module.waitSelector ?? getPageWaitSelector(module),
+    waitSelector:
+      resolveCaptureReadySelector(module.flow) ??
+      module.waitSelector ??
+      getPageWaitSelector(module),
     waitMs: 2500,
+    flow: module.flow,
   }));
+}
+
+/** Selector de pantalla lista para captura: último wait útil antes del primer fill (sin modales). */
+export function resolveCaptureReadySelector(
+  flow?: TutorialManifestFlowStep[],
+): string | undefined {
+  if (!flow?.length) return undefined;
+
+  const firstFillIndex = flow.findIndex((step) => step.action === 'fill');
+  const stepsBeforeFill = firstFillIndex >= 0 ? flow.slice(0, firstFillIndex) : flow;
+  const waitSteps = stepsBeforeFill.filter(
+    (step) => step.action === 'wait' && Boolean(step.selector?.trim()),
+  );
+  const pageWaits = waitSteps.filter((step) => !isModalCaptureSelector(step.selector!));
+  const target = pageWaits.at(-1) ?? waitSteps.at(-1);
+  return target?.selector;
+}
+
+function isModalCaptureSelector(selector: string): boolean {
+  return /dialog|modal|form-|popup|drawer/i.test(selector);
 }
 
 export function isCaptureEligibleModule(
@@ -366,6 +392,7 @@ function readFlow(value: unknown): TutorialManifestFlowStep[] {
         ...(readString(step.label) ? { label: readString(step.label)! } : {}),
         ...(readString(step.selector ?? step.target) ? { selector: readString(step.selector ?? step.target)! } : {}),
         ...(readString(step.value) ? { value: readString(step.value)! } : {}),
+        ...(readString(step.url) ? { url: readString(step.url)! } : {}),
       } satisfies TutorialManifestFlowStep;
     })
     .filter((step): step is TutorialManifestFlowStep => step !== null);
