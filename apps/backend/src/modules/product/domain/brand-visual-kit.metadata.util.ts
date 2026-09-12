@@ -2,7 +2,8 @@ export const BRAND_VISUAL_KIT_METADATA_KEY = 'brandVisualKit';
 
 export type BrandVisualStyle = 'minimal' | 'bold' | 'luxury';
 
-const DEFAULT_FONT_FAMILY = '"Helvetica Neue", Arial, sans-serif';
+/** Sin comillas internas: se usa dentro de atributos SVG con comillas simples. */
+const DEFAULT_FONT_FAMILY = 'Helvetica Neue, Arial, sans-serif';
 
 export interface ProductBrandVisualKit {
   style: BrandVisualStyle;
@@ -59,11 +60,17 @@ export function getProductBrandVisualKit(
   };
 }
 
+export function stripCssFontQuotes(fontStack: string): string {
+  return fontStack.replace(/"/g, '').trim();
+}
+
 export function normalizeBrandFontFamily(value: unknown): string {
   if (typeof value !== 'string' || !value.trim()) {
     return DEFAULT_FONT_FAMILY;
   }
-  const sanitized = value.trim().replace(/[^a-zA-Z0-9 ,'"-]/g, '').slice(0, 120);
+  const sanitized = stripCssFontQuotes(
+    value.trim().replace(/[^a-zA-Z0-9 ,'"-]/g, '').slice(0, 120),
+  );
   return sanitized || DEFAULT_FONT_FAMILY;
 }
 

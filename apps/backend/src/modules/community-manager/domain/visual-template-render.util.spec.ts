@@ -219,5 +219,56 @@ describe('visual-template-render.util', () => {
 
       expect(buffer.length).toBeGreaterThan(500);
     });
+
+    it('renders Instagram carousel slides with default Helvetica stack (no SVG quote clash)', async () => {
+      const photoBuffer = await createTestPhoto(1080, 1920);
+      const slots = buildVisualTemplateSlots(
+        {
+          title: 'Organiza tu consultorio en 3 pasos (carrusel educativo)',
+          body:
+            '¿Todavía usas papel o Excel para gestionar tus pacientes y citas? 😫\nPaso 1: Centraliza pacientes\nPaso 2: Agenda inteligente\nPaso 3: Reportes en un clic',
+          callToAction: 'Prueba Oraltrack gratis',
+        },
+        'tip-card',
+        1,
+        3,
+      );
+
+      for (let slideIndex = 0; slideIndex < 3; slideIndex += 1) {
+        const output = await renderVisualTemplateFrame({
+          templateId: 'tip-card',
+          brandKit,
+          slots,
+          size: '1024x1024',
+          platform: 'instagram',
+          photoBuffer,
+          slideIndex,
+          slideCount: 3,
+          screenshotDevice: 'ios',
+        });
+        expect(output.length).toBeGreaterThan(500);
+      }
+    });
+
+    it('renders with legacy quoted font family from brand kit metadata', async () => {
+      const photoBuffer = await createTestPhoto(800, 600);
+      const output = await renderVisualTemplateFrame({
+        templateId: 'product-hero',
+        brandKit: {
+          ...brandKit,
+          fontFamily: '"Helvetica Neue", Arial, sans-serif',
+        },
+        slots: {
+          headline: 'Organiza tu consultorio',
+          subline: 'Gestión inteligente para dentistas',
+          cta: 'Demo gratis',
+        },
+        size: '1024x1024',
+        platform: 'instagram',
+        photoBuffer,
+      });
+
+      expect(output.length).toBeGreaterThan(500);
+    });
   });
 });

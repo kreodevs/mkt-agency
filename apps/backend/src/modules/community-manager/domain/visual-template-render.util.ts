@@ -1,7 +1,10 @@
 import sharp from '@/shared/media/sharp.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
 import type { AssetDeviceHint } from '../../assets/domain/asset-folder.util';
-import { normalizeBrandFontFamily } from '../../product/domain/brand-visual-kit.metadata.util';
+import {
+  normalizeBrandFontFamily,
+  stripCssFontQuotes,
+} from '../../product/domain/brand-visual-kit.metadata.util';
 import {
   buildDeviceShadow,
   renderDeviceFrame,
@@ -67,7 +70,7 @@ function resolveTextFonts(
   if (isQuote || kit.style === 'luxury') {
     return { sans: 'Georgia, serif', display: 'Georgia, serif' };
   }
-  const base = '"Helvetica Neue", Arial, sans-serif';
+  const base = 'Helvetica Neue, Arial, sans-serif';
   return { sans: base, display: base };
 }
 
@@ -246,6 +249,11 @@ function escapeXml(value: string): string {
     .replace(/'/g, '&apos;');
 }
 
+/** Atributo font-family seguro para SVG (evita comillas dobles anidadas que rompen librsvg). */
+function svgFontFamily(fontStack: string): string {
+  return `font-family='${escapeXml(stripCssFontQuotes(fontStack))}'`;
+}
+
 function wrapTextLines(text: string, maxCharsPerLine: number, maxLines: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
@@ -387,13 +395,13 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
 
   const slideBadge =
     slideCount > 1
-      ? `<text x="${width - padding}" y="${padding + 26}" text-anchor="end" fill="${TEXT_MUTED}" font-family="${fonts.sans}" font-size="20" font-weight="600" opacity="0.9">${slideIndex + 1}/${slideCount}</text>`
+      ? `<text x="${width - padding}" y="${padding + 26}" text-anchor="end" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="20" font-weight="600" opacity="0.9">${slideIndex + 1}/${slideCount}</text>`
       : '';
 
   const promoBadge =
     templateId === 'promo-cta' && variant !== 'cta-solid'
       ? `<rect x="${padding}" y="${padding}" rx="16" ry="16" width="${Math.min(width * 0.28, 200)}" height="44" fill="${kit.accentColor}"/>
-         <text x="${padding + 18}" y="${padding + 30}" fill="${kit.secondaryColor}" font-family="${fonts.sans}" font-size="18" font-weight="700">NUEVO</text>`
+         <text x="${padding + 18}" y="${padding + 30}" fill="${kit.secondaryColor}" ${svgFontFamily(fonts.sans)} font-size="18" font-weight="700">NUEVO</text>`
       : '';
 
   const ctaY = isCtaFocus
@@ -403,19 +411,19 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
 
   const ctaBlock = slots.cta
     ? `<rect x="${padding}" y="${ctaY}" rx="28" ry="28" width="${ctaWidth}" height="56" fill="${kit.primaryColor}"/>
-       <text x="${padding + 28}" y="${ctaY + 36}" fill="${TEXT_PRIMARY}" font-family="${fonts.sans}" font-size="${ctaSize}" font-weight="700">${escapeXml(slots.cta)}</text>`
+       <text x="${padding + 28}" y="${ctaY + 36}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.sans)} font-size="${ctaSize}" font-weight="700">${escapeXml(slots.cta)}</text>`
     : '';
 
   const statBlock =
     isStat && slots.statValue
-      ? `<text x="${padding}" y="${contentY}" fill="${kit.accentColor}" font-family="${fonts.sans}" font-size="${statSize}" font-weight="800" letter-spacing="-2">${escapeXml(slots.statValue)}</text>`
+      ? `<text x="${padding}" y="${contentY}" fill="${kit.accentColor}" ${svgFontFamily(fonts.sans)} font-size="${statSize}" font-weight="800" letter-spacing="-2">${escapeXml(slots.statValue)}</text>`
       : '';
 
   const headlineFont = isQuote ? fonts.display : fonts.display;
   const headlineY = statBlock ? contentY + statSize * 0.95 : contentY;
   const headlineBlock = statBlock
-    ? `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" font-family="${fonts.sans}" font-size="${Math.round(headlineSize * 0.72)}" font-weight="600">${headlineTspans}</text>`
-    : `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" font-family="${headlineFont}" font-size="${headlineSize}" font-weight="700">${headlineTspans}</text>`;
+    ? `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.sans)} font-size="${Math.round(headlineSize * 0.72)}" font-weight="600">${headlineTspans}</text>`
+    : `<text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" ${svgFontFamily(headlineFont)} font-size="${headlineSize}" font-weight="700">${headlineTspans}</text>`;
 
   const sublineY =
     headlineY +
@@ -437,7 +445,7 @@ function buildTextBlockSvg(options: TextBlockOptions): string {
     ${quoteMark}
     ${statBlock}
     ${statBlock ? '' : headlineBlock}
-    <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" font-family="${fonts.sans}" font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
+    <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
     ${ctaBlock}
   </svg>`;
 }
