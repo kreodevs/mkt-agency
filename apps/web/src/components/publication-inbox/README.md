@@ -15,7 +15,7 @@ La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, pró
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
 | `InboxArtPublishBar.tsx` | CTA **Publicar este arte con n8n** debajo del mockup visual (por pieza) |
-| `InboxQuickPublishActions.tsx` | Copiar, Abrir red, menú «Más»; n8n primario va en `InboxArtPublishBar` |
+| `InboxQuickPublishActions.tsx` | Copiar, Abrir red, **Recomponer** (plantilla + media kit), menú «Más»; n8n en `InboxArtPublishBar` |
 | `InboxContentDeleteDialog.tsx` | Confirmación de borrado individual o en lote |
 | `InboxPurgeDialog.tsx` | Limpiar bandeja por alcance (todo / por aprobar / listas / …) |
 | `InboxKitPanel.tsx` | Kit Copiar y Llevar (aprobadas) |

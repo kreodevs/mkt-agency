@@ -91,6 +91,11 @@ export function ContentVisualPanel({
   const isProcessing = generation?.status === 'processing' && !isStaleProcessing;
   const isFailed = generation?.status === 'failed' || isStaleProcessing;
   const isCompleted = generation?.status === 'completed' && hasVisual;
+  const canRecomposeTemplate =
+    Boolean(productId) &&
+    hasVisual &&
+    visualFormat !== 'talking-head' &&
+    !isProcessing;
   const processingLabel =
     visualFormat === 'talking-head'
       ? 'Generando reel con CM virtual…'
@@ -253,6 +258,18 @@ export function ContentVisualPanel({
           </Button>
         ) : null}
 
+        {canRecomposeTemplate ? (
+          <Button
+            variant="outline"
+            className="gap-2"
+            loading={recomposeMutation.isPending}
+            onClick={() => recomposeMutation.mutate()}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Recomponer plantilla
+          </Button>
+        ) : null}
+
         {isCompleted && generation ? (
           <>
             <Link to={`/agents/image-generator/${generation.id}`}>
@@ -261,17 +278,6 @@ export function ContentVisualPanel({
                 Ver detalle
               </Button>
             </Link>
-            {productId ? (
-              <Button
-                variant="outline"
-                className="gap-2"
-                loading={recomposeMutation.isPending}
-                onClick={() => recomposeMutation.mutate()}
-              >
-                <RefreshCw className="h-4 w-4" />
-                Recomponer plantilla
-              </Button>
-            ) : null}
             <Button
               variant="ghost"
               className="gap-2"

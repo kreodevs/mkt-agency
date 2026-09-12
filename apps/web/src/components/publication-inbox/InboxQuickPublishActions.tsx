@@ -25,6 +25,9 @@ import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
 import { approveContentVersion, rejectContentVersion } from '@/services/content';
+import { recomposeContentVisual } from '@/services/community-manager';
+import { extractContentAssetIds } from '@/lib/image-generation';
+import { normalizeContentVisualFormat } from '@/lib/visual-format';
 import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
 import { useInboxPublishActions } from '@/hooks/useInboxPublishActions';
@@ -181,6 +184,22 @@ export function InboxQuickPublishActions({
       toast.success('Nueva versión en camino — texto actualizado e imagen regenerándose');
     },
     onError: () => toast.error('No se pudo regenerar'),
+  });
+
+  const visualFormat = normalizeContentVisualFormat(item.visualFormat);
+  const hasTemplateVisual = extractContentAssetIds(item.assets).length > 0;
+  const canRecomposeTemplate =
+    Boolean(item.productId) && hasTemplateVisual && visualFormat !== 'talking-head';
+
+  const recomposeMutation = useMutation({
+    mutationFn: () => recomposeContentVisual(item.contentId),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success('Plantilla recomponida con capturas y textos actuales');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo recomponer la plantilla');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -393,6 +412,19 @@ export function InboxQuickPublishActions({
         <ExternalLink className="mr-1 h-3.5 w-3.5" />
         Abrir red
       </Button>
+      {canRecomposeTemplate ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={primaryButtonClass}
+          loading={recomposeMutation.isPending}
+          onClick={() => recomposeMutation.mutate()}
+        >
+          <RefreshCw className="mr-1 h-3.5 w-3.5" />
+          Recomponer
+        </Button>
+      ) : null}
 
       <div className="relative">
         <Button
