@@ -12,6 +12,7 @@ describe('ImageGenerationService', () => {
       {} as any, // assetService
       {} as any, // contentService
       {} as any, // productService
+      {} as any, // mediaKitService
       {} as any, // imageBranding
       {} as any, // llmConfig
       {} as any, // llmUsage
