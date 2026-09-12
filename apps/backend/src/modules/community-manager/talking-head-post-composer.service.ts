@@ -7,6 +7,8 @@ import { ContentService } from '../content/content.service';
 import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import type { SocialCopyPost } from './adapters/social-copy.adapter.port';
+import { ProductMediaKitService } from '../product/product-media-kit.service';
+import { AssetService } from '../assets/asset.service';
 import { CmCharacterService } from './cm-character.service';
 import { DEFAULT_CM_VOICE_ID } from './domain/cm-character.constants';
 
@@ -18,6 +20,8 @@ export class TalkingHeadPostComposerService {
     private readonly cmCharacter: CmCharacterService,
     private readonly talkingHeadComposer: TalkingHeadComposerService,
     private readonly contentService: ContentService,
+    private readonly mediaKit: ProductMediaKitService,
+    private readonly assetService: AssetService,
     @InjectRepository(AgentImageGenerationEntity)
     private readonly generations: Repository<AgentImageGenerationEntity>,
   ) {}
@@ -70,6 +74,22 @@ export class TalkingHeadPostComposerService {
     );
 
     try {
+      const kit = await this.mediaKit.listEntitiesForProduct(tenantId, productId);
+      const picks = await this.mediaKit.pickComposeImagePicks(
+        tenantId,
+        kit,
+        'talking-head',
+        0,
+        content.platform ?? undefined,
+      );
+      const screenshotBuffers: Buffer[] = [];
+      for (const pick of picks.slice(0, 2)) {
+        const file = await this.assetService.readFile(tenantId, pick.assetId).catch(() => null);
+        if (file?.buffer) {
+          screenshotBuffers.push(file.buffer);
+        }
+      }
+
       const composed = await this.talkingHeadComposer.compose({
         tenantId,
         productId,
@@ -78,11 +98,13 @@ export class TalkingHeadPostComposerService {
         script,
         voiceId: config.voiceId ?? DEFAULT_CM_VOICE_ID,
         accessUser: { id: userId, tenantId },
+        productScreenshotBuffers: screenshotBuffers,
         metadata: {
           source: 'copilot-week',
           generationId: record.id,
           cmCharacterId: config.id,
           cmCharacterName: config.name,
+          mediaKitScreenshotCount: screenshotBuffers.length,
         },
       });
 
@@ -95,12 +117,16 @@ export class TalkingHeadPostComposerService {
         frameCount: 1,
         frames: [{ assetId: composed.videoAssetId, index: 0 }],
         audioAssetId: composed.audioAssetId,
+        mediaKitScreenshotCount: screenshotBuffers.length,
       };
       await this.generations.save(record);
 
       await this.contentService.update(tenantId, userId, contentId, {
         assets: [composed.videoAssetId],
-        changeSummary: 'Reel con CM virtual (retrato + lip-sync)',
+        changeSummary:
+          screenshotBuffers.length > 0
+            ? 'Reel con CM virtual + capturas Oraltrack (intro y PiP)'
+            : 'Reel con CM virtual (retrato + lip-sync)',
       });
 
       return true;

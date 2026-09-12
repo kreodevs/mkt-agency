@@ -41,6 +41,7 @@ import {
 import { TALKING_HEAD_ADAPTER } from './adapters/talking-head.adapter.port';
 import { TtsGenerationService } from './tts-generation.service';
 import { TalkingHeadComposerService } from './talking-head-composer.service';
+import { TalkingHeadVideoEnricherService } from './talking-head-video-enricher.service';
 import { AgentInterviewController } from './agent-interview.controller';
 import { AgentInterviewService } from './agent-interview.service';
 import { AgentInterviewEntity } from './domain/agent-interview.entity';
@@ -110,6 +111,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     StubTalkingHeadAdapter,
     TtsGenerationService,
     TalkingHeadComposerService,
+    TalkingHeadVideoEnricherService,
     StubWebsiteAnalyzerAdapter,
     OpenRouterWebsiteAnalyzerAdapter,
     WebsiteAnalyzerService,

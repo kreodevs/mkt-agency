@@ -121,7 +121,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             'Elige cmCharacterId según tono (formal → ejecutiva, cercano → juvenil).',
             'visualDescription en talking-head: solo fondo/ambiente del reel (consultorio, oficina moderna, luz natural). NO describas otra persona.',
             'El body del talking-head = guion hablado 15-45 s, natural, sin timestamps ni direcciones de escena.',
-            'En posts estáticos/carousel el sistema puede superponer el retrato de la CM en la portada; el copy puede invitar a ver el reel.',
+            'En posts estáticos/carousel el sistema superpone el retrato de la CM en la portada.',
+            'En talking-head el sistema añade automáticamente capturas del media kit: intro de producto (~3 s) + PiP con la app durante el reel.',
           ].join('\n')
         : context.cmCharacterReady
           ? [

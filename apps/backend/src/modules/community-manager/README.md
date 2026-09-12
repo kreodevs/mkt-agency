@@ -17,7 +17,7 @@ Generación de copy para redes sociales con IA.
 Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposerService` prioriza fotos reales del kit antes de la API de imágenes.
 
 1. **Post estático / carrusel** — imágenes del kit por rol (`product-screenshot` > `event-photo` > …).
-2. **Video IA** — deshabilitado. Futuro: reel con FFmpeg y material del kit.
+2. **Reel CM virtual (`talking-head`)** — lip-sync de la CM + FFmpeg: intro con captura del media kit y PiP de la app durante el video (requiere FFmpeg en el worker).
 
 ## CM virtual (talking-head)
 

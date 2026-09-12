@@ -14,6 +14,7 @@ import {
   TalkingHeadResult,
 } from './adapters/talking-head.adapter.port';
 import { TtsGenerationService } from './tts-generation.service';
+import { TalkingHeadVideoEnricherService } from './talking-head-video-enricher.service';
 
 export interface ComposeTalkingHeadOptions {
   portraitAssetId: string;
@@ -25,6 +26,8 @@ export interface ComposeTalkingHeadOptions {
   contentId?: string;
   productId?: string;
   metadata?: Record<string, unknown>;
+  /** Capturas del media kit para intro + PiP en el reel. */
+  productScreenshotBuffers?: Buffer[];
 }
 
 export interface ComposeTalkingHeadResult {
@@ -43,6 +46,7 @@ export class TalkingHeadComposerService {
     private readonly llmConfig: LlmConfigService,
     private readonly llmProviders: LlmProviderService,
     private readonly replicate: ReplicateTalkingHeadAdapter,
+    private readonly videoEnricher: TalkingHeadVideoEnricherService,
     @Inject(TALKING_HEAD_ADAPTER)
     private readonly stub: TalkingHeadAdapterPort,
   ) {}
@@ -85,9 +89,14 @@ export class TalkingHeadComposerService {
       resolution: '720p',
     });
 
+    const enriched = await this.videoEnricher.enrichWithProductScreenshots(
+      talkingHead.videoBuffer,
+      options.productScreenshotBuffers ?? [],
+    );
+
     const videoAsset = await this.uploadBuffer(
       options.tenantId,
-      talkingHead.videoBuffer,
+      enriched.buffer,
       `cm-reel-${Date.now()}.mp4`,
       talkingHead.mimeType,
       {
@@ -97,6 +106,8 @@ export class TalkingHeadComposerService {
         productId: options.productId ?? null,
         portraitAssetId: options.portraitAssetId,
         audioAssetId: audioAsset.id,
+        mediaKitEnriched: Boolean(enriched.metadata),
+        mediaKitIntroSeconds: enriched.metadata?.introSeconds ?? null,
         ...options.metadata,
       },
     );

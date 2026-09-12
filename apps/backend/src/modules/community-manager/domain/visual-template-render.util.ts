@@ -523,25 +523,86 @@ async function renderGradientBase(
   return sharp(bgSvg).composite([{ input: decorSvg, top: 0, left: 0 }]).png().toBuffer();
 }
 
+const CM_PORTRAIT_RING_PADDING = 12;
+
+function cmPortraitBadgeOuterSize(diameter: number): number {
+  return diameter + CM_PORTRAIT_RING_PADDING;
+}
+
+function resolveCmPortraitPlacement(
+  width: number,
+  height: number,
+  badgeOuterSize: number,
+  devicePlacement: { top: number; frameHeight: number; left: number },
+  scrimTop: number,
+): { top: number; left: number } {
+  const padding = Math.round(width * 0.08);
+  const topSafe = Math.round(height * 0.17);
+  const deviceCenterY = devicePlacement.top + devicePlacement.frameHeight / 2;
+  let top = Math.round(deviceCenterY - badgeOuterSize / 2);
+  const maxBottom = scrimTop - padding;
+  if (top + badgeOuterSize > maxBottom) {
+    top = maxBottom - badgeOuterSize;
+  }
+  top = Math.max(topSafe, top);
+  const maxLeft = devicePlacement.left - badgeOuterSize - Math.round(padding * 0.75);
+  const left = Math.max(padding, Math.min(maxLeft, Math.round(width * 0.1)));
+  return { left, top };
+}
+
+function applyPresenterDevicePlacement(
+  placement: { left: number; top: number; frameWidth: number; frameHeight: number },
+  canvasWidth: number,
+  canvasHeight: number,
+): void {
+  const maxPhoneW = Math.round(canvasWidth * 0.52);
+  if (placement.frameWidth > maxPhoneW) {
+    const scale = maxPhoneW / placement.frameWidth;
+    placement.frameWidth = maxPhoneW;
+    placement.frameHeight = Math.round(placement.frameHeight * scale);
+  }
+  placement.left = canvasWidth - placement.frameWidth - Math.round(canvasWidth * 0.06);
+  placement.top = Math.round(canvasHeight * 0.05);
+}
+
 async function renderCmPortraitBadge(
   portraitBuffer: Buffer,
   diameter: number,
 ): Promise<Buffer> {
+  const innerDiameter = Math.round(diameter * 0.84);
+  const inset = Math.round((diameter - innerDiameter) / 2);
+  const cropPosition = sharp.strategy?.attention ?? 'north';
   const resized = await sharp(portraitBuffer)
-    .resize(diameter, diameter, { fit: 'cover', position: 'centre' })
+    .resize(innerDiameter, innerDiameter, {
+      fit: 'cover',
+      position: cropPosition,
+    })
     .png()
     .toBuffer();
   const mask = Buffer.from(
     `<svg width="${diameter}" height="${diameter}"><circle cx="${diameter / 2}" cy="${diameter / 2}" r="${diameter / 2}" fill="white"/></svg>`,
   );
+  const outer = cmPortraitBadgeOuterSize(diameter);
   const ring = Buffer.from(
-    `<svg width="${diameter + 12}" height="${diameter + 12}">
-      <circle cx="${(diameter + 12) / 2}" cy="${(diameter + 12) / 2}" r="${diameter / 2 + 4}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="4"/>
+    `<svg width="${outer}" height="${outer}">
+      <circle cx="${outer / 2}" cy="${outer / 2}" r="${diameter / 2 + 4}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="4"/>
     </svg>`,
   );
-  const clipped = await sharp(resized).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
+  const clipped = await sharp({
+    create: {
+      width: diameter,
+      height: diameter,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: resized, top: inset, left: inset }])
+    .composite([{ input: mask, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+  const ringInset = Math.round(CM_PORTRAIT_RING_PADDING / 2);
   return sharp(ring)
-    .composite([{ input: clipped, top: 6, left: 6 }])
+    .composite([{ input: clipped, top: ringInset, left: ringInset }])
     .png()
     .toBuffer();
 }
@@ -563,7 +624,7 @@ function buildCarouselTextSvg(options: {
   const headlineSize = Math.round(width * (mode === 'cta' ? 0.064 : 0.074));
   const sublineSize = Math.round(headlineSize * 0.4);
   const headlineLines = wrapTextLines(slots.headline, 18, 2);
-  const sublineLines = wrapTextLines(slots.subline ?? '', 32, 2);
+  const sublineLines = wrapTextLines(slots.subline ?? '', mode === 'cover' ? 26 : 32, 2);
 
   const headlineTspans = headlineLines
     .map((line, index) => {
@@ -574,7 +635,7 @@ function buildCarouselTextSvg(options: {
 
   const sublineTspans = sublineLines
     .map((line, index) => {
-      const dy = index === 0 ? sublineSize * 1.3 : sublineSize * 1.15;
+      const dy = index === 0 ? 0 : sublineSize * 1.2;
       return `<tspan x="${padding}" dy="${dy}">${escapeXml(line)}</tspan>`;
     })
     .join('');
@@ -586,19 +647,44 @@ function buildCarouselTextSvg(options: {
       : '';
 
   if (mode === 'cover') {
-    const headlineY = Math.round(height * 0.64);
-    const sublineY = headlineY + headlineSize * (headlineLines.length + 0.55);
-    const ctaY = height - padding - 52;
+    const ctaH = 54;
     const ctaW = Math.min(width - padding * 2, 420);
-    const ctaBlock = slots.cta
-      ? `<rect x="${padding}" y="${ctaY}" rx="30" ry="30" width="${ctaW}" height="54" fill="${kit.accentColor}"/>
-         <text x="${padding + 26}" y="${ctaY + 35}" fill="${kit.secondaryColor}" ${svgFontFamily(fonts.sans)} font-size="${Math.round(headlineSize * 0.38)}" font-weight="800">${escapeXml(slots.cta)}</text>`
+    const blockGap = Math.round(sublineSize * 1.25);
+    const headlineLineGap = headlineSize * 1.12;
+    const sublineLineGap = sublineSize * 1.2;
+    const hasCta = Boolean(slots.cta?.trim());
+    const hasSubline = sublineLines.length > 0 && Boolean(slots.subline?.trim());
+
+    const ctaY = hasCta ? height - padding - ctaH : height - padding;
+    let anchorBaseline = hasCta ? ctaY - blockGap : height - padding;
+
+    const sublineLastBaseline = anchorBaseline;
+    const sublineFirstBaseline = hasSubline
+      ? sublineLastBaseline - (sublineLines.length - 1) * sublineLineGap
+      : anchorBaseline;
+    anchorBaseline = hasSubline ? sublineFirstBaseline - blockGap : anchorBaseline;
+
+    const headlineLastBaseline = anchorBaseline;
+    const headlineFirstBaseline =
+      headlineLastBaseline - (headlineLines.length - 1) * headlineLineGap;
+    const minHeadlineBaseline = Math.round(height * 0.54) + Math.round(headlineSize * 0.2);
+    const headlineY = Math.max(headlineFirstBaseline, minHeadlineBaseline);
+
+    const ctaTextColor =
+      kit.accentColor.toLowerCase() === kit.secondaryColor.toLowerCase() ? TEXT_PRIMARY : kit.secondaryColor;
+    const ctaBlock = hasCta
+      ? `<rect x="${padding}" y="${ctaY}" rx="30" ry="30" width="${ctaW}" height="${ctaH}" fill="${kit.accentColor}"/>
+         <text x="${padding + 26}" y="${ctaY + 36}" fill="${ctaTextColor}" ${svgFontFamily(fonts.sans)} font-size="${Math.round(headlineSize * 0.38)}" font-weight="800">${escapeXml(slots.cta!)}</text>`
+      : '';
+
+    const sublineBlock = hasSubline
+      ? `<text x="${padding}" y="${sublineFirstBaseline}" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>`
       : '';
 
     return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       ${slideBadge}
       <text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.display)} font-size="${headlineSize}" font-weight="800">${headlineTspans}</text>
-      <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
+      ${sublineBlock}
       ${ctaBlock}
     </svg>`;
   }
@@ -713,10 +799,7 @@ async function renderCarouselCover(
     layoutContext.aspectRatio,
   );
   if (hasPresenter) {
-    placement.left = Math.min(
-      width - placement.frameWidth - Math.round(width * 0.05),
-      placement.left + Math.round(width * 0.1),
-    );
+    applyPresenterDevicePlacement(placement, width, height);
   }
   const deviceImage = await renderDeviceFrame(photoBuffer, placement);
   const shadow = await buildDeviceShadow(
@@ -747,12 +830,24 @@ async function renderCarouselCover(
   ];
 
   if (cmPortraitBuffer) {
-    const portraitSize = Math.round(Math.min(width, height) * 0.28);
+    const portraitSize = Math.round(Math.min(width, height) * 0.27);
     const portrait = await renderCmPortraitBadge(cmPortraitBuffer, portraitSize);
+    const scrimTop = height - scrimH;
+    const portraitPlacement = resolveCmPortraitPlacement(
+      width,
+      height,
+      cmPortraitBadgeOuterSize(portraitSize),
+      {
+        top: placement.top,
+        frameHeight: placement.frameHeight,
+        left: placement.left,
+      },
+      scrimTop,
+    );
     composites.splice(1, 0, {
       input: portrait,
-      top: Math.round(height * 0.1),
-      left: Math.round(width * 0.07),
+      top: portraitPlacement.top,
+      left: portraitPlacement.left,
     });
   }
 
@@ -1147,19 +1242,24 @@ async function renderGradientText(
   return sharp(base).composite([{ input: textSvg, top: 0, left: 0 }]).png().toBuffer();
 }
 
+type LogoCorner = 'top-left' | 'top-right';
+
 async function compositeLogo(
   base: Buffer,
   logoBuffer: Buffer,
   mimeType: string | null,
   width: number,
   height: number,
+  corner: LogoCorner = 'top-left',
 ): Promise<Buffer> {
   const logoWidth = Math.max(88, Math.round(Math.min(width, height) * 0.14));
   const pipeline =
     mimeType === 'image/svg+xml' ? sharp(logoBuffer, { density: 300 }) : sharp(logoBuffer);
   const logo = await pipeline.resize(logoWidth).png().toBuffer();
   const padding = Math.round(Math.min(width, height) * 0.04);
-  return sharp(base).composite([{ input: logo, top: padding, left: padding }]).png().toBuffer();
+  const left =
+    corner === 'top-right' ? width - logoWidth - padding : padding;
+  return sharp(base).composite([{ input: logo, top: padding, left }]).png().toBuffer();
 }
 
 export async function renderVisualTemplateFrame(
@@ -1309,12 +1409,15 @@ export async function renderVisualTemplateFrame(
     Boolean(input.logoBuffer) &&
     (layout === 'carousel-cover' || slideCount === 1);
   if (showLogo && input.logoBuffer) {
+    const logoCorner: LogoCorner =
+      layout === 'carousel-cover' && input.cmPortraitBuffer ? 'top-right' : 'top-left';
     composed = await compositeLogo(
       composed,
       input.logoBuffer,
       input.logoMimeType ?? 'image/png',
       width,
       height,
+      logoCorner,
     );
   }
 
