@@ -9,6 +9,7 @@ import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonatio
 import { ActiveProductSelector } from '@/components/products/ActiveProductSelector';
 import { Button } from '@/components/atoms/Button';
 import { logout } from '@/services/auth';
+import { inboxQueryKey } from '@/lib/inbox-sync.util';
 import { getPublicationInbox } from '@/services/publication-inbox';
 import { useAuthStore } from '@/store/auth';
 import { useActiveProductStore } from '@/store/active-product';
@@ -40,10 +41,9 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const advancedNav = isGrowth;
 
   const inboxBadgeQuery = useQuery({
-    queryKey: ['publication-inbox', activeProductId],
+    queryKey: inboxQueryKey(activeProductId),
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
     enabled: Boolean(user?.tenantId && !user.isSuperadmin),
-    staleTime: 30_000,
   });
   const unreadNotifications = inboxBadgeQuery.data?.stats.unreadNotifications ?? 0;
 

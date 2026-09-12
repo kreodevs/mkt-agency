@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
@@ -55,6 +55,12 @@ import { useActiveProductStore } from '@/store/active-product';
 import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import {
+  inboxNeedsHealSync,
+  inboxQueryKey,
+  isCopilotPrepareWeekMutation,
+  syncInboxAfterGeneration,
+} from '@/lib/inbox-sync.util';
 import { withActiveProductQuery } from '@/store/active-product';
 
 const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
@@ -83,13 +89,28 @@ export default function PublicationInboxPage() {
     }
   }, [urlProductId, setActiveProduct]);
 
-  const prepareWeekInFlight = useIsMutating({ mutationKey: ['copilot-prepare-week'] }) > 0;
+  const prepareWeekInFlight =
+    useIsMutating({
+      predicate: (mutation) => isCopilotPrepareWeekMutation(mutation.options.mutationKey),
+    }) > 0;
+  const wasPreparingRef = useRef(false);
 
   const inboxQuery = useQuery({
-    queryKey: ['publication-inbox', activeProductId],
+    queryKey: inboxQueryKey(activeProductId),
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
-    refetchInterval: prepareWeekInFlight ? 5000 : false,
+    refetchInterval: (query) => {
+      if (prepareWeekInFlight) return 3000;
+      if (inboxNeedsHealSync(query.state.data, activeProductId)) return 3000;
+      return false;
+    },
   });
+
+  useEffect(() => {
+    if (wasPreparingRef.current && !prepareWeekInFlight) {
+      void syncInboxAfterGeneration(queryClient, activeProductId, 1);
+    }
+    wasPreparingRef.current = prepareWeekInFlight;
+  }, [prepareWeekInFlight, queryClient, activeProductId]);
 
   useEffect(() => {
     if (!welcome) return;

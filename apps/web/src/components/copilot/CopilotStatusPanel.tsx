@@ -20,7 +20,8 @@ import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
 import type { CopilotPrepareHorizon } from '@/types/publication-inbox';
 import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPanel';
-import { withActiveProductQuery } from '@/store/active-product';
+import { syncInboxAfterGeneration } from '@/lib/inbox-sync.util';
+import { useActiveProductStore, withActiveProductQuery } from '@/store/active-product';
 
 const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
 
@@ -68,6 +69,7 @@ function pipelineProgressPercent(completedSteps: boolean[]): number {
 export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const setActiveProduct = useActiveProductStore((s) => s.setActiveProduct);
   const [horizon, setHorizon] = useState<CopilotPrepareHorizon>('day');
 
   const statusQuery = useQuery({
@@ -84,9 +86,18 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
     mutationKey: ['copilot-prepare-week', productId ?? 'primary'],
     mutationFn: () => prepareWeek(productId, horizon),
     onSuccess: async (result) => {
+      if (result.productId) {
+        setActiveProduct(result.productId, result.productName);
+      }
+
+      if (result.status === 'completed' && result.postsGenerated > 0) {
+        await syncInboxAfterGeneration(queryClient, result.productId, result.postsGenerated);
+      } else {
+        await queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      }
+
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['publication-inbox'] }),
-        queryClient.refetchQueries({ queryKey: ['soho-summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['soho-summary'] }),
         queryClient.invalidateQueries({ queryKey: ['copilot-status'] }),
       ]);
 

@@ -103,11 +103,20 @@ export class PublicationInboxService {
     upcoming.sort(sortByDate);
     rejected.sort(sortByDate);
 
-    const notificationRows = await this.notifications.find({
-      where: { tenantId, readAt: IsNull() },
-      order: { createdAt: 'DESC' },
-      take: 20,
-    });
+    const notificationQb = this.notifications
+      .createQueryBuilder('n')
+      .where('n.tenant_id = :tenantId', { tenantId })
+      .andWhere('n.read_at IS NULL')
+      .orderBy('n.created_at', 'DESC')
+      .take(20);
+
+    if (productId) {
+      notificationQb.andWhere('(n.product_id IS NULL OR n.product_id = :productId)', {
+        productId,
+      });
+    }
+
+    const notificationRows = await notificationQb.getMany();
 
     const notifications = notificationRows.map((n) => this.toNotificationDto(n));
 
