@@ -11,6 +11,6 @@ export type VisualTemplateId = (typeof VISUAL_TEMPLATE_IDS)[number];
 
 export const DEFAULT_VISUAL_TEMPLATE: VisualTemplateId = 'product-hero';
 
-export const CAROUSEL_VISUAL_TEMPLATE: VisualTemplateId = 'tip-card';
+export const CAROUSEL_VISUAL_TEMPLATE: VisualTemplateId = 'promo-cta';
 
 export const MEDIA_KIT_RECOMMENDED_MIN_IMAGES = 3;

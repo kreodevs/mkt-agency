@@ -46,6 +46,8 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
 
 Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
 
+Carruseles con media kit usan layouts `carousel-cover` / `carousel-step` / `carousel-cta`: mockup grande (~74% ancho), panel inferior con tipografía y CTA pill; sin miniaturas en esquina ni texto solapado.
+
 API kit de marca: `GET/PATCH /api/v1/products/:id/brand-visual-kit` (UI en detalle de producto)
 
 Recomponer plantilla desde editor: `POST /api/v1/community-manager/contents/:contentId/recompose-visual`

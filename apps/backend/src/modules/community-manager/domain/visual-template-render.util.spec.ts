@@ -48,32 +48,30 @@ describe('visual-template-render.util', () => {
       ).toBe('split-screenshot-top');
     });
 
-    it('uses device mockup for product-hero on Instagram', () => {
+    it('uses carousel-cover for product-hero on Instagram with media kit', () => {
       expect(
         resolveVisualLayoutMode('product-hero', 0, 1, true, {
           ...squareContext,
           platform: 'instagram',
         }),
-      ).toBe('device-mockup');
+      ).toBe('carousel-cover');
     });
 
-    it('uses device mockup for product-hero on LinkedIn', () => {
+    it('uses carousel-cover hero layout for single-image posts with media kit', () => {
       expect(
         resolveVisualLayoutMode('product-hero', 0, 1, true, {
           ...squareContext,
           platform: 'linkedin',
         }),
-      ).toBe('device-mockup');
+      ).toBe('carousel-cover');
     });
 
-    it('varies carousel slides with media kit: mockup + split on every frame', () => {
-      expect(resolveVisualLayoutMode('tip-card', 0, 3, true, squareContext)).toBe('device-mockup');
+    it('varies carousel slides with media kit: cover, step and cta layouts', () => {
+      expect(resolveVisualLayoutMode('tip-card', 0, 3, true, squareContext)).toBe('carousel-cover');
       expect(resolveVisualLayoutMode('tip-card', 1, 3, true, squareContext)).toBe(
-        'split-screenshot-top',
+        'carousel-step',
       );
-      expect(resolveVisualLayoutMode('tip-card', 2, 3, true, squareContext)).toBe(
-        'split-screenshot-top',
-      );
+      expect(resolveVisualLayoutMode('tip-card', 2, 3, true, squareContext)).toBe('carousel-cta');
     });
 
     it('keeps text-only carousel slides when there is no photo', () => {
@@ -81,20 +79,16 @@ describe('visual-template-render.util', () => {
       expect(resolveVisualLayoutMode('tip-card', 2, 3, false, squareContext)).toBe('cta-solid');
     });
 
-    it('uses device mockup on carousel middle slide for vertical', () => {
-      expect(resolveVisualLayoutMode('tip-card', 1, 3, true, verticalContext)).toBe(
-        'device-mockup',
-      );
+    it('uses carousel-step on carousel middle slide for vertical', () => {
+      expect(resolveVisualLayoutMode('tip-card', 1, 3, true, verticalContext)).toBe('carousel-step');
     });
 
     it('falls back to gradient when there is no photo', () => {
       expect(resolveVisualLayoutMode('product-hero', 0, 1, false)).toBe('gradient-only');
     });
 
-    it('uses device mockup for promo posts with screenshot', () => {
-      expect(resolveVisualLayoutMode('promo-cta', 0, 1, true, squareContext)).toBe(
-        'device-mockup',
-      );
+    it('uses carousel-cover for promo posts with screenshot', () => {
+      expect(resolveVisualLayoutMode('promo-cta', 0, 1, true, squareContext)).toBe('carousel-cover');
     });
   });
 

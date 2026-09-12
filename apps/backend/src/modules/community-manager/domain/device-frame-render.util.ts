@@ -108,6 +108,63 @@ export function resolveDevicePlacement(
   };
 }
 
+/** Mockup grande para portadas de carrusel y posts hero (≈70–75% del ancho). */
+export function resolveHeroDevicePlacement(
+  canvasWidth: number,
+  canvasHeight: number,
+  frameType: DeviceFrameType,
+  aspectRatio: VisualAspectRatio,
+): DevicePlacement {
+  if (frameType === 'iphone') {
+    const maxWidth = Math.round(canvasWidth * 0.74);
+    const maxHeight = Math.round(canvasHeight * 0.9);
+    let frameWidth = maxWidth;
+    let frameHeight = Math.round(frameWidth * 2.05);
+    if (frameHeight > maxHeight) {
+      frameHeight = maxHeight;
+      frameWidth = Math.round(frameHeight / 2.05);
+    }
+    return {
+      frameType: 'iphone',
+      frameWidth,
+      frameHeight,
+      left: Math.round((canvasWidth - frameWidth) / 2),
+      top: Math.round(canvasHeight * 0.04),
+    };
+  }
+
+  if (frameType === 'ipad') {
+    const maxWidth = Math.round(canvasWidth * 0.8);
+    const maxHeight = Math.round(canvasHeight * 0.88);
+    let frameWidth = maxWidth;
+    let frameHeight = Math.round(frameWidth * 1.35);
+    if (frameHeight > maxHeight) {
+      frameHeight = maxHeight;
+      frameWidth = Math.round(frameHeight / 1.35);
+    }
+    return {
+      frameType: 'ipad',
+      frameWidth,
+      frameHeight,
+      left: Math.round((canvasWidth - frameWidth) / 2),
+      top: Math.round(canvasHeight * 0.05),
+    };
+  }
+
+  const frameWidth = Math.round(canvasWidth * 0.9);
+  const frameHeight = Math.min(
+    Math.round(frameWidth * 0.58),
+    Math.round(canvasHeight * 0.82),
+  );
+  return {
+    frameType: 'macbook',
+    frameWidth,
+    frameHeight,
+    left: Math.round((canvasWidth - frameWidth) / 2),
+    top: Math.round(canvasHeight * 0.05),
+  };
+}
+
 async function applyRoundedCorners(
   input: Buffer,
   width: number,

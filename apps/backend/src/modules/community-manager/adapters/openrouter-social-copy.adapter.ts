@@ -80,7 +80,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           'Cada ítem puede incluir folderPath (carpeta en librería) y device (pc|ipad|ios). Usa device para elegir capturas acordes a la plataforma: TikTok/Instagram→ios/ipad; LinkedIn→pc.',
           'En visualDescription indica cómo se verá el asset real (ej. "screenshot de la app iOS en mockup móvil", "captura desktop en MacBook").',
           'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
-          'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup.',
+          'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup grande tipo anuncio (no miniaturas).',
+          'visualHeadline solo en slide 1; slide 2 = beneficio concreto del bullet 2; slide 3 = CTA corto (2-4 palabras).',
         ].join('\n')
       : '';
 

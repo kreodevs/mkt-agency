@@ -11,10 +11,11 @@ import {
   renderMiniDeviceThumbnail,
   resolveDeviceFrameType,
   resolveDevicePlacement,
+  resolveHeroDevicePlacement,
   resolveVisualAspectRatio,
   type VisualAspectRatio,
 } from './device-frame-render.util';
-import { resizeScreenshotForSlot } from './screenshot-crop.util';
+import { resizeScreenshotContain, resizeScreenshotForSlot } from './screenshot-crop.util';
 import type { ResolvedVisualBrandKit } from './visual-brand-kit.util';
 import type { VisualTemplateId } from './visual-template.constants';
 
@@ -54,7 +55,10 @@ export type VisualLayoutMode =
   | 'device-mockup'
   | 'story-bleed'
   | 'stat-solid'
-  | 'quote-editorial';
+  | 'quote-editorial'
+  | 'carousel-cover'
+  | 'carousel-step'
+  | 'carousel-cta';
 
 const TEXT_PRIMARY = '#faf9f5';
 const TEXT_MUTED = '#e8e6df';
@@ -171,9 +175,10 @@ export function buildVisualTemplateSlots(
     }
 
     if (slideIndex === slideCount - 1) {
+      const closingTip = tips[slideIndex] ?? post.callToAction;
       return {
         headline: cta || truncateWords(post.callToAction, 4) || 'Empieza hoy',
-        subline: truncateWords(post.callToAction || (tips[slideIndex] ?? post.body), 12),
+        subline: truncateWords(closingTip, 12),
         cta,
       };
     }
@@ -238,12 +243,16 @@ export function resolveVisualLayoutMode(
     }
 
     if (slideIndex === 0) {
-      return 'device-mockup';
+      return 'carousel-cover';
     }
     if (slideIndex === slideCount - 1) {
-      return aspect === 'vertical' ? 'device-mockup' : 'split-screenshot-top';
+      return 'carousel-cta';
     }
-    return aspect === 'vertical' ? 'device-mockup' : 'split-screenshot-top';
+    return 'carousel-step';
+  }
+
+  if (hasPhoto) {
+    return 'carousel-cover';
   }
 
   switch (templateId) {
@@ -259,7 +268,7 @@ export function resolveVisualLayoutMode(
     case 'promo-cta':
       return 'device-mockup';
     case 'quote-insight':
-      return 'quote-editorial';
+      return 'gradient-only';
     case 'stat-highlight':
       return 'stat-solid';
     case 'story-vertical':
@@ -505,6 +514,290 @@ async function renderGradientBase(
   kit: ResolvedVisualBrandKit,
 ): Promise<Buffer> {
   return sharp(Buffer.from(buildGradientSvg(width, height, kit))).png().toBuffer();
+}
+
+type CarouselTextMode = 'cover' | 'step' | 'cta';
+
+function buildCarouselTextSvg(options: {
+  width: number;
+  height: number;
+  kit: ResolvedVisualBrandKit;
+  slots: VisualTemplateSlots;
+  slideIndex: number;
+  slideCount: number;
+  mode: CarouselTextMode;
+}): string {
+  const { width, height, kit, slots, slideIndex, slideCount, mode } = options;
+  const padding = Math.round(width * 0.08);
+  const fonts = resolveTextFonts(kit, false);
+  const headlineSize = Math.round(width * (mode === 'cta' ? 0.064 : 0.074));
+  const sublineSize = Math.round(headlineSize * 0.4);
+  const headlineLines = wrapTextLines(slots.headline, 18, 2);
+  const sublineLines = wrapTextLines(slots.subline ?? '', 32, 2);
+
+  const headlineTspans = headlineLines
+    .map((line, index) => {
+      const dy = index === 0 ? 0 : headlineSize * 1.1;
+      return `<tspan x="${padding}" dy="${dy}">${escapeXml(line)}</tspan>`;
+    })
+    .join('');
+
+  const sublineTspans = sublineLines
+    .map((line, index) => {
+      const dy = index === 0 ? sublineSize * 1.3 : sublineSize * 1.15;
+      return `<tspan x="${padding}" dy="${dy}">${escapeXml(line)}</tspan>`;
+    })
+    .join('');
+
+  const slideBadge =
+    slideCount > 1
+      ? `<rect x="${width - padding - 54}" y="${padding}" rx="14" ry="14" width="54" height="28" fill="rgba(255,255,255,0.14)"/>
+         <text x="${width - padding - 27}" y="${padding + 19}" text-anchor="middle" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.sans)} font-size="14" font-weight="700">${slideIndex + 1}/${slideCount}</text>`
+      : '';
+
+  if (mode === 'cover') {
+    const headlineY = Math.round(height * 0.64);
+    const sublineY = headlineY + headlineSize * (headlineLines.length + 0.55);
+    const ctaY = height - padding - 52;
+    const ctaW = Math.min(width - padding * 2, 420);
+    const ctaBlock = slots.cta
+      ? `<rect x="${padding}" y="${ctaY}" rx="30" ry="30" width="${ctaW}" height="54" fill="${kit.accentColor}"/>
+         <text x="${padding + 26}" y="${ctaY + 35}" fill="${kit.secondaryColor}" ${svgFontFamily(fonts.sans)} font-size="${Math.round(headlineSize * 0.38)}" font-weight="800">${escapeXml(slots.cta)}</text>`
+      : '';
+
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      ${slideBadge}
+      <text x="${padding}" y="${headlineY}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.display)} font-size="${headlineSize}" font-weight="800">${headlineTspans}</text>
+      <text x="${padding}" y="${sublineY}" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>
+      ${ctaBlock}
+    </svg>`;
+  }
+
+  const stepBadge =
+    mode === 'step'
+      ? `<circle cx="${padding + 24}" cy="${padding + 26}" r="22" fill="${kit.accentColor}"/>
+         <text x="${padding + 24}" y="${padding + 32}" text-anchor="middle" fill="${kit.secondaryColor}" ${svgFontFamily(fonts.sans)} font-size="18" font-weight="800">${slideIndex + 1}</text>`
+      : '';
+
+  const headlineY = mode === 'cta' ? padding + 12 : padding + 58;
+  const sublineY = headlineY + headlineSize * (headlineLines.length + 0.45);
+  const ctaBtnH = 58;
+  const ctaBtnY = height - padding - ctaBtnH;
+  const ctaBtnW = width - padding * 2;
+  const ctaBlock = slots.cta
+    ? `<rect x="${padding}" y="${ctaBtnY}" rx="30" ry="30" width="${ctaBtnW}" height="${ctaBtnH}" fill="${kit.accentColor}"/>
+       <text x="${padding + 28}" y="${ctaBtnY + 38}" fill="${kit.secondaryColor}" ${svgFontFamily(fonts.sans)} font-size="${Math.round(headlineSize * 0.42)}" font-weight="800">${escapeXml(slots.cta)}</text>`
+    : '';
+
+  const headlineBlock =
+    mode === 'cta'
+      ? `<text x="${padding}" y="${headlineY + headlineSize * 0.85}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.display)} font-size="${Math.round(headlineSize * 0.92)}" font-weight="800">${headlineTspans}</text>`
+      : `<text x="${padding + (mode === 'step' ? 56 : 0)}" y="${headlineY}" fill="${TEXT_PRIMARY}" ${svgFontFamily(fonts.display)} font-size="${headlineSize}" font-weight="800">${headlineTspans}</text>`;
+
+  const sublineBlock =
+    sublineLines.length > 0 && slots.subline?.trim()
+      ? `<text x="${padding + (mode === 'step' ? 56 : 0)}" y="${sublineY}" fill="${TEXT_MUTED}" ${svgFontFamily(fonts.sans)} font-size="${sublineSize}" font-weight="400">${sublineTspans}</text>`
+      : '';
+
+  return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    ${stepBadge}
+    ${headlineBlock}
+    ${sublineBlock}
+    ${mode === 'cta' ? ctaBlock : ''}
+  </svg>`;
+}
+
+function buildBottomScrimSvg(width: number, height: number): string {
+  return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="45%" stop-color="#000000" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.82"/>
+      </linearGradient>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#scrim)"/>
+  </svg>`;
+}
+
+async function renderCarouselVisualAsset(
+  photoBuffer: Buffer,
+  width: number,
+  zoneHeight: number,
+  layoutContext: VisualLayoutContext,
+): Promise<{ buffer: Buffer; left: number; top: number }> {
+  const frameType = resolveDeviceFrameType(
+    layoutContext.platform,
+    layoutContext.aspectRatio,
+    layoutContext.screenshotDevice,
+  );
+
+  if (frameType === 'iphone' || frameType === 'ipad') {
+    const placement = resolveHeroDevicePlacement(
+      width,
+      zoneHeight,
+      frameType,
+      layoutContext.aspectRatio,
+    );
+    const deviceImage = await renderDeviceFrame(photoBuffer, placement);
+    return { buffer: deviceImage, left: placement.left, top: placement.top };
+  }
+
+  const visualW = Math.round(width * 0.88);
+  const visualH = Math.round(zoneHeight * 0.84);
+  const visualLeft = Math.round((width - visualW) / 2);
+  const visualTop = Math.round(zoneHeight * 0.05);
+  let visualBuffer = await resizeScreenshotContain(photoBuffer, visualW, visualH, {
+    r: 248,
+    g: 250,
+    b: 252,
+    alpha: 255,
+  });
+  visualBuffer = await applyRoundedCorners(visualBuffer, visualW, visualH, 18);
+  return { buffer: visualBuffer, left: visualLeft, top: visualTop };
+}
+
+async function renderCarouselCover(
+  width: number,
+  height: number,
+  kit: ResolvedVisualBrandKit,
+  slots: VisualTemplateSlots,
+  templateId: VisualTemplateId,
+  photoBuffer: Buffer,
+  slideIndex: number,
+  slideCount: number,
+  layoutContext: VisualLayoutContext,
+): Promise<Buffer> {
+  const base = await renderGradientBase(width, height, kit);
+  const frameType = resolveDeviceFrameType(
+    layoutContext.platform,
+    layoutContext.aspectRatio,
+    layoutContext.screenshotDevice,
+  );
+  const placement = resolveHeroDevicePlacement(
+    width,
+    height,
+    frameType,
+    layoutContext.aspectRatio,
+  );
+  const deviceImage = await renderDeviceFrame(photoBuffer, placement);
+  const shadow = await buildDeviceShadow(
+    placement.frameWidth + 32,
+    placement.frameHeight + 32,
+    Math.round(placement.frameWidth * 0.09),
+  );
+
+  const scrimH = Math.round(height * 0.52);
+  const scrimSvg = Buffer.from(buildBottomScrimSvg(width, scrimH));
+  const textSvg = Buffer.from(
+    buildCarouselTextSvg({
+      width,
+      height,
+      kit,
+      slots,
+      slideIndex,
+      slideCount,
+      mode: 'cover',
+    }),
+  );
+
+  return sharp(base)
+    .composite([
+      { input: shadow, top: placement.top + 10, left: placement.left - 16 },
+      { input: deviceImage, top: placement.top, left: placement.left },
+      { input: scrimSvg, top: height - scrimH, left: 0 },
+      { input: textSvg, top: 0, left: 0 },
+    ])
+    .png()
+    .toBuffer();
+}
+
+async function renderCarouselStep(
+  width: number,
+  height: number,
+  kit: ResolvedVisualBrandKit,
+  slots: VisualTemplateSlots,
+  photoBuffer: Buffer,
+  slideIndex: number,
+  slideCount: number,
+  layoutContext: VisualLayoutContext,
+): Promise<Buffer> {
+  const photoZoneH = Math.round(height * 0.58);
+  const panelH = height - photoZoneH;
+  const topBg = await sharp(Buffer.from(buildGradientSvg(width, photoZoneH, kit)))
+    .png()
+    .toBuffer();
+  const visual = await renderCarouselVisualAsset(photoBuffer, width, photoZoneH, layoutContext);
+  const textSvg = Buffer.from(
+    buildCarouselTextSvg({
+      width,
+      height: panelH,
+      kit,
+      slots,
+      slideIndex,
+      slideCount,
+      mode: 'step',
+    }),
+  );
+  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, kit.secondaryColor)))
+    .composite([{ input: Buffer.from(textSvg), top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([
+      { input: topBg, top: 0, left: 0 },
+      { input: visual.buffer, top: visual.top, left: visual.left },
+      { input: panel, top: photoZoneH, left: 0 },
+    ])
+    .png()
+    .toBuffer();
+}
+
+async function renderCarouselCta(
+  width: number,
+  height: number,
+  kit: ResolvedVisualBrandKit,
+  slots: VisualTemplateSlots,
+  photoBuffer: Buffer,
+  slideIndex: number,
+  slideCount: number,
+  layoutContext: VisualLayoutContext,
+): Promise<Buffer> {
+  const photoZoneH = Math.round(height * 0.5);
+  const panelH = height - photoZoneH;
+  const topBg = await sharp(Buffer.from(buildGradientSvg(width, photoZoneH, kit)))
+    .png()
+    .toBuffer();
+  const visual = await renderCarouselVisualAsset(photoBuffer, width, photoZoneH, layoutContext);
+  const textSvg = Buffer.from(
+    buildCarouselTextSvg({
+      width,
+      height: panelH,
+      kit,
+      slots,
+      slideIndex,
+      slideCount,
+      mode: 'cta',
+    }),
+  );
+  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, kit.secondaryColor)))
+    .composite([{ input: Buffer.from(textSvg), top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([
+      { input: topBg, top: 0, left: 0 },
+      { input: visual.buffer, top: visual.top, left: visual.left },
+      { input: panel, top: photoZoneH, left: 0 },
+    ])
+    .png()
+    .toBuffer();
 }
 
 async function renderSplitScreenshotTop(
@@ -847,6 +1140,43 @@ export async function renderVisualTemplateFrame(
   let composed: Buffer;
 
   switch (layout) {
+    case 'carousel-cover':
+      composed = await renderCarouselCover(
+        width,
+        height,
+        input.brandKit,
+        input.slots,
+        input.templateId,
+        input.photoBuffer!,
+        slideIndex,
+        slideCount,
+        layoutContext,
+      );
+      break;
+    case 'carousel-step':
+      composed = await renderCarouselStep(
+        width,
+        height,
+        input.brandKit,
+        input.slots,
+        input.photoBuffer!,
+        slideIndex,
+        slideCount,
+        layoutContext,
+      );
+      break;
+    case 'carousel-cta':
+      composed = await renderCarouselCta(
+        width,
+        height,
+        input.brandKit,
+        input.slots,
+        input.photoBuffer!,
+        slideIndex,
+        slideCount,
+        layoutContext,
+      );
+      break;
     case 'split-screenshot-top':
       composed = await renderSplitScreenshotTop(
         width,
@@ -929,7 +1259,10 @@ export async function renderVisualTemplateFrame(
       break;
   }
 
-  if (input.logoBuffer) {
+  const showLogo =
+    Boolean(input.logoBuffer) &&
+    (layout === 'carousel-cover' || slideCount === 1);
+  if (showLogo && input.logoBuffer) {
     composed = await compositeLogo(
       composed,
       input.logoBuffer,
