@@ -93,7 +93,7 @@ Persistencia:
 
 - `pgdata` — PostgreSQL (volumen Docker nombrado)
 - `redisdata` — Redis (volumen Docker nombrado). Entrypoint **inline** en compose (cuarentena AOF legacy + sin persistencia).
-- **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`)
+- **MinIO** — bind mount en el filesystem del host (`MINIO_DATA_DIR`, default `/var/lib/mkt-agency/minio`). Imágenes: `pgsty/minio` + `pgsty/mc` (fork mantenido; `minio/*` en Docker Hub ya no publica builds).
 
 Antes del primer deploy con MinIO en el servidor:
 

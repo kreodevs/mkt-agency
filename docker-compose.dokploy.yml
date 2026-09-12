@@ -58,7 +58,8 @@ services:
       - internal
 
   minio:
-    image: minio/minio:latest
+    # Upstream minio/minio dejó de publicar imágenes en Docker Hub (2025–2026); pgsty/silo es drop-in.
+    image: pgsty/minio:latest
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
@@ -74,7 +75,7 @@ services:
       - internal
 
   minio-init:
-    image: minio/mc:latest
+    image: pgsty/mc:latest
     restart: "no"
     depends_on:
       minio:
