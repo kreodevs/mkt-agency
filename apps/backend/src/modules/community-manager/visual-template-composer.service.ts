@@ -101,10 +101,6 @@ export class VisualTemplateComposerService {
         post.platform,
       );
 
-      const logoFile = brandKit.logoAssetId
-        ? await this.assetService.readFile(tenantId, brandKit.logoAssetId).catch(() => null)
-        : null;
-
       const cmPortraitAssetId = await this.cmCharacter.resolveDefaultPortraitAssetId(
         tenantId,
         productId,
@@ -163,13 +159,16 @@ export class VisualTemplateComposerService {
           slideIndex,
           slideCount: frameCount,
           photoBuffer: photoFile?.buffer ?? null,
-          logoBuffer: logoFile?.buffer ?? null,
-          logoMimeType: logoFile?.mimeType ?? null,
+          logoBuffer: null,
+          logoMimeType: null,
           screenshotDevice: pick?.device ?? null,
           cmPortraitBuffer: useCmPortrait ? cmPortraitFile?.buffer ?? null : null,
         });
 
-        if (brandKit.logoAssetId && !logoFile) {
+        const shouldBrandLogo =
+          Boolean(brandKit.logoAssetId) &&
+          (slideIndex === 0 || frameCount === 1);
+        if (shouldBrandLogo && brandKit.logoAssetId) {
           buffer = await this.imageBranding
             .applyProductLogo(tenantId, buffer, brandKit.logoAssetId)
             .catch(() => buffer);

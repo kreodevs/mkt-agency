@@ -537,7 +537,7 @@ function resolveCmPortraitPlacement(
   scrimTop: number,
 ): { top: number; left: number } {
   const padding = Math.round(width * 0.08);
-  const topSafe = Math.round(height * 0.17);
+  const topSafe = Math.round(height * 0.22);
   const deviceCenterY = devicePlacement.top + devicePlacement.frameHeight / 2;
   let top = Math.round(deviceCenterY - badgeOuterSize / 2);
   const maxBottom = scrimTop - padding;
@@ -569,40 +569,41 @@ async function renderCmPortraitBadge(
   portraitBuffer: Buffer,
   diameter: number,
 ): Promise<Buffer> {
-  const innerDiameter = Math.round(diameter * 0.84);
-  const inset = Math.round((diameter - innerDiameter) / 2);
-  const cropPosition = sharp.strategy?.attention ?? 'north';
-  const resized = await sharp(portraitBuffer)
-    .resize(innerDiameter, innerDiameter, {
-      fit: 'cover',
-      position: cropPosition,
-    })
+  const outer = cmPortraitBadgeOuterSize(diameter);
+  const ringInset = Math.round(CM_PORTRAIT_RING_PADDING / 2);
+
+  const face = await sharp(portraitBuffer)
+    .resize(diameter, diameter, { fit: 'cover', position: 'north' })
     .png()
     .toBuffer();
-  const mask = Buffer.from(
+
+  const circleMask = Buffer.from(
     `<svg width="${diameter}" height="${diameter}"><circle cx="${diameter / 2}" cy="${diameter / 2}" r="${diameter / 2}" fill="white"/></svg>`,
   );
-  const outer = cmPortraitBadgeOuterSize(diameter);
+
+  const circularFace = await sharp(face)
+    .composite([{ input: circleMask, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+
   const ring = Buffer.from(
     `<svg width="${outer}" height="${outer}">
-      <circle cx="${outer / 2}" cy="${outer / 2}" r="${diameter / 2 + 4}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="4"/>
+      <circle cx="${outer / 2}" cy="${outer / 2}" r="${diameter / 2 + 4}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="4"/>
     </svg>`,
   );
-  const clipped = await sharp({
+
+  return sharp({
     create: {
-      width: diameter,
-      height: diameter,
+      width: outer,
+      height: outer,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   })
-    .composite([{ input: resized, top: inset, left: inset }])
-    .composite([{ input: mask, blend: 'dest-in' }])
-    .png()
-    .toBuffer();
-  const ringInset = Math.round(CM_PORTRAIT_RING_PADDING / 2);
-  return sharp(ring)
-    .composite([{ input: clipped, top: ringInset, left: ringInset }])
+    .composite([
+      { input: ring, top: 0, left: 0 },
+      { input: circularFace, top: ringInset, left: ringInset },
+    ])
     .png()
     .toBuffer();
 }
@@ -1250,15 +1251,14 @@ async function compositeLogo(
   mimeType: string | null,
   width: number,
   height: number,
-  corner: LogoCorner = 'top-left',
+  _corner: LogoCorner = 'top-left',
 ): Promise<Buffer> {
   const logoWidth = Math.max(88, Math.round(Math.min(width, height) * 0.14));
   const pipeline =
     mimeType === 'image/svg+xml' ? sharp(logoBuffer, { density: 300 }) : sharp(logoBuffer);
-  const logo = await pipeline.resize(logoWidth).png().toBuffer();
+  const logo = await pipeline.resize({ width: logoWidth, withoutEnlargement: true }).png().toBuffer();
   const padding = Math.round(Math.min(width, height) * 0.04);
-  const left =
-    corner === 'top-right' ? width - logoWidth - padding : padding;
+  const left = padding;
   return sharp(base).composite([{ input: logo, top: padding, left }]).png().toBuffer();
 }
 
@@ -1409,15 +1409,13 @@ export async function renderVisualTemplateFrame(
     Boolean(input.logoBuffer) &&
     (layout === 'carousel-cover' || slideCount === 1);
   if (showLogo && input.logoBuffer) {
-    const logoCorner: LogoCorner =
-      layout === 'carousel-cover' && input.cmPortraitBuffer ? 'top-right' : 'top-left';
     composed = await compositeLogo(
       composed,
       input.logoBuffer,
       input.logoMimeType ?? 'image/png',
       width,
       height,
-      logoCorner,
+      'top-left',
     );
   }
 
