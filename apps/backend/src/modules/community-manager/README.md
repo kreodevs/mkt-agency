@@ -21,7 +21,7 @@ Si el producto tiene ítems en `product_media_kit_items`, `ContentVisualComposer
 
 ## CM virtual (talking-head)
 
-Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más adecuada por post TikTok.
+Biblioteca de presentadoras virtuales por producto. El copiloto asigna al menos un reel `talking-head` (TikTok o Instagram Reels) y puede superponer el retrato de la CM en la portada de carruseles/imágenes estáticas.
 
 ## Visual Studio (plantillas)
 
@@ -40,7 +40,7 @@ Biblioteca de presentadoras virtuales por producto. El copiloto elige la CM más
    - LinkedIn / X → MacBook; Instagram / TikTok / Facebook → iPhone
    - TikTok (9:16) ajusta proporciones de split/bleed y prioriza mockup en carrusel
 3. **LLM** — elige `visualTemplateId` + `visualHeadline` / `visualSubline` / `visualCta` por post
-4. **Marca** — colores desde `visual_preferences` del perfil o `product.metadata.brandVisualKit`
+4. **Marca** — colores desde `visual_preferences` del perfil o `product.metadata.brandVisualKit`; `visual-palette-expand.util` deriva degradados, brillos y paneles por slide (no solo 3 hex planos)
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
 6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación). Con feedback del copiloto (“usa mi media kit”, “fotos reales”), no se invoca imagen IA aunque falle el copy del LLM; se recomponen capturas del kit.
 

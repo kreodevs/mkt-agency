@@ -16,6 +16,11 @@ import {
   type VisualAspectRatio,
 } from './device-frame-render.util';
 import { resizeScreenshotContain, resizeScreenshotForSlot } from './screenshot-crop.util';
+import {
+  buildDecorativeOverlaySvg,
+  buildRichBackgroundSvg,
+  resolvePanelColor,
+} from './visual-palette-expand.util';
 import type { ResolvedVisualBrandKit } from './visual-brand-kit.util';
 import type { VisualTemplateId } from './visual-template.constants';
 
@@ -39,6 +44,8 @@ export interface RenderVisualTemplateInput {
   logoBuffer?: Buffer | null;
   logoMimeType?: string | null;
   screenshotDevice?: AssetDeviceHint | null;
+  /** Retrato de CM virtual para portadas con presentadora. */
+  cmPortraitBuffer?: Buffer | null;
 }
 
 export interface VisualLayoutContext {
@@ -337,18 +344,14 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-function buildGradientSvg(width: number, height: number, kit: ResolvedVisualBrandKit): string {
-  const angle = kit.style === 'luxury' ? 160 : 135;
-  return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(${angle})">
-        <stop offset="0%" stop-color="${kit.primaryColor}" />
-        <stop offset="55%" stop-color="${kit.secondaryColor}" />
-        <stop offset="100%" stop-color="${kit.accentColor}" />
-      </linearGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#bg)" />
-  </svg>`;
+function buildGradientSvg(
+  width: number,
+  height: number,
+  kit: ResolvedVisualBrandKit,
+  slideIndex = 0,
+  slideCount = 1,
+): string {
+  return buildRichBackgroundSvg(width, height, kit, slideIndex, slideCount);
 }
 
 function buildSolidSvg(width: number, height: number, color: string): string {
@@ -512,8 +515,35 @@ async function renderGradientBase(
   width: number,
   height: number,
   kit: ResolvedVisualBrandKit,
+  slideIndex = 0,
+  slideCount = 1,
 ): Promise<Buffer> {
-  return sharp(Buffer.from(buildGradientSvg(width, height, kit))).png().toBuffer();
+  const bgSvg = Buffer.from(buildGradientSvg(width, height, kit, slideIndex, slideCount));
+  const decorSvg = Buffer.from(buildDecorativeOverlaySvg(width, height, kit, slideIndex));
+  return sharp(bgSvg).composite([{ input: decorSvg, top: 0, left: 0 }]).png().toBuffer();
+}
+
+async function renderCmPortraitBadge(
+  portraitBuffer: Buffer,
+  diameter: number,
+): Promise<Buffer> {
+  const resized = await sharp(portraitBuffer)
+    .resize(diameter, diameter, { fit: 'cover', position: 'centre' })
+    .png()
+    .toBuffer();
+  const mask = Buffer.from(
+    `<svg width="${diameter}" height="${diameter}"><circle cx="${diameter / 2}" cy="${diameter / 2}" r="${diameter / 2}" fill="white"/></svg>`,
+  );
+  const ring = Buffer.from(
+    `<svg width="${diameter + 12}" height="${diameter + 12}">
+      <circle cx="${(diameter + 12) / 2}" cy="${(diameter + 12) / 2}" r="${diameter / 2 + 4}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="4"/>
+    </svg>`,
+  );
+  const clipped = await sharp(resized).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
+  return sharp(ring)
+    .composite([{ input: clipped, top: 6, left: 6 }])
+    .png()
+    .toBuffer();
 }
 
 type CarouselTextMode = 'cover' | 'step' | 'cta';
@@ -667,19 +697,27 @@ async function renderCarouselCover(
   slideIndex: number,
   slideCount: number,
   layoutContext: VisualLayoutContext,
+  cmPortraitBuffer?: Buffer | null,
 ): Promise<Buffer> {
-  const base = await renderGradientBase(width, height, kit);
+  const base = await renderGradientBase(width, height, kit, slideIndex, slideCount);
   const frameType = resolveDeviceFrameType(
     layoutContext.platform,
     layoutContext.aspectRatio,
     layoutContext.screenshotDevice,
   );
+  const hasPresenter = Boolean(cmPortraitBuffer);
   const placement = resolveHeroDevicePlacement(
     width,
     height,
     frameType,
     layoutContext.aspectRatio,
   );
+  if (hasPresenter) {
+    placement.left = Math.min(
+      width - placement.frameWidth - Math.round(width * 0.05),
+      placement.left + Math.round(width * 0.1),
+    );
+  }
   const deviceImage = await renderDeviceFrame(photoBuffer, placement);
   const shadow = await buildDeviceShadow(
     placement.frameWidth + 32,
@@ -701,15 +739,24 @@ async function renderCarouselCover(
     }),
   );
 
-  return sharp(base)
-    .composite([
-      { input: shadow, top: placement.top + 10, left: placement.left - 16 },
-      { input: deviceImage, top: placement.top, left: placement.left },
-      { input: scrimSvg, top: height - scrimH, left: 0 },
-      { input: textSvg, top: 0, left: 0 },
-    ])
-    .png()
-    .toBuffer();
+  const composites: Array<{ input: Buffer; top: number; left: number }> = [
+    { input: shadow, top: placement.top + 10, left: placement.left - 16 },
+    { input: deviceImage, top: placement.top, left: placement.left },
+    { input: scrimSvg, top: height - scrimH, left: 0 },
+    { input: textSvg, top: 0, left: 0 },
+  ];
+
+  if (cmPortraitBuffer) {
+    const portraitSize = Math.round(Math.min(width, height) * 0.28);
+    const portrait = await renderCmPortraitBadge(cmPortraitBuffer, portraitSize);
+    composites.splice(1, 0, {
+      input: portrait,
+      top: Math.round(height * 0.1),
+      left: Math.round(width * 0.07),
+    });
+  }
+
+  return sharp(base).composite(composites).png().toBuffer();
 }
 
 async function renderCarouselStep(
@@ -724,9 +771,7 @@ async function renderCarouselStep(
 ): Promise<Buffer> {
   const photoZoneH = Math.round(height * 0.58);
   const panelH = height - photoZoneH;
-  const topBg = await sharp(Buffer.from(buildGradientSvg(width, photoZoneH, kit)))
-    .png()
-    .toBuffer();
+  const topBg = await renderGradientBase(width, photoZoneH, kit, slideIndex, slideCount);
   const visual = await renderCarouselVisualAsset(photoBuffer, width, photoZoneH, layoutContext);
   const textSvg = Buffer.from(
     buildCarouselTextSvg({
@@ -739,7 +784,8 @@ async function renderCarouselStep(
       mode: 'step',
     }),
   );
-  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, kit.secondaryColor)))
+  const panelColor = resolvePanelColor(kit, slideIndex, slideCount);
+  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, panelColor)))
     .composite([{ input: Buffer.from(textSvg), top: 0, left: 0 }])
     .png()
     .toBuffer();
@@ -768,9 +814,7 @@ async function renderCarouselCta(
 ): Promise<Buffer> {
   const photoZoneH = Math.round(height * 0.5);
   const panelH = height - photoZoneH;
-  const topBg = await sharp(Buffer.from(buildGradientSvg(width, photoZoneH, kit)))
-    .png()
-    .toBuffer();
+  const topBg = await renderGradientBase(width, photoZoneH, kit, slideIndex, slideCount);
   const visual = await renderCarouselVisualAsset(photoBuffer, width, photoZoneH, layoutContext);
   const textSvg = Buffer.from(
     buildCarouselTextSvg({
@@ -783,7 +827,8 @@ async function renderCarouselCta(
       mode: 'cta',
     }),
   );
-  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, kit.secondaryColor)))
+  const panelColor = resolvePanelColor(kit, slideIndex, slideCount);
+  const panel = await sharp(Buffer.from(buildSolidSvg(width, panelH, panelColor)))
     .composite([{ input: Buffer.from(textSvg), top: 0, left: 0 }])
     .png()
     .toBuffer();
@@ -1151,6 +1196,7 @@ export async function renderVisualTemplateFrame(
         slideIndex,
         slideCount,
         layoutContext,
+        input.cmPortraitBuffer,
       );
       break;
     case 'carousel-step':

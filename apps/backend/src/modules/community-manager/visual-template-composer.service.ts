@@ -25,6 +25,7 @@ import {
   resolveVisualTemplateId,
 } from './domain/visual-brand-kit.util';
 import type { VisualTemplateId } from './domain/visual-template.constants';
+import { CmCharacterService } from './cm-character.service';
 
 export interface VisualTemplateComposeContext {
   resolvedProfile: ResolvedProfileValues | null;
@@ -46,6 +47,7 @@ export class VisualTemplateComposerService {
     private readonly productService: ProductService,
     private readonly mediaKit: ProductMediaKitService,
     private readonly imageBranding: ImageBrandingService,
+    private readonly cmCharacter: CmCharacterService,
     @InjectRepository(ProductEntity)
     private readonly products: Repository<ProductEntity>,
     @InjectRepository(AgentImageGenerationEntity)
@@ -103,6 +105,14 @@ export class VisualTemplateComposerService {
         ? await this.assetService.readFile(tenantId, brandKit.logoAssetId).catch(() => null)
         : null;
 
+      const cmPortraitAssetId = await this.cmCharacter.resolveDefaultPortraitAssetId(
+        tenantId,
+        productId,
+      );
+      const cmPortraitFile = cmPortraitAssetId
+        ? await this.assetService.readFile(tenantId, cmPortraitAssetId).catch(() => null)
+        : null;
+
       const assetIds: string[] = [];
       const frames: Array<{ assetId: string; index: number }> = [];
 
@@ -142,6 +152,8 @@ export class VisualTemplateComposerService {
           frameCount,
         );
 
+        const useCmPortrait = Boolean(cmPortraitFile?.buffer) && slideIndex === 0;
+
         let buffer = await renderVisualTemplateFrame({
           templateId,
           brandKit,
@@ -154,6 +166,7 @@ export class VisualTemplateComposerService {
           logoBuffer: logoFile?.buffer ?? null,
           logoMimeType: logoFile?.mimeType ?? null,
           screenshotDevice: pick?.device ?? null,
+          cmPortraitBuffer: useCmPortrait ? cmPortraitFile?.buffer ?? null : null,
         });
 
         if (brandKit.logoAssetId && !logoFile) {

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { feedbackRequestsMediaKit } from '../domain/feedback-visual-intent.util';
+import { styleDesignCue } from '../domain/visual-palette-expand.util';
+import { styleLabel } from '../domain/visual-brand-kit.util';
 import { LlmClient } from '../../../shared/ai/llm.client';
 import {
   SocialCopyAdapterPort,
@@ -93,21 +95,40 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ].join('\n')
       : '';
 
+    const brandVisualStyle =
+      typeof context.brandBrief?.brandVisualStyle === 'string'
+        ? context.brandBrief.brandVisualStyle
+        : typeof context.brandBrief?.style === 'string'
+          ? context.brandBrief.style
+          : 'minimal';
+
+    const creativeDesignGuide = [
+      'DIRECCIÓN CREATIVA (obligatoria): piensa como diseñador de performance ads, no como wireframe.',
+      `Estilo visual de marca: ${styleLabel(brandVisualStyle as 'minimal' | 'bold' | 'luxury')} — ${styleDesignCue(brandVisualStyle as 'minimal' | 'bold' | 'luxury')}.`,
+      'El sistema expande la paleta (degradados, brillos, acentos) a partir de los colores de marca; evita pedir solo bloques planos.',
+      'visualHeadline = gancho emocional (beneficio o dolor), no descripción técnica.',
+      'visualSubline = prueba o contexto concreto (1 frase).',
+      'visualCta = acción de conversión (demo, prueba gratis, descarga).',
+      'Varía el ángulo entre posts: dolor→solución, dato→beneficio, objeción→prueba, CTA directo.',
+    ].join('\n');
+
     const cmCharacterGuide =
       context.cmCharacterReady && context.cmCharacters?.length
         ? [
             `Biblioteca de CMs virtuales listas (${context.cmCharacters.length}): ${JSON.stringify(context.cmCharacters)}`,
-            'Para TikTok con visualFormat talking-head elige cmCharacterId de la biblioteca según tono del post (ej. más formal → CM ejecutiva, más cercana → CM juvenil).',
-            'Si ninguna CM encaja, usa la de nombre más genérico o la primera de la lista.',
-            'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM elegida.',
-            'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta), sin marcadores de tiempo ni direcciones de escena (prohibido: "(0:00-0:05)", "[0:10]", "mostrar...", etc.).',
+            'OBLIGATORIO: incluye al menos 1 post con visualFormat talking-head (video con lip-sync de la CM).',
+            'talking-head en TikTok o Instagram Reels: platform instagram/tiktok, visualTemplateId story-vertical, imageDestination story.',
+            'Elige cmCharacterId según tono (formal → ejecutiva, cercano → juvenil).',
+            'visualDescription en talking-head: solo fondo/ambiente del reel (consultorio, oficina moderna, luz natural). NO describas otra persona.',
+            'El body del talking-head = guion hablado 15-45 s, natural, sin timestamps ni direcciones de escena.',
+            'En posts estáticos/carousel el sistema puede superponer el retrato de la CM en la portada; el copy puede invitar a ver el reel.',
           ].join('\n')
         : context.cmCharacterReady
           ? [
-              'La marca tiene al menos una CM virtual lista (retrato + lip-sync en español).',
-              'Para TikTok asigna visualFormat: talking-head (la CM hablará el body del post).',
-              'visualDescription en talking-head: fondo/ambiente del reel, NO describas otra persona distinta a la CM.',
-              'El body debe ser guion hablado natural en español (15-45 s al leer en voz alta), sin marcadores de tiempo ni direcciones de escena (prohibido: "(0:00-0:05)", "[0:10]", "mostrar...", etc.).',
+              'La marca tiene CM virtual lista (retrato + lip-sync en español).',
+              'OBLIGATORIO: al menos 1 post talking-head en TikTok o Instagram Reels (story-vertical).',
+              'visualDescription en talking-head: fondo/ambiente del reel, NO otra persona.',
+              'Guion hablado 15-45 s, sin timestamps ni direcciones de escena.',
             ].join('\n')
           : 'No hay CM virtual lista: NO uses visualFormat talking-head. TikTok→image vertical.';
 
@@ -132,7 +153,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             visualSubline: 'subtítulo opcional para la plantilla (máx 14 palabras)',
             visualCta: 'CTA corto para botón visual (2-4 palabras)',
             visualFormat:
-              'image | carousel | talking-head — talking-head=solo TikTok si hay CM virtual; image=estático; carousel=3 slides',
+              'image | carousel | talking-head — talking-head=video CM virtual (TikTok o IG Reels); image=estático; carousel=3 slides',
+            imageDestination: 'feed | story — story para Reels/TikTok talking-head',
             bestTime: 'mejor hora para publicar según la plataforma',
             targetAudience: 'audiencia objetivo de este post específico',
             callToAction: 'llamado a la acción claro',
@@ -166,11 +188,12 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       mediaKitGuide,
       libraryFoldersGuide,
       cmCharacterGuide,
+      creativeDesignGuide,
       `Instrucción: ${countInstruction}`,
       context.cmCharacterReady
-        ? 'visualFormat: carruseles educativos→carousel; TikTok→talking-head con cmCharacterId; resto→image.'
+        ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image. Prioriza variedad visual.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
-      'visualDescription = brief de arte (ambiente/fondo). El diseño final lo maqueta el sistema con plantillas.',
+      'visualDescription = brief de arte (ambiente, luz, emoción). El diseño final lo maqueta el sistema con plantillas premium.',
       'visualTemplateId = elige la plantilla gráfica más adecuada por post.',
       'Plantillas: product-hero (lanzamiento, split app+texto); tip-card/promo-cta (tips y promos, mockup); quote-insight (cita larga); stat-highlight (dato numérico); story-vertical (TikTok/Reels).',
       revisionWantsMediaKit

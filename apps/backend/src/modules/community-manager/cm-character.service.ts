@@ -436,6 +436,19 @@ export class CmCharacterService {
     return listReadyCharacters(library).map(summarizeCharacterForLlm);
   }
 
+  async resolveDefaultPortraitAssetId(
+    tenantId: string,
+    productId: string,
+  ): Promise<string | null> {
+    const product = await this.productService.findOwnedEntity(tenantId, productId);
+    const library = await this.loadLibrary(product);
+    const entry = getDefaultCharacter(library);
+    if (!entry || !isCmCharacterEntryReady(entry) || !entry.portraitAssetId) {
+      return null;
+    }
+    return entry.portraitAssetId;
+  }
+
   async assertReadyForTalkingHead(
     tenantId: string,
     productId: string,
