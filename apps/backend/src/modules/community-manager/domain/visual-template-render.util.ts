@@ -155,6 +155,37 @@ export function buildVisualTemplateSlots(
   slideIndex = 0,
   slideCount = 1,
 ): VisualTemplateSlots {
+  const cta = post.visualCta?.trim() || truncateWords(post.callToAction, 4);
+
+  if (slideCount > 1) {
+    const tips = splitCarouselTips(post.body, slideCount);
+    if (slideIndex === 0) {
+      return {
+        headline:
+          post.visualHeadline?.trim() ||
+          summarizeHeadline(post.title, post.body, templateId === 'stat-highlight' ? 4 : 8),
+        subline:
+          post.visualSubline?.trim() || truncateWords(tips[0] ?? post.body, 12),
+        cta,
+      };
+    }
+
+    if (slideIndex === slideCount - 1) {
+      return {
+        headline: cta || truncateWords(post.callToAction, 4) || 'Empieza hoy',
+        subline: truncateWords(post.callToAction || (tips[slideIndex] ?? post.body), 12),
+        cta,
+      };
+    }
+
+    const tip = tips[slideIndex] ?? `Paso ${slideIndex + 1}`;
+    return {
+      headline: truncateWords(tip, 8),
+      subline: truncateWords(tip, 14),
+      cta,
+    };
+  }
+
   const headline =
     post.visualHeadline?.trim() ||
     summarizeHeadline(post.title, post.body, templateId === 'stat-highlight' ? 4 : 8);
@@ -163,11 +194,7 @@ export function buildVisualTemplateSlots(
     post.visualSubline?.trim() ||
     (templateId === 'quote-insight'
       ? truncateWords(post.body, 18)
-      : templateId === 'tip-card' && slideCount > 1
-        ? truncateWords(splitCarouselTips(post.body, slideCount)[slideIndex] ?? post.body, 14)
-        : truncateWords(post.body, 12));
-
-  const cta = post.visualCta?.trim() || truncateWords(post.callToAction, 4);
+      : truncateWords(post.body, 12));
 
   if (templateId === 'stat-highlight') {
     const stat = extractStatFromBody(post.body);
@@ -200,11 +227,21 @@ export function resolveVisualLayoutMode(
   }
 
   if (slideCount > 1) {
+    if (!hasPhoto) {
+      if (slideIndex === 0) {
+        return 'gradient-hook';
+      }
+      if (slideIndex === slideCount - 1) {
+        return 'cta-solid';
+      }
+      return 'gradient-only';
+    }
+
     if (slideIndex === 0) {
-      return 'gradient-hook';
+      return 'device-mockup';
     }
     if (slideIndex === slideCount - 1) {
-      return 'cta-solid';
+      return aspect === 'vertical' ? 'device-mockup' : 'split-screenshot-top';
     }
     return aspect === 'vertical' ? 'device-mockup' : 'split-screenshot-top';
   }

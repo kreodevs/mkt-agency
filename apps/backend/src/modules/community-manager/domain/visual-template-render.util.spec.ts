@@ -66,12 +66,19 @@ describe('visual-template-render.util', () => {
       ).toBe('device-mockup');
     });
 
-    it('varies carousel slides: hook, feature, cta', () => {
-      expect(resolveVisualLayoutMode('tip-card', 0, 3, true, squareContext)).toBe('gradient-hook');
+    it('varies carousel slides with media kit: mockup + split on every frame', () => {
+      expect(resolveVisualLayoutMode('tip-card', 0, 3, true, squareContext)).toBe('device-mockup');
       expect(resolveVisualLayoutMode('tip-card', 1, 3, true, squareContext)).toBe(
         'split-screenshot-top',
       );
-      expect(resolveVisualLayoutMode('tip-card', 2, 3, true, squareContext)).toBe('cta-solid');
+      expect(resolveVisualLayoutMode('tip-card', 2, 3, true, squareContext)).toBe(
+        'split-screenshot-top',
+      );
+    });
+
+    it('keeps text-only carousel slides when there is no photo', () => {
+      expect(resolveVisualLayoutMode('tip-card', 0, 3, false, squareContext)).toBe('gradient-hook');
+      expect(resolveVisualLayoutMode('tip-card', 2, 3, false, squareContext)).toBe('cta-solid');
     });
 
     it('uses device mockup on carousel middle slide for vertical', () => {
@@ -145,6 +152,25 @@ describe('visual-template-render.util', () => {
       );
       expect(slots.headline).toBe('Hook corto');
       expect(slots.cta).toBe('Demo gratis');
+    });
+
+    it('builds distinct carousel slots per slide', () => {
+      const post = {
+        title: 'Organiza tu consultorio',
+        body: 'Paso 1: Centraliza pacientes\nPaso 2: Agenda inteligente\nPaso 3: Reportes en un clic',
+        callToAction: 'Prueba gratis 15 días',
+        visualHeadline: 'Centraliza tu consultorio',
+        visualCta: 'Prueba gratis',
+      };
+
+      const slide0 = buildVisualTemplateSlots(post, 'tip-card', 0, 3);
+      const slide1 = buildVisualTemplateSlots(post, 'tip-card', 1, 3);
+      const slide2 = buildVisualTemplateSlots(post, 'tip-card', 2, 3);
+
+      expect(slide0.headline).toBe('Centraliza tu consultorio');
+      expect(slide1.headline).toContain('Paso 2');
+      expect(slide2.headline).toBe('Prueba gratis');
+      expect(slide0.headline).not.toBe(slide1.headline);
     });
   });
 

@@ -80,6 +80,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           'Cada ítem puede incluir folderPath (carpeta en librería) y device (pc|ipad|ios). Usa device para elegir capturas acordes a la plataforma: TikTok/Instagram→ios/ipad; LinkedIn→pc.',
           'En visualDescription indica cómo se verá el asset real (ej. "screenshot de la app iOS en mockup móvil", "captura desktop en MacBook").',
           'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
+          'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup.',
         ].join('\n')
       : '';
 
@@ -171,7 +172,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       'visualDescription = brief de arte (ambiente/fondo). El diseño final lo maqueta el sistema con plantillas.',
       'visualTemplateId = elige la plantilla gráfica más adecuada por post.',
       'Plantillas: product-hero (lanzamiento, split app+texto); tip-card/promo-cta (tips y promos, mockup); quote-insight (cita larga); stat-highlight (dato numérico); story-vertical (TikTok/Reels).',
-      'Carrusel (3 slides): slide 1 = hook sin depender de la app; slide 2 = feature con captura; slide 3 = CTA claro. visualHeadline máx 6 palabras por slide.',
+      revisionWantsMediaKit
+        ? [
+            'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit (mockup móvil/desktop).',
+            'body = exactamente 3 líneas o bullets (Paso 1 / Paso 2 / Paso 3), una idea por slide.',
+            'visualHeadline = solo el hook del slide 1 (máx 6 palabras). visualCta = titular del slide 3 (CTA).',
+            'NO repitas el mismo titular en los 3 frames; el slide 2 usa el bullet del body como tip.',
+            'visualDescription = cómo enmarcar la captura (ej. app iOS en iPhone), sin inventar UI ni logos.',
+          ].join('\n')
+        : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA. body con 3 bullets distintos.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
       'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]

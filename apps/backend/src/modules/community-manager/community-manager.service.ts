@@ -18,13 +18,17 @@ import {
   buildMediaKitRevisionHint,
   feedbackRequestsAiImage,
   feedbackRequestsMediaKit,
+  parseFeedbackTargetFrames,
 } from './domain/feedback-visual-intent.util';
 import { enrichVisualDescriptionForAi } from './domain/visual-prompt-enrichment.util';
 import { resolveVisualBrandKit } from './domain/visual-brand-kit.util';
 import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
 import { ProductService } from '../product/product.service';
 import { ProductAppCaptureService } from '../product/product-app-capture.service';
-import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
+import {
+  normalizeContentVisualFormat,
+  visualFormatToFrameCount,
+} from '../content/domain/content-visual-format.util';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -660,6 +664,52 @@ export class CommunityManagerService {
     return parts.join('\n\n');
   }
 
+  private extractVersionAssetIds(
+    version: { assets?: unknown } | null | undefined,
+  ): string[] {
+    if (!version?.assets || !Array.isArray(version.assets)) {
+      return [];
+    }
+
+    return version.assets
+      .map((asset) => {
+        if (typeof asset === 'string') {
+          return asset;
+        }
+        if (asset && typeof asset === 'object' && 'id' in asset) {
+          const id = (asset as { id?: unknown }).id;
+          return typeof id === 'string' ? id : null;
+        }
+        return null;
+      })
+      .filter((id): id is string => Boolean(id));
+  }
+
+  private buildComposeOptions(
+    post: SocialCopyPost,
+    feedback: string | undefined,
+    currentVersion: { versionNumber?: number; assets?: unknown } | null,
+  ): {
+    targetSlideIndices?: number[];
+    existingAssetIds?: string[];
+    variationSeed: number;
+  } {
+    const visualVariantIndex = currentVersion?.versionNumber ?? 0;
+    const frameCount =
+      normalizeContentVisualFormat(post.visualFormat) === 'carousel'
+        ? visualFormatToFrameCount('carousel')
+        : 1;
+    const targetSlideIndices = parseFeedbackTargetFrames(feedback, frameCount);
+    const existingAssetIds = this.extractVersionAssetIds(currentVersion);
+
+    return {
+      ...(targetSlideIndices && existingAssetIds.length > 0
+        ? { targetSlideIndices, existingAssetIds }
+        : {}),
+      variationSeed: visualVariantIndex + (targetSlideIndices?.length ?? 1) + 1,
+    };
+  }
+
   private async handlePostRegenerationVisual(
     tenantId: string,
     userId: string,
@@ -667,7 +717,7 @@ export class CommunityManagerService {
     post: SocialCopyPost,
     content: ContentEntity,
     ctx: GenerationContext,
-    currentVersion: { versionNumber?: number } | null,
+    currentVersion: { versionNumber?: number; assets?: unknown } | null,
     feedback: string | undefined,
   ): Promise<void> {
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
@@ -677,8 +727,27 @@ export class CommunityManagerService {
     const allowAiFallback =
       feedbackRequestsAiImage(feedback) ||
       (!hasKitImages && !feedbackRequestsMediaKit(feedback));
+    const composeOptions = this.buildComposeOptions(post, feedback, currentVersion);
+    const composeCtx = { resolvedProfile: ctx.resolvedProfile };
 
     if (productId && hasKitImages) {
+      if (composeOptions.targetSlideIndices) {
+        const partial = await this.templateComposer.tryComposeFromTemplate(
+          tenantId,
+          userId,
+          contentId,
+          post,
+          productId,
+          ctx.kit,
+          visualVariantIndex,
+          composeCtx,
+          composeOptions,
+        );
+        if (partial.attached) {
+          return;
+        }
+      }
+
       const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
         tenantId,
         userId,
@@ -687,7 +756,11 @@ export class CommunityManagerService {
         productId,
         ctx.kit,
         visualVariantIndex,
-        { resolvedProfile: ctx.resolvedProfile },
+        composeCtx,
+        {
+          targetSlideIndices: composeOptions.targetSlideIndices,
+          existingAssetIds: composeOptions.existingAssetIds,
+        },
       );
       if (recomposed) {
         return;
@@ -716,8 +789,8 @@ export class CommunityManagerService {
           productId,
           ctx.kit,
           visualVariantIndex,
-          { resolvedProfile: ctx.resolvedProfile },
-          { variationSeed: visualVariantIndex + 1 },
+          composeCtx,
+          composeOptions,
         );
         if (varied.attached) {
           return;

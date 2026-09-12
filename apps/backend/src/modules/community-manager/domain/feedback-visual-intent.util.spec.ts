@@ -2,6 +2,7 @@ import {
   buildMediaKitRevisionHint,
   feedbackRequestsAiImage,
   feedbackRequestsMediaKit,
+  parseFeedbackTargetFrames,
 } from './feedback-visual-intent.util';
 
 describe('feedback-visual-intent.util', () => {
@@ -26,5 +27,16 @@ describe('feedback-visual-intent.util', () => {
     const hint = buildMediaKitRevisionHint('usa capturas del kit');
     expect(hint).toContain('PRIORIDAD MEDIA KIT');
     expect(hint).toContain('NO inventes');
+  });
+
+  it('parses target frame numbers from feedback (1-based)', () => {
+    expect(parseFeedbackTargetFrames('regenera frame 1 y frame 3', 3)).toEqual([0, 2]);
+    expect(parseFeedbackTargetFrames('slide 2 con media kit', 3)).toEqual([1]);
+    expect(parseFeedbackTargetFrames('haz el tono más cercano', 3)).toBeNull();
+  });
+
+  it('includes frame hint in media kit revision brief', () => {
+    const hint = buildMediaKitRevisionHint('usa media kit en frame 1 y frame 3');
+    expect(hint).toContain('frames 1, 3');
   });
 });

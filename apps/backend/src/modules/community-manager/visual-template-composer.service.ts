@@ -65,6 +65,9 @@ export class VisualTemplateComposerService {
       forceTemplateId?: VisualTemplateId;
       variationSeed?: number;
       imageDestination?: ContentImageDestination;
+      /** Índices 0-based; si se omite un slide, se conserva existingAssetIds[slideIndex]. */
+      targetSlideIndices?: number[];
+      existingAssetIds?: string[];
     },
   ): Promise<VisualTemplateComposeResult> {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);
@@ -104,6 +107,17 @@ export class VisualTemplateComposerService {
       const frames: Array<{ assetId: string; index: number }> = [];
 
       for (let slideIndex = 0; slideIndex < frameCount; slideIndex += 1) {
+        const preservedId = options?.existingAssetIds?.[slideIndex];
+        if (
+          options?.targetSlideIndices &&
+          !options.targetSlideIndices.includes(slideIndex) &&
+          preservedId
+        ) {
+          assetIds.push(preservedId);
+          frames.push({ assetId: preservedId, index: slideIndex });
+          continue;
+        }
+
         const pick =
           imagePicks[slideIndex % Math.max(imagePicks.length, 1)] ?? imagePicks[0];
         const photoAssetId = pick?.assetId;
@@ -224,6 +238,10 @@ export class VisualTemplateComposerService {
     kit: ProductMediaKitItemEntity[],
     postIndex: number,
     ctx: VisualTemplateComposeContext,
+    options?: {
+      targetSlideIndices?: number[];
+      existingAssetIds?: string[];
+    },
   ): Promise<boolean> {
     const previous = await this.generations.find({
       where: { tenantId, contentId },
@@ -262,6 +280,8 @@ export class VisualTemplateComposerService {
         variationSeed: (last?.metadata as { variationSeed?: number })?.variationSeed
           ? Number((last.metadata as { variationSeed: number }).variationSeed) + 1
           : 1,
+        targetSlideIndices: options?.targetSlideIndices,
+        existingAssetIds: options?.existingAssetIds,
       },
     );
     return result.attached;
