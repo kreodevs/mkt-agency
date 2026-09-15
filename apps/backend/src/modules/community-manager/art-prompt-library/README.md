@@ -10,10 +10,11 @@ SocialCopyPost (+ visualIntent from CM LLM)
         ▼
 attachVisualForPost
   1. talking-head composer
-  2. VisualTemplateComposer (media kit + templates) — skipped when `preferLayout: ai-art`
-  3. Art + kit compose (hybrid) ◄── `ArtKitComposeService` when kit has compose roles
-  4. Art Prompt Library  ◄── pure IA (no kit overlay)
-  5. ImageGenerationService (branded IA fallback)
+  2. SceneKitComposer (creative scene) ◄── `SceneKitComposeService` — CM en escena + pantalla real del kit
+  3. VisualTemplateComposer (media kit + templates) — skipped when `preferLayout: ai-art` or creative scene routing
+  4. Art + kit compose (hybrid) ◄── `ArtKitComposeService` when kit has compose roles
+  5. Art Prompt Library  ◄── pure IA (no kit overlay)
+  6. ImageGenerationService (branded IA fallback)
         │
         ▼
 ArtPromptSelectorService.resolveVisualPrompt()
@@ -38,6 +39,10 @@ ImageGenerationService.attachVisualToContent({ artRecipeBasePrompt, artRecipeId 
 | `visual-intent.util.ts` | Parse/infer `visualIntent`; gate library + kit-compose usage |
 | `art-kit-compose.util.ts` | Kit overlay prompts, layout resolution, Sharp compositing |
 | `art-kit-compose.service.ts` | Hybrid pipeline: MeiGen art background + real kit screenshot |
+| `scene-recipes.data.ts` | 8 creative scene recipes (workspace, hand-phone, clinical, abstract) |
+| `scene-routing.util.ts` | Route stories/kit posts to creative scene before rigid templates |
+| `scene-kit-compose.util.ts` | Screen region compositing + CM identity prompt suffix |
+| `scene-kit-compose.service.ts` | Premium scene IA + kit screen inpainting + CM portrait reference |
 
 ## visualIntent (CM LLM)
 
@@ -49,15 +54,29 @@ The social copy adapter asks the CM to fill per post:
     "goal": "educar sobre feature X",
     "subject": "automatización de reportes",
     "style": "minimal",
-    "preferLayout": "ai-art",
+    "preferLayout": "creative-scene",
+    "scene": "clinical",
     "carouselStructure": "hook-feature-cta"
   }
 }
 ```
 
-- `preferLayout: "template"` → skip art library and art-kit-compose (use Visual Studio templates)
-- `preferLayout: "ai-art"` → skip templates; prefer art-kit-compose (when kit exists) then art library
-- talking-head posts always skip the library and art-kit-compose
+- `preferLayout: "template"` → skip creative scene, art library and art-kit-compose (use Visual Studio templates)
+- `preferLayout: "creative-scene"` → SceneKitComposer first (CM en escena + captura real en pantalla)
+- `preferLayout: "ai-art"` → skip rigid templates; prefer art-kit-compose (when kit exists) then art library
+- `scene: "clinical"` → escenas de consultorio/dental; `"hand-phone"` para stories; `"workspace"` para SaaS
+- talking-head posts always skip creative scene, library and art-kit-compose
+
+## SceneKitComposer (creative scene)
+
+When media kit has compose roles and routing selects creative scene (stories, `preferLayout: creative-scene`, batch rotation):
+
+1. `resolveEffectiveScene()` picks archetype (`workspace`, `hand-phone`, `clinical`, `abstract-premium`).
+2. `ArtPromptSelectorService.selectSceneRecipe()` picks from `SCENE_PROMPT_RECIPES`.
+3. CM portrait (if ready) is passed as `input_references` to OpenRouter image API for identity.
+4. IA generates photorealistic scene with **blank device screen**.
+5. `compositeScreenIntoScene()` inpaints the real media-kit screenshot into the screen region.
+6. Generation metadata uses `pipeline: 'scene-kit-compose'`.
 
 ## Art + kit compose (hybrid)
 
@@ -86,4 +105,6 @@ Selected recipe id is stored on `contents.art_recipe_id` for traceability and ba
 ```bash
 npx jest art-prompt --passWithNoTests
 npx jest art-kit --passWithNoTests
+npx jest scene-routing --passWithNoTests
+npx jest scene-kit --passWithNoTests
 ```

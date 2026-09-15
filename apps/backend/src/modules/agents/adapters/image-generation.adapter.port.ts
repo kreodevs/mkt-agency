@@ -1,5 +1,10 @@
 import type { LlmTaskType } from '../../../shared/ai/llm-task-types';
 
+export interface ImageGenerationReferenceImage {
+  buffer: Buffer;
+  mimeType?: string;
+}
+
 export interface ImageGenerationResult {
   imageUrl?: string;
   imageBuffer?: Buffer;
@@ -14,6 +19,7 @@ export interface ImageGenerationAdapterPort {
       size?: string;
       style?: string;
       taskType?: LlmTaskType;
+      referenceImage?: ImageGenerationReferenceImage;
     },
   ): Promise<ImageGenerationResult>;
 }

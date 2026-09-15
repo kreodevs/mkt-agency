@@ -36,6 +36,7 @@ import { GenerationContextFacade } from './generation-context.facade';
 import { TonePresetController } from './tone-preset.controller';
 import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
 import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
+import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.service';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-select
     TalkingHeadPostComposerService,
     ArtPromptSelectorService,
     ArtKitComposeService,
+    SceneKitComposeService,
     StubSocialCopyAdapter,
     OpenRouterSocialCopyAdapter,
     {

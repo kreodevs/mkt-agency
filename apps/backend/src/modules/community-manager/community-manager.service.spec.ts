@@ -20,6 +20,8 @@ describe('CommunityManagerService — extracted helpers', () => {
       {} as any, // contextFacade
       {} as any, // artPromptSelector
       {} as any, // artKitCompose
+      {} as any, // sceneKitCompose
+      {} as any, // cmCharacter
     );
   });
 
@@ -122,7 +124,9 @@ describe('CommunityManagerService — extracted helpers', () => {
         { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
         {} as any,
         {} as any, // artPromptSelector
-      {} as any, // artKitCompose
+        {} as any, // artKitCompose
+        { tryCompose: jest.fn().mockResolvedValue({ attached: false, assetIds: [] }) } as any,
+        { resolveDefaultPortraitAssetId: jest.fn().mockResolvedValue(null) } as any,
       );
       talkingHeadComposer.attachToContent.mockReset();
       templateComposer.tryComposeFromTemplate.mockReset();
@@ -212,7 +216,9 @@ describe('CommunityManagerService — extracted helpers', () => {
         { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
         {} as any,
         {} as any, // artPromptSelector
-      {} as any, // artKitCompose
+        {} as any, // artKitCompose
+        {} as any, // sceneKitCompose
+        {} as any, // cmCharacter
       );
       templateComposer.recomposeFromStoredTemplate.mockReset();
       templateComposer.tryComposeFromTemplate.mockReset();

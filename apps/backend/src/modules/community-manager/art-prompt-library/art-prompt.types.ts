@@ -36,7 +36,21 @@ export type ArtPromptCarouselStructure =
   | 'multi-stat';
 
 /** Whether CM prefers template composition vs raw AI art. */
-export type ArtPromptPreferLayout = 'template' | 'ai-art' | 'auto';
+export type ArtPromptPreferLayout = 'template' | 'ai-art' | 'auto' | 'creative-scene';
+
+/**
+ * Creative scene archetype for SceneKitComposer (CM in environment + real app screen).
+ * `auto` lets routing infer from platform, industry and batch rotation.
+ */
+export type ArtPromptScene =
+  | 'auto'
+  | 'workspace'
+  | 'hand-phone'
+  | 'clinical'
+  | 'abstract-premium';
+
+/** Device screen placement for compositing real media-kit screenshots. */
+export type SceneScreenLayout = 'laptop' | 'phone-hand' | 'phone-table' | 'none';
 
 /** Structured visual intent filled by the CM LLM per post. */
 export interface VisualIntent {
@@ -45,6 +59,8 @@ export interface VisualIntent {
   style?: ArtPromptStyle;
   preferLayout?: ArtPromptPreferLayout;
   carouselStructure?: ArtPromptCarouselStructure;
+  /** Creative scene archetype (premium CM + environment compositions). */
+  scene?: ArtPromptScene;
 }
 
 /** Curated MeiGen-style art prompt recipe. */
@@ -70,6 +86,34 @@ export interface ArtPromptRecipe {
   supportsMediaKitOverlay?: boolean;
   /** Preferred layout when compositing kit screenshot on AI background. */
   kitLayout?: 'mockup' | 'split-bottom' | 'center-panel';
+}
+
+/** Premium creative scene recipe (SceneKitComposer). */
+export interface ScenePromptRecipe extends ArtPromptRecipe {
+  sceneType: ArtPromptScene;
+  screenLayout: SceneScreenLayout;
+  /** Use CM virtual portrait as identity reference in image generation. */
+  requiresCmReference: boolean;
+  /** Composite real media-kit screenshot into device screen region. */
+  requiresKitScreen: boolean;
+}
+
+export interface SceneScreenRegion {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  borderRadius?: number;
+}
+
+export interface ScenePromptSelection {
+  recipeId: string;
+  recipe: ScenePromptRecipe;
+  filledPrompt: string;
+  aspectRatioHint: '1:1' | '4:5' | '9:16';
+  score: number;
+  selectionMethod: 'deterministic' | 'llm';
+  effectiveScene: ArtPromptScene;
 }
 
 export type ArtKitLayoutMode = 'mockup' | 'split-bottom' | 'center-panel';

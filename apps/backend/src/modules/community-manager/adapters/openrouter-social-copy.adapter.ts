@@ -168,7 +168,9 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
               style:
                 'minimal | bold | luxury | editorial | playful | technical | photoreal | illustration | flatlay | infographic',
               preferLayout:
-                'template | ai-art | auto — template si hay media kit; ai-art para arte IA curado; auto por defecto',
+                'template | ai-art | creative-scene | auto — creative-scene para CM en escena real con app; template si plantilla rígida; ai-art para arte abstracto',
+              scene:
+                'auto | workspace | hand-phone | clinical | abstract-premium — arquetipo de escena creativa (CM en oficina, mano con móvil, clínica, marca abstracta)',
               carouselStructure:
                 'hook-feature-cta | listicle | before-after | step-by-step | multi-stat (solo carousel)',
             },
@@ -217,8 +219,10 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           ].join('\n')
         : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA. body con 3 bullets distintos.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
-      'visualIntent = intención visual estructurada para seleccionar receta de arte IA (goal, subject, style, preferLayout, carouselStructure).',
-      'preferLayout=template cuando hay media kit o plantilla; preferLayout=ai-art para infografías, posters editoriales o escenas creativas sin capturas reales.',
+      'visualIntent = intención visual estructurada para seleccionar receta de arte IA (goal, subject, style, preferLayout, scene, carouselStructure).',
+      'preferLayout=creative-scene para posts premium con CM en escena real y captura del app en pantalla (stories, Reels estáticos, lanzamientos).',
+      'scene=clinical para dental/salud; scene=hand-phone para stories/TikTok; scene=workspace para SaaS; scene=abstract-premium para marca sin dispositivo.',
+      'preferLayout=template solo si necesitas tip-card/stat-highlight rígido; preferLayout=ai-art para infografías o posters sin capturas reales.',
       'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]
       .filter(Boolean)

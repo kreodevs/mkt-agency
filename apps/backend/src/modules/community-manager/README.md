@@ -44,7 +44,11 @@ Biblioteca de presentadoras virtuales por producto. El copiloto asigna al menos 
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
 6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación). Con feedback del copiloto (“usa mi media kit”, “fotos reales”), no se invoca imagen IA aunque falle el copy del LLM; se recomponen capturas del kit.
 
-Orden en `attachVisualForPost`: talking-head → plantilla (salvo `preferLayout: ai-art`) → **Art + kit compose** (receta MeiGen + captura real del media kit) → **Art Prompt Library** (IA pura, sin kit) → IA enriquecida genérica. Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+Orden en `attachVisualForPost`: talking-head → **SceneKitComposer** (escena creativa CM + pantalla real del kit; antes de plantillas rígidas en stories) → plantilla (salvo `preferLayout: ai-art` o routing creativo) → **Art + kit compose** → **Art Prompt Library** → IA enriquecida genérica. Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+
+## SceneKitComposer (escena creativa)
+
+Para stories, Reels estáticos y posts con `preferLayout: creative-scene`, `SceneKitComposeService` genera fotografía editorial con la CM en escena, pantalla del dispositivo en blanco para inpainting, y retrato de la CM virtual como referencia de identidad (`input_references` en OpenRouter). Metadata: `pipeline: scene-kit-compose`, `sceneType`, `artRecipeId`.
 
 ## Art + kit compose (híbrido)
 
