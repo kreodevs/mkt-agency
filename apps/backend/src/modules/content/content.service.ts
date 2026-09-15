@@ -124,6 +124,7 @@ export class ContentService {
           visualSubline: dto.visualSubline ?? null,
           visualCta: dto.visualCta ?? null,
           imageDestination: dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
+          artRecipeId: dto.artRecipeId ?? null,
         }),
       );
 
@@ -193,7 +194,8 @@ export class ContentService {
       dto.visualHeadline !== undefined ||
       dto.visualSubline !== undefined ||
       dto.visualCta !== undefined ||
-      dto.imageDestination !== undefined;
+      dto.imageDestination !== undefined ||
+      dto.artRecipeId !== undefined;
     const hasMetadataOnly = hasMetadataFields && !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
@@ -227,6 +229,7 @@ export class ContentService {
     if (dto.imageDestination !== undefined) {
       content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
     }
+    if (dto.artRecipeId !== undefined) content.artRecipeId = dto.artRecipeId ?? null;
 
     const saved = await this.contents.save(content);
     return this.toContentResponse(saved);
@@ -289,6 +292,7 @@ export class ContentService {
     if (dto.imageDestination !== undefined) {
       content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
     }
+    if (dto.artRecipeId !== undefined) content.artRecipeId = dto.artRecipeId ?? null;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -800,6 +804,7 @@ export class ContentService {
       visualSubline: content.visualSubline ?? null,
       visualCta: content.visualCta ?? null,
       imageDestination: content.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
+      artRecipeId: content.artRecipeId ?? null,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

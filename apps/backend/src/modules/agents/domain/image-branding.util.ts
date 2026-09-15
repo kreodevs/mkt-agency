@@ -9,6 +9,8 @@ export interface BrandedImagePromptInput {
   productName: string;
   title?: string;
   visualDescription?: string;
+  /** When set, used as primary visual scene instead of generic visualDescription. */
+  artRecipeBasePrompt?: string;
   hasLogo: boolean;
   visualFormat?: ContentVisualFormat;
   primaryColor?: string;
@@ -24,7 +26,11 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     'NO renderices el texto del post, hashtags, captions ni copy publicable dentro de la imagen.',
   ];
 
-  if (input.visualDescription?.trim()) {
+  if (input.artRecipeBasePrompt?.trim()) {
+    parts.push(
+      `Escena visual (receta de arte curada — composición/fotografía/ilustración): ${input.artRecipeBasePrompt.trim()}`,
+    );
+  } else if (input.visualDescription?.trim()) {
     parts.push(`Escena visual (solo composición/fotografía/ilustración): ${input.visualDescription.trim()}`);
   } else if (input.title?.trim()) {
     parts.push(`Tema ilustrado (sin copiar el texto del post): "${input.title.trim()}".`);

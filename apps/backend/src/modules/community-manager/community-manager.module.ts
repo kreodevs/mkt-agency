@@ -34,6 +34,7 @@ import { CommunityManagerController } from './community-manager.controller';
 import { CommunityManagerService } from './community-manager.service';
 import { GenerationContextFacade } from './generation-context.facade';
 import { TonePresetController } from './tone-preset.controller';
+import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { TonePresetController } from './tone-preset.controller';
     VisualTemplateComposerService,
     CmCharacterService,
     TalkingHeadPostComposerService,
+    ArtPromptSelectorService,
     StubSocialCopyAdapter,
     OpenRouterSocialCopyAdapter,
     {

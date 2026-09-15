@@ -68,6 +68,8 @@ import {
   GenerationContextFacade,
   type GenerationContext,
 } from './generation-context.facade';
+import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
+import { shouldUseArtPromptLibrary } from './art-prompt-library/visual-intent.util';
 
 @Injectable()
 export class CommunityManagerService {
@@ -90,6 +92,7 @@ export class CommunityManagerService {
     private readonly productService: ProductService,
     private readonly productAppCaptureService: ProductAppCaptureService,
     private readonly contextFacade: GenerationContextFacade,
+    private readonly artPromptSelector: ArtPromptSelectorService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -224,6 +227,7 @@ export class CommunityManagerService {
   ): Promise<{ publishedPosts: string[]; imagesAttached: number }> {
     const publishedPosts: string[] = [];
     let imagesAttached = 0;
+    const recentRecipeIds: string[] = [];
     const today = new Date();
     for (let i = 0; i < posts.length; i++) {
       const post = posts[i];
@@ -236,9 +240,12 @@ export class CommunityManagerService {
 
         if (dto.attachImages === false) continue;
         const attached = await this.attachVisualForPost(
-          tenantId, userId, content.id, post, ctx.effectiveProductId, ctx.kit, i, ctx,
+          tenantId, userId, content.id, post, ctx.effectiveProductId, ctx.kit, i, ctx, recentRecipeIds,
         );
         if (attached) imagesAttached += 1;
+        if (post.artRecipeId && !recentRecipeIds.includes(post.artRecipeId)) {
+          recentRecipeIds.push(post.artRecipeId);
+        }
       } catch (err) {
         this.logger.warn(`Failed to save post "${post.title}" as content: ${err}`);
       }
@@ -881,6 +888,7 @@ export class CommunityManagerService {
     kit: GenerationContext['kit'],
     postIndex: number,
     ctx: GenerationContext,
+    recentRecipeIds?: string[],
   ): Promise<boolean> {
     const visualFormat = normalizeContentVisualFormat(post.visualFormat);
 
@@ -938,23 +946,65 @@ export class CommunityManagerService {
       return false;
     }
 
-    if (!post.visualDescription?.trim()) {
+    if (!post.visualDescription?.trim() && !post.visualIntent?.subject?.trim()) {
       return false;
     }
 
     try {
-      const enriched = await this.buildEnrichedVisualDescription(
-        tenantId,
-        post.visualDescription,
-        productId ?? undefined,
-        ctx,
-      );
+      let visualDescription = post.visualDescription?.trim() ?? '';
+      let artRecipeBasePrompt: string | undefined;
+      let artRecipeId: string | undefined;
+
+      if (shouldUseArtPromptLibrary(post, kit)) {
+        const brandKit = productId
+          ? resolveVisualBrandKit(
+              await this.productService.findOwnedEntity(tenantId, productId),
+              ctx.resolvedProfile,
+            )
+          : null;
+
+        const resolved = await this.artPromptSelector.resolveVisualPrompt(
+          post,
+          {
+            industry: ctx.resolvedProfile?.industry ?? null,
+            competitorIntelBrief: ctx.competitorIntelBrief,
+          },
+          brandKit,
+          recentRecipeIds,
+          kit,
+        );
+
+        if (resolved.recipeId) {
+          artRecipeId = resolved.recipeId;
+          artRecipeBasePrompt = resolved.artRecipeBasePrompt;
+          visualDescription = resolved.visualDescription;
+          post.artRecipeId = resolved.recipeId;
+        } else if (resolved.visualDescription) {
+          visualDescription = resolved.visualDescription;
+        }
+      } else if (visualDescription) {
+        visualDescription = await this.buildEnrichedVisualDescription(
+          tenantId,
+          visualDescription,
+          productId ?? undefined,
+          ctx,
+        );
+      }
+
+      if (!visualDescription.trim()) {
+        return false;
+      }
+
       const imageResult = await this.imageGeneration.attachVisualToContent(
         tenantId,
         userId,
         contentId,
-        enriched,
+        visualDescription,
         productId ?? undefined,
+        {
+          artRecipeBasePrompt,
+          artRecipeId,
+        },
       );
       return imageResult?.status === 'completed';
     } catch (error) {

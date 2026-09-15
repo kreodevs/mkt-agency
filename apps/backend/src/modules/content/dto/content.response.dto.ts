@@ -32,6 +32,7 @@ export class ContentResponseDto {
   visualSubline!: string | null;
   visualCta!: string | null;
   imageDestination!: string;
+  artRecipeId!: string | null;
   currentVersion?: ContentVersionResponseDto;
   createdAt!: string;
   updatedAt!: string;

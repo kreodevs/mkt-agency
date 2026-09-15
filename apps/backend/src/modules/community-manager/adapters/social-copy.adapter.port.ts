@@ -1,5 +1,8 @@
 import type { ContentVisualFormat } from '../../content/domain/content.constants';
 import type { CmCharacterLlmOption } from '../domain/cm-character.constants';
+import type { VisualIntent } from '../art-prompt-library/art-prompt.types';
+
+export type { VisualIntent };
 
 export interface SocialCopyPost {
   id: string;
@@ -25,6 +28,10 @@ export interface SocialCopyPost {
   contentId?: string;
   /** CM virtual elegida por el LLM para talking-head (debe existir en la biblioteca). */
   cmCharacterId?: string;
+  /** Structured visual intent for art prompt library (filled by CM LLM). */
+  visualIntent?: VisualIntent;
+  /** Selected art prompt recipe id (set during visual attach). */
+  artRecipeId?: string;
 }
 
 export interface SocialCopyBatch {

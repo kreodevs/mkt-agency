@@ -162,6 +162,16 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             tone: 'tono usado en este post',
             cmCharacterId:
               'uuid de la CM virtual (solo si visualFormat=talking-head y hay biblioteca)',
+            visualIntent: {
+              goal: 'objetivo visual del post (educar, vender, inspirar…)',
+              subject: 'tema o sujeto principal de la pieza gráfica',
+              style:
+                'minimal | bold | luxury | editorial | playful | technical | photoreal | illustration | flatlay | infographic',
+              preferLayout:
+                'template | ai-art | auto — template si hay media kit; ai-art para arte IA curado; auto por defecto',
+              carouselStructure:
+                'hook-feature-cta | listicle | before-after | step-by-step | multi-stat (solo carousel)',
+            },
           },
         ],
         publishingGuide:
@@ -207,6 +217,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           ].join('\n')
         : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA. body con 3 bullets distintos.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
+      'visualIntent = intención visual estructurada para seleccionar receta de arte IA (goal, subject, style, preferLayout, carouselStructure).',
+      'preferLayout=template cuando hay media kit o plantilla; preferLayout=ai-art para infografías, posters editoriales o escenas creativas sin capturas reales.',
       'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]
       .filter(Boolean)

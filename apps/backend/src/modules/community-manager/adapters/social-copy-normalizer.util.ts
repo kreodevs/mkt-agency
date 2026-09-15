@@ -2,6 +2,7 @@ import type { SocialCopyPost } from './social-copy.adapter.port';
 import { inferContentVisualFormat, normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 import { sanitizeVisualPromptForArt } from '../../content/domain/visual-prompt.util';
 import { isVisualTemplateId } from '../domain/visual-brand-kit.util';
+import { normalizeVisualIntent } from '../art-prompt-library/visual-intent.util';
 
 const ALLOWED_PLATFORMS = new Set(['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok']);
 
@@ -146,6 +147,21 @@ export function normalizeSocialCopyBatch(
       const visualCta = pickString(row, ['visualCta', 'visual_cta', 'ctaVisual']);
       if (visualCta) {
         post.visualCta = visualCta;
+      }
+
+      const imageDestination = pickString(row, ['imageDestination', 'image_destination']);
+      if (imageDestination === 'feed' || imageDestination === 'story') {
+        post.imageDestination = imageDestination;
+      }
+
+      const visualIntent = normalizeVisualIntent(row.visualIntent ?? row.visual_intent);
+      if (visualIntent) {
+        post.visualIntent = visualIntent;
+      }
+
+      const artRecipeId = pickString(row, ['artRecipeId', 'art_recipe_id']);
+      if (artRecipeId) {
+        post.artRecipeId = artRecipeId;
       }
 
       return post;
