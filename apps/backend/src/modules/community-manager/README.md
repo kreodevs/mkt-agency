@@ -44,7 +44,19 @@ Biblioteca de presentadoras virtuales por producto. El copiloto asigna al menos 
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
 6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación). Con feedback del copiloto (“usa mi media kit”, “fotos reales”), no se invoca imagen IA aunque falle el copy del LLM; se recomponen capturas del kit.
 
-Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → **Art Prompt Library** (recetas MeiGen curadas) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+
+## Art Prompt Library
+
+Cuando la plantilla falla y no hay media kit bloqueando IA, `ArtPromptSelectorService` elige una receta curada (~30 familias MeiGen: infografías, posters, flatlay, product hero, etc.):
+
+1. El CM LLM rellena `visualIntent` por post (`goal`, `subject`, `style`, `preferLayout`, `carouselStructure`).
+2. `filterArtPromptCandidates()` puntúa recetas por plataforma, formato, industria e intención.
+3. Si hay >1 candidata, `LlmClient.chatJson` (task `social_copy`, temp 0.2) desempata.
+4. `fillRecipeTemplate()` inyecta slots de marca (`productName`, colores, headline…).
+5. El prompt relleno pasa a `ImageGenerationService` como `artRecipeBasePrompt`; el id se guarda en `contents.art_recipe_id`.
+
+**Skip:** `preferLayout=template`, talking-head, o media kit con roles de composición. Ver `art-prompt-library/README.md`.
 
 Carruseles con media kit usan layouts `carousel-cover` / `carousel-step` / `carousel-cta`: mockup grande (~74% ancho), panel inferior con tipografía y CTA pill; sin miniaturas en esquina ni texto solapado.
 

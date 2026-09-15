@@ -90,6 +90,13 @@ export interface GenerateImageOptions {
   background?: boolean;
   forcedMediaType?: GenerationMediaType;
   forcedFrameCount?: number;
+  artRecipeBasePrompt?: string;
+  artRecipeId?: string;
+}
+
+export interface AttachVisualToContentOptions {
+  artRecipeBasePrompt?: string;
+  artRecipeId?: string;
 }
 
 export interface GenerateImageResult {
@@ -233,6 +240,7 @@ export class ImageGenerationService implements OnModuleInit {
     contentId: string,
     visualDescription: string,
     productId?: string,
+    options?: AttachVisualToContentOptions,
   ): Promise<GenerateImageResult | null> {
     const trimmed = visualDescription.trim();
     if (!trimmed) {
@@ -245,10 +253,18 @@ export class ImageGenerationService implements OnModuleInit {
     const publishableBody = content.currentVersion?.body;
     const sanitizedPrompt = sanitizeVisualPromptForArt(trimmed, publishableBody) || trimmed;
 
-    if (sanitizedPrompt !== (content.visualPrompt ?? '')) {
-      await this.contentService.update(tenantId, userId, contentId, {
-        visualPrompt: sanitizedPrompt,
-      });
+    const metadataUpdate: { visualPrompt: string; artRecipeId?: string | null } = {
+      visualPrompt: sanitizedPrompt,
+    };
+    if (options?.artRecipeId) {
+      metadataUpdate.artRecipeId = options.artRecipeId;
+    }
+
+    if (
+      sanitizedPrompt !== (content.visualPrompt ?? '') ||
+      (options?.artRecipeId && options.artRecipeId !== (content.artRecipeId ?? ''))
+    ) {
+      await this.contentService.update(tenantId, userId, contentId, metadataUpdate);
     }
 
     const visualFormat = normalizeContentVisualFormat(content.visualFormat);
@@ -267,6 +283,7 @@ export class ImageGenerationService implements OnModuleInit {
         sanitizedPrompt,
         effectiveProductId,
         visualFormat,
+        options?.artRecipeBasePrompt,
       ),
       {
         contentId,
@@ -276,6 +293,8 @@ export class ImageGenerationService implements OnModuleInit {
         background: true,
         forcedMediaType: visualFormatToMediaType(visualFormat),
         forcedFrameCount: visualFormatToFrameCount(visualFormat),
+        artRecipeBasePrompt: options?.artRecipeBasePrompt,
+        artRecipeId: options?.artRecipeId,
       },
     );
   }
@@ -287,8 +306,10 @@ export class ImageGenerationService implements OnModuleInit {
       visualPrompt?: string | null;
       visualFormat?: string;
       productId?: string | null;
+      artRecipeId?: string | null;
     },
     publishableBody?: string,
+    artRecipeBasePrompt?: string,
   ): Promise<string> {
     const branding = await this.resolveProductBranding(tenantId, content.productId ?? undefined);
     const visualDescription =
@@ -299,6 +320,7 @@ export class ImageGenerationService implements OnModuleInit {
       productName: branding.productName,
       title: content.title,
       visualDescription,
+      artRecipeBasePrompt,
       hasLogo: !!branding.logoAssetId,
       visualFormat: normalizeContentVisualFormat(content.visualFormat),
     });
@@ -309,11 +331,13 @@ export class ImageGenerationService implements OnModuleInit {
     visualDescription: string,
     productId?: string,
     visualFormat = 'image',
+    artRecipeBasePrompt?: string,
   ): Promise<string> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     return buildBrandedImagePrompt({
       productName: branding.productName,
       visualDescription,
+      artRecipeBasePrompt,
       hasLogo: !!branding.logoAssetId,
       visualFormat: normalizeContentVisualFormat(visualFormat),
     });

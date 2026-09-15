@@ -64,6 +64,10 @@ export class ContentEntity {
   @Column({ name: 'image_destination', type: 'varchar', length: 10, default: 'feed' })
   imageDestination!: string;
 
+  /** Art prompt library recipe id used for IA visual generation. */
+  @Column({ name: 'art_recipe_id', type: 'varchar', length: 80, nullable: true })
+  artRecipeId!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

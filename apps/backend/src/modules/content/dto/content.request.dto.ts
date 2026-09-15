@@ -83,6 +83,11 @@ export class CreateContentDto {
   @IsString()
   @IsIn([...CONTENT_IMAGE_DESTINATIONS])
   imageDestination?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  artRecipeId?: string | null;
 }
 
 export class UpdateContentDto {
@@ -151,6 +156,11 @@ export class UpdateContentDto {
   @IsString()
   @IsIn([...CONTENT_IMAGE_DESTINATIONS])
   imageDestination?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  artRecipeId?: string | null;
 }
 
 export class ListContentsQueryDto {
