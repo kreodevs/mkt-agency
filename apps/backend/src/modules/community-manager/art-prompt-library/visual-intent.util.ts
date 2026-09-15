@@ -6,8 +6,11 @@ import type { VisualIntent } from './art-prompt.types';
 import type {
   ArtPromptCarouselStructure,
   ArtPromptPreferLayout,
+  ArtPromptScene,
   ArtPromptStyle,
 } from './art-prompt.types';
+import type { CreativeSceneRoutingOptions } from './scene-routing.util';
+import { shouldUseCreativeScene } from './scene-routing.util';
 
 const VALID_STYLES = new Set<ArtPromptStyle>([
   'minimal',
@@ -22,7 +25,20 @@ const VALID_STYLES = new Set<ArtPromptStyle>([
   'infographic',
 ]);
 
-const VALID_LAYOUTS = new Set<ArtPromptPreferLayout>(['template', 'ai-art', 'auto']);
+const VALID_LAYOUTS = new Set<ArtPromptPreferLayout>([
+  'template',
+  'ai-art',
+  'auto',
+  'creative-scene',
+]);
+
+const VALID_SCENES = new Set<ArtPromptScene>([
+  'auto',
+  'workspace',
+  'hand-phone',
+  'clinical',
+  'abstract-premium',
+]);
 
 const VALID_CAROUSEL_STRUCTURES = new Set<ArtPromptCarouselStructure>([
   'hook-feature-cta',
@@ -52,6 +68,14 @@ function pickLayout(value: unknown): ArtPromptPreferLayout | undefined {
   return undefined;
 }
 
+function pickScene(value: unknown): ArtPromptScene | undefined {
+  const raw = pickString(value)?.toLowerCase();
+  if (raw && VALID_SCENES.has(raw as ArtPromptScene)) {
+    return raw as ArtPromptScene;
+  }
+  return undefined;
+}
+
 function pickCarouselStructure(value: unknown): ArtPromptCarouselStructure | undefined {
   const raw = pickString(value)?.toLowerCase();
   if (raw && VALID_CAROUSEL_STRUCTURES.has(raw as ArtPromptCarouselStructure)) {
@@ -76,12 +100,14 @@ export function normalizeVisualIntent(raw: unknown): VisualIntent | null {
   const carouselStructure = pickCarouselStructure(
     record.carouselStructure ?? record.carousel_structure,
   );
+  const scene = pickScene(record.scene);
 
   if (goal) intent.goal = goal;
   if (subject) intent.subject = subject;
   if (style) intent.style = style;
   if (preferLayout) intent.preferLayout = preferLayout;
   if (carouselStructure) intent.carouselStructure = carouselStructure;
+  if (scene) intent.scene = scene;
 
   return Object.keys(intent).length > 0 ? intent : null;
 }
@@ -138,10 +164,15 @@ export function resolveVisualIntent(post: SocialCopyPost): VisualIntent {
 export function shouldUseArtKitCompose(
   post: SocialCopyPost,
   kit: ProductMediaKitItemEntity[] | null | undefined,
+  sceneOptions?: CreativeSceneRoutingOptions,
 ): boolean {
   const format = normalizeContentVisualFormat(post.visualFormat);
 
   if (format === 'talking-head') {
+    return false;
+  }
+
+  if (shouldUseCreativeScene(post, kit, sceneOptions)) {
     return false;
   }
 
@@ -150,7 +181,7 @@ export function shouldUseArtKitCompose(
   }
 
   const intent = resolveVisualIntent(post);
-  if (intent.preferLayout === 'template') {
+  if (intent.preferLayout === 'template' || intent.preferLayout === 'creative-scene') {
     return false;
   }
 
@@ -197,7 +228,8 @@ export function resolveArtVisualMode(
   post: SocialCopyPost,
   kit: ProductMediaKitItemEntity[] | null | undefined,
   templateAttached?: boolean,
-): 'template' | 'art-kit-compose' | 'art-prompt' | 'skip' {
+  sceneOptions?: CreativeSceneRoutingOptions,
+): 'template' | 'creative-scene' | 'art-kit-compose' | 'art-prompt' | 'skip' {
   const format = normalizeContentVisualFormat(post.visualFormat);
 
   if (format === 'talking-head') {
@@ -214,7 +246,11 @@ export function resolveArtVisualMode(
     return 'skip';
   }
 
-  if (shouldUseArtKitCompose(post, kit)) {
+  if (shouldUseCreativeScene(post, kit, sceneOptions)) {
+    return 'creative-scene';
+  }
+
+  if (shouldUseArtKitCompose(post, kit, sceneOptions)) {
     return 'art-kit-compose';
   }
 

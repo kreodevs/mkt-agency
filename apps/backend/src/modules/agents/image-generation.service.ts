@@ -101,6 +101,10 @@ export interface GenerateImageBufferOptions {
   style?: string;
   productId?: string;
   skipLogoOverlay?: boolean;
+  referenceImage?: {
+    buffer: Buffer;
+    mimeType?: string;
+  };
 }
 
 export interface AttachVisualToContentOptions {
@@ -265,6 +269,7 @@ export class ImageGenerationService implements OnModuleInit {
     const result = await this.adapter.generateImage(brandedPrompt, {
       size: options.size,
       style: options.style,
+      referenceImage: options.referenceImage,
     });
 
     const { buffer } = await this.resolveImagePayload(result);

@@ -18,6 +18,7 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
       size?: string;
       style?: string;
       taskType?: LlmTaskType;
+      referenceImage?: { buffer: Buffer; mimeType?: string };
     },
   ): Promise<ImageGenerationResult> {
     const taskType = options?.taskType ?? 'image_generation';
@@ -26,13 +27,24 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
     const model = normalizeOpenRouterImageModel(resolved.model);
     const size = normalizeImageGenerationSize(options?.size || '1920x1920');
 
-    const body = {
+    const body: Record<string, unknown> = {
       model,
       prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}`,
       n: 1,
       size,
       output_format: 'png',
     };
+
+    if (options?.referenceImage?.buffer) {
+      const mime = options.referenceImage.mimeType ?? 'image/png';
+      const dataUrl = `data:${mime};base64,${options.referenceImage.buffer.toString('base64')}`;
+      body.input_references = [
+        {
+          type: 'image_url',
+          image_url: { url: dataUrl },
+        },
+      ];
+    }
 
     const baseUrl = resolved.apiUrl.replace(/\/$/, '');
     const url = baseUrl.includes('/api/v1')

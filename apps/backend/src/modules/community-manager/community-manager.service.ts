@@ -70,11 +70,17 @@ import {
 } from './generation-context.facade';
 import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
 import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
+import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.service';
+import {
+  shouldSkipTemplateForCreativeScene,
+  shouldUseCreativeScene,
+} from './art-prompt-library/scene-routing.util';
 import {
   resolveVisualIntent,
   shouldUseArtKitCompose,
   shouldUseArtPromptLibrary,
 } from './art-prompt-library/visual-intent.util';
+import { CmCharacterService } from './cm-character.service';
 
 @Injectable()
 export class CommunityManagerService {
@@ -99,6 +105,8 @@ export class CommunityManagerService {
     private readonly contextFacade: GenerationContextFacade,
     private readonly artPromptSelector: ArtPromptSelectorService,
     private readonly artKitCompose: ArtKitComposeService,
+    private readonly sceneKitCompose: SceneKitComposeService,
+    private readonly cmCharacter: CmCharacterService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -932,7 +940,44 @@ export class CommunityManagerService {
     const intent = resolveVisualIntent(post);
     const skipTemplateForAiArt = intent.preferLayout === 'ai-art';
 
-    if (productId && !skipTemplateForAiArt) {
+    const cmPortraitAssetId = productId
+      ? await this.cmCharacter.resolveDefaultPortraitAssetId(tenantId, productId).catch(() => null)
+      : null;
+    const creativeSceneOptions = {
+      postIndex,
+      cmPortraitReady: Boolean(cmPortraitAssetId),
+    };
+
+    if (productId && shouldUseCreativeScene(post, kit, creativeSceneOptions)) {
+      const sceneResult = await this.sceneKitCompose.tryCompose(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        kit,
+        postIndex,
+        {
+          resolvedProfile: ctx.resolvedProfile,
+          competitorIntelBrief: ctx.competitorIntelBrief,
+        },
+        recentRecipeIds,
+      );
+      if (sceneResult.attached) {
+        if (sceneResult.recipeId) {
+          post.artRecipeId = sceneResult.recipeId;
+        }
+        return true;
+      }
+    }
+
+    const skipTemplateForCreative = shouldSkipTemplateForCreativeScene(
+      post,
+      kit,
+      creativeSceneOptions,
+    );
+
+    if (productId && !skipTemplateForAiArt && !skipTemplateForCreative) {
       const templated = await this.templateComposer.tryComposeFromTemplate(
         tenantId,
         userId,
@@ -948,7 +993,7 @@ export class CommunityManagerService {
       }
     }
 
-    if (productId && shouldUseArtKitCompose(post, kit)) {
+    if (productId && shouldUseArtKitCompose(post, kit, creativeSceneOptions)) {
       const artKitResult = await this.artKitCompose.tryCompose(
         tenantId,
         userId,
