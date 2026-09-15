@@ -17,6 +17,19 @@ const EXPLICIT_SCENES = new Set<ArtPromptScene>([
   'abstract-premium',
 ]);
 
+/** Templates that must stay in Visual Studio (typography/layout rigid). */
+const RIGID_TEMPLATE_IDS = new Set([
+  'stat-highlight',
+  'tip-card',
+  'quote-insight',
+  'promo-cta',
+]);
+
+export function prefersRigidTemplate(post: SocialCopyPost): boolean {
+  const id = post.visualTemplateId?.trim();
+  return id ? RIGID_TEMPLATE_IDS.has(id) : false;
+}
+
 export function inferSceneFromIndustry(industry?: string | null): ArtPromptScene | undefined {
   if (!industry?.trim()) return undefined;
   const normalized = industry.toLowerCase();
@@ -61,6 +74,21 @@ export function wouldUseRigidStoryTemplate(post: SocialCopyPost): boolean {
   );
 }
 
+function layoutBlocksCreativeScene(post: SocialCopyPost): boolean {
+  const intent = resolveVisualIntent(post);
+  const format = normalizeContentVisualFormat(post.visualFormat);
+
+  if (format === 'carousel' || format === 'talking-head') {
+    return true;
+  }
+
+  if (intent.preferLayout === 'template' && prefersRigidTemplate(post)) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Whether SceneKitComposer should run (premium CM + environment + real app screen).
  */
@@ -70,11 +98,15 @@ export function shouldUseCreativeScene(
   options: CreativeSceneRoutingOptions = {},
 ): boolean {
   const format = normalizeContentVisualFormat(post.visualFormat);
-  if (format === 'talking-head') return false;
+  if (format === 'talking-head' || format === 'carousel') {
+    return false;
+  }
+
+  if (layoutBlocksCreativeScene(post)) {
+    return false;
+  }
 
   const intent = resolveVisualIntent(post);
-  if (intent.preferLayout === 'template') return false;
-
   const hasKit = kitHasComposeImageRoles(kit ?? []);
   const scene = intent.scene;
   const explicitCreative =
@@ -96,14 +128,13 @@ export function shouldUseCreativeScene(
     return true;
   }
 
-  if (hasKit && options.postIndex !== undefined) {
-    if (intent.preferLayout === 'auto' && options.postIndex % 2 === 0) {
-      return true;
-    }
+  // Default: image posts with media kit → creative scene (not product-hero template)
+  if (hasKit && !prefersRigidTemplate(post)) {
+    return true;
   }
 
-  if (hasKit && options.cmPortraitReady && options.postIndex !== undefined) {
-    if (options.postIndex % 3 === 0) return true;
+  if (hasKit && options.cmPortraitReady) {
+    return true;
   }
 
   return false;
@@ -114,11 +145,5 @@ export function shouldSkipTemplateForCreativeScene(
   kit: ProductMediaKitItemEntity[] | null | undefined,
   options: CreativeSceneRoutingOptions = {},
 ): boolean {
-  if (!shouldUseCreativeScene(post, kit, options)) return false;
-  const intent = resolveVisualIntent(post);
-  return (
-    intent.preferLayout === 'creative-scene' ||
-    intent.preferLayout === 'ai-art' ||
-    wouldUseRigidStoryTemplate(post)
-  );
+  return shouldUseCreativeScene(post, kit, options);
 }

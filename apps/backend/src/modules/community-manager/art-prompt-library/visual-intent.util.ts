@@ -129,11 +129,12 @@ export function inferVisualIntentFromPost(post: SocialCopyPost): VisualIntent {
 
   if (format === 'carousel') {
     intent.carouselStructure = 'hook-feature-cta';
-    intent.preferLayout = post.visualTemplateId ? 'template' : 'auto';
+    intent.preferLayout = 'template';
   } else if (format === 'talking-head') {
     intent.preferLayout = 'template';
   } else {
-    intent.preferLayout = post.visualTemplateId ? 'template' : 'auto';
+    // visualTemplateId is a compositor hint; routing picks creative scene vs template separately.
+    intent.preferLayout = 'auto';
   }
 
   if (post.tone?.toLowerCase().includes('profesional')) {

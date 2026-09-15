@@ -84,6 +84,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
           'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup grande tipo anuncio (no miniaturas).',
           'visualHeadline solo en slide 1; slide 2 = beneficio concreto del bullet 2; slide 3 = CTA corto (2-4 palabras).',
+          'Posts estáticos (image) con kit: visualIntent.preferLayout=creative-scene y scene=clinical|workspace|hand-phone según industria. NO uses product-hero para lanzamientos con capturas reales.',
         ].join('\n')
       : '';
 
@@ -206,9 +207,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       context.cmCharacterReady
         ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image. Prioriza variedad visual.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
-      'visualDescription = brief de arte (ambiente, luz, emoción). El diseño final lo maqueta el sistema con plantillas premium.',
-      'visualTemplateId = elige la plantilla gráfica más adecuada por post.',
-      'Plantillas: product-hero (lanzamiento, split app+texto); tip-card/promo-cta (tips y promos, mockup); quote-insight (cita larga); stat-highlight (dato numérico); story-vertical (TikTok/Reels).',
+      'visualDescription = brief de arte (ambiente, luz, emoción). Con media kit el sistema genera escena fotorealista CM + app real en pantalla.',
+      'visualTemplateId = fallback si no hay kit; con kit usa creative-scene (no product-hero). Plantillas rígidas: tip-card, quote-insight, stat-highlight, promo-cta; story-vertical solo Reels/TikTok.',
       revisionWantsMediaKit
         ? [
             'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit (mockup móvil/desktop).',
