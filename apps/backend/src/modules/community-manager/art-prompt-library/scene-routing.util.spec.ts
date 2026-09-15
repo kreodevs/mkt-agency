@@ -5,6 +5,7 @@ import {
   resolveEffectiveScene,
   shouldSkipTemplateForCreativeScene,
   shouldUseCreativeScene,
+  wantsProductScreenShowcase,
   wouldUseRigidStoryTemplate,
 } from './scene-routing.util';
 
@@ -65,12 +66,21 @@ describe('scene-routing.util', () => {
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(true);
   });
 
-  it('routes Twitter product-hero with media kit to creative scene', () => {
+  it('routes Twitter product-hero to art-kit showcase, not creative scene', () => {
     const post = basePost({
       platform: 'twitter',
       visualTemplateId: 'product-hero',
-      visualIntent: { preferLayout: 'template' },
     });
+    expect(wantsProductScreenShowcase(post)).toBe(true);
+    expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(false);
+  });
+
+  it('routes creative-scene preset to lifestyle without showcase', () => {
+    const post = basePost({
+      platform: 'twitter',
+      visualTemplateId: 'creative-scene',
+    });
+    expect(wantsProductScreenShowcase(post)).toBe(false);
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(true);
     expect(shouldSkipTemplateForCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(
       true,

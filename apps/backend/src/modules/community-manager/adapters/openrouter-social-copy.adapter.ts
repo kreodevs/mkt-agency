@@ -84,7 +84,8 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
           'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
           'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup grande tipo anuncio (no miniaturas).',
           'visualHeadline solo en slide 1; slide 2 = beneficio concreto del bullet 2; slide 3 = CTA corto (2-4 palabras).',
-          'Posts estáticos (image) con kit: visualIntent.preferLayout=creative-scene y scene=clinical|workspace|hand-phone según industria. NO uses product-hero para lanzamientos con capturas reales.',
+          'Posts estáticos (image) con kit: visualIntent.preferLayout=creative-scene y scene=clinical|workspace según industria (foto CM lifestyle, SIN captura de app en la imagen).',
+          'Solo usa visualTemplateId=product-hero o menciona "captura/interfaz" en visualDescription cuando el post DEBE mostrar la UI del producto.',
         ].join('\n')
       : '';
 
@@ -220,9 +221,10 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA. body con 3 bullets distintos.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
       'visualIntent = intención visual estructurada para seleccionar receta de arte IA (goal, subject, style, preferLayout, scene, carouselStructure).',
-      'preferLayout=creative-scene para posts premium con CM en escena real y captura del app en pantalla (stories, Reels estáticos, lanzamientos).',
-      'scene=clinical para dental/salud; scene=hand-phone para stories/TikTok; scene=workspace para SaaS; scene=abstract-premium para marca sin dispositivo.',
-      'preferLayout=template solo si necesitas tip-card/stat-highlight rígido; preferLayout=ai-art para infografías o posters sin capturas reales.',
+      'preferLayout=creative-scene para posts de confianza/educación/marca con CM en escena (SIN captura de app superpuesta).',
+      'scene=clinical para dental/salud; scene=hand-phone para stories/TikTok; scene=workspace para SaaS; scene=abstract-premium para marca sin personas.',
+      'visualTemplateId=product-hero SOLO si el post vende una funcionalidad concreta de la app y debe verse la captura real.',
+      'preferLayout=template solo para tip-card/stat-highlight/quote; preferLayout=ai-art para infografías sin kit.',
       'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]
       .filter(Boolean)

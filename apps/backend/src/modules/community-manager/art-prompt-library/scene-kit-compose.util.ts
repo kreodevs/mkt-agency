@@ -5,7 +5,9 @@ import {
   resizeScreenshotContain,
 } from '../domain/screenshot-crop.util';
 import { parseImageSize } from '../domain/visual-template-render.util';
+import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import type { ScenePromptRecipe, SceneScreenLayout, SceneScreenRegion } from './art-prompt.types';
+import { wantsProductScreenShowcase } from './scene-routing.util';
 
 /** Normalized screen regions (0–1) per device layout for inpainting kit screenshots. */
 const SCREEN_LAYOUT_REGIONS: Record<
@@ -112,4 +114,18 @@ export async function compositeScreenIntoScene(
 
 export function sceneRecipeRequiresKitScreen(recipe: ScenePromptRecipe): boolean {
   return recipe.requiresKitScreen && recipe.screenLayout !== 'none';
+}
+
+/**
+ * Screen inpainting uses fixed regions and only works with art-kit mockup geometry.
+ * Lifestyle scene-kit posts skip kit overlay unless explicitly a product showcase post.
+ */
+export function shouldCompositeKitScreenIntoScene(
+  post: SocialCopyPost,
+  recipe: ScenePromptRecipe,
+): boolean {
+  if (!sceneRecipeRequiresKitScreen(recipe)) {
+    return false;
+  }
+  return wantsProductScreenShowcase(post);
 }

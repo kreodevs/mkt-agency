@@ -75,8 +75,8 @@ When media kit has compose roles and routing selects creative scene (stories, `p
 2. `ArtPromptSelectorService.selectSceneRecipe()` picks from `SCENE_PROMPT_RECIPES`.
 3. CM portrait (if ready) is passed as `input_references` to OpenRouter image API for identity.
 4. IA generates photorealistic scene with **blank device screen**.
-5. `compositeScreenIntoScene()` inpaints the real media-kit screenshot into the screen region.
-6. Generation metadata uses `pipeline: 'scene-kit-compose'`.
+5. By default **no kit overlay** — lifestyle photography only. Captures are composited only when `wantsProductScreenShowcase()` (explicit `product-hero` or UI-focused copy); those posts use **art-kit-compose** mockup geometry instead of fixed inpainting.
+6. Generation metadata uses `pipeline: 'scene-kit-compose'` with `kitScreenComposited: false` for pure lifestyle scenes.
 
 ## Art + kit compose (hybrid)
 

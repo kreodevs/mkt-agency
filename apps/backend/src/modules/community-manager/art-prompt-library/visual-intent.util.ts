@@ -10,7 +10,11 @@ import type {
   ArtPromptStyle,
 } from './art-prompt.types';
 import type { CreativeSceneRoutingOptions } from './scene-routing.util';
-import { shouldUseCreativeScene } from './scene-routing.util';
+import {
+  isCreativeSceneTemplateId,
+  shouldUseCreativeScene,
+  wantsProductScreenShowcase,
+} from './scene-routing.util';
 
 const VALID_STYLES = new Set<ArtPromptStyle>([
   'minimal',
@@ -127,13 +131,14 @@ export function inferVisualIntentFromPost(post: SocialCopyPost): VisualIntent {
     intent.goal = post.callToAction.trim();
   }
 
-  if (format === 'carousel') {
+  if (isCreativeSceneTemplateId(post.visualTemplateId)) {
+    intent.preferLayout = 'creative-scene';
+  } else if (format === 'carousel') {
     intent.carouselStructure = 'hook-feature-cta';
     intent.preferLayout = 'template';
   } else if (format === 'talking-head') {
     intent.preferLayout = 'template';
   } else {
-    // visualTemplateId is a compositor hint; routing picks creative scene vs template separately.
     intent.preferLayout = 'auto';
   }
 
@@ -173,11 +178,15 @@ export function shouldUseArtKitCompose(
     return false;
   }
 
-  if (shouldUseCreativeScene(post, kit, sceneOptions)) {
+  if (!kitHasComposeImageRoles(kit ?? [])) {
     return false;
   }
 
-  if (!kitHasComposeImageRoles(kit ?? [])) {
+  if (wantsProductScreenShowcase(post)) {
+    return true;
+  }
+
+  if (shouldUseCreativeScene(post, kit, sceneOptions)) {
     return false;
   }
 
