@@ -568,6 +568,37 @@ export class CommunityManagerService {
       ? (content.visualTemplateId as VisualTemplateId)
       : undefined;
 
+    const cmPortraitAssetId = await this.cmCharacter
+      .resolveDefaultPortraitAssetId(tenantId, productId)
+      .catch(() => null);
+    const creativeSceneOptions = {
+      postIndex: visualVariantIndex,
+      cmPortraitReady: Boolean(cmPortraitAssetId),
+    };
+
+    if (shouldUseCreativeScene(post, ctx.kit, creativeSceneOptions)) {
+      const sceneResult = await this.sceneKitCompose.tryCompose(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        {
+          resolvedProfile: ctx.resolvedProfile,
+          competitorIntelBrief: ctx.competitorIntelBrief,
+        },
+      );
+      if (sceneResult.attached) {
+        return {
+          contentId,
+          attached: true,
+          assetIds: sceneResult.assetIds,
+        };
+      }
+    }
+
     const result = await this.templateComposer.tryComposeFromTemplate(
       tenantId,
       userId,
@@ -769,6 +800,20 @@ export class CommunityManagerService {
         }
       }
 
+      const composed = await this.attachVisualForPost(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        ctx,
+      );
+      if (composed) {
+        return;
+      }
+
       const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
         tenantId,
         userId,
@@ -784,20 +829,6 @@ export class CommunityManagerService {
         },
       );
       if (recomposed) {
-        return;
-      }
-
-      const composed = await this.attachVisualForPost(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        ctx.kit,
-        visualVariantIndex,
-        ctx,
-      );
-      if (composed) {
         return;
       }
 

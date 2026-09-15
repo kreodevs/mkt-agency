@@ -1,6 +1,7 @@
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import {
   inferSceneFromIndustry,
+  prefersRigidTemplate,
   resolveEffectiveScene,
   shouldSkipTemplateForCreativeScene,
   shouldUseCreativeScene,
@@ -64,27 +65,38 @@ describe('scene-routing.util', () => {
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(true);
   });
 
-  it('skips creative scene when preferLayout is template', () => {
+  it('routes Twitter product-hero with media kit to creative scene', () => {
     const post = basePost({
-      platform: 'tiktok',
+      platform: 'twitter',
+      visualTemplateId: 'product-hero',
       visualIntent: { preferLayout: 'template' },
     });
+    expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(true);
+    expect(shouldSkipTemplateForCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(
+      true,
+    );
+  });
+
+  it('skips creative scene for rigid stat-highlight template', () => {
+    const post = basePost({
+      visualTemplateId: 'stat-highlight',
+      visualIntent: { preferLayout: 'template' },
+    });
+    expect(prefersRigidTemplate(post)).toBe(true);
     expect(shouldUseCreativeScene(post, kitWithScreenshots)).toBe(false);
   });
 
-  it('skips rigid template when creative scene applies', () => {
-    const post = basePost({
-      platform: 'tiktok',
-      imageDestination: 'story',
-    });
-    expect(
-      shouldSkipTemplateForCreativeScene(post, kitWithScreenshots, { postIndex: 0 }),
-    ).toBe(true);
+  it('skips creative scene for carousel format', () => {
+    const post = basePost({ visualFormat: 'carousel' });
+    expect(shouldUseCreativeScene(post, kitWithScreenshots)).toBe(false);
   });
 
-  it('rotates creative scene on even post indexes with auto layout', () => {
-    const post = basePost({ visualIntent: { preferLayout: 'auto' } });
+  it('uses creative scene for all image posts with kit regardless of post index', () => {
+    const post = basePost({
+      platform: 'twitter',
+      visualTemplateId: 'product-hero',
+    });
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(true);
-    expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(false);
+    expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(true);
   });
 });
