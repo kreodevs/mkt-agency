@@ -22,6 +22,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 90,
     meigenRank: 1,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'center-panel',
   },
   {
     id: 'infographic-educational-012',
@@ -40,6 +42,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 88,
     meigenRank: 12,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'center-panel',
   },
   {
     id: 'product-hero-json-050',
@@ -58,6 +62,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 95,
     meigenRank: 50,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'mockup',
   },
   {
     id: 'poster-social-4x5-014',
@@ -76,6 +82,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 85,
     meigenRank: 14,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'mockup',
   },
   {
     id: 'carousel-dtc-037',
@@ -94,6 +102,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 87,
     meigenRank: 37,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'mockup',
   },
   {
     id: 'logo-fluid-230',
@@ -130,6 +140,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 82,
     meigenRank: 45,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'flatlay-instagram-051',
@@ -148,6 +160,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 80,
     meigenRank: 51,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'brand-vi-matrix-006',
@@ -166,6 +180,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 70,
     meigenRank: 6,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'center-panel',
   },
   {
     id: 'travel-portal-041',
@@ -184,6 +200,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 78,
     meigenRank: 41,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'poster-food-instagram-100',
@@ -202,6 +220,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 83,
     meigenRank: 100,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'poster-editorial-475',
@@ -220,6 +240,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 84,
     meigenRank: 475,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'stat-highlight-data-022',
@@ -274,6 +296,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 81,
     meigenRank: 33,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'split-bottom',
   },
   {
     id: 'promo-cta-bold-029',
@@ -346,6 +370,8 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     requiresReferenceImage: false,
     priority: 89,
     meigenRank: 73,
+    supportsMediaKitOverlay: true,
+    kitLayout: 'center-panel',
   },
   {
     id: 'event-announcement-088',
