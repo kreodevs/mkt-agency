@@ -132,7 +132,33 @@ export function resolveVisualIntent(post: SocialCopyPost): VisualIntent {
 }
 
 /**
- * Whether the art prompt library should run for this post.
+ * Whether art-kit-compose hybrid mode should run for this post.
+ * Requires media kit compose roles and ai-art/auto layout preference.
+ */
+export function shouldUseArtKitCompose(
+  post: SocialCopyPost,
+  kit: ProductMediaKitItemEntity[] | null | undefined,
+): boolean {
+  const format = normalizeContentVisualFormat(post.visualFormat);
+
+  if (format === 'talking-head') {
+    return false;
+  }
+
+  if (!kitHasComposeImageRoles(kit ?? [])) {
+    return false;
+  }
+
+  const intent = resolveVisualIntent(post);
+  if (intent.preferLayout === 'template') {
+    return false;
+  }
+
+  return intent.preferLayout === 'ai-art' || intent.preferLayout === 'auto' || !intent.preferLayout;
+}
+
+/**
+ * Whether the art prompt library should run for this post (pure IA path).
  * Skips template-preferred layouts, talking-head, and when media kit blocks AI.
  */
 export function shouldUseArtPromptLibrary(
@@ -164,4 +190,41 @@ export function shouldUseArtPromptLibrary(
   }
 
   return true;
+}
+
+/** Resolve which visual pipeline should run for a post. */
+export function resolveArtVisualMode(
+  post: SocialCopyPost,
+  kit: ProductMediaKitItemEntity[] | null | undefined,
+  templateAttached?: boolean,
+): 'template' | 'art-kit-compose' | 'art-prompt' | 'skip' {
+  const format = normalizeContentVisualFormat(post.visualFormat);
+
+  if (format === 'talking-head') {
+    return 'skip';
+  }
+
+  const intent = resolveVisualIntent(post);
+
+  if (intent.preferLayout === 'template' && !templateAttached) {
+    return 'template';
+  }
+
+  if (templateAttached) {
+    return 'skip';
+  }
+
+  if (shouldUseArtKitCompose(post, kit)) {
+    return 'art-kit-compose';
+  }
+
+  if (shouldUseArtPromptLibrary(post, kit, templateAttached)) {
+    return 'art-prompt';
+  }
+
+  if (intent.preferLayout === 'template') {
+    return 'template';
+  }
+
+  return 'skip';
 }

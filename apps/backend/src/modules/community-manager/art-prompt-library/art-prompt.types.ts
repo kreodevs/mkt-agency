@@ -66,7 +66,13 @@ export interface ArtPromptRecipe {
   requiresReferenceImage: boolean;
   priority: number;
   meigenRank?: number;
+  /** When true, recipe works with real media-kit screenshot overlay (art-kit-compose). */
+  supportsMediaKitOverlay?: boolean;
+  /** Preferred layout when compositing kit screenshot on AI background. */
+  kitLayout?: 'mockup' | 'split-bottom' | 'center-panel';
 }
+
+export type ArtKitLayoutMode = 'mockup' | 'split-bottom' | 'center-panel';
 
 export interface ArtPromptSelection {
   recipeId: string;

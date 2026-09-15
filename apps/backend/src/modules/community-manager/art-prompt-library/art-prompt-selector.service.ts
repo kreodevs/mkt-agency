@@ -41,6 +41,61 @@ export class ArtPromptSelectorService {
     return filterArtPromptCandidates(ART_PROMPT_RECIPES, input);
   }
 
+  filterKitComposeCandidates(input: ArtPromptFilterInput): ArtPromptCandidate[] {
+    const overlayRecipes = ART_PROMPT_RECIPES.filter((recipe) => recipe.supportsMediaKitOverlay);
+    return filterArtPromptCandidates(overlayRecipes, input);
+  }
+
+  async selectRecipeForKitCompose(
+    post: SocialCopyPost,
+    ctx: ArtPromptSelectorContext,
+    brandKit?: ResolvedVisualBrandKit | null,
+    recentRecipeIds?: string[],
+  ): Promise<ArtPromptSelection | null> {
+    const visualIntent = resolveVisualIntent(post);
+    const input: ArtPromptFilterInput = {
+      post,
+      brandKit,
+      industry: ctx.industry,
+      recentRecipeIds,
+      visualIntent,
+    };
+
+    const candidates = this.filterKitComposeCandidates(input);
+    if (!candidates.length) {
+      this.logger.warn('No art-kit-compose overlay recipes matched; falling back to all recipes');
+      return this.selectRecipe(post, ctx, brandKit, recentRecipeIds);
+    }
+
+    const aspectRatioHint = resolveArtPromptAspectRatio(post);
+    const slotCtx = this.buildSlotContext(post, brandKit, ctx.industry);
+    const slots = buildDefaultSlots(slotCtx, post);
+
+    if (candidates.length === 1) {
+      const recipe = candidates[0];
+      return {
+        recipeId: recipe.id,
+        recipe,
+        filledPrompt: fillRecipeTemplate(recipe.template, slots),
+        aspectRatioHint,
+        score: recipe.score,
+        selectionMethod: 'deterministic',
+      };
+    }
+
+    const selected = await this.selectWithLlm(post, candidates, visualIntent);
+    const recipe = selected ?? candidates[0];
+
+    return {
+      recipeId: recipe.id,
+      recipe,
+      filledPrompt: fillRecipeTemplate(recipe.template, slots),
+      aspectRatioHint,
+      score: recipe.score,
+      selectionMethod: selected ? 'llm' : 'deterministic',
+    };
+  }
+
   async selectRecipe(
     post: SocialCopyPost,
     ctx: ArtPromptSelectorContext,

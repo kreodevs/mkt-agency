@@ -44,11 +44,21 @@ Biblioteca de presentadoras virtuales por producto. El copiloto asigna al menos 
 5. **Fotos reales** — prioriza assets del media kit; sin captura → gradiente de marca
 6. **Regenerar** — reutiliza la misma plantilla con variación de foto (`pipeline: visual-template` en generación). Con feedback del copiloto (“usa mi media kit”, “fotos reales”), no se invoca imagen IA aunque falle el copy del LLM; se recomponen capturas del kit.
 
-Orden en `attachVisualForPost`: talking-head → plantilla (capturas `product-screenshot` del media kit) → **Art Prompt Library** (recetas MeiGen curadas) → IA enriquecida (paleta + intel competitiva). Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+Orden en `attachVisualForPost`: talking-head → plantilla (salvo `preferLayout: ai-art`) → **Art + kit compose** (receta MeiGen + captura real del media kit) → **Art Prompt Library** (IA pura, sin kit) → IA enriquecida genérica. Si el reel con CM virtual falla, se reintenta automáticamente con plantilla y las capturas del kit.
+
+## Art + kit compose (híbrido)
+
+Cuando el media kit tiene roles de composición y el post prefiere `ai-art` o `auto`, `ArtKitComposeService` combina:
+
+1. **Fondo IA** — receta MeiGen con prompt de overlay (espacio reservado, sin UI falsa).
+2. **Captura real** — `pickComposeImagePicks` + Sharp (`mockup`, `center-panel` o `split-bottom` según familia).
+3. **Logo** — después del composite, no en la generación IA cruda.
+
+Metadata: `pipeline: art-kit-compose`, `artRecipeId`. Carrusel: slide 0 con foto del kit; slides 1+ art-only o kit si hay más picks.
 
 ## Art Prompt Library
 
-Cuando la plantilla falla y no hay media kit bloqueando IA, `ArtPromptSelectorService` elige una receta curada (~30 familias MeiGen: infografías, posters, flatlay, product hero, etc.):
+Cuando no aplica art-kit-compose y no hay media kit bloqueando IA, `ArtPromptSelectorService` elige una receta curada (~30 familias MeiGen: infografías, posters, flatlay, product hero, etc.):
 
 1. El CM LLM rellena `visualIntent` por post (`goal`, `subject`, `style`, `preferLayout`, `carouselStructure`).
 2. `filterArtPromptCandidates()` puntúa recetas por plataforma, formato, industria e intención.
@@ -56,7 +66,7 @@ Cuando la plantilla falla y no hay media kit bloqueando IA, `ArtPromptSelectorSe
 4. `fillRecipeTemplate()` inyecta slots de marca (`productName`, colores, headline…).
 5. El prompt relleno pasa a `ImageGenerationService` como `artRecipeBasePrompt`; el id se guarda en `contents.art_recipe_id`.
 
-**Skip:** `preferLayout=template`, talking-head, o media kit con roles de composición. Ver `art-prompt-library/README.md`.
+**Skip (IA pura):** `preferLayout=template`, talking-head, o media kit con roles de composición (usa art-kit-compose en su lugar). Ver `art-prompt-library/README.md`.
 
 Carruseles con media kit usan layouts `carousel-cover` / `carousel-step` / `carousel-cta`: mockup grande (~74% ancho), panel inferior con tipografía y CTA pill; sin miniaturas en esquina ni texto solapado.
 

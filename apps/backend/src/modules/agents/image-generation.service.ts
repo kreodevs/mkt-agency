@@ -92,6 +92,15 @@ export interface GenerateImageOptions {
   forcedFrameCount?: number;
   artRecipeBasePrompt?: string;
   artRecipeId?: string;
+  /** Skip logo overlay (e.g. art-kit-compose applies logo after compositing). */
+  skipLogoOverlay?: boolean;
+}
+
+export interface GenerateImageBufferOptions {
+  size?: string;
+  style?: string;
+  productId?: string;
+  skipLogoOverlay?: boolean;
 }
 
 export interface AttachVisualToContentOptions {
@@ -232,6 +241,39 @@ export class ImageGenerationService implements OnModuleInit {
         await this.generations.save(record);
       }
     }
+  }
+
+  /** Generate a raw image buffer without persisting to content (internal compositing pipelines). */
+  async generateImageBuffer(
+    tenantId: string,
+    userId: string,
+    prompt: string,
+    options: GenerateImageBufferOptions = {},
+  ): Promise<Buffer> {
+    const trimmed = prompt.trim();
+    if (!trimmed) {
+      throw new BadRequestException({ error: 'Prompt is required', code: 'VALIDATION_ERROR' });
+    }
+
+    const brandedPrompt = await this.buildPromptForProduct(
+      tenantId,
+      trimmed,
+      options.productId,
+      'image',
+    );
+
+    const result = await this.adapter.generateImage(brandedPrompt, {
+      size: options.size,
+      style: options.style,
+    });
+
+    const { buffer } = await this.resolveImagePayload(result);
+
+    if (options.productId && !options.skipLogoOverlay) {
+      return this.applyLogoOverlay(tenantId, options.productId, buffer);
+    }
+
+    return buffer;
   }
 
   async attachVisualToContent(

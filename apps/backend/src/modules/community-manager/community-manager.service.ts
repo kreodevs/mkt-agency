@@ -68,8 +68,13 @@ import {
   GenerationContextFacade,
   type GenerationContext,
 } from './generation-context.facade';
+import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
 import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
-import { shouldUseArtPromptLibrary } from './art-prompt-library/visual-intent.util';
+import {
+  resolveVisualIntent,
+  shouldUseArtKitCompose,
+  shouldUseArtPromptLibrary,
+} from './art-prompt-library/visual-intent.util';
 
 @Injectable()
 export class CommunityManagerService {
@@ -93,6 +98,7 @@ export class CommunityManagerService {
     private readonly productAppCaptureService: ProductAppCaptureService,
     private readonly contextFacade: GenerationContextFacade,
     private readonly artPromptSelector: ArtPromptSelectorService,
+    private readonly artKitCompose: ArtKitComposeService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -923,7 +929,10 @@ export class CommunityManagerService {
       }
     }
 
-    if (productId) {
+    const intent = resolveVisualIntent(post);
+    const skipTemplateForAiArt = intent.preferLayout === 'ai-art';
+
+    if (productId && !skipTemplateForAiArt) {
       const templated = await this.templateComposer.tryComposeFromTemplate(
         tenantId,
         userId,
@@ -939,9 +948,32 @@ export class CommunityManagerService {
       }
     }
 
+    if (productId && shouldUseArtKitCompose(post, kit)) {
+      const artKitResult = await this.artKitCompose.tryCompose(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        kit,
+        postIndex,
+        {
+          resolvedProfile: ctx.resolvedProfile,
+          competitorIntelBrief: ctx.competitorIntelBrief,
+        },
+        recentRecipeIds,
+      );
+      if (artKitResult.attached) {
+        if (artKitResult.recipeId) {
+          post.artRecipeId = artKitResult.recipeId;
+        }
+        return true;
+      }
+    }
+
     if (kitHasComposeImageRoles(kit)) {
       this.logger.warn(
-        `Media kit disponible pero la plantilla falló para content ${contentId}; no se usará imagen IA`,
+        `Media kit disponible pero art-kit-compose y plantilla fallaron para content ${contentId}; no se usará imagen IA pura`,
       );
       return false;
     }
