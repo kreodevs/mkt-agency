@@ -16,8 +16,11 @@ import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import {
   CAROUSEL_VISUAL_TEMPLATE,
   DEFAULT_VISUAL_TEMPLATE,
+  isVisualDesignPresetId,
   type VisualTemplateId,
 } from './visual-template.constants';
+
+export { isVisualDesignPresetId };
 
 export interface ResolvedVisualBrandKit extends ProductBrandVisualKit {
   productName: string;

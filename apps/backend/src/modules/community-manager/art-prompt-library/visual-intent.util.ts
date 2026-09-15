@@ -10,11 +10,12 @@ import type {
   ArtPromptStyle,
 } from './art-prompt.types';
 import type { CreativeSceneRoutingOptions } from './scene-routing.util';
-import {
-  isCreativeSceneTemplateId,
-  shouldUseCreativeScene,
-  wantsProductScreenShowcase,
-} from './scene-routing.util';
+import { CREATIVE_SCENE_TEMPLATE_ID } from '../domain/visual-template.constants';
+import { shouldUseCreativeScene, wantsProductScreenShowcase } from './scene-routing.util';
+
+function isCreativeSceneTemplateId(templateId?: string | null): boolean {
+  return templateId?.trim() === CREATIVE_SCENE_TEMPLATE_ID;
+}
 
 const VALID_STYLES = new Set<ArtPromptStyle>([
   'minimal',

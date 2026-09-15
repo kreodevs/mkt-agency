@@ -2,6 +2,7 @@ import { normalizeContentVisualFormat } from '../../content/domain/content-visua
 import { kitHasComposeImageRoles } from '../../product/domain/product-media-kit.constants';
 import type { ProductMediaKitItemEntity } from '../../product/infrastructure/typeorm/product-media-kit-item.entity';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
+import { CREATIVE_SCENE_TEMPLATE_ID } from '../domain/visual-template.constants';
 import type { ArtPromptScene } from './art-prompt.types';
 import { resolveVisualIntent } from './visual-intent.util';
 
@@ -24,8 +25,6 @@ const RIGID_TEMPLATE_IDS = new Set([
   'quote-insight',
   'promo-cta',
 ]);
-
-export const CREATIVE_SCENE_TEMPLATE_ID = 'creative-scene';
 
 export function prefersRigidTemplate(post: SocialCopyPost): boolean {
   const id = post.visualTemplateId?.trim();
