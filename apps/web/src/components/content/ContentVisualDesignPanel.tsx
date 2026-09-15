@@ -8,9 +8,10 @@ import { Textarea } from '@/components/atoms/Textarea';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
 import {
-  VISUAL_TEMPLATE_IDS,
-  VISUAL_TEMPLATE_LABELS,
-  type VisualTemplateId,
+  VISUAL_DESIGN_PRESET_HINTS,
+  VISUAL_DESIGN_SELECT_OPTIONS,
+  isCreativeScenePreset,
+  isVisualTemplateId,
 } from '@/lib/visual-template';
 import { validateVisualTemplateText } from '@/lib/visual-template-text';
 import { ApiError } from '@/services/api';
@@ -37,7 +38,7 @@ export function ContentVisualDesignPanel({
   onSaved,
 }: ContentVisualDesignPanelProps) {
   const queryClient = useQueryClient();
-  const [templateId, setTemplateId] = useState<VisualTemplateId | ''>('');
+  const [templateId, setTemplateId] = useState<string>('');
   const [headline, setHeadline] = useState('');
   const [subline, setSubline] = useState('');
   const [cta, setCta] = useState('');
@@ -45,8 +46,9 @@ export function ContentVisualDesignPanel({
 
   useEffect(() => {
     setTemplateId(
-      visualTemplateId && VISUAL_TEMPLATE_IDS.includes(visualTemplateId as VisualTemplateId)
-        ? (visualTemplateId as VisualTemplateId)
+      visualTemplateId &&
+        (isVisualTemplateId(visualTemplateId) || isCreativeScenePreset(visualTemplateId))
+        ? visualTemplateId
         : '',
     );
     setHeadline(visualHeadline ?? '');
@@ -61,7 +63,7 @@ export function ContentVisualDesignPanel({
         headline,
         subline,
         cta,
-        templateId: templateId || null,
+        templateId: isVisualTemplateId(templateId) ? templateId : null,
       }),
     [headline, subline, cta, templateId],
   );
@@ -102,27 +104,25 @@ export function ContentVisualDesignPanel({
   return (
     <Card
       title="Diseño de plantilla"
-      subtitle="Textos y plantilla que el compositor usa para maquetar la imagen (independiente del copy publicable)."
+      subtitle="Preset visual, textos en imagen y formato. El motor elige escena CM, mockup con captura o plantilla tipográfica."
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <Select
-          label="Plantilla gráfica"
+          label="Estilo visual"
           value={templateId}
           onChange={(event) => {
-            const next = event.target.value as VisualTemplateId | '';
+            const next = event.target.value;
             setTemplateId(next);
             if (next === 'story-vertical') {
               setDestination('story');
             }
           }}
-          options={[
-            { value: '', label: 'Automática (según tipo de post)' },
-            ...VISUAL_TEMPLATE_IDS.map((id) => ({
-              value: id,
-              label: VISUAL_TEMPLATE_LABELS[id],
-            })),
-          ]}
+          options={VISUAL_DESIGN_SELECT_OPTIONS}
         />
+
+        {templateId && VISUAL_DESIGN_PRESET_HINTS[templateId] ? (
+          <p className="text-xs text-[var(--foreground-muted)]">{VISUAL_DESIGN_PRESET_HINTS[templateId]}</p>
+        ) : null}
 
         <Select
           label="Formato de imagen"

@@ -74,6 +74,7 @@ import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.s
 import {
   shouldSkipTemplateForCreativeScene,
   shouldUseCreativeScene,
+  wantsProductScreenShowcase,
 } from './art-prompt-library/scene-routing.util';
 import {
   resolveVisualIntent,
@@ -576,6 +577,29 @@ export class CommunityManagerService {
       cmPortraitReady: Boolean(cmPortraitAssetId),
     };
 
+    if (wantsProductScreenShowcase(post) && shouldUseArtKitCompose(post, ctx.kit, creativeSceneOptions)) {
+      const artKitResult = await this.artKitCompose.tryCompose(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        {
+          resolvedProfile: ctx.resolvedProfile,
+          competitorIntelBrief: ctx.competitorIntelBrief,
+        },
+      );
+      if (artKitResult.attached) {
+        return {
+          contentId,
+          attached: true,
+          assetIds: artKitResult.assetIds,
+        };
+      }
+    }
+
     if (shouldUseCreativeScene(post, ctx.kit, creativeSceneOptions)) {
       const sceneResult = await this.sceneKitCompose.tryCompose(
         tenantId,
@@ -978,6 +1002,29 @@ export class CommunityManagerService {
       postIndex,
       cmPortraitReady: Boolean(cmPortraitAssetId),
     };
+
+    if (productId && wantsProductScreenShowcase(post) && shouldUseArtKitCompose(post, kit, creativeSceneOptions)) {
+      const artKitResult = await this.artKitCompose.tryCompose(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        kit,
+        postIndex,
+        {
+          resolvedProfile: ctx.resolvedProfile,
+          competitorIntelBrief: ctx.competitorIntelBrief,
+        },
+        recentRecipeIds,
+      );
+      if (artKitResult.attached) {
+        if (artKitResult.recipeId) {
+          post.artRecipeId = artKitResult.recipeId;
+        }
+        return true;
+      }
+    }
 
     if (productId && shouldUseCreativeScene(post, kit, creativeSceneOptions)) {
       const sceneResult = await this.sceneKitCompose.tryCompose(

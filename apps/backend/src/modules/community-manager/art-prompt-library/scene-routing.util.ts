@@ -25,9 +25,50 @@ const RIGID_TEMPLATE_IDS = new Set([
   'promo-cta',
 ]);
 
+export const CREATIVE_SCENE_TEMPLATE_ID = 'creative-scene';
+
 export function prefersRigidTemplate(post: SocialCopyPost): boolean {
   const id = post.visualTemplateId?.trim();
   return id ? RIGID_TEMPLATE_IDS.has(id) : false;
+}
+
+export function isCreativeSceneTemplateId(templateId?: string | null): boolean {
+  return templateId?.trim() === CREATIVE_SCENE_TEMPLATE_ID;
+}
+
+/**
+ * Posts that should show a real app screenshot via art-kit-compose (known mockup geometry).
+ * Default lifestyle / CM scenes do NOT force a kit overlay.
+ */
+export function wantsProductScreenShowcase(post: SocialCopyPost): boolean {
+  if (isCreativeSceneTemplateId(post.visualTemplateId)) {
+    return false;
+  }
+
+  if (post.visualTemplateId === 'product-hero' || post.visualTemplateId === 'promo-cta') {
+    return true;
+  }
+
+  const intent = resolveVisualIntent(post);
+  if (intent.preferLayout === 'creative-scene') {
+    return false;
+  }
+
+  const text = [
+    intent.goal,
+    intent.subject,
+    post.visualHeadline,
+    post.title,
+    post.visualDescription,
+    post.body,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return /\b(captura|screenshot|interfaz|pantalla de la app|demo de la app|mockup|ui del producto|funcionalidad|dashboard|agenda semanal|vista de administrador)\b/.test(
+    text,
+  );
 }
 
 export function inferSceneFromIndustry(industry?: string | null): ArtPromptScene | undefined {
@@ -103,6 +144,10 @@ export function shouldUseCreativeScene(
   }
 
   if (layoutBlocksCreativeScene(post)) {
+    return false;
+  }
+
+  if (wantsProductScreenShowcase(post)) {
     return false;
   }
 

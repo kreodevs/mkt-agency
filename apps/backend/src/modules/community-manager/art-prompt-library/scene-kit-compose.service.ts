@@ -34,7 +34,7 @@ import {
 import {
   buildScenePromptWithReference,
   compositeScreenIntoScene,
-  sceneRecipeRequiresKitScreen,
+  shouldCompositeKitScreenIntoScene,
 } from './scene-kit-compose.util';
 
 export interface SceneKitComposeContext {
@@ -121,7 +121,9 @@ export class SceneKitComposeService {
       const useCmReference =
         selection.recipe.requiresCmReference && Boolean(portraitFile?.buffer);
 
-      const imagePicks = sceneRecipeRequiresKitScreen(selection.recipe)
+      const compositeKitScreen = shouldCompositeKitScreenIntoScene(post, selection.recipe);
+
+      const imagePicks = compositeKitScreen
         ? await this.mediaKit.pickComposeImagePicks(
             tenantId,
             kit,
@@ -131,8 +133,10 @@ export class SceneKitComposeService {
           )
         : [];
 
-      if (sceneRecipeRequiresKitScreen(selection.recipe) && !imagePicks.length && frameCount === 1) {
-        this.logger.warn(`Scene-kit-compose: no kit picks for content ${contentId}`);
+      if (compositeKitScreen && !imagePicks.length && frameCount === 1) {
+        this.logger.warn(
+          `Scene-kit-compose: product showcase requested but no kit picks for content ${contentId}`,
+        );
         return { attached: false, assetIds: [] };
       }
 
@@ -155,7 +159,7 @@ export class SceneKitComposeService {
             slideIndex === 0
               ? (imagePicks[0] ?? null)
               : (imagePicks[slideIndex] ?? null);
-          const needsScreen = sceneRecipeRequiresKitScreen(selection.recipe) && pick?.assetId;
+          const needsScreen = compositeKitScreen && pick?.assetId;
 
           const sceneBuffer = await this.imageGeneration.generateImageBuffer(
             tenantId,
@@ -236,6 +240,7 @@ export class SceneKitComposeService {
             sceneType: selection.effectiveScene,
             screenLayout: selection.recipe.screenLayout,
             cmReferenceUsed: useCmReference,
+            kitScreenComposited: compositeKitScreen,
             headline: post.visualHeadline ?? null,
             subline: post.visualSubline ?? null,
             cta: post.visualCta ?? null,
