@@ -13,7 +13,7 @@ import {
 import { CONTENT_STATUSES, CONTENT_TYPES, CONTENT_VISUAL_FORMATS } from '../domain/content.constants';
 import { CONTENT_IMAGE_DESTINATIONS } from '../domain/content.constants';
 import { CM_PLATFORMS } from '../../community-manager/domain/cm-platforms.constants';
-import { VISUAL_TEMPLATE_IDS } from '../../community-manager/domain/visual-template.constants';
+import { VISUAL_DESIGN_PRESET_IDS } from '../../community-manager/domain/visual-template.constants';
 
 export class CreateContentDto {
   @IsString()
@@ -61,7 +61,7 @@ export class CreateContentDto {
 
   @IsOptional()
   @IsString()
-  @IsIn([...VISUAL_TEMPLATE_IDS])
+  @IsIn([...VISUAL_DESIGN_PRESET_IDS])
   visualTemplateId?: string | null;
 
   @IsOptional()
@@ -134,7 +134,7 @@ export class UpdateContentDto {
 
   @IsOptional()
   @IsString()
-  @IsIn([...VISUAL_TEMPLATE_IDS])
+  @IsIn([...VISUAL_DESIGN_PRESET_IDS])
   visualTemplateId?: string | null;
 
   @IsOptional()

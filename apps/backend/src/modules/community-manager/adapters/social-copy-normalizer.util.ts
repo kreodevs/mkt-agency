@@ -1,7 +1,7 @@
 import type { SocialCopyPost } from './social-copy.adapter.port';
 import { inferContentVisualFormat, normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 import { sanitizeVisualPromptForArt } from '../../content/domain/visual-prompt.util';
-import { isVisualTemplateId } from '../domain/visual-brand-kit.util';
+import { isVisualDesignPresetId } from '../domain/visual-brand-kit.util';
 import { normalizeVisualIntent } from '../art-prompt-library/visual-intent.util';
 
 const ALLOWED_PLATFORMS = new Set(['instagram', 'linkedin', 'twitter', 'facebook', 'tiktok']);
@@ -130,7 +130,7 @@ export function normalizeSocialCopyBatch(
         'visual_template_id',
         'plantillaVisual',
       ]);
-      if (isVisualTemplateId(visualTemplateId)) {
+      if (isVisualDesignPresetId(visualTemplateId)) {
         post.visualTemplateId = visualTemplateId;
       }
 

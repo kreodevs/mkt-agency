@@ -60,7 +60,10 @@ import { ContentEntity } from '../content/infrastructure/typeorm/content.entity'
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
 import { resolveContentImageDestination, socialCopyPostFromContent } from './domain/content-visual-design.util';
-import { isVisualTemplateId } from './domain/visual-brand-kit.util';
+import {
+  isVisualDesignPresetId,
+  isVisualTemplateId,
+} from './domain/visual-brand-kit.util';
 import type { VisualTemplateId } from './domain/visual-template.constants';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { toLocalDateKey } from '../../shared/domain/date-key.util';
@@ -289,7 +292,7 @@ export class CommunityManagerService {
     contentDto.platform = post.platform;
     contentDto.visualFormat = post.visualFormat;
     contentDto.visualPrompt = sanitizeVisualPromptForArt(post.visualDescription, post.body) || null;
-    contentDto.visualTemplateId = isVisualTemplateId(post.visualTemplateId)
+    contentDto.visualTemplateId = isVisualDesignPresetId(post.visualTemplateId)
       ? post.visualTemplateId
       : null;
     contentDto.visualHeadline = post.visualHeadline ?? null;
@@ -717,7 +720,7 @@ export class CommunityManagerService {
       visualFormat: post.visualFormat,
       platform: post.platform,
       visualPrompt: sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
-      visualTemplateId: isVisualTemplateId(post.visualTemplateId) ? post.visualTemplateId : null,
+      visualTemplateId: isVisualDesignPresetId(post.visualTemplateId) ? post.visualTemplateId : null,
       visualHeadline: post.visualHeadline ?? null,
       visualSubline: post.visualSubline ?? null,
       visualCta: post.visualCta ?? null,

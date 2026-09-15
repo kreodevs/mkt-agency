@@ -27,7 +27,7 @@ Los visuales generados para la semana se guardan en la **librería de recursos**
 
 Campo `visualPrompt` (TEXT, metadata-only): brief de escena para Image/Video Generator. **No** es el copy publicable (`body` de la versión). Community Manager lo rellena desde `visualDescription` del LLM; Image Generator lo usa en lugar del body al generar o regenerar arte.
 
-Campo `platform` (red social destino) también es metadata-only: editable vía `PATCH` sin nueva versión (`scheduledDate`, `visualFormat`, `visualPrompt`, `platform`, `visualTemplateId`, `visualHeadline`, `visualSubline`, `visualCta`).
+Campo `platform` (red social destino) también es metadata-only: editable vía `PATCH` sin nueva versión (`scheduledDate`, `visualFormat`, `visualPrompt`, `platform`, `visualTemplateId`, `visualHeadline`, `visualSubline`, `visualCta`). `visualTemplateId` acepta plantillas SVG (`product-hero`, …) y el preset `creative-scene`.
 
 Firma: `SHA-256(body|versionId|assetIds ordenados)`.
 
