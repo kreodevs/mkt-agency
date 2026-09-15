@@ -285,7 +285,11 @@ export function ContentVisualPanel({
               onClick={() => regenerateMutation.mutate()}
             >
               <RefreshCw className="h-4 w-4" />
-              {isTemplateVisual ? 'Regenerar con IA' : 'Regenerar'}
+              {productId
+                ? 'Regenerar escena'
+                : isTemplateVisual
+                  ? 'Regenerar con IA'
+                  : 'Regenerar'}
             </Button>
           </>
         ) : null}

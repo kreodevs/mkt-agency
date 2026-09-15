@@ -1,24 +1,32 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Post,
   UseGuards,
+  forwardRef,
 } from '@nestjs/common';
 import { AuthenticatedUser } from '../../shared/auth/jwt-payload.interface';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { TenantGuard } from '../../shared/guards/tenant.guard';
-import { ImageGenerationService } from './image-generation.service';
+import { CommunityManagerService } from '../community-manager/community-manager.service';
+import { ImageGenerationService, type GenerateImageResult } from './image-generation.service';
 
 @Controller('agents/image-generation')
 @UseGuards(TenantGuard)
 export class ImageGenerationController {
-  constructor(private readonly imageGeneration: ImageGenerationService) {}
+  constructor(
+    private readonly imageGeneration: ImageGenerationService,
+    @Inject(forwardRef(() => CommunityManagerService))
+    private readonly communityManager: CommunityManagerService,
+  ) {}
 
   @Get()
   listGenerations(@CurrentUser() user: AuthenticatedUser) {
@@ -58,19 +66,54 @@ export class ImageGenerationController {
 
   @Post('for-content/:contentId')
   @HttpCode(HttpStatus.CREATED)
-  generateForContent(
+  async generateForContent(
     @CurrentUser() user: AuthenticatedUser,
     @Param('contentId') contentId: string,
   ) {
+    if (await this.imageGeneration.requiresKitVisualPipeline(user.tenantId!, contentId)) {
+      return this.composeVisualForContent(user.tenantId!, user.id, contentId);
+    }
     return this.imageGeneration.generateForContent(user.tenantId!, user.id, contentId);
   }
 
   @Post('for-content/:contentId/regenerate')
-  regenerateForContent(
+  async regenerateForContent(
     @CurrentUser() user: AuthenticatedUser,
     @Param('contentId') contentId: string,
   ) {
+    if (await this.imageGeneration.requiresKitVisualPipeline(user.tenantId!, contentId)) {
+      return this.composeVisualForContent(user.tenantId!, user.id, contentId);
+    }
     return this.imageGeneration.regenerateForContent(user.tenantId!, user.id, contentId);
+  }
+
+  private async composeVisualForContent(
+    tenantId: string,
+    userId: string,
+    contentId: string,
+  ): Promise<GenerateImageResult> {
+    const result = await this.communityManager.recomposeVisualForContent(
+      tenantId,
+      userId,
+      contentId,
+    );
+    if (!result.attached) {
+      throw new BadRequestException({
+        error:
+          'No se pudo regenerar el visual. Revisa el media kit del producto y el estilo visual del contenido.',
+        code: 'VISUAL_REGENERATE_FAILED',
+      });
+    }
+
+    const record = await this.imageGeneration.findByContentId(tenantId, contentId);
+    if (!record) {
+      throw new BadRequestException({
+        error: 'El visual se generó pero no hay registro de generación asociado al contenido.',
+        code: 'VISUAL_REGENERATE_FAILED',
+      });
+    }
+
+    return this.imageGeneration.mapToGenerateImageResult(record);
   }
 
   @Get(':id')

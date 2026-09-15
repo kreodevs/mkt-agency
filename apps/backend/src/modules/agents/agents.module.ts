@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
 import { QUEUE_BRAND_INTERVIEW, QUEUE_COMPETITOR_INTEL, QUEUE_IMAGE_GENERATION } from '../../shared/queue/queue.constants';
+import { CommunityManagerModule } from '../community-manager/community-manager.module';
 import { ContentModule } from '../content/content.module';
 import { CompanyProfileModule } from '../company-profile/company-profile.module';
 import { CompetitorsModule } from '../competitors/competitors.module';
@@ -85,6 +86,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     AssetsModule,
     ContentModule,
     KnowledgeModule,
+    forwardRef(() => CommunityManagerModule),
   ],
   controllers: [AgentInterviewController, CompetitorIntelController, ImageGenerationController],
   providers: [

@@ -933,6 +933,10 @@ export class CommunityManagerService {
       }
 
       if (!post.visualDescription?.trim()) {
+        if (kitHasComposeImageRoles(ctx.kit)) {
+          await this.recomposeVisualForContent(tenantId, userId, contentId);
+          return;
+        }
         await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
         return;
       }

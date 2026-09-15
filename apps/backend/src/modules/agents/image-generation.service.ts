@@ -725,6 +725,20 @@ export class ImageGenerationService implements OnModuleInit {
     });
   }
 
+  async requiresKitVisualPipeline(tenantId: string, contentId: string): Promise<boolean> {
+    const content = await this.contentService.findOne(tenantId, contentId);
+    if (!content.productId) {
+      return false;
+    }
+
+    const kit = await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId);
+    return kitHasComposeImageRoles(kit);
+  }
+
+  mapToGenerateImageResult(record: AgentImageGenerationEntity): GenerateImageResult {
+    return this.toResult(record);
+  }
+
   private toResult(record: AgentImageGenerationEntity): GenerateImageResult {
     return {
       id: record.id,

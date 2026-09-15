@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from '../../shared/ai/llm.module';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
@@ -55,7 +55,7 @@ import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.s
     ProductModule,
     AssetsModule,
     CompetitorsModule,
-    AgentsModule,
+    forwardRef(() => AgentsModule),
     LlmModule,
     ContentModule,
     KnowledgeModule,
