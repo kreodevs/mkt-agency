@@ -545,7 +545,9 @@ export class CommunityManagerService {
     tenantId: string,
     userId: string,
     contentId: string,
+    options: { mode?: 'recompose' | 'regenerate' } = {},
   ): Promise<{ contentId: string; attached: boolean; templateId?: string; assetIds: string[] }> {
+    const mode = options.mode ?? 'recompose';
     const content = await this.contentService.findOne(tenantId, contentId);
     const version = content.currentVersion;
     if (!version) {
@@ -571,12 +573,38 @@ export class CommunityManagerService {
     )
       ? (content.visualTemplateId as VisualTemplateId)
       : undefined;
+    const composeCtx = { resolvedProfile: ctx.resolvedProfile };
+    const recentRecipeIds =
+      mode === 'regenerate' && content.artRecipeId ? [content.artRecipeId] : undefined;
+    const templateVariationSeed =
+      mode === 'regenerate' ? visualVariantIndex + 1 : visualVariantIndex;
+
+    if (mode === 'recompose') {
+      const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        composeCtx,
+      );
+      if (recomposed) {
+        const updated = await this.contentService.findOne(tenantId, contentId);
+        return {
+          contentId,
+          attached: true,
+          assetIds: this.extractVersionAssetIds(updated.currentVersion),
+        };
+      }
+    }
 
     const cmPortraitAssetId = await this.cmCharacter
       .resolveDefaultPortraitAssetId(tenantId, productId)
       .catch(() => null);
     const creativeSceneOptions = {
-      postIndex: visualVariantIndex,
+      postIndex: visualVariantIndex + (mode === 'regenerate' ? 1 : 0),
       cmPortraitReady: Boolean(cmPortraitAssetId),
     };
 
@@ -593,6 +621,7 @@ export class CommunityManagerService {
           resolvedProfile: ctx.resolvedProfile,
           competitorIntelBrief: ctx.competitorIntelBrief,
         },
+        recentRecipeIds,
       );
       if (artKitResult.attached) {
         return {
@@ -616,6 +645,7 @@ export class CommunityManagerService {
           resolvedProfile: ctx.resolvedProfile,
           competitorIntelBrief: ctx.competitorIntelBrief,
         },
+        recentRecipeIds,
       );
       if (sceneResult.attached) {
         return {
@@ -626,6 +656,14 @@ export class CommunityManagerService {
       }
     }
 
+    if (mode === 'recompose') {
+      throw new BadRequestException({
+        error:
+          'Este visual es una escena generada con IA. Guarda el estilo visual y pulsa «Regenerar escena» para aplicarlo.',
+        code: 'VISUAL_RECOMPOSE_NOT_APPLICABLE',
+      });
+    }
+
     const result = await this.templateComposer.tryComposeFromTemplate(
       tenantId,
       userId,
@@ -634,13 +672,19 @@ export class CommunityManagerService {
       productId,
       ctx.kit,
       visualVariantIndex,
-      { resolvedProfile: ctx.resolvedProfile },
-      forceTemplateId ? { forceTemplateId, imageDestination: post.imageDestination } : { imageDestination: post.imageDestination },
+      composeCtx,
+      forceTemplateId
+        ? {
+            forceTemplateId,
+            imageDestination: post.imageDestination,
+            variationSeed: templateVariationSeed,
+          }
+        : { imageDestination: post.imageDestination, variationSeed: templateVariationSeed },
     );
 
     if (!result.attached) {
       throw new BadRequestException({
-        error: 'No se pudo recomponer la plantilla. Verifica el kit de medios y la configuración visual del producto.',
+        error: 'No se pudo regenerar el visual. Verifica el kit de medios y el estilo visual del contenido.',
         code: 'VISUAL_RECOMPOSE_FAILED',
       });
     }
@@ -934,7 +978,7 @@ export class CommunityManagerService {
 
       if (!post.visualDescription?.trim()) {
         if (kitHasComposeImageRoles(ctx.kit)) {
-          await this.recomposeVisualForContent(tenantId, userId, contentId);
+          await this.recomposeVisualForContent(tenantId, userId, contentId, { mode: 'regenerate' });
           return;
         }
         await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);

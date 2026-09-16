@@ -176,8 +176,9 @@ export function ContentVisualDesignPanel({
         ) : null}
 
         <p className="text-xs text-[var(--foreground-muted)]">
-          Tras guardar, usa <strong>Recomponer plantilla</strong> en el panel de imagen para aplicar
-          los cambios sin volver a generar copy.
+          Tras guardar, pulsa <strong>Regenerar escena</strong> en el panel de imagen para aplicar el
+          nuevo estilo. Si solo cambiaste textos en una plantilla tipográfica, usa{' '}
+          <strong>Recomponer plantilla</strong>.
         </p>
 
         <Button type="submit" loading={saveMutation.isPending}>

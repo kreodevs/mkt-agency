@@ -75,6 +75,9 @@ export function ContentVisualPanel({
   const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
   const frameMeta = parseImageGenerationMetadata(generation?.metadata);
   const isTemplateVisual = isVisualTemplateGeneration(generation?.metadata);
+  const visualPipeline = frameMeta?.pipeline;
+  const isSceneVisual =
+    visualPipeline === 'scene-kit-compose' || visualPipeline === 'art-kit-compose';
   const templateLabel = resolveGenerationTemplateLabel(generation?.metadata);
   const isVideo = isVideoGeneration(generation?.metadata);
   const frameCount = frameMeta ? frameMeta.frameCount ?? frameMeta.frames.length : 0;
@@ -94,8 +97,15 @@ export function ContentVisualPanel({
   const canRecomposeTemplate =
     Boolean(productId) &&
     hasVisual &&
+    isTemplateVisual &&
     visualFormat !== 'talking-head' &&
     !isProcessing;
+  const canRegenerateScene =
+    Boolean(productId) &&
+    hasVisual &&
+    !isProcessing &&
+    visualFormat !== 'talking-head' &&
+    (isSceneVisual || !isTemplateVisual);
   const processingLabel =
     visualFormat === 'talking-head'
       ? 'Generando reel con CM virtual…'
@@ -103,10 +113,16 @@ export function ContentVisualPanel({
         ? 'Generando carrusel con IA…'
         : 'Generando imagen con IA…';
 
+  const refreshVisual = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });
+    await queryClient.invalidateQueries({ queryKey: ['image-generations'] });
+    await queryClient.invalidateQueries({ queryKey: ['content', contentId] });
+    await queryClient.refetchQueries({ queryKey: ['content', contentId] });
+    await queryClient.refetchQueries({ queryKey: ['image-generation-by-content', contentId] });
+  };
+
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['image-generation-by-content', contentId] });
-    void queryClient.invalidateQueries({ queryKey: ['image-generations'] });
-    void queryClient.invalidateQueries({ queryKey: ['content', contentId] });
+    void refreshVisual();
   };
 
   const generateMutation = useMutation({
@@ -117,14 +133,17 @@ export function ContentVisualPanel({
 
   const regenerateMutation = useMutation({
     mutationFn: () => regenerateImageForContent(contentId),
-    onSuccess: (result) => handleGenerationResult(result, invalidate, true),
+    onSuccess: async (result) => {
+      await refreshVisual();
+      handleGenerationResult(result, invalidate, true);
+    },
     onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo regenerar la imagen')),
   });
 
   const recomposeMutation = useMutation({
-    mutationFn: () => recomposeContentVisual(contentId),
-    onSuccess: () => {
-      invalidate();
+    mutationFn: () => recomposeContentVisual(contentId, { mode: 'recompose' }),
+    onSuccess: async () => {
+      await refreshVisual();
       toast.success('Plantilla recompuesta con los textos y colores actuales');
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo recomponer la plantilla')),
@@ -278,19 +297,21 @@ export function ContentVisualPanel({
                 Ver detalle
               </Button>
             </Link>
-            <Button
-              variant="ghost"
-              className="gap-2"
-              loading={regenerateMutation.isPending}
-              onClick={() => regenerateMutation.mutate()}
-            >
-              <RefreshCw className="h-4 w-4" />
-              {productId
-                ? 'Regenerar escena'
-                : isTemplateVisual
-                  ? 'Regenerar con IA'
-                  : 'Regenerar'}
-            </Button>
+            {canRegenerateScene || !productId ? (
+              <Button
+                variant={canRecomposeTemplate ? 'ghost' : 'outline'}
+                className="gap-2"
+                loading={regenerateMutation.isPending}
+                onClick={() => regenerateMutation.mutate()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {productId
+                  ? 'Regenerar escena'
+                  : isTemplateVisual
+                    ? 'Regenerar con IA'
+                    : 'Regenerar'}
+              </Button>
+            ) : null}
           </>
         ) : null}
 
@@ -298,14 +319,24 @@ export function ContentVisualPanel({
           <Button
             variant="outline"
             className="gap-2"
-            loading={recomposeMutation.isPending}
-            onClick={() => recomposeMutation.mutate()}
+            loading={regenerateMutation.isPending}
+            onClick={() => regenerateMutation.mutate()}
           >
-            <RefreshCw className="h-4 w-4" />
-            Componer plantilla
+            <Sparkles className="h-4 w-4" />
+            Generar visual
           </Button>
         ) : null}
       </div>
+
+      {productId && hasVisual ? (
+        <p className="mt-3 text-xs text-[var(--foreground-muted)]">
+          Tras cambiar el <strong>estilo visual</strong>, usa <strong>Regenerar escena</strong> para
+          aplicar el nuevo preset (escena CM, mockup o plantilla).{' '}
+          {isTemplateVisual
+            ? '«Recomponer plantilla» solo actualiza titular, subtítulo y CTA sobre el mismo diseño.'
+            : '«Recomponer plantilla» solo aplica a diseños tipográficos guardados.'}
+        </p>
+      ) : null}
     </Card>
   );
 }

@@ -96,6 +96,7 @@ export class ImageGenerationController {
       tenantId,
       userId,
       contentId,
+      { mode: 'regenerate' },
     );
     if (!result.attached) {
       throw new BadRequestException({

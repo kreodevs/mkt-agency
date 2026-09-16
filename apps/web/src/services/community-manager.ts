@@ -79,9 +79,15 @@ export interface RecomposeVisualResponse {
   assetIds: string[];
 }
 
-export async function recomposeContentVisual(contentId: string): Promise<RecomposeVisualResponse> {
+export async function recomposeContentVisual(
+  contentId: string,
+  options: { mode?: 'recompose' | 'regenerate' } = {},
+): Promise<RecomposeVisualResponse> {
   return apiFetch<RecomposeVisualResponse>(
     `/community-manager/contents/${contentId}/recompose-visual`,
-    { method: 'POST' },
+    {
+      method: 'POST',
+      body: JSON.stringify(options),
+    },
   );
 }

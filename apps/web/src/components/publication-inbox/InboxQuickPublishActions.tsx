@@ -192,7 +192,7 @@ export function InboxQuickPublishActions({
     Boolean(item.productId) && hasTemplateVisual && visualFormat !== 'talking-head';
 
   const recomposeMutation = useMutation({
-    mutationFn: () => recomposeContentVisual(item.contentId),
+    mutationFn: () => recomposeContentVisual(item.contentId, { mode: 'recompose' }),
     onSuccess: async () => {
       await invalidate();
       toast.success('Plantilla recompuesta con capturas y textos actuales');

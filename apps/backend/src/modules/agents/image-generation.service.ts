@@ -767,9 +767,10 @@ export class ImageGenerationService implements OnModuleInit {
     tenantId: string,
     contentId: string,
   ): Promise<AgentImageGenerationEntity | null> {
-    const record = await this.generations.findOne({
+    const [record] = await this.generations.find({
       where: { tenantId, contentId },
       order: { createdAt: 'DESC' },
+      take: 1,
     });
 
     return this.recoverStaleProcessingRecord(record);

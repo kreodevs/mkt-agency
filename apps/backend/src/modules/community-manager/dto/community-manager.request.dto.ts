@@ -41,6 +41,13 @@ export class GenerateSocialCopyDto {
   attachImages?: boolean;
 }
 
+export class RecomposeVisualRequestDto {
+  /** `recompose` = mismos textos/colores en plantilla guardada; `regenerate` = nuevo render según estilo visual. */
+  @IsOptional()
+  @IsIn(['recompose', 'regenerate'])
+  mode?: 'recompose' | 'regenerate';
+}
+
 export class UpdateCommunityManagerPreferencesDto {
   @IsArray()
   @ArrayMinSize(1)

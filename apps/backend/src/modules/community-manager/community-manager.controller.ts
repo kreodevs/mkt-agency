@@ -16,6 +16,7 @@ import { TenantGuard } from '../../shared/guards/tenant.guard';
 import { CommunityManagerService } from './community-manager.service';
 import {
   GenerateSocialCopyDto,
+  RecomposeVisualRequestDto,
   UpdateCommunityManagerPreferencesDto,
 } from './dto/community-manager.request.dto';
 import {
@@ -71,7 +72,13 @@ export class CommunityManagerController {
   recomposeVisual(
     @CurrentUser() user: AuthenticatedUser,
     @Param('contentId', ParseUUIDPipe) contentId: string,
+    @Body() body: RecomposeVisualRequestDto = {},
   ) {
-    return this.cmService.recomposeVisualForContent(user.tenantId!, user.id, contentId);
+    return this.cmService.recomposeVisualForContent(
+      user.tenantId!,
+      user.id,
+      contentId,
+      { mode: body.mode ?? 'recompose' },
+    );
   }
 }
