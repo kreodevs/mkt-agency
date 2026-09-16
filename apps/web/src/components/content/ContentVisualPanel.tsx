@@ -125,7 +125,7 @@ export function ContentVisualPanel({
     mutationFn: () => recomposeContentVisual(contentId),
     onSuccess: () => {
       invalidate();
-      toast.success('Plantilla recomponida con los textos y colores actuales');
+      toast.success('Plantilla recompuesta con los textos y colores actuales');
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'No se pudo recomponer la plantilla')),
   });

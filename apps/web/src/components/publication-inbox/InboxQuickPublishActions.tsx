@@ -195,7 +195,7 @@ export function InboxQuickPublishActions({
     mutationFn: () => recomposeContentVisual(item.contentId),
     onSuccess: async () => {
       await invalidate();
-      toast.success('Plantilla recomponida con capturas y textos actuales');
+      toast.success('Plantilla recompuesta con capturas y textos actuales');
     },
     onError: (error) => {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo recomponer la plantilla');
