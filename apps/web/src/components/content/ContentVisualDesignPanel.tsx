@@ -7,13 +7,17 @@ import { Select } from '@/components/atoms/Select';
 import { Textarea } from '@/components/atoms/Textarea';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
+import { HEALTH_UI } from '@/lib/semantic-ui';
 import {
   VISUAL_DESIGN_PRESET_HINTS,
   VISUAL_DESIGN_SELECT_OPTIONS,
   isCreativeScenePreset,
   isVisualTemplateId,
 } from '@/lib/visual-template';
-import { validateVisualTemplateText } from '@/lib/visual-template-text';
+import {
+  hasTruncationRiskWarnings,
+  validateVisualTemplateText,
+} from '@/lib/visual-template-text';
 import { ApiError } from '@/services/api';
 import { updateContent } from '@/services/content';
 import type { ContentImageDestination } from '@/types/content';
@@ -63,7 +67,7 @@ export function ContentVisualDesignPanel({
         headline,
         subline,
         cta,
-        templateId: isVisualTemplateId(templateId) ? templateId : null,
+        templateId: templateId || null,
       }),
     [headline, subline, cta, templateId],
   );
@@ -90,9 +94,9 @@ export function ContentVisualDesignPanel({
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (warnings.length > 0) {
+    if (hasTruncationRiskWarnings(warnings)) {
       const proceed = window.confirm(
-        'Hay avisos de longitud en los textos. ¿Guardar igualmente? La imagen puede truncar titulares o subtítulos.',
+        'El titular o subtítulo puede truncarse en la plantilla tipográfica. ¿Guardar igualmente?',
       );
       if (!proceed) {
         return;
@@ -162,13 +166,15 @@ export function ContentVisualDesignPanel({
         />
 
         {warnings.length > 0 ? (
-          <div className="space-y-1 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 p-[var(--spacing-sm)]">
+          <div
+            className={`space-y-1 rounded-[var(--radius-md)] border p-[var(--spacing-sm)] ${HEALTH_UI.fair.border} ${HEALTH_UI.fair.bg}`}
+          >
             {warnings.map((warning) => (
               <p
                 key={`${warning.field}-${warning.message}`}
-                className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-200"
+                className={`flex items-start gap-2 text-sm font-medium ${HEALTH_UI.fair.text}`}
               >
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 {warning.message}
               </p>
             ))}

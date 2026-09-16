@@ -1,6 +1,15 @@
+import { usesTypographicVisualTemplate } from '@/lib/visual-template';
+
+export type VisualTextWarningKind = 'truncation' | 'recommendation';
+
 export interface VisualTextWarning {
   field: 'headline' | 'subline' | 'cta';
+  kind: VisualTextWarningKind;
   message: string;
+}
+
+export function hasTruncationRiskWarnings(warnings: VisualTextWarning[]): boolean {
+  return warnings.some((warning) => warning.kind === 'truncation');
 }
 
 const HEADLINE_MAX_CHARS = 18;
@@ -45,17 +54,19 @@ export function validateVisualTemplateText(input: {
   templateId?: string | null;
 }): VisualTextWarning[] {
   const warnings: VisualTextWarning[] = [];
+  const typographic = usesTypographicVisualTemplate(input.templateId);
   const isQuote = input.templateId === 'quote-insight';
   const headlineMaxChars = isQuote ? QUOTE_HEADLINE_MAX_CHARS : HEADLINE_MAX_CHARS;
   const headlineMaxLines = isQuote ? QUOTE_HEADLINE_MAX_LINES : HEADLINE_MAX_LINES;
 
   const headline = input.headline?.trim() ?? '';
-  if (headline) {
+  if (headline && typographic) {
     const lines = estimateWrappedLines(headline, headlineMaxChars, headlineMaxLines);
     if (lines > headlineMaxLines) {
       warnings.push({
         field: 'headline',
-        message: `El titular ocupará más de ${headlineMaxLines} líneas y puede truncarse en la imagen.`,
+        kind: 'truncation',
+        message: `El titular ocupará más de ${headlineMaxLines} líneas y puede truncarse en la plantilla.`,
       });
     }
   }
@@ -65,12 +76,17 @@ export function validateVisualTemplateText(input: {
     if (countWords(subline) > SUBLINE_MAX_WORDS) {
       warnings.push({
         field: 'subline',
+        kind: 'recommendation',
         message: `Subtítulo recomendado: máx. ${SUBLINE_MAX_WORDS} palabras.`,
       });
     }
-    if (estimateWrappedLines(subline, SUBLINE_MAX_CHARS, SUBLINE_MAX_LINES) > SUBLINE_MAX_LINES) {
+    if (
+      typographic &&
+      estimateWrappedLines(subline, SUBLINE_MAX_CHARS, SUBLINE_MAX_LINES) > SUBLINE_MAX_LINES
+    ) {
       warnings.push({
         field: 'subline',
+        kind: 'truncation',
         message: 'El subtítulo puede cortarse en la composición.',
       });
     }
@@ -80,6 +96,7 @@ export function validateVisualTemplateText(input: {
   if (cta && countWords(cta) > CTA_MAX_WORDS) {
     warnings.push({
       field: 'cta',
+      kind: 'recommendation',
       message: `CTA recomendado: ${CTA_MAX_WORDS} palabras o menos.`,
     });
   }

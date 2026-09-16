@@ -58,6 +58,13 @@ export function isCreativeScenePreset(value: string | null | undefined): boolean
   return value === CREATIVE_SCENE_TEMPLATE_ID;
 }
 
+/** SVG templates with fixed text slots; scene/IA presets skip typographic line-wrap checks. */
+export function usesTypographicVisualTemplate(
+  value: string | null | undefined,
+): value is VisualTemplateId {
+  return isVisualTemplateId(value);
+}
+
 export function visualTemplateLabel(templateId: string | null | undefined): string | null {
   if (!templateId) {
     return null;
