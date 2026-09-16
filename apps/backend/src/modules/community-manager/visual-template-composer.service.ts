@@ -14,6 +14,7 @@ import { ProductService } from '../product/product.service';
 import { ProductMediaKitService } from '../product/product-media-kit.service';
 import type { ProductMediaKitItemEntity } from '../product/infrastructure/typeorm/product-media-kit-item.entity';
 import type { SocialCopyPost } from './adapters/social-copy.adapter.port';
+import { resolveProductMockupDeviceHint } from './domain/device-frame-render.util';
 import {
   buildVisualTemplateSlots,
   renderVisualTemplateFrame,
@@ -161,7 +162,10 @@ export class VisualTemplateComposerService {
           photoBuffer: photoFile?.buffer ?? null,
           logoBuffer: null,
           logoMimeType: null,
-          screenshotDevice: pick?.device ?? null,
+          screenshotDevice: resolveProductMockupDeviceHint(
+            pick?.device ?? null,
+            post.visualTemplateId ?? null,
+          ),
           cmPortraitBuffer: useCmPortrait ? cmPortraitFile?.buffer ?? null : null,
         });
 

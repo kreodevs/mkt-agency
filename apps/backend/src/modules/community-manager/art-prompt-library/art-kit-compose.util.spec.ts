@@ -2,6 +2,7 @@ import { ART_PROMPT_RECIPES } from './art-prompt-recipes.data';
 import {
   buildKitOverlayPrompt,
   resolveArtKitLayout,
+  wantsPhoneDeviceMockup,
 } from './art-kit-compose.util';
 import type { ArtPromptRecipe } from './art-prompt.types';
 
@@ -63,6 +64,16 @@ describe('art-kit-compose.util', () => {
       family: 'unknown-family',
     };
     expect(resolveArtKitLayout(recipe, 'instagram')).toBe('split-bottom');
+  });
+
+  it('forces mockup layout and phone hint for product-hero preset', () => {
+    const recipe = recipeById('infographic-educational-012');
+    const post = { visualTemplateId: 'product-hero', platform: 'twitter' as const };
+
+    expect(wantsPhoneDeviceMockup(post)).toBe(true);
+    expect(resolveArtKitLayout(recipe, 'twitter', post)).toBe('mockup');
+    expect(buildKitOverlayPrompt('Hero', recipe, post)).toContain('portrait orientation');
+    expect(buildKitOverlayPrompt('Hero', recipe, post)).not.toContain('centered rectangular panel');
   });
 
   it('marks overlay-capable recipes in catalog', () => {

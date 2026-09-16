@@ -85,7 +85,7 @@ When the product media kit has compose image roles (`product-screenshot`, etc.) 
 1. `ArtPromptSelectorService.selectRecipeForKitCompose()` picks a recipe with `supportsMediaKitOverlay: true`.
 2. `buildKitOverlayPrompt()` tells the image model to leave negative space for a real screenshot.
 3. `ImageGenerationService.generateImageBuffer()` produces the art background (no logo yet).
-4. `compositeKitOnArtBackground()` overlays the kit capture (mockup / center-panel / split-bottom).
+4. `compositeKitOnArtBackground()` overlays the kit capture (mockup / center-panel / split-bottom). Preset `product-hero` / `promo-cta` always uses **phone mockup** (`renderDeviceFrame` iPhone) even on Twitter/LinkedIn.
 5. Logo is applied via `ImageBrandingService` after compositing.
 6. Generation metadata uses `pipeline: 'art-kit-compose'`.
 

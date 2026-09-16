@@ -170,10 +170,25 @@ export class ArtPromptSelectorService {
       visualIntent,
     };
 
-    const candidates = this.filterKitComposeCandidates(input);
+    let candidates = this.filterKitComposeCandidates(input);
     if (!candidates.length) {
       this.logger.warn('No art-kit-compose overlay recipes matched; falling back to all recipes');
       return this.selectRecipe(post, ctx, brandKit, recentRecipeIds);
+    }
+
+    const wantsProductMockup =
+      post.visualTemplateId === 'product-hero' || post.visualTemplateId === 'promo-cta';
+    if (wantsProductMockup) {
+      const mockupCandidates = candidates.filter(
+        (recipe) => recipe.kitLayout === 'mockup' || recipe.family === 'product-hero',
+      );
+      if (mockupCandidates.length) {
+        candidates = mockupCandidates;
+      }
+      const heroRecipe = candidates.find((recipe) => recipe.id === 'product-hero-json-050');
+      if (heroRecipe) {
+        candidates = [heroRecipe, ...candidates.filter((recipe) => recipe.id !== heroRecipe.id)];
+      }
     }
 
     const aspectRatioHint = resolveArtPromptAspectRatio(post);

@@ -6,6 +6,7 @@ import {
   renderDeviceFrame,
   resolveDeviceFrameType,
   resolveHeroDevicePlacement,
+  resolveProductMockupDeviceHint,
   resolveVisualAspectRatio,
 } from '../domain/device-frame-render.util';
 import { parseImageSize } from '../domain/visual-template-render.util';
@@ -14,6 +15,7 @@ import {
   resizeScreenshotContain,
   resizeScreenshotCover,
 } from '../domain/screenshot-crop.util';
+import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import type { ArtKitLayoutMode, ArtPromptRecipe } from './art-prompt.types';
 
 const KIT_OVERLAY_BASE =
@@ -21,6 +23,10 @@ const KIT_OVERLAY_BASE =
   'Do NOT generate fake UI, app interfaces, device screens, or mock product screenshots. ' +
   'Create abstract background art only, OR a split layout with an empty device-shaped zone reserved for overlay. ' +
   'The reserved zone must have neutral background with no text or UI elements inside it.';
+
+const PHONE_MOCKUP_HINT =
+  'Reserve a prominent empty zone shaped like a modern smartphone in portrait orientation (tall rounded rectangle). ' +
+  'No landscape monitor, no wide horizontal panel — only vertical phone silhouette for a mobile app screenshot overlay.';
 
 const LAYOUT_HINTS: Record<ArtKitLayoutMode, string> = {
   mockup:
@@ -31,15 +37,35 @@ const LAYOUT_HINTS: Record<ArtKitLayoutMode, string> = {
     'Reserve the bottom 40% of the canvas as clean empty space or subtle gradient for a real photo overlay.',
 };
 
+export function wantsPhoneDeviceMockup(
+  post: Pick<SocialCopyPost, 'visualTemplateId'>,
+): boolean {
+  const id = post.visualTemplateId?.trim();
+  return id === 'product-hero' || id === 'promo-cta';
+}
+
 /** Append kit-overlay instructions so IA leaves room for real screenshot compositing. */
-export function buildKitOverlayPrompt(basePrompt: string, recipe: ArtPromptRecipe): string {
-  const layout = resolveArtKitLayout(recipe, 'instagram');
-  const hint = LAYOUT_HINTS[layout];
+export function buildKitOverlayPrompt(
+  basePrompt: string,
+  recipe: ArtPromptRecipe,
+  post?: Pick<SocialCopyPost, 'visualTemplateId' | 'platform'>,
+): string {
+  const layout = resolveArtKitLayout(recipe, post?.platform ?? 'instagram', post);
+  const hint =
+    post && wantsPhoneDeviceMockup(post) ? PHONE_MOCKUP_HINT : LAYOUT_HINTS[layout];
   return `${basePrompt.trim()}. ${KIT_OVERLAY_BASE} ${hint}`;
 }
 
 /** Resolve compositing layout from recipe family or explicit kitLayout. */
-export function resolveArtKitLayout(recipe: ArtPromptRecipe, _platform: string): ArtKitLayoutMode {
+export function resolveArtKitLayout(
+  recipe: ArtPromptRecipe,
+  _platform: string,
+  post?: Pick<SocialCopyPost, 'visualTemplateId'>,
+): ArtKitLayoutMode {
+  if (post && wantsPhoneDeviceMockup(post)) {
+    return 'mockup';
+  }
+
   if (recipe.kitLayout) {
     return recipe.kitLayout;
   }
@@ -170,17 +196,21 @@ export async function compositeKitOnArtBackground(
   size: ImageGenerationSize,
   platform: string,
   device?: AssetDeviceHint | null,
+  visualTemplateId?: string | null,
 ): Promise<Buffer> {
+  const effectiveDevice = resolveProductMockupDeviceHint(device, visualTemplateId);
+  const effectiveLayout =
+    visualTemplateId && wantsPhoneDeviceMockup({ visualTemplateId }) ? 'mockup' : layout;
   const { width, height } = parseImageSize(size);
   const canvas = await sharp(artBuffer)
     .resize(width, height, { fit: 'cover', position: 'centre' })
     .png()
     .toBuffer();
 
-  if (layout === 'mockup') {
-    return compositeMockupLayout(canvas, photoBuffer, width, height, platform, device);
+  if (effectiveLayout === 'mockup') {
+    return compositeMockupLayout(canvas, photoBuffer, width, height, platform, effectiveDevice);
   }
-  if (layout === 'center-panel') {
+  if (effectiveLayout === 'center-panel') {
     return compositeCenterPanelLayout(canvas, photoBuffer, width, height);
   }
   return compositeSplitBottomLayout(canvas, photoBuffer, width, height);

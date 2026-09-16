@@ -4,6 +4,7 @@ import {
   resolveVisualAspectRatio,
   renderDeviceFrame,
   resolveDevicePlacement,
+  resolveProductMockupDeviceHint,
 } from './device-frame-render.util';
 import {
   buildVisualTemplateSlots,
@@ -102,6 +103,13 @@ describe('visual-template-render.util', () => {
       expect(resolveDeviceFrameType('linkedin', 'square')).toBe('macbook');
       expect(resolveDeviceFrameType('tiktok', 'vertical')).toBe('iphone');
       expect(resolveDeviceFrameType('instagram', 'square')).toBe('iphone');
+    });
+
+    it('defaults product-hero preset to ios device for mockup', () => {
+      expect(resolveProductMockupDeviceHint(null, 'product-hero')).toBe('ios');
+      expect(resolveProductMockupDeviceHint(null, 'promo-cta')).toBe('ios');
+      expect(resolveDeviceFrameType('twitter', 'square', 'ios')).toBe('iphone');
+      expect(resolveProductMockupDeviceHint('pc', 'product-hero')).toBe('pc');
     });
 
     it('renders iphone and macbook device frames', async () => {

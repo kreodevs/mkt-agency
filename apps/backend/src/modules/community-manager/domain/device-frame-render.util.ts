@@ -28,6 +28,26 @@ export function resolveVisualAspectRatio(size: ImageGenerationSize): VisualAspec
   return height > width * 1.12 ? 'vertical' : 'square';
 }
 
+/** Preset product-hero / promo-cta: captura móvil → mockup iPhone salvo que el kit indique PC. */
+export function resolveProductMockupDeviceHint(
+  screenshotDevice: AssetDeviceHint | null | undefined,
+  visualTemplateId?: string | null,
+): AssetDeviceHint | null {
+  if (screenshotDevice === 'pc') {
+    return 'pc';
+  }
+  if (screenshotDevice === 'ipad') {
+    return 'ipad';
+  }
+  if (screenshotDevice === 'ios') {
+    return 'ios';
+  }
+  if (visualTemplateId === 'product-hero' || visualTemplateId === 'promo-cta') {
+    return 'ios';
+  }
+  return screenshotDevice ?? null;
+}
+
 /** Marco según captura del media kit; si no hay hint, por plataforma. */
 export function resolveDeviceFrameType(
   platform: string | null | undefined,

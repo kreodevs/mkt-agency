@@ -104,7 +104,7 @@ export class ArtKitComposeService {
         return { attached: false, assetIds: [] };
       }
 
-      const layout = resolveArtKitLayout(selection.recipe, post.platform);
+      const layout = resolveArtKitLayout(selection.recipe, post.platform, post);
       const size = resolveImageSizeForPlatform(post.platform, post.imageDestination);
       const style = resolveImageStyleForPlatform(post.platform);
       const frameCount =
@@ -144,7 +144,7 @@ export class ArtKitComposeService {
           const useKitOverlay = Boolean(pick?.assetId);
 
           const slidePrompt = useKitOverlay
-            ? buildKitOverlayPrompt(basePrompt, selection.recipe)
+            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post)
             : basePrompt;
 
           const artBuffer = await this.imageGeneration.generateImageBuffer(
@@ -167,6 +167,7 @@ export class ArtKitComposeService {
                 size,
                 post.platform,
                 pick.device ?? null,
+                post.visualTemplateId ?? null,
               );
             }
           }
