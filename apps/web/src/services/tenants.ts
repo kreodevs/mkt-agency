@@ -1,5 +1,4 @@
-import { apiFetch, apiFetchAsPlatform } from '@/services/api';
-import { isImpersonatingSession } from '@/lib/impersonation';
+import { apiFetch } from '@/services/api';
 import type {
   ListTenantsParams,
   PaginatedTenantsResponse,
@@ -43,9 +42,6 @@ export async function listTenants(
   params: ListTenantsParams = {},
 ): Promise<PaginatedTenantsResponse> {
   const path = `/tenants${buildQuery(params)}`;
-  if (isImpersonatingSession()) {
-    return apiFetchAsPlatform<PaginatedTenantsResponse>(path);
-  }
   return apiFetch<PaginatedTenantsResponse>(path);
 }
 

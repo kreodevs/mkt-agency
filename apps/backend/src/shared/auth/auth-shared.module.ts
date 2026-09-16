@@ -3,6 +3,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtTokenService } from './jwt-token.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { SuperadminGuard } from '../guards/superadmin.guard';
+import { SuperadminPlatformAccessGuard } from '../guards/superadmin-platform-access.guard';
 import { TenantGuard } from '../guards/tenant.guard';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 
@@ -13,12 +14,14 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
     JwtStrategy,
     JwtAuthGuard,
     SuperadminGuard,
+    SuperadminPlatformAccessGuard,
     TenantGuard,
   ],
   exports: [
     JwtTokenService,
     JwtAuthGuard,
     SuperadminGuard,
+    SuperadminPlatformAccessGuard,
     TenantGuard,
     PassportModule,
   ],

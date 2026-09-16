@@ -4,9 +4,12 @@ CRUD de tenants (superadmin). Endpoints bajo `/api/v1/tenants`.
 
 ## Autenticación
 
-Requiere `Authorization: Bearer <JWT>` con claim `isSuperadmin: true`.
+Requiere `Authorization: Bearer <JWT>`.
 
-Guards: `JwtAuthGuard` + `SuperadminGuard` (`apps/backend/src/shared/guards/`).
+Guards: `JwtAuthGuard` global + por ruta:
+
+- `GET /tenants` — `SuperadminPlatformAccessGuard` (superadmin nativo o impersonación con `superadminId`)
+- Resto — `SuperadminGuard` (`isSuperadmin: true`, sin impersonación)
 
 > El login (`POST /auth/login`) se implementa en US-004; hasta entonces los tokens deben emitirse con el mismo payload (`sub`, `email`, `isSuperadmin`, `role`, `tenantId`).
 
