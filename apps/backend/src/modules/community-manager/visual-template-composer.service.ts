@@ -14,7 +14,7 @@ import { ProductService } from '../product/product.service';
 import { ProductMediaKitService } from '../product/product-media-kit.service';
 import type { ProductMediaKitItemEntity } from '../product/infrastructure/typeorm/product-media-kit-item.entity';
 import type { SocialCopyPost } from './adapters/social-copy.adapter.port';
-import { resolveProductMockupDeviceHint } from './domain/device-frame-render.util';
+import { readCaptureImageSize, resolveMockupDeviceHint } from './domain/device-frame-render.util';
 import {
   buildVisualTemplateSlots,
   renderVisualTemplateFrame,
@@ -150,6 +150,10 @@ export class VisualTemplateComposerService {
         );
 
         const useCmPortrait = Boolean(cmPortraitFile?.buffer) && slideIndex === 0;
+        const captureSize = photoFile?.buffer
+          ? await readCaptureImageSize(photoFile.buffer)
+          : null;
+        const screenshotDevice = resolveMockupDeviceHint(pick?.device ?? null, captureSize);
 
         let buffer = await renderVisualTemplateFrame({
           templateId,
@@ -162,10 +166,7 @@ export class VisualTemplateComposerService {
           photoBuffer: photoFile?.buffer ?? null,
           logoBuffer: null,
           logoMimeType: null,
-          screenshotDevice: resolveProductMockupDeviceHint(
-            pick?.device ?? null,
-            post.visualTemplateId ?? null,
-          ),
+          screenshotDevice,
           cmPortraitBuffer: useCmPortrait ? cmPortraitFile?.buffer ?? null : null,
         });
 

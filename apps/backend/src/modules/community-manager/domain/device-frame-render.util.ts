@@ -1,7 +1,10 @@
 import sharp from '@/shared/media/sharp.util';
 import { isCmPlatform } from '../../../shared/social/image-destination-formats.util';
 import type { ImageGenerationSize } from '../../../shared/social/image-generation-size.util';
-import type { AssetDeviceHint } from '../../assets/domain/asset-folder.util';
+import {
+  inferDeviceHintFromImageSize,
+  type AssetDeviceHint,
+} from '../../assets/domain/asset-folder.util';
 import { resizeScreenshotContain, DEVICE_SCREEN_BACKGROUND } from './screenshot-crop.util';
 
 export type VisualAspectRatio = 'square' | 'vertical';
@@ -28,24 +31,42 @@ export function resolveVisualAspectRatio(size: ImageGenerationSize): VisualAspec
   return height > width * 1.12 ? 'vertical' : 'square';
 }
 
-/** Preset product-hero / promo-cta: captura móvil → mockup iPhone salvo que el kit indique PC. */
+export type CaptureImageSize = { width: number; height: number };
+
+export async function readCaptureImageSize(photoBuffer: Buffer): Promise<CaptureImageSize | null> {
+  const meta = await sharp(photoBuffer).metadata();
+  if (!meta.width || !meta.height) {
+    return null;
+  }
+  return { width: meta.width, height: meta.height };
+}
+
+/**
+ * Resolve mockup device from kit metadata first, then capture dimensions.
+ * Does not force mobile — wide screenshots → laptop, tall → phone.
+ */
+export function resolveMockupDeviceHint(
+  screenshotDevice: AssetDeviceHint | null | undefined,
+  imageSize?: CaptureImageSize | null,
+): AssetDeviceHint | null {
+  if (screenshotDevice === 'pc' || screenshotDevice === 'ipad' || screenshotDevice === 'ios') {
+    return screenshotDevice;
+  }
+
+  if (imageSize && imageSize.width > 0 && imageSize.height > 0) {
+    return inferDeviceHintFromImageSize(imageSize.width, imageSize.height);
+  }
+
+  return null;
+}
+
+/** @deprecated Use resolveMockupDeviceHint */
 export function resolveProductMockupDeviceHint(
   screenshotDevice: AssetDeviceHint | null | undefined,
-  visualTemplateId?: string | null,
+  _visualTemplateId?: string | null,
+  imageSize?: CaptureImageSize | null,
 ): AssetDeviceHint | null {
-  if (screenshotDevice === 'pc') {
-    return 'pc';
-  }
-  if (screenshotDevice === 'ipad') {
-    return 'ipad';
-  }
-  if (screenshotDevice === 'ios') {
-    return 'ios';
-  }
-  if (visualTemplateId === 'product-hero' || visualTemplateId === 'promo-cta') {
-    return 'ios';
-  }
-  return screenshotDevice ?? null;
+  return resolveMockupDeviceHint(screenshotDevice, imageSize);
 }
 
 /** Marco según captura del media kit; si no hay hint, por plataforma. */

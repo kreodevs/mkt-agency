@@ -57,6 +57,21 @@ export function buildFolderPathMap(
   return cache;
 }
 
+/** Infer device class from screenshot pixel dimensions when folder/metadata lack a hint. */
+export function inferDeviceHintFromImageSize(width: number, height: number): AssetDeviceHint {
+  if (width <= 0 || height <= 0) {
+    return 'ios';
+  }
+  const ratio = width / height;
+  if (ratio > 1.12) {
+    return 'pc';
+  }
+  if (ratio < 0.78) {
+    return 'ios';
+  }
+  return 'ipad';
+}
+
 export function inferDeviceFromFolderPath(path: string): AssetDeviceHint | null {
   const segments = path.split('/');
   for (let i = segments.length - 1; i >= 0; i -= 1) {

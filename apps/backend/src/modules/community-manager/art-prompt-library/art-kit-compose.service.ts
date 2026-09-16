@@ -30,6 +30,7 @@ import {
   ArtPromptSelectorService,
   type ArtPromptSelectorContext,
 } from './art-prompt-selector.service';
+import { readCaptureImageSize, resolveMockupDeviceHint } from '../domain/device-frame-render.util';
 import {
   buildKitOverlayPrompt,
   compositeKitOnArtBackground,
@@ -142,9 +143,17 @@ export class ArtKitComposeService {
               ? (imagePicks[0] ?? null)
               : (imagePicks[slideIndex] ?? null);
           const useKitOverlay = Boolean(pick?.assetId);
+          const photoFile =
+            useKitOverlay && pick?.assetId
+              ? await this.assetService.readFile(tenantId, pick.assetId).catch(() => null)
+              : null;
+          const captureSize = photoFile?.buffer
+            ? await readCaptureImageSize(photoFile.buffer)
+            : null;
+          const mockupDevice = resolveMockupDeviceHint(pick?.device ?? null, captureSize);
 
           const slidePrompt = useKitOverlay
-            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post)
+            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post, mockupDevice)
             : basePrompt;
 
           const artBuffer = await this.imageGeneration.generateImageBuffer(
@@ -155,21 +164,16 @@ export class ArtKitComposeService {
           );
 
           let buffer = artBuffer;
-          if (useKitOverlay && pick?.assetId) {
-            const photoFile = await this.assetService
-              .readFile(tenantId, pick.assetId)
-              .catch(() => null);
-            if (photoFile?.buffer) {
-              buffer = await compositeKitOnArtBackground(
-                artBuffer,
-                photoFile.buffer,
-                layout,
-                size,
-                post.platform,
-                pick.device ?? null,
-                post.visualTemplateId ?? null,
-              );
-            }
+          if (useKitOverlay && photoFile?.buffer) {
+            buffer = await compositeKitOnArtBackground(
+              artBuffer,
+              photoFile.buffer,
+              layout,
+              size,
+              post.platform,
+              mockupDevice,
+              post.visualTemplateId ?? null,
+            );
           }
 
           const shouldBrandLogo =

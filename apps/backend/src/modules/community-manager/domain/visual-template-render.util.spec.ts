@@ -4,8 +4,9 @@ import {
   resolveVisualAspectRatio,
   renderDeviceFrame,
   resolveDevicePlacement,
-  resolveProductMockupDeviceHint,
+  resolveMockupDeviceHint,
 } from './device-frame-render.util';
+import { inferDeviceHintFromImageSize } from '../../assets/domain/asset-folder.util';
 import {
   buildVisualTemplateSlots,
   parseImageSize,
@@ -105,11 +106,14 @@ describe('visual-template-render.util', () => {
       expect(resolveDeviceFrameType('instagram', 'square')).toBe('iphone');
     });
 
-    it('defaults product-hero preset to ios device for mockup', () => {
-      expect(resolveProductMockupDeviceHint(null, 'product-hero')).toBe('ios');
-      expect(resolveProductMockupDeviceHint(null, 'promo-cta')).toBe('ios');
+    it('infers mockup device from capture dimensions when metadata is missing', () => {
+      expect(inferDeviceHintFromImageSize(390, 844)).toBe('ios');
+      expect(inferDeviceHintFromImageSize(1440, 900)).toBe('pc');
+      expect(inferDeviceHintFromImageSize(1024, 768)).toBe('ipad');
+      expect(resolveMockupDeviceHint(null, { width: 1440, height: 900 })).toBe('pc');
+      expect(resolveMockupDeviceHint('pc', { width: 390, height: 844 })).toBe('pc');
+      expect(resolveMockupDeviceHint(null, null)).toBeNull();
       expect(resolveDeviceFrameType('twitter', 'square', 'ios')).toBe('iphone');
-      expect(resolveProductMockupDeviceHint('pc', 'product-hero')).toBe('pc');
     });
 
     it('renders iphone and macbook device frames', async () => {
