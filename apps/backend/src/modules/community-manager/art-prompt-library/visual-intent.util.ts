@@ -10,12 +10,9 @@ import type {
   ArtPromptStyle,
 } from './art-prompt.types';
 import type { CreativeSceneRoutingOptions } from './scene-routing.util';
-import { CREATIVE_SCENE_TEMPLATE_ID } from '../domain/visual-template.constants';
+import { isAiArtTemplateId, isCreativeSceneTemplateId } from '../domain/visual-template.constants';
+import { resolvePostVisualScene } from '../domain/visual-scene.util';
 import { shouldUseCreativeScene, wantsProductScreenShowcase } from './scene-routing.util';
-
-function isCreativeSceneTemplateId(templateId?: string | null): boolean {
-  return templateId?.trim() === CREATIVE_SCENE_TEMPLATE_ID;
-}
 
 const VALID_STYLES = new Set<ArtPromptStyle>([
   'minimal',
@@ -134,6 +131,8 @@ export function inferVisualIntentFromPost(post: SocialCopyPost): VisualIntent {
 
   if (isCreativeSceneTemplateId(post.visualTemplateId)) {
     intent.preferLayout = 'creative-scene';
+  } else if (isAiArtTemplateId(post.visualTemplateId)) {
+    intent.preferLayout = 'ai-art';
   } else if (format === 'carousel') {
     intent.carouselStructure = 'hook-feature-cta';
     intent.preferLayout = 'template';
@@ -147,6 +146,11 @@ export function inferVisualIntentFromPost(post: SocialCopyPost): VisualIntent {
     intent.style = 'minimal';
   } else if (post.tone?.toLowerCase().includes('juvenil')) {
     intent.style = 'playful';
+  }
+
+  const scene = resolvePostVisualScene(post);
+  if (scene) {
+    intent.scene = scene;
   }
 
   return intent;
@@ -176,6 +180,10 @@ export function shouldUseArtKitCompose(
   const format = normalizeContentVisualFormat(post.visualFormat);
 
   if (format === 'talking-head') {
+    return false;
+  }
+
+  if (isAiArtTemplateId(post.visualTemplateId)) {
     return false;
   }
 
@@ -215,6 +223,11 @@ export function shouldUseArtPromptLibrary(
   }
 
   const intent = resolveVisualIntent(post);
+
+  if (isAiArtTemplateId(post.visualTemplateId)) {
+    return Boolean(post.visualDescription?.trim() || intent.subject?.trim());
+  }
+
   if (intent.preferLayout === 'template') {
     return false;
   }

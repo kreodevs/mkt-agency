@@ -9,6 +9,22 @@ export class ImageBrandingService {
 
   constructor(private readonly assets: AssetService) {}
 
+  /** Rasterized logo PNG with drop shadow for video overlay (top-left placement). */
+  async prepareLogoOverlayPng(
+    tenantId: string,
+    logoAssetId: string,
+    targetWidth: number,
+  ): Promise<Buffer> {
+    const logoFile = await this.assets.readFile(tenantId, logoAssetId);
+    const logoWidth = Math.max(96, Math.round(targetWidth));
+    const rasterizedLogo = await this.rasterizeLogo(
+      logoFile.buffer,
+      logoFile.mimeType,
+      logoWidth,
+    );
+    return this.withDropShadow(rasterizedLogo);
+  }
+
   async applyProductLogo(
     tenantId: string,
     imageBuffer: Buffer,

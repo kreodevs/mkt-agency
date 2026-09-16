@@ -125,6 +125,7 @@ export function InboxContentDetailDialog({
             <ContentVisualDesignPanel
               contentId={item.contentId}
               visualTemplateId={item.visualTemplateId}
+              visualScene={item.visualScene}
               visualHeadline={item.visualHeadline}
               visualSubline={item.visualSubline}
               visualCta={item.visualCta}

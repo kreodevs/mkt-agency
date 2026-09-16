@@ -26,8 +26,10 @@ import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import { ensureCaptureForm } from '@/services/forms';
 import { approveContentVersion, rejectContentVersion } from '@/services/content';
 import { recomposeContentVisual } from '@/services/community-manager';
+import { regenerateImageForContent } from '@/services/agents';
 import { extractContentAssetIds } from '@/lib/image-generation';
 import { normalizeContentVisualFormat } from '@/lib/visual-format';
+import { VISUAL_DESIGN_PRESET_KINDS } from '@/lib/visual-template';
 import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
 import { useInboxPublishActions } from '@/hooks/useInboxPublishActions';
@@ -181,15 +183,36 @@ export function InboxQuickPublishActions({
       await queryClient.invalidateQueries({
         queryKey: ['image-generation-by-content', item.contentId],
       });
-      toast.success('Nueva versión en camino — texto actualizado e imagen regenerándose');
+      toast.success('Regenerando post completo — nuevo copy y visual desde cero');
     },
     onError: () => toast.error('No se pudo regenerar'),
   });
 
   const visualFormat = normalizeContentVisualFormat(item.visualFormat);
-  const hasTemplateVisual = extractContentAssetIds(item.assets).length > 0;
+  const hasVisualAssets = extractContentAssetIds(item.assets).length > 0;
+  const presetKind = VISUAL_DESIGN_PRESET_KINDS[item.visualTemplateId ?? ''] ?? 'auto';
+  const isTypographicPreset = presetKind === 'template';
   const canRecomposeTemplate =
-    Boolean(item.productId) && hasTemplateVisual && visualFormat !== 'talking-head';
+    Boolean(item.productId) &&
+    hasVisualAssets &&
+    visualFormat !== 'talking-head' &&
+    isTypographicPreset;
+  const canRegenerateScene =
+    Boolean(item.productId) &&
+    hasVisualAssets &&
+    visualFormat !== 'talking-head' &&
+    !isTypographicPreset;
+
+  const regenerateSceneMutation = useMutation({
+    mutationFn: () => regenerateImageForContent(item.contentId),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success('Regenerando escena visual — nueva variación en camino');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'No se pudo regenerar la escena');
+    },
+  });
 
   const recomposeMutation = useMutation({
     mutationFn: () => recomposeContentVisual(item.contentId, { mode: 'recompose' }),
@@ -292,6 +315,7 @@ export function InboxQuickPublishActions({
           variant="ghost"
           className="w-full justify-start"
           disabled={regenerateMutation.isPending}
+          title="Nuevo copy del CM y visual desde cero"
           onClick={() => {
             regenerateMutation.mutate();
             setMoreOpen(false);
@@ -300,7 +324,7 @@ export function InboxQuickPublishActions({
           <RefreshCw
             className={`mr-2 h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`}
           />
-          Otra versión
+          Regenerar post completo
         </Button>
       ) : null}
       {showDelete ? (
@@ -412,6 +436,22 @@ export function InboxQuickPublishActions({
         <ExternalLink className="mr-1 h-3.5 w-3.5" />
         Abrir red
       </Button>
+      {canRegenerateScene ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={primaryButtonClass}
+          loading={regenerateSceneMutation.isPending}
+          title="Nueva variación de la escena o mockup (mismo copy)"
+          onClick={() => regenerateSceneMutation.mutate()}
+        >
+          <RefreshCw
+            className={`mr-1 h-3.5 w-3.5 ${regenerateSceneMutation.isPending ? 'animate-spin' : ''}`}
+          />
+          Regenerar escena
+        </Button>
+      ) : null}
       {canRecomposeTemplate ? (
         <Button
           type="button"
@@ -419,6 +459,7 @@ export function InboxQuickPublishActions({
           variant="outline"
           className={primaryButtonClass}
           loading={recomposeMutation.isPending}
+          title="Actualiza textos y capturas en la plantilla tipográfica actual"
           onClick={() => recomposeMutation.mutate()}
         >
           <RefreshCw className="mr-1 h-3.5 w-3.5" />

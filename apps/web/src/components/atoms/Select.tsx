@@ -7,11 +7,17 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
+export interface SelectOptionGroup {
+  label: string;
+  options: SelectOption[];
+}
+
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   hint?: string;
   error?: string;
-  options: SelectOption[];
+  options?: SelectOption[];
+  optionGroups?: SelectOptionGroup[];
   placeholder?: string;
   fullWidth?: boolean;
 }
@@ -22,7 +28,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       label,
       hint,
       error,
-      options,
+      options = [],
+      optionGroups,
       placeholder,
       fullWidth = true,
       className,
@@ -57,11 +64,21 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               {placeholder}
             </option>
           )}
-          {options.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
+          {optionGroups?.length
+            ? optionGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((option) => (
+                    <option key={option.value} value={option.value} disabled={option.disabled}>
+                      {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))
+            : options.map((option) => (
+                <option key={option.value} value={option.value} disabled={option.disabled}>
+                  {option.label}
+                </option>
+              ))}
         </select>
         {hint && !error && (
           <p className="text-xs text-[var(--foreground-subtle)]">{hint}</p>

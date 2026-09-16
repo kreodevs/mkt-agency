@@ -151,7 +151,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             hashtags: ['hashtag1', 'hashtag2'],
             visualDescription: 'escena visual para IA (fondo/ambiente si aplica) — SIN repetir el body ni hashtags',
             visualTemplateId:
-              'product-hero | tip-card | quote-insight | promo-cta | stat-highlight | story-vertical',
+              'creative-scene | ai-art | product-hero | tip-card | quote-insight | promo-cta | stat-highlight | story-vertical',
             visualHeadline: 'titular corto para la pieza gráfica (3-8 palabras, sin hashtags)',
             visualSubline: 'subtítulo opcional para la plantilla (máx 14 palabras)',
             visualCta: 'CTA corto para botón visual (2-4 palabras)',
@@ -209,7 +209,7 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image. Prioriza variedad visual.'
         : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
       'visualDescription = brief de arte (ambiente, luz, emoción). Con media kit el sistema genera escena fotorealista CM + app real en pantalla.',
-      'visualTemplateId = fallback si no hay kit; con kit usa creative-scene (no product-hero). Plantillas rígidas: tip-card, quote-insight, stat-highlight, promo-cta; story-vertical solo Reels/TikTok.',
+      'visualTemplateId: creative-scene (CM lifestyle sin captura), ai-art (infografía/arte IA pura), product-hero (mockup con captura). Con kit prioriza creative-scene salvo que el post deba mostrar UI (product-hero). Plantillas rígidas: tip-card, quote-insight, stat-highlight, promo-cta; story-vertical solo Reels/TikTok.',
       revisionWantsMediaKit
         ? [
             'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit (mockup móvil/desktop).',
@@ -221,10 +221,11 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA. body con 3 bullets distintos.',
       'visualHeadline / visualSubline / visualCta = textos cortos que irán DENTRO del diseño (legibles, sin hashtags).',
       'visualIntent = intención visual estructurada para seleccionar receta de arte IA (goal, subject, style, preferLayout, scene, carouselStructure).',
-      'preferLayout=creative-scene para posts de confianza/educación/marca con CM en escena (SIN captura de app superpuesta).',
-      'scene=clinical para dental/salud; scene=hand-phone para stories/TikTok; scene=workspace para SaaS; scene=abstract-premium para marca sin personas.',
+      'visualTemplateId=creative-scene para confianza/educación/marca (CM en escena, SIN captura). visualTemplateId=ai-art para infografías, abstractos o comparativas sin plantilla SVG.',
+      'visualIntent.scene=clinical para dental/salud; hand-phone para stories/TikTok; workspace para SaaS; abstract-premium para marca sin personas.',
       'visualTemplateId=product-hero SOLO si el post vende una funcionalidad concreta de la app y debe verse la captura real.',
-      'preferLayout=template solo para tip-card/stat-highlight/quote; preferLayout=ai-art para infografías sin kit.',
+      'preferLayout debe alinearse con visualTemplateId (creative-scene | ai-art | template).',
+      'Si usas creative-scene, rellena visualIntent.scene según industria/plataforma.',
       'body = copy publicable listo para publicar en la red, sin marcadores de tiempo (ej. "(0:00-0:05)") ni direcciones de escena. Son campos independientes.',
     ]
       .filter(Boolean)

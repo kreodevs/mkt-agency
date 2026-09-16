@@ -51,6 +51,10 @@ export class ContentEntity {
   @Column({ name: 'visual_template_id', type: 'varchar', length: 40, nullable: true })
   visualTemplateId!: string | null;
 
+  /** Creative scene archetype when visual_template_id is creative-scene. */
+  @Column({ name: 'visual_scene', type: 'varchar', length: 32, nullable: true })
+  visualScene!: string | null;
+
   @Column({ name: 'visual_headline', type: 'varchar', length: 200, nullable: true })
   visualHeadline!: string | null;
 

@@ -62,8 +62,8 @@ The social copy adapter asks the CM to fill per post:
 ```
 
 - `preferLayout: "template"` → skip creative scene, art library and art-kit-compose (use Visual Studio templates)
-- `preferLayout: "creative-scene"` → SceneKitComposer first (CM en escena + captura real en pantalla)
-- `preferLayout: "ai-art"` → skip rigid templates; prefer art-kit-compose (when kit exists) then art library
+- `preferLayout: "creative-scene"` / `visualTemplateId: "creative-scene"` → SceneKitComposer (lifestyle CM; `visualScene` o `visualIntent.scene` elige arquetipo)
+- `preferLayout: "ai-art"` / `visualTemplateId: "ai-art"` → skip SVG templates and art-kit-compose; use art prompt library (even with media kit)
 - `scene: "clinical"` → escenas de consultorio/dental; `"hand-phone"` para stories; `"workspace"` para SaaS
 - talking-head posts always skip creative scene, library and art-kit-compose
 

@@ -60,6 +60,8 @@ import { ContentEntity } from '../content/infrastructure/typeorm/content.entity'
 import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
 import { resolveContentImageDestination, socialCopyPostFromContent } from './domain/content-visual-design.util';
+import { resolveStoredVisualScene } from './domain/visual-scene.util';
+import { isAiArtTemplateId } from './domain/visual-template.constants';
 import {
   isVisualDesignPresetId,
   isVisualTemplateId,
@@ -295,6 +297,7 @@ export class CommunityManagerService {
     contentDto.visualTemplateId = isVisualDesignPresetId(post.visualTemplateId)
       ? post.visualTemplateId
       : null;
+    contentDto.visualScene = resolveStoredVisualScene(post);
     contentDto.visualHeadline = post.visualHeadline ?? null;
     contentDto.visualSubline = post.visualSubline ?? null;
     contentDto.visualCta = post.visualCta ?? null;
@@ -765,6 +768,7 @@ export class CommunityManagerService {
       platform: post.platform,
       visualPrompt: sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
       visualTemplateId: isVisualDesignPresetId(post.visualTemplateId) ? post.visualTemplateId : null,
+      visualScene: resolveStoredVisualScene(post),
       visualHeadline: post.visualHeadline ?? null,
       visualSubline: post.visualSubline ?? null,
       visualCta: post.visualCta ?? null,
@@ -1145,7 +1149,7 @@ export class CommunityManagerService {
       }
     }
 
-    if (kitHasComposeImageRoles(kit)) {
+    if (kitHasComposeImageRoles(kit) && !isAiArtTemplateId(post.visualTemplateId)) {
       this.logger.warn(
         `Media kit disponible pero art-kit-compose y plantilla fallaron para content ${contentId}; no se usará imagen IA pura`,
       );

@@ -390,6 +390,7 @@ export default function ContentEditPage() {
           <ContentVisualDesignPanel
             contentId={content.id}
             visualTemplateId={content.visualTemplateId}
+            visualScene={content.visualScene}
             visualHeadline={content.visualHeadline}
             visualSubline={content.visualSubline}
             visualCta={content.visualCta}

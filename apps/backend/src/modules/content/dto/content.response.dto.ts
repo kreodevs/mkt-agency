@@ -28,6 +28,7 @@ export class ContentResponseDto {
   visualFormat!: string;
   visualPrompt!: string | null;
   visualTemplateId!: string | null;
+  visualScene!: string | null;
   visualHeadline!: string | null;
   visualSubline!: string | null;
   visualCta!: string | null;

@@ -61,6 +61,7 @@ import { ImageGenerationController } from './image-generation.controller';
 import { ImageGenerationService } from './image-generation.service';
 import { VideoGenerationService } from './video-generation.service';
 import { ImageBrandingService } from './image-branding.service';
+import { VideoBrandingService } from './video-branding.service';
 import { WebsiteAnalyzerService } from './website-analyzer.service';
 
 @Module({
@@ -120,6 +121,7 @@ import { WebsiteAnalyzerService } from './website-analyzer.service';
     ImageGenerationService,
     VideoGenerationService,
     ImageBrandingService,
+    VideoBrandingService,
     {
       provide: WEBSITE_ANALYZER_ADAPTER,
       useFactory: (

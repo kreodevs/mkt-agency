@@ -35,6 +35,7 @@ export interface Content {
   visualFormat: ContentVisualFormat;
   visualPrompt: string | null;
   visualTemplateId: string | null;
+  visualScene: string | null;
   visualHeadline: string | null;
   visualSubline: string | null;
   visualCta: string | null;
@@ -75,6 +76,7 @@ export interface UpdateContentPayload {
   visualFormat?: ContentVisualFormat;
   visualPrompt?: string | null;
   visualTemplateId?: string | null;
+  visualScene?: string | null;
   visualHeadline?: string | null;
   visualSubline?: string | null;
   visualCta?: string | null;

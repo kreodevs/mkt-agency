@@ -46,6 +46,7 @@ interface InboxRow {
   platform: string | null;
   visualFormat: string | null;
   visualTemplateId: string | null;
+  visualScene: string | null;
   visualHeadline: string | null;
   visualSubline: string | null;
   visualCta: string | null;
@@ -358,6 +359,7 @@ export class PublicationInboxService {
         'c.platform AS platform',
         'c.visual_format AS "visualFormat"',
         'c.visual_template_id AS "visualTemplateId"',
+        'c.visual_scene AS "visualScene"',
         'c.visual_headline AS "visualHeadline"',
         'c.visual_subline AS "visualSubline"',
         'c.visual_cta AS "visualCta"',
@@ -400,6 +402,7 @@ export class PublicationInboxService {
       platform: row.platform,
       visualFormat: row.visualFormat ?? 'image',
       visualTemplateId: row.visualTemplateId,
+      visualScene: row.visualScene,
       visualHeadline: row.visualHeadline,
       visualSubline: row.visualSubline,
       visualCta: row.visualCta,

@@ -2,6 +2,7 @@ import type { ContentImageDestination, ContentVisualFormat } from '../../content
 import { normalizeContentVisualFormat } from '../../content/domain/content-visual-format.util';
 import { CM_PLATFORMS, type CmPlatform } from './cm-platforms.constants';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
+import { isVisualSceneId } from './visual-template.constants';
 
 export function resolveContentImageDestination(
   post: Pick<SocialCopyPost, 'imageDestination' | 'visualTemplateId'>,
@@ -21,6 +22,7 @@ export interface ContentVisualDesignSource {
   visualFormat: string;
   visualPrompt: string | null;
   visualTemplateId: string | null;
+  visualScene: string | null;
   visualHeadline: string | null;
   visualSubline: string | null;
   visualCta: string | null;
@@ -53,6 +55,10 @@ export function socialCopyPostFromContent(
     visualDescription: content.visualPrompt?.trim() ?? '',
     visualFormat,
     visualTemplateId: content.visualTemplateId ?? undefined,
+    visualScene:
+      content.visualScene && isVisualSceneId(content.visualScene)
+        ? content.visualScene
+        : undefined,
     visualHeadline: content.visualHeadline ?? undefined,
     visualSubline: content.visualSubline ?? undefined,
     visualCta: content.visualCta ?? undefined,

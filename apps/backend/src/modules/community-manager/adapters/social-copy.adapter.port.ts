@@ -15,6 +15,8 @@ export interface SocialCopyPost {
   visualFormat: ContentVisualFormat;
   /** Plantilla de diseño elegida por la IA (visual studio). */
   visualTemplateId?: string;
+  /** Escena creativa persistida (workspace, clinical, hand-phone, abstract-premium). */
+  visualScene?: string;
   /** Titular corto para la pieza gráfica (3-8 palabras). */
   visualHeadline?: string;
   visualSubline?: string;

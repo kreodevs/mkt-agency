@@ -10,9 +10,14 @@ import { toast } from '@/components/molecules/Sonner';
 import { HEALTH_UI } from '@/lib/semantic-ui';
 import {
   VISUAL_DESIGN_PRESET_HINTS,
-  VISUAL_DESIGN_SELECT_OPTIONS,
+  VISUAL_DESIGN_SELECT_OPTION_GROUPS,
+  VISUAL_PRESET_KIND_LABELS,
+  VISUAL_SCENE_SELECT_OPTIONS,
+  VISUAL_STYLE_GUIDE_ROWS,
   isCreativeScenePreset,
-  isVisualTemplateId,
+  isVisualDesignPreset,
+  isVisualSceneId,
+  resolveVisualPresetKind,
 } from '@/lib/visual-template';
 import {
   hasTruncationRiskWarnings,
@@ -25,6 +30,7 @@ import type { ContentImageDestination } from '@/types/content';
 interface ContentVisualDesignPanelProps {
   contentId: string;
   visualTemplateId?: string | null;
+  visualScene?: string | null;
   visualHeadline?: string | null;
   visualSubline?: string | null;
   visualCta?: string | null;
@@ -35,6 +41,7 @@ interface ContentVisualDesignPanelProps {
 export function ContentVisualDesignPanel({
   contentId,
   visualTemplateId = null,
+  visualScene = null,
   visualHeadline = null,
   visualSubline = null,
   visualCta = null,
@@ -43,6 +50,7 @@ export function ContentVisualDesignPanel({
 }: ContentVisualDesignPanelProps) {
   const queryClient = useQueryClient();
   const [templateId, setTemplateId] = useState<string>('');
+  const [sceneId, setSceneId] = useState<string>('');
   const [headline, setHeadline] = useState('');
   const [subline, setSubline] = useState('');
   const [cta, setCta] = useState('');
@@ -50,16 +58,24 @@ export function ContentVisualDesignPanel({
 
   useEffect(() => {
     setTemplateId(
-      visualTemplateId &&
-        (isVisualTemplateId(visualTemplateId) || isCreativeScenePreset(visualTemplateId))
-        ? visualTemplateId
-        : '',
+      visualTemplateId && isVisualDesignPreset(visualTemplateId) ? visualTemplateId : '',
     );
+    setSceneId(visualScene && isVisualSceneId(visualScene) ? visualScene : '');
     setHeadline(visualHeadline ?? '');
     setSubline(visualSubline ?? '');
     setCta(visualCta ?? '');
     setDestination(imageDestination === 'story' ? 'story' : 'feed');
-  }, [visualTemplateId, visualHeadline, visualSubline, visualCta, imageDestination]);
+  }, [
+    visualTemplateId,
+    visualScene,
+    visualHeadline,
+    visualSubline,
+    visualCta,
+    imageDestination,
+  ]);
+
+  const presetKind = resolveVisualPresetKind(templateId || null);
+  const presetHint = templateId ? VISUAL_DESIGN_PRESET_HINTS[templateId] : VISUAL_DESIGN_PRESET_HINTS[''];
 
   const warnings = useMemo(
     () =>
@@ -76,6 +92,7 @@ export function ContentVisualDesignPanel({
     mutationFn: () =>
       updateContent(contentId, {
         visualTemplateId: templateId || null,
+        visualScene: isCreativeScenePreset(templateId) && sceneId ? sceneId : null,
         visualHeadline: headline.trim() || null,
         visualSubline: subline.trim() || null,
         visualCta: cta.trim() || null,
@@ -107,25 +124,62 @@ export function ContentVisualDesignPanel({
 
   return (
     <Card
-      title="Diseño de plantilla"
-      subtitle="Preset visual, textos en imagen y formato. El motor elige escena CM, mockup con captura o plantilla tipográfica."
+      title="Diseño visual"
+      subtitle="Elige cómo se generará la imagen: escena con CM, mockup con captura del app, arte IA o plantilla con textos fijos."
     >
       <form onSubmit={onSubmit} className="space-y-4">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--secondary)] p-[var(--spacing-sm)]">
+          <p className="mb-2 text-xs font-medium text-[var(--foreground)]">¿Cuál elegir?</p>
+          <dl className="space-y-2 text-xs text-[var(--foreground-muted)]">
+            {VISUAL_STYLE_GUIDE_ROWS.map((row) => (
+              <div
+                key={row.kind}
+                className="flex flex-col gap-0.5 sm:grid sm:grid-cols-[5.5rem_1fr_auto] sm:items-baseline sm:gap-x-2"
+              >
+                <dt className="font-medium text-[var(--foreground)]">{VISUAL_PRESET_KIND_LABELS[row.kind]}</dt>
+                <dd>{row.generates}</dd>
+                <dd className="sm:text-right">
+                  ¿Muestra la app?{' '}
+                  <span className="font-medium text-[var(--foreground)]">{row.showsApp}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
         <Select
-          label="Estilo visual"
+          label="Modo de generación"
           value={templateId}
           onChange={(event) => {
             const next = event.target.value;
             setTemplateId(next);
+            if (!isCreativeScenePreset(next)) {
+              setSceneId('');
+            }
             if (next === 'story-vertical') {
               setDestination('story');
             }
           }}
-          options={VISUAL_DESIGN_SELECT_OPTIONS}
+          optionGroups={VISUAL_DESIGN_SELECT_OPTION_GROUPS}
+          hint="Escena CM ≠ mockup: la escena no muestra la interfaz del producto; el mockup sí."
         />
 
-        {templateId && VISUAL_DESIGN_PRESET_HINTS[templateId] ? (
-          <p className="text-xs text-[var(--foreground-muted)]">{VISUAL_DESIGN_PRESET_HINTS[templateId]}</p>
+        {presetHint ? (
+          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-[var(--spacing-sm)]">
+            <p className="text-xs font-semibold text-[var(--foreground)]">
+              {VISUAL_PRESET_KIND_LABELS[presetKind]}
+            </p>
+            <p className="mt-1 text-xs text-[var(--foreground-muted)]">{presetHint}</p>
+          </div>
+        ) : null}
+
+        {isCreativeScenePreset(templateId) ? (
+          <Select
+            label="Tipo de escena"
+            value={sceneId}
+            onChange={(event) => setSceneId(event.target.value)}
+            options={VISUAL_SCENE_SELECT_OPTIONS}
+          />
         ) : null}
 
         <Select

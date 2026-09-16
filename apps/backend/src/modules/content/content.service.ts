@@ -120,6 +120,7 @@ export class ContentService {
           visualFormat: normalizeContentVisualFormat(dto.visualFormat),
           visualPrompt: dto.visualPrompt ?? null,
           visualTemplateId: dto.visualTemplateId ?? null,
+          visualScene: dto.visualScene ?? null,
           visualHeadline: dto.visualHeadline ?? null,
           visualSubline: dto.visualSubline ?? null,
           visualCta: dto.visualCta ?? null,
@@ -191,6 +192,7 @@ export class ContentService {
       dto.platform !== undefined ||
       dto.visualPrompt !== undefined ||
       dto.visualTemplateId !== undefined ||
+      dto.visualScene !== undefined ||
       dto.visualHeadline !== undefined ||
       dto.visualSubline !== undefined ||
       dto.visualCta !== undefined ||
@@ -223,6 +225,7 @@ export class ContentService {
     if (dto.platform !== undefined) content.platform = dto.platform ?? null;
     if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
     if (dto.visualTemplateId !== undefined) content.visualTemplateId = dto.visualTemplateId ?? null;
+    if (dto.visualScene !== undefined) content.visualScene = dto.visualScene ?? null;
     if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
     if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
     if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
@@ -286,6 +289,7 @@ export class ContentService {
     if (dto.platform !== undefined) content.platform = dto.platform ?? null;
     if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
     if (dto.visualTemplateId !== undefined) content.visualTemplateId = dto.visualTemplateId ?? null;
+    if (dto.visualScene !== undefined) content.visualScene = dto.visualScene ?? null;
     if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
     if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
     if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
@@ -800,6 +804,7 @@ export class ContentService {
       visualFormat: normalizeContentVisualFormat(content.visualFormat),
       visualPrompt: content.visualPrompt ?? null,
       visualTemplateId: content.visualTemplateId ?? null,
+      visualScene: content.visualScene ?? null,
       visualHeadline: content.visualHeadline ?? null,
       visualSubline: content.visualSubline ?? null,
       visualCta: content.visualCta ?? null,

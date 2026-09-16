@@ -2,7 +2,10 @@ import { normalizeContentVisualFormat } from '../../content/domain/content-visua
 import { kitHasComposeImageRoles } from '../../product/domain/product-media-kit.constants';
 import type { ProductMediaKitItemEntity } from '../../product/infrastructure/typeorm/product-media-kit-item.entity';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
-import { CREATIVE_SCENE_TEMPLATE_ID } from '../domain/visual-template.constants';
+import { isAiArtTemplateId, isCreativeSceneTemplateId } from '../domain/visual-template.constants';
+
+export { isCreativeSceneTemplateId };
+import { resolvePostVisualScene } from '../domain/visual-scene.util';
 import type { ArtPromptScene } from './art-prompt.types';
 import { resolveVisualIntent } from './visual-intent.util';
 
@@ -31,16 +34,16 @@ export function prefersRigidTemplate(post: SocialCopyPost): boolean {
   return id ? RIGID_TEMPLATE_IDS.has(id) : false;
 }
 
-export function isCreativeSceneTemplateId(templateId?: string | null): boolean {
-  return templateId?.trim() === CREATIVE_SCENE_TEMPLATE_ID;
-}
-
 /**
  * Posts that should show a real app screenshot via art-kit-compose (known mockup geometry).
  * Default lifestyle / CM scenes do NOT force a kit overlay.
  */
 export function wantsProductScreenShowcase(post: SocialCopyPost): boolean {
   if (isCreativeSceneTemplateId(post.visualTemplateId)) {
+    return false;
+  }
+
+  if (isAiArtTemplateId(post.visualTemplateId)) {
     return false;
   }
 
@@ -86,6 +89,11 @@ export function resolveEffectiveScene(
   post: SocialCopyPost,
   industry?: string | null,
 ): ArtPromptScene {
+  const persistedScene = resolvePostVisualScene(post);
+  if (persistedScene && EXPLICIT_SCENES.has(persistedScene)) {
+    return persistedScene;
+  }
+
   const intent = resolveVisualIntent(post);
   const explicit = intent.scene;
   if (explicit && explicit !== 'auto' && EXPLICIT_SCENES.has(explicit)) {
@@ -137,6 +145,10 @@ export function shouldUseCreativeScene(
   kit: ProductMediaKitItemEntity[] | null | undefined,
   options: CreativeSceneRoutingOptions = {},
 ): boolean {
+  if (isAiArtTemplateId(post.visualTemplateId)) {
+    return false;
+  }
+
   const format = normalizeContentVisualFormat(post.visualFormat);
   if (format === 'talking-head' || format === 'carousel') {
     return false;

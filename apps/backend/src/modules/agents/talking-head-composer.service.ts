@@ -15,6 +15,7 @@ import {
 } from './adapters/talking-head.adapter.port';
 import { TtsGenerationService } from './tts-generation.service';
 import { TalkingHeadVideoEnricherService } from './talking-head-video-enricher.service';
+import { VideoBrandingService } from './video-branding.service';
 
 export interface ComposeTalkingHeadOptions {
   portraitAssetId: string;
@@ -47,6 +48,7 @@ export class TalkingHeadComposerService {
     private readonly llmProviders: LlmProviderService,
     private readonly replicate: ReplicateTalkingHeadAdapter,
     private readonly videoEnricher: TalkingHeadVideoEnricherService,
+    private readonly videoBranding: VideoBrandingService,
     @Inject(TALKING_HEAD_ADAPTER)
     private readonly stub: TalkingHeadAdapterPort,
   ) {}
@@ -94,9 +96,18 @@ export class TalkingHeadComposerService {
       options.productScreenshotBuffers ?? [],
     );
 
+    let finalVideo = enriched.buffer;
+    if (options.productId) {
+      finalVideo = await this.videoBranding.applyProductLogoToVideo(
+        options.tenantId,
+        options.productId,
+        finalVideo,
+      );
+    }
+
     const videoAsset = await this.uploadBuffer(
       options.tenantId,
-      enriched.buffer,
+      finalVideo,
       `cm-reel-${Date.now()}.mp4`,
       talkingHead.mimeType,
       {

@@ -16,6 +16,7 @@ export interface PublicationInboxItem {
   platform: string | null;
   visualFormat: string;
   visualTemplateId?: string | null;
+  visualScene?: string | null;
   visualHeadline?: string | null;
   visualSubline?: string | null;
   visualCta?: string | null;

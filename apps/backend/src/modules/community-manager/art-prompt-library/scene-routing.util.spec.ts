@@ -87,6 +87,23 @@ describe('scene-routing.util', () => {
     );
   });
 
+  it('uses persisted visualScene for effective scene routing', () => {
+    const post = basePost({
+      visualTemplateId: 'creative-scene',
+      visualScene: 'clinical',
+    });
+    expect(resolveEffectiveScene(post, 'saas')).toBe('clinical');
+  });
+
+  it('blocks showcase and creative scene for ai-art preset', () => {
+    const post = basePost({
+      visualTemplateId: 'ai-art',
+      visualDescription: 'Infografía abstracta',
+    });
+    expect(wantsProductScreenShowcase(post)).toBe(false);
+    expect(shouldUseCreativeScene(post, kitWithScreenshots)).toBe(false);
+  });
+
   it('skips creative scene for rigid stat-highlight template', () => {
     const post = basePost({
       visualTemplateId: 'stat-highlight',
@@ -101,10 +118,9 @@ describe('scene-routing.util', () => {
     expect(shouldUseCreativeScene(post, kitWithScreenshots)).toBe(false);
   });
 
-  it('uses creative scene for all image posts with kit regardless of post index', () => {
+  it('uses creative scene for image posts with kit when not showcasing product UI', () => {
     const post = basePost({
       platform: 'twitter',
-      visualTemplateId: 'product-hero',
     });
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(true);
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 1 })).toBe(true);
