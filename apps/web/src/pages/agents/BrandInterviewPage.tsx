@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bot, ChevronLeft, History, Send, Sparkles } from 'lucide-react';
+import { Bot, ChevronLeft, History, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BrandInterviewHistory } from '@/components/agents/BrandInterviewHistory';
 import { BrandProductOnboardingPanel } from '@/components/agents/BrandProductOnboardingPanel';
+import { BrandInterviewChat } from '@/components/agents/BrandInterviewChat';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
@@ -12,7 +13,6 @@ import { Button } from '@/components/atoms/Button';
 import { Select } from '@/components/atoms/Select';
 import { MarkdownEditor } from '@/components/molecules/MarkdownEditor';
 import { toast } from '@/components/molecules/Sonner';
-import { Progress } from '@/components/molecules/Progress';
 import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { createInterview, getInterview, listInterviews, retryBrandBrief, submitAnswer } from '@/services/agents';
 import { listProducts, getProduct } from '@/services/products';
@@ -22,7 +22,7 @@ import { ApiError } from '@/services/api';
 import type { AgentInterview } from '@/types/agents';
 import { getEffectiveInterviewStatus, hasBrandBriefResult, isLegacyManualInterview, isOnboardingSourcedInterview } from '@/utils/brandInterview';
 
-function isInterviewProcessing(interview: AgentInterview): boolean {
+function isProcessing(interview: AgentInterview): boolean {
   if (interview.status !== 'in_progress') return false;
   if (interview.currentStep >= interview.totalSteps) return true;
   return interview.messages.some((m) => m.metadata?.type === 'processing');
@@ -32,7 +32,6 @@ export default function BrandInterviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const [answer, setAnswer] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const resolvedProductId = useResolvedProductId();
@@ -43,13 +42,10 @@ export default function BrandInterviewPage() {
     queryFn: () => listProducts({ status: 'active', limit: 100 }),
     enabled: !id,
   });
-
   const products = productsQuery.data?.items ?? [];
 
   useEffect(() => {
-    if (resolvedProductId && !selectedProductId) {
-      setSelectedProductId(resolvedProductId);
-    }
+    if (resolvedProductId && !selectedProductId) setSelectedProductId(resolvedProductId);
     if (!selectedProductId && products.length > 0) {
       const primary = products.find((p) => p.isPrimary) ?? products[0];
       setSelectedProductId(primary.id);
@@ -63,8 +59,7 @@ export default function BrandInterviewPage() {
     enabled: !!id,
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (!data) return false;
-      return isInterviewProcessing(data) ? 3000 : false;
+      return data && isProcessing(data) ? 3000 : false;
     },
   });
 
@@ -82,26 +77,16 @@ export default function BrandInterviewPage() {
   const inProgressInterview = useMemo(() => {
     const candidate = brandInterviews.find((item) => item.status === 'in_progress');
     if (!candidate) return undefined;
-
     if (isLegacyManualInterview(candidate) && candidate.productId) {
       const product = products.find((p) => p.id === candidate.productId);
-      if (product?.onboardingCompleted || product?.onboardingReady) {
-        return undefined;
-      }
+      if (product?.onboardingCompleted || product?.onboardingReady) return undefined;
     }
-
     return candidate;
   }, [brandInterviews, products]);
-  const selectedProduct = useMemo(
-    () => products.find((p) => p.id === selectedProductId),
-    [products, selectedProductId],
-  );
-  const selectedProductCanGenerateBrief = Boolean(
-    selectedProduct?.onboardingCompleted || selectedProduct?.onboardingReady,
-  );
-  const selectedProductNeedsOnboarding = Boolean(
-    selectedProductId && selectedProduct && !selectedProductCanGenerateBrief,
-  );
+
+  const selectedProduct = useMemo(() => products.find((p) => p.id === selectedProductId), [products, selectedProductId]);
+  const readyForBrief = Boolean(selectedProduct?.onboardingCompleted || selectedProduct?.onboardingReady);
+  const needsOnboarding = Boolean(selectedProductId && selectedProduct && !readyForBrief);
 
   const activeInterview = id ? interviewQuery.data : undefined;
 
@@ -121,12 +106,9 @@ export default function BrandInterviewPage() {
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 409) {
-        void interviewsQuery.refetch().then((result) => {
-          const active = result.data?.find((item) => item.status === 'in_progress');
-          if (active) {
-            navigate(`/agents/brand-interview/${active.id}`);
-            return;
-          }
+        void interviewsQuery.refetch().then((r) => {
+          const active = r.data?.find((item) => item.status === 'in_progress');
+          if (active) navigate(`/agents/brand-interview/${active.id}`);
         });
         return;
       }
@@ -134,56 +116,39 @@ export default function BrandInterviewPage() {
     },
   });
 
-  const manualInterviewMutation = useMutation({
+  const manualMutation = useMutation({
     mutationFn: () => createInterview('brand_interview', selectedProductId || undefined),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
       void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
       navigate(`/agents/brand-interview/${result.id}`, { replace: true });
     },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo iniciar la entrevista');
-    },
+    onError: (error) => { toast.error(error instanceof ApiError ? error.message : 'No se pudo iniciar'); },
   });
 
-  const pageDescription = selectedProductId
-    ? selectedProductNeedsOnboarding
-      ? 'Configura tu producto analizando su página web; eso reemplaza la entrevista manual.'
-      : 'Genera el Brand Brief a partir del onboarding del producto (datos inferidos de la web).'
-    : 'Entrevista guiada para marcas sin producto concreto, o elige un producto para usar su onboarding.';
-
   const answerMutation = useMutation({
-    mutationFn: (answerText: string) => submitAnswer(activeInterview!.id, answerText),
+    mutationFn: (text: string) => submitAnswer(activeInterview!.id, text),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
       void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
       setAnswer('');
     },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'Error al enviar respuesta');
-    },
+    onError: (error) => { toast.error(error instanceof ApiError ? error.message : 'Error al enviar'); },
   });
 
-  const retryBriefMutation = useMutation({
+  const retryMutation = useMutation({
     mutationFn: () => retryBrandBrief(activeInterview!.id),
     onSuccess: (result) => {
       queryClient.setQueryData(['agent-interview', result.id], result);
       void queryClient.invalidateQueries({ queryKey: ['agent-interviews'] });
-      toast.success('Reintentando generación del Brand Brief...');
+      toast.success('Reintentando...');
     },
-    onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : 'No se pudo reintentar');
-    },
+    onError: (error) => { toast.error(error instanceof ApiError ? error.message : 'No se pudo reintentar'); },
   });
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeInterview?.messages]);
-
-  useEffect(() => {
-    if (activeInterview && id && activeInterview.id !== id) {
+    if (activeInterview && id && activeInterview.id !== id)
       navigate(`/agents/brand-interview/${activeInterview.id}`, { replace: true });
-    }
   }, [activeInterview?.id, id, navigate]);
 
   const handleSend = () => {
@@ -192,169 +157,101 @@ export default function BrandInterviewPage() {
     answerMutation.mutate(trimmed);
   };
 
-  const backButton = (
+  const backLink = (
     <Link to="/agents">
       <Button variant="ghost" size="sm" className="gap-1.5">
-        <ChevronLeft className="h-4 w-4" />
-        Volver
+        <ChevronLeft className="h-4 w-4" /> Volver
       </Button>
     </Link>
   );
 
+  // Waiting for create
   if (!id && (createMutation.isPending || createMutation.isSuccess)) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <AiThinkingPanel
-          variant="centered"
-          state="composing"
-          title={
-            selectedProductCanGenerateBrief
-              ? 'Generando Brand Brief desde onboarding'
-              : 'Preparando Brand Analyst'
-          }
+        <AiThinkingPanel variant="centered" state="composing"
+          title={readyForBrief ? 'Generando Brand Brief desde onboarding' : 'Preparando Brand Analyst'}
           description="La IA analiza tu producto y redacta el perfil de marca."
         />
       </DashboardShell>
     );
   }
 
-  // Starting state — no interview yet
+  // Start screen — no interview yet
   if (!id) {
+    const desc = selectedProductId
+      ? needsOnboarding ? 'Configura tu producto analizando su página web.' : 'Genera el Brand Brief a partir del onboarding.'
+      : 'Entrevista guiada para marcas sin producto concreto.';
+
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <PageHeader
-          title="Brand Analyst"
-          description={pageDescription}
-          actions={backButton}
-        />
-
+        <PageHeader title="Brand Analyst" description={desc} actions={backLink} />
         <div className="mx-auto mt-6 max-w-2xl space-y-6">
           {interviewsQuery.isLoading ? (
-            <Card>
-              <div className="flex items-center gap-2 py-6 text-sm text-[var(--foreground-muted)]">
-                <History className="h-4 w-4" />
-                Cargando historial...
-              </div>
-            </Card>
+            <Card><div className="flex items-center gap-2 py-6 text-sm text-[var(--foreground-muted)]"><History className="h-4 w-4" /> Cargando historial...</div></Card>
           ) : (
             <BrandInterviewHistory interviews={brandInterviews} />
           )}
 
           <Card title={brandInterviews.length > 0 ? 'Brand Brief' : 'Brand Analyst'}>
             <div className="flex flex-col items-center gap-4 py-4 text-center sm:py-6">
-              {brandInterviews.length === 0 && !selectedProductNeedsOnboarding && (
+              {brandInterviews.length === 0 && !needsOnboarding && (
                 <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-md)] border border-[var(--accent)]/20 bg-[var(--accent)]/10 shadow-sm">
                   <Bot className="h-8 w-8 text-[var(--brand)]" />
                 </div>
               )}
-              {!selectedProductNeedsOnboarding ? (
-                <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  {selectedProductId
-                    ? selectedProductCanGenerateBrief
-                      ? brandInterviews.length > 0
-                        ? 'Regenera el Brand Brief con los datos actuales del producto.'
-                        : 'Usaremos los datos del onboarding (inferidos de la web).'
-                      : 'Cargando estado del producto…'
-                    : brandInterviews.length > 0
-                      ? 'Inicia otra ronda para actualizar el Brand Brief de marca general.'
-                      : 'Selecciona un producto para inferir desde su web, o usa marca general para entrevista manual.'}
-                </p>
-              ) : null}
+              <p className="max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
+                {selectedProductId ? (readyForBrief ? (brandInterviews.length > 0 ? 'Regenera el Brand Brief.' : 'Usaremos los datos del onboarding.') : 'Cargando...')
+                  : brandInterviews.length > 0 ? 'Inicia otra ronda.' : 'Selecciona un producto o usa marca general.'}
+              </p>
               {!inProgressInterview && products.length > 0 && (
                 <div className="w-full max-w-sm text-left">
-                  <Select
-                    label="Producto"
-                    value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
+                  <Select label="Producto" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)}
                     placeholder="Marca general (entrevista manual)"
-                    options={products.map((p) => ({
-                      value: p.id,
-                      label: `${p.name}${
-                        p.onboardingCompleted
-                          ? ' · onboarding listo'
-                          : p.onboardingReady
-                            ? ' · datos completos'
-                            : ''
-                      }`,
-                    }))}
+                    options={products.map((p) => ({ value: p.id, label: `${p.name}${p.onboardingCompleted ? ' · listo' : p.onboardingReady ? ' · datos completos' : ''}` }))}
                   />
-                  {selectedProduct && selectedProduct.onboardingCompletionPercentage != null ? (
-                    <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">
-                      Onboarding: {selectedProduct.onboardingCompletionPercentage}%
-                    </p>
-                  ) : null}
+                  {selectedProduct?.onboardingCompletionPercentage != null && (
+                    <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">Onboarding: {selectedProduct.onboardingCompletionPercentage}%</p>
+                  )}
                 </div>
               )}
               {inProgressInterview ? (
                 <Link to={`/agents/brand-interview/${inProgressInterview.id}`}>
-                  <Button className="gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Continuar en progreso
-                  </Button>
+                  <Button className="gap-2"><Sparkles className="h-4 w-4" /> Continuar</Button>
                 </Link>
-              ) : selectedProductCanGenerateBrief && selectedProductId ? (
-                <Button
-                  size="lg"
-                  loading={createMutation.isPending}
-                  onClick={() => createMutation.mutate()}
-                  className="gap-2"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  Generar Brand Brief
+              ) : readyForBrief && selectedProductId ? (
+                <Button size="lg" loading={createMutation.isPending} onClick={() => createMutation.mutate()} className="gap-2">
+                  <Sparkles className="h-5 w-5" /> Generar Brand Brief
                 </Button>
               ) : !selectedProductId ? (
-                <Button
-                  size="lg"
-                  loading={createMutation.isPending}
-                  onClick={() => createMutation.mutate()}
-                  className="gap-2"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  Iniciar entrevista de marca
+                <Button size="lg" loading={createMutation.isPending} onClick={() => createMutation.mutate()} className="gap-2">
+                  <Sparkles className="h-5 w-5" /> Iniciar entrevista
                 </Button>
               ) : null}
             </div>
           </Card>
 
-          {selectedProductNeedsOnboarding && selectedProductId && !inProgressInterview ? (
+          {needsOnboarding && selectedProductId && !inProgressInterview && (
             <div className="space-y-4">
-              <BrandProductOnboardingPanel
-                productId={selectedProductId}
-                generatingBrief={createMutation.isPending}
-                onGenerateBrief={() => createMutation.mutate()}
-              />
+              <BrandProductOnboardingPanel productId={selectedProductId} generatingBrief={createMutation.isPending} onGenerateBrief={() => createMutation.mutate()} />
               <Card title="Alternativa" subtitle="Si prefieres no usar la web del producto">
-                <p className="mb-4 text-sm text-[var(--foreground-muted)]">
-                  Puedes responder 6 preguntas manualmente. Recomendamos inferir desde la URL arriba
-                  para no repetir lo que ya captura el onboarding.
-                </p>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  loading={manualInterviewMutation.isPending}
-                  onClick={() => manualInterviewMutation.mutate()}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Entrevista manual (6 preguntas)
+                <p className="mb-4 text-sm text-[var(--foreground-muted)]">Puedes responder 6 preguntas manualmente.</p>
+                <Button variant="outline" className="gap-2" loading={manualMutation.isPending} onClick={() => manualMutation.mutate()}>
+                  <Sparkles className="h-4 w-4" /> Entrevista manual
                 </Button>
               </Card>
             </div>
-          ) : null}
+          )}
         </div>
       </DashboardShell>
     );
   }
 
-  // Loading state
+  // Loading interview
   if (interviewQuery.isLoading) {
     return (
       <DashboardShell navigationOverride={tenantNavigation}>
-        <AiThinkingPanel
-          variant="centered"
-          state="working"
-          title="Cargando entrevista"
-          description="Recuperando mensajes y progreso del Brand Analyst."
-        />
+        <AiThinkingPanel variant="centered" state="working" title="Cargando entrevista" description="Recuperando mensajes." />
       </DashboardShell>
     );
   }
@@ -373,27 +270,17 @@ export default function BrandInterviewPage() {
     );
   }
 
-  const effectiveStatus = getEffectiveInterviewStatus(activeInterview);
-  const isProcessing = isInterviewProcessing(activeInterview);
-  const isCompleted = effectiveStatus === 'completed';
-  const isFailed = effectiveStatus === 'failed';
+  // Active interview
+  const status = getEffectiveInterviewStatus(activeInterview);
+  const isInterviewProcessing = isProcessing(activeInterview);
+  const isCompleted = status === 'completed';
+  const isFailed = status === 'failed';
   const fromOnboarding = isOnboardingSourcedInterview(activeInterview);
-  const interviewProductReady = Boolean(
-    interviewProductQuery.data?.onboardingCompleted || interviewProductQuery.data?.onboardingReady,
-  );
-  const briefMarkdown = activeInterview.brandBriefMarkdown;
+  const interviewProductReady = Boolean(interviewProductQuery.data?.onboardingCompleted || interviewProductQuery.data?.onboardingReady);
   const showBrief = hasBrandBriefResult(activeInterview) && isCompleted;
   const isSending = answerMutation.isPending;
-  const canAnswer =
-    activeInterview.status === 'in_progress' &&
-    !isProcessing &&
-    !isSending &&
-    !fromOnboarding &&
-    !(isLegacyManualInterview(activeInterview) && interviewProductReady);
-  const stepProgress = Math.min(
-    100,
-    Math.round((activeInterview.currentStep / activeInterview.totalSteps) * 100),
-  );
+  const canAnswer = activeInterview.status === 'in_progress' && !isInterviewProcessing && !isSending && !fromOnboarding && !(isLegacyManualInterview(activeInterview) && interviewProductReady);
+  const stepProgress = Math.min(100, Math.round((activeInterview.currentStep / activeInterview.totalSteps) * 100));
 
   return (
     <DashboardShell navigationOverride={tenantNavigation}>
@@ -401,209 +288,42 @@ export default function BrandInterviewPage() {
         title="Brand Analyst"
         description={
           activeInterview.productName
-            ? fromOnboarding
-              ? isProcessing
-                ? `Generando Brand Brief de ${activeInterview.productName} desde onboarding...`
-                : isCompleted
-                  ? `Brand Brief de ${activeInterview.productName} generado desde onboarding`
-                  : `Brand Brief de ${activeInterview.productName} desde onboarding`
-              : `Entrevista enfocada en ${activeInterview.productName}${
-                isProcessing
-                  ? ' — generando Brand Brief...'
-                  : isSending
-                    ? ' — enviando respuesta...'
-                    : ` — paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
-              }`
-            : isProcessing
-              ? 'Generando tu Brand Brief con IA...'
-              : isSending
-                ? 'Enviando respuesta...'
-                : `Paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
+            ? fromOnboarding ? `Brand Brief de ${activeInterview.productName}` : `Entrevista — paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
+            : `Paso ${Math.min(activeInterview.currentStep + 1, activeInterview.totalSteps)} de ${activeInterview.totalSteps}`
         }
-        actions={
-          <Link to="/agents">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <ChevronLeft className="h-4 w-4" />
-              Agentes
-            </Button>
-          </Link>
-        }
+        actions={<Link to="/agents"><Button variant="ghost" size="sm" className="gap-1.5"><ChevronLeft className="h-4 w-4" /> Agentes</Button></Link>}
       />
 
-      {activeInterview?.productId && (
-        <ProductContextBanner
-          productId={activeInterview.productId}
-          productName={activeInterview.productName}
-        />
-      )}
+      {activeInterview?.productId && <ProductContextBanner productId={activeInterview.productId} productName={activeInterview.productName} />}
 
-      <div className="mx-auto mt-4 max-w-2xl space-y-3">
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] px-[var(--spacing-md)] py-[var(--spacing-md)]">
-          <div className="mb-2 flex items-center justify-between text-xs text-[var(--foreground-muted)]">
-            <span>
-              {fromOnboarding
-                ? isProcessing
-                  ? 'Generando Brand Brief desde onboarding'
-                  : isCompleted
-                    ? 'Brand Brief generado desde onboarding'
-                    : 'Contexto tomado del onboarding del producto'
-                : isProcessing
-                  ? 'Analizando respuestas y redactando el brief'
-                  : isCompleted
-                    ? 'Entrevista completada'
-                    : `${activeInterview.currentStep} de ${activeInterview.totalSteps} preguntas respondidas`}
-            </span>
-            <span className="font-medium tabular-nums text-[var(--foreground)]">
-              {fromOnboarding && isProcessing ? '…' : isProcessing ? '…' : `${stepProgress}%`}
-            </span>
-          </div>
-          <Progress
-            value={isProcessing ? 100 : stepProgress}
-            className={isProcessing ? '[&>div]:animate-pulse' : undefined}
-          />
-        </div>
-
-      <Card className="flex max-w-2xl flex-col overflow-hidden" style={{ height: '62vh' }}>
-        {/* Messages */}
-        <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-6">
-          {activeInterview.messages.map((msg) => {
-            const isAgent = msg.role === 'agent';
-            const isSystem = msg.role === 'system';
-            const isError = msg.metadata?.type === 'error';
-
-            if (isSystem && isError) {
-              if (showBrief) {
-                return null;
-              }
-              return (
-                <div
-                  key={msg.id}
-                  className="rounded-lg border border-[var(--destructive)]/30 bg-[var(--destructive)]/5 p-4 text-sm text-[var(--destructive)]"
-                >
-                  {msg.content}
-                </div>
-              );
-            }
-
-            if (isSystem) return null;
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${isAgent ? '' : 'flex-row-reverse'}`}
-              >
-                {isAgent && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10">
-                    <Bot className="h-4 w-4 text-[var(--brand)]" />
-                  </div>
-                )}
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    isAgent
-                      ? 'rounded-bl-sm bg-[var(--secondary)] text-[var(--foreground)]'
-                      : 'rounded-br-sm bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            );
-          })}
-
-          {(isProcessing || isSending) && (
-            <AiThinkingPanel
-              variant="inline"
-              state={isSending ? 'listening' : 'composing'}
-              title={isSending ? 'Enviando tu respuesta…' : 'Generando Brand Brief'}
-              description={
-                isSending
-                  ? 'Un momento mientras registro tu respuesta.'
-                  : 'La IA analiza tus respuestas y actualiza tu perfil de marca. Suele tardar unos segundos.'
-              }
-            />
-          )}
-
-          <div ref={chatEndRef} />
-        </div>
-
-        {isFailed && (
-          <div className="border-t border-[var(--border)] p-4 text-center">
-            <p className="text-sm text-[var(--destructive)]">
-              {activeInterview.errorMessage ?? 'Error al generar el Brand Brief.'}
-            </p>
-            {!showBrief && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                loading={retryBriefMutation.isPending}
-                onClick={() => retryBriefMutation.mutate()}
-              >
-                Reintentar generación
-              </Button>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 border-t border-[var(--border)] p-4">
-          <input
-            type="text"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder={
-              isCompleted
-                ? 'Entrevista completada'
-                : isSending
-                  ? 'Enviando respuesta...'
-                  : isProcessing
-                    ? 'Generando Brand Brief...'
-                    : 'Escribe tu respuesta...'
-            }
-            disabled={!canAnswer}
-            className="h-10 flex-1 rounded-full border border-[var(--border)] bg-[var(--input)] px-4 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!canAnswer || !answer.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:text-[var(--foreground-muted)] disabled:hover:opacity-100"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-      </Card>
+      <BrandInterviewChat
+        interview={activeInterview}
+        isProcessing={isInterviewProcessing}
+        isCompleted={isCompleted}
+        isFailed={isFailed}
+        isSending={isSending}
+        canAnswer={canAnswer}
+        stepProgress={stepProgress}
+        answer={answer}
+        onAnswerChange={setAnswer}
+        onSend={handleSend}
+        onRetry={() => retryMutation.mutate()}
+        retryPending={retryMutation.isPending}
+      />
 
       {showBrief && (
-        <Card title="Brand Brief" subtitle="Resultado de tu entrevista">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-[var(--foreground-muted)]">
-              Generado el{' '}
-              {new Date(activeInterview.updatedAt).toLocaleString('es-MX', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-            <Link
-              to="/onboarding"
-              className="text-xs font-medium text-[var(--primary)] hover:underline"
-            >
-              Ver perfil de empresa actualizado
-            </Link>
-          </div>
-          <MarkdownEditor value={briefMarkdown!} readOnly minHeight="420px" />
-        </Card>
+        <div className="mx-auto mt-3 max-w-2xl">
+          <Card title="Brand Brief" subtitle="Resultado de tu entrevista">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Generado el {new Date(activeInterview.updatedAt).toLocaleString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <Link to="/onboarding" className="text-xs font-medium text-[var(--primary)] hover:underline">Ver perfil de empresa</Link>
+            </div>
+            <MarkdownEditor value={activeInterview.brandBriefMarkdown!} readOnly minHeight="420px" />
+          </Card>
+        </div>
       )}
-      </div>
     </DashboardShell>
   );
 }

@@ -12,23 +12,11 @@ import { runWithLlmUsageContext } from '../../shared/ai/llm-usage.context';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { ContentService } from '../content/content.service';
 import { ImageGenerationService } from '../agents/image-generation.service';
-import { TalkingHeadPostComposerService } from './talking-head-post-composer.service';
-import { VisualTemplateComposerService } from './visual-template-composer.service';
-import {
-  buildMediaKitRevisionHint,
-  feedbackRequestsAiImage,
-  feedbackRequestsMediaKit,
-  parseFeedbackTargetFrames,
-} from './domain/feedback-visual-intent.util';
-import { enrichVisualDescriptionForAi } from './domain/visual-prompt-enrichment.util';
-import { resolveVisualBrandKit } from './domain/visual-brand-kit.util';
-import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
 import { ProductService } from '../product/product.service';
 import { ProductAppCaptureService } from '../product/product-app-capture.service';
-import {
-  normalizeContentVisualFormat,
-  visualFormatToFrameCount,
-} from '../content/domain/content-visual-format.util';
+import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
+import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
+import { VisualTemplateComposerService } from './visual-template-composer.service';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -61,32 +49,14 @@ import { CreateContentDto } from '../content/dto/content.request.dto';
 import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util';
 import { resolveContentImageDestination, socialCopyPostFromContent } from './domain/content-visual-design.util';
 import { resolveStoredVisualScene } from './domain/visual-scene.util';
-import { isAiArtTemplateId } from './domain/visual-template.constants';
-import {
-  isVisualDesignPresetId,
-  isVisualTemplateId,
-} from './domain/visual-brand-kit.util';
+import { isVisualDesignPresetId, isVisualTemplateId } from './domain/visual-brand-kit.util';
 import type { VisualTemplateId } from './domain/visual-template.constants';
-import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
-import { toLocalDateKey } from '../../shared/domain/date-key.util';
 import {
   GenerationContextFacade,
   type GenerationContext,
 } from './generation-context.facade';
-import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
-import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
-import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.service';
-import {
-  shouldSkipTemplateForCreativeScene,
-  shouldUseCreativeScene,
-  wantsProductScreenShowcase,
-} from './art-prompt-library/scene-routing.util';
-import {
-  resolveVisualIntent,
-  shouldUseArtKitCompose,
-  shouldUseArtPromptLibrary,
-} from './art-prompt-library/visual-intent.util';
 import { CmCharacterService } from './cm-character.service';
+import { VisualOrchestratorService } from './visual-orchestrator.service';
 
 @Injectable()
 export class CommunityManagerService {
@@ -104,15 +74,12 @@ export class CommunityManagerService {
     private readonly llmProviders: LlmProviderService,
     private readonly contentService: ContentService,
     private readonly imageGeneration: ImageGenerationService,
-    private readonly templateComposer: VisualTemplateComposerService,
-    private readonly talkingHeadComposer: TalkingHeadPostComposerService,
     private readonly productService: ProductService,
     private readonly productAppCaptureService: ProductAppCaptureService,
-    private readonly contextFacade: GenerationContextFacade,
-    private readonly artPromptSelector: ArtPromptSelectorService,
-    private readonly artKitCompose: ArtKitComposeService,
-    private readonly sceneKitCompose: SceneKitComposeService,
+    private readonly templateComposer: VisualTemplateComposerService,
     private readonly cmCharacter: CmCharacterService,
+    private readonly contextFacade: GenerationContextFacade,
+    private readonly visualOrchestrator: VisualOrchestratorService,
   ) {}
 
   async getPreferences(tenantId: string): Promise<CommunityManagerPreferencesResponse> {
@@ -839,406 +806,68 @@ export class CommunityManagerService {
   }
 
   private async handlePostRegenerationVisual(
-    tenantId: string,
-    userId: string,
-    contentId: string,
-    post: SocialCopyPost,
-    content: ContentEntity,
+    tenantId: string, userId: string, contentId: string,
+    post: SocialCopyPost, content: ContentEntity,
     ctx: GenerationContext,
     currentVersion: { versionNumber?: number; assets?: unknown } | null,
     feedback: string | undefined,
   ): Promise<void> {
     const visualVariantIndex = currentVersion?.versionNumber ?? 0;
     const productId = content.productId ?? ctx.effectiveProductId;
-    const hasKitImages = kitHasComposeImageRoles(ctx.kit);
-    const wantsMediaKit = feedbackRequestsMediaKit(feedback) || hasKitImages;
-    const allowAiFallback =
-      feedbackRequestsAiImage(feedback) ||
-      (!hasKitImages && !feedbackRequestsMediaKit(feedback));
-    const composeOptions = this.buildComposeOptions(post, feedback, currentVersion);
-    const composeCtx = { resolvedProfile: ctx.resolvedProfile };
 
-    if (productId && hasKitImages) {
-      if (composeOptions.targetSlideIndices) {
-        const partial = await this.templateComposer.tryComposeFromTemplate(
-          tenantId,
-          userId,
-          contentId,
-          post,
-          productId,
-          ctx.kit,
-          visualVariantIndex,
-          composeCtx,
-          composeOptions,
-        );
-        if (partial.attached) {
-          return;
-        }
-      }
-
-      const composed = await this.attachVisualForPost(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        ctx.kit,
-        visualVariantIndex,
-        ctx,
-      );
-      if (composed) {
-        return;
-      }
-
-      const recomposed = await this.templateComposer.recomposeFromStoredTemplate(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        ctx.kit,
-        visualVariantIndex,
-        composeCtx,
-        {
-          targetSlideIndices: composeOptions.targetSlideIndices,
-          existingAssetIds: composeOptions.existingAssetIds,
-        },
-      );
-      if (recomposed) {
-        return;
-      }
-
-      if (feedback) {
-        const varied = await this.templateComposer.tryComposeFromTemplate(
-          tenantId,
-          userId,
-          contentId,
-          post,
-          productId,
-          ctx.kit,
-          visualVariantIndex,
-          composeCtx,
-          composeOptions,
-        );
-        if (varied.attached) {
-          return;
-        }
-      }
-    }
-
-    if (!feedback) {
-      await this.regenerateVisualWithoutFeedback(
-        tenantId, userId, contentId, post, ctx,
-      );
-      return;
-    }
-
-    if (wantsMediaKit && hasKitImages && !feedbackRequestsAiImage(feedback)) {
-      this.logger.warn(
-        `Media kit compose failed for content ${contentId} despite kit items; skipping AI fallback`,
-      );
-      return;
-    }
-
-    if (!post.visualDescription?.trim()) {
-      return;
-    }
-
-    if (productId) {
-      const composed = await this.attachVisualForPost(
-        tenantId, userId, contentId, post,
-        productId, ctx.kit, visualVariantIndex, ctx,
-      );
-      if (composed) {
-        return;
-      }
-    }
-
-    if (!allowAiFallback) {
-      return;
-    }
-
-    try {
-      await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
-    } catch (error) {
-      this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
-    }
+    await this.visualOrchestrator.handlePostRegenerationVisual(
+      tenantId, userId, contentId, post, productId, ctx.kit,
+      visualVariantIndex, ctx, feedback, currentVersion,
+      (tId, uId, cId, opts) => this.recomposeVisualForContent(tId, uId, cId, opts).then(() => {}),
+    );
   }
 
   private async regenerateVisualWithoutFeedback(
-    tenantId: string,
-    userId: string,
-    contentId: string,
-    post: SocialCopyPost,
-    ctx: GenerationContext,
+    tenantId: string, userId: string, contentId: string,
+    post: SocialCopyPost, ctx: GenerationContext,
   ): Promise<void> {
-    try {
-      const productId = ctx.effectiveProductId;
-      if (productId) {
-        const templated = await this.attachVisualForPost(
+    const productId = ctx.effectiveProductId;
+    const ok = productId
+      ? await this.visualOrchestrator.attachVisualForPost(
           tenantId, userId, contentId, post, productId, ctx.kit, 0, ctx,
-        );
-        if (templated) return;
-      }
+        )
+      : false;
+    if (ok) return;
 
-      if (!post.visualDescription?.trim()) {
-        if (kitHasComposeImageRoles(ctx.kit)) {
-          await this.recomposeVisualForContent(tenantId, userId, contentId, { mode: 'regenerate' });
-          return;
-        }
-        await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+    if (!post.visualDescription?.trim()) {
+      if (kitHasComposeImageRoles(ctx.kit)) {
+        await this.recomposeVisualForContent(tenantId, userId, contentId, { mode: 'regenerate' });
         return;
       }
-
-      const enriched = await this.buildEnrichedVisualDescription(
-        tenantId,
-        post.visualDescription,
-        productId,
-        ctx,
-      );
-      await this.imageGeneration.attachVisualToContent(
-        tenantId, userId, contentId, enriched, productId,
-      );
-    } catch (error) {
-      this.logger.warn(`Visual regenerate failed for content ${contentId}`, error);
+      await this.imageGeneration.regenerateForContent(tenantId, userId, contentId);
+      return;
     }
+
+    const enriched = await this.visualOrchestrator.buildEnrichedVisualDescription(
+      tenantId, post.visualDescription, productId ?? undefined, ctx,
+    );
+    await this.imageGeneration.attachVisualToContent(
+      tenantId, userId, contentId, enriched, productId,
+    );
   }
 
   private async attachVisualForPost(
-    tenantId: string,
-    userId: string,
-    contentId: string,
-    post: SocialCopyPost,
-    productId: string | null | undefined,
-    kit: GenerationContext['kit'],
-    postIndex: number,
-    ctx: GenerationContext,
-    recentRecipeIds?: string[],
+    tenantId: string, userId: string, contentId: string,
+    post: SocialCopyPost, productId: string | null | undefined,
+    kit: GenerationContext['kit'], postIndex: number,
+    ctx: GenerationContext, recentRecipeIds?: string[],
   ): Promise<boolean> {
-    const visualFormat = normalizeContentVisualFormat(post.visualFormat);
-
-    if (visualFormat === 'talking-head' && productId) {
-      const talkingHeadAttached = await this.talkingHeadComposer.attachToContent(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-      );
-      if (talkingHeadAttached) {
-        return true;
-      }
-      this.logger.log(
-        `Talking-head falló para content ${contentId}; reintentando con plantilla y capturas del media kit`,
-      );
-
-      const staticPost: SocialCopyPost = { ...post, visualFormat: 'image' };
-      const templatedAfterTalkingHead = await this.templateComposer.tryComposeFromTemplate(
-        tenantId,
-        userId,
-        contentId,
-        staticPost,
-        productId,
-        kit,
-        postIndex,
-        { resolvedProfile: ctx.resolvedProfile },
-      );
-      if (templatedAfterTalkingHead.attached) {
-        return true;
-      }
-    }
-
-    const intent = resolveVisualIntent(post);
-    const skipTemplateForAiArt = intent.preferLayout === 'ai-art';
-
-    const cmPortraitAssetId = productId
-      ? await this.cmCharacter.resolveDefaultPortraitAssetId(tenantId, productId).catch(() => null)
-      : null;
-    const creativeSceneOptions = {
-      postIndex,
-      cmPortraitReady: Boolean(cmPortraitAssetId),
-    };
-
-    if (productId && wantsProductScreenShowcase(post) && shouldUseArtKitCompose(post, kit, creativeSceneOptions)) {
-      const artKitResult = await this.artKitCompose.tryCompose(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        kit,
-        postIndex,
-        {
-          resolvedProfile: ctx.resolvedProfile,
-          competitorIntelBrief: ctx.competitorIntelBrief,
-        },
-        recentRecipeIds,
-      );
-      if (artKitResult.attached) {
-        if (artKitResult.recipeId) {
-          post.artRecipeId = artKitResult.recipeId;
-        }
-        return true;
-      }
-    }
-
-    if (productId && shouldUseCreativeScene(post, kit, creativeSceneOptions)) {
-      const sceneResult = await this.sceneKitCompose.tryCompose(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        kit,
-        postIndex,
-        {
-          resolvedProfile: ctx.resolvedProfile,
-          competitorIntelBrief: ctx.competitorIntelBrief,
-        },
-        recentRecipeIds,
-      );
-      if (sceneResult.attached) {
-        if (sceneResult.recipeId) {
-          post.artRecipeId = sceneResult.recipeId;
-        }
-        return true;
-      }
-    }
-
-    const skipTemplateForCreative = shouldSkipTemplateForCreativeScene(
-      post,
-      kit,
-      creativeSceneOptions,
+    return this.visualOrchestrator.attachVisualForPost(
+      tenantId, userId, contentId, post, productId, kit, postIndex, ctx, recentRecipeIds,
     );
-
-    if (productId && !skipTemplateForAiArt && !skipTemplateForCreative) {
-      const templated = await this.templateComposer.tryComposeFromTemplate(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        kit,
-        postIndex,
-        { resolvedProfile: ctx.resolvedProfile },
-      );
-      if (templated.attached) {
-        return true;
-      }
-    }
-
-    if (productId && shouldUseArtKitCompose(post, kit, creativeSceneOptions)) {
-      const artKitResult = await this.artKitCompose.tryCompose(
-        tenantId,
-        userId,
-        contentId,
-        post,
-        productId,
-        kit,
-        postIndex,
-        {
-          resolvedProfile: ctx.resolvedProfile,
-          competitorIntelBrief: ctx.competitorIntelBrief,
-        },
-        recentRecipeIds,
-      );
-      if (artKitResult.attached) {
-        if (artKitResult.recipeId) {
-          post.artRecipeId = artKitResult.recipeId;
-        }
-        return true;
-      }
-    }
-
-    if (kitHasComposeImageRoles(kit) && !isAiArtTemplateId(post.visualTemplateId)) {
-      this.logger.warn(
-        `Media kit disponible pero art-kit-compose y plantilla fallaron para content ${contentId}; no se usará imagen IA pura`,
-      );
-      return false;
-    }
-
-    if (!post.visualDescription?.trim() && !post.visualIntent?.subject?.trim()) {
-      return false;
-    }
-
-    try {
-      let visualDescription = post.visualDescription?.trim() ?? '';
-      let artRecipeBasePrompt: string | undefined;
-      let artRecipeId: string | undefined;
-
-      if (shouldUseArtPromptLibrary(post, kit)) {
-        const brandKit = productId
-          ? resolveVisualBrandKit(
-              await this.productService.findOwnedEntity(tenantId, productId),
-              ctx.resolvedProfile,
-            )
-          : null;
-
-        const resolved = await this.artPromptSelector.resolveVisualPrompt(
-          post,
-          {
-            industry: ctx.resolvedProfile?.industry ?? null,
-            competitorIntelBrief: ctx.competitorIntelBrief,
-          },
-          brandKit,
-          recentRecipeIds,
-          kit,
-        );
-
-        if (resolved.recipeId) {
-          artRecipeId = resolved.recipeId;
-          artRecipeBasePrompt = resolved.artRecipeBasePrompt;
-          visualDescription = resolved.visualDescription;
-          post.artRecipeId = resolved.recipeId;
-        } else if (resolved.visualDescription) {
-          visualDescription = resolved.visualDescription;
-        }
-      } else if (visualDescription) {
-        visualDescription = await this.buildEnrichedVisualDescription(
-          tenantId,
-          visualDescription,
-          productId ?? undefined,
-          ctx,
-        );
-      }
-
-      if (!visualDescription.trim()) {
-        return false;
-      }
-
-      const imageResult = await this.imageGeneration.attachVisualToContent(
-        tenantId,
-        userId,
-        contentId,
-        visualDescription,
-        productId ?? undefined,
-        {
-          artRecipeBasePrompt,
-          artRecipeId,
-        },
-      );
-      return imageResult?.status === 'completed';
-    } catch (error) {
-      this.logger.warn(`Image attach failed for content ${contentId}`, error);
-      return false;
-    }
   }
 
   private async buildEnrichedVisualDescription(
-    tenantId: string,
-    visualDescription: string,
-    productId: string | undefined,
-    ctx: GenerationContext,
+    tenantId: string, visualDescription: string,
+    productId: string | undefined, ctx: GenerationContext,
   ): Promise<string> {
-    if (!productId) {
-      return visualDescription;
-    }
-    const product = await this.productService.findOwnedEntity(tenantId, productId);
-    const brandKit = resolveVisualBrandKit(product, ctx.resolvedProfile);
-    return enrichVisualDescriptionForAi(
-      visualDescription,
-      brandKit,
-      ctx.competitorIntelBrief,
+    return this.visualOrchestrator.buildEnrichedVisualDescription(
+      tenantId, visualDescription, productId, ctx,
     );
   }
 }

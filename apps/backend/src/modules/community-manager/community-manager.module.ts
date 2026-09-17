@@ -16,6 +16,7 @@ import { CompanyProfileEntity } from '../company-profile/infrastructure/typeorm/
 import { CompanyProfileSectionEntity } from '../company-profile/infrastructure/typeorm/company-profile-section.entity';
 import { TenantEntity } from '../tenant/infrastructure/typeorm/tenant.entity';
 import { OpenRouterSocialCopyAdapter } from './adapters/openrouter-social-copy.adapter';
+import { SocialCopyToolOrchestratorService } from './adapters/social-copy-tool-orchestrator.service';
 import { StubSocialCopyAdapter } from './adapters/stub-social-copy.adapter';
 import {
   SOCIAL_COPY_ADAPTER,
@@ -38,6 +39,7 @@ import { TonePresetController } from './tone-preset.controller';
 import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
 import { ArtPromptSelectorService } from './art-prompt-library/art-prompt-selector.service';
 import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.service';
+import { VisualOrchestratorService } from './visual-orchestrator.service';
 
 @Module({
   imports: [
@@ -78,7 +80,9 @@ import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.s
     ArtPromptSelectorService,
     ArtKitComposeService,
     SceneKitComposeService,
+    VisualOrchestratorService,
     StubSocialCopyAdapter,
+    SocialCopyToolOrchestratorService,
     OpenRouterSocialCopyAdapter,
     {
       provide: SOCIAL_COPY_ADAPTER,

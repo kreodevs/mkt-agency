@@ -1,32 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Bell,
-  Bot,
-  CalendarDays,
-  CheckCheck,
-  ClipboardCheck,
-  Crosshair,
-  FolderOpen,
-  Layers,
-  PartyPopper,
-  Send,
-  Trash2,
-  Users,
-  XCircle,
+  CalendarDays, ClipboardCheck, Layers, PartyPopper, Send, Trash2, Users, XCircle,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CopilotStatusPanel } from '@/components/copilot/CopilotStatusPanel';
 import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
+import { InboxNotificationList } from '@/components/publication-inbox/InboxNotificationList';
+import { InboxSidebar } from '@/components/publication-inbox/InboxSidebar';
 import {
-  InboxRejectFollowUpDialog,
-  type InboxRejectFollowUpContext,
+  InboxRejectFollowUpDialog, type InboxRejectFollowUpContext,
 } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
-import { InboxKitPanel } from '@/components/publication-inbox/InboxKitPanel';
-import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
 import { InboxPurgeDialog } from '@/components/publication-inbox/InboxPurgeDialog';
 import { InboxContentDeleteDialog } from '@/components/publication-inbox/InboxContentDeleteDialog';
 import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPanel';
+import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
@@ -39,31 +26,17 @@ import { StaggerGroup } from '@/components/molecules/Reveal';
 import { toast } from '@/components/molecules/Sonner';
 import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import { useInboxKeyboardHints } from '@/hooks/useInboxKeyboardHints';
+import { excludeTodayFromPending, getTodayContentIds } from '@/lib/inbox-today.util';
 import {
-  excludeTodayFromPending,
-  getTodayContentIds,
-} from '@/lib/inbox-today.util';
-import {
-  bulkApproveInbox,
-  bulkDeleteInboxContents,
-  getPublicationInbox,
-  getSohoSummary,
-  markAllNotificationsRead,
-  markNotificationRead,
+  bulkApproveInbox, bulkDeleteInboxContents, getPublicationInbox, getSohoSummary,
+  markAllNotificationsRead, markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
-import { LIBRARY_ROUTE } from '@/lib/tenant-navigation';
 import { useAdvancedNav, useCopilotUiStore } from '@/store/copilot-ui';
 import { useOperatingProfile } from '@/hooks/useOperatingProfile';
 import {
-  inboxNeedsHealSync,
-  inboxQueryKey,
-  isCopilotPrepareWeekMutation,
-  syncInboxAfterGeneration,
+  inboxNeedsHealSync, inboxQueryKey, isCopilotPrepareWeekMutation, syncInboxAfterGeneration,
 } from '@/lib/inbox-sync.util';
-import { withActiveProductQuery } from '@/store/active-product';
-
-const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
 
 export default function PublicationInboxPage() {
   const queryClient = useQueryClient();
@@ -84,15 +57,12 @@ export default function PublicationInboxPage() {
   const urlProductId = searchParams.get('productId');
 
   useEffect(() => {
-    if (urlProductId) {
-      setActiveProduct(urlProductId);
-    }
+    if (urlProductId) setActiveProduct(urlProductId);
   }, [urlProductId, setActiveProduct]);
 
-  const prepareWeekInFlight =
-    useIsMutating({
-      predicate: (mutation) => isCopilotPrepareWeekMutation(mutation.options.mutationKey),
-    }) > 0;
+  const prepareWeekInFlight = useIsMutating({
+    predicate: (mutation) => isCopilotPrepareWeekMutation(mutation.options.mutationKey),
+  }) > 0;
   const wasPreparingRef = useRef(false);
 
   const inboxQuery = useQuery({
@@ -135,12 +105,8 @@ export default function PublicationInboxPage() {
       void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
       void queryClient.invalidateQueries({ queryKey: ['calendar'] });
       setSelectedIds(new Set());
-      if (result.approved > 0) {
-        toast.success(`${result.approved} publicación(es) aprobada(s)`);
-      }
-      if (result.failed.length > 0) {
-        toast.error(`${result.failed.length} no se pudieron aprobar`);
-      }
+      if (result.approved > 0) toast.success(`${result.approved} publicación(es) aprobada(s)`);
+      if (result.failed.length > 0) toast.error(`${result.failed.length} no se pudieron aprobar`);
     },
     onError: () => toast.error('No se pudo aprobar en lote'),
   });
@@ -152,12 +118,8 @@ export default function PublicationInboxPage() {
       void queryClient.invalidateQueries({ queryKey: ['calendar'] });
       setSelectedIds(new Set());
       setBulkDeleteOpen(false);
-      if (result.deleted > 0) {
-        toast.success(`${result.deleted} publicación(es) eliminada(s)`);
-      }
-      if (result.failed.length > 0) {
-        toast.error(`${result.failed.length} no se pudieron eliminar`);
-      }
+      if (result.deleted > 0) toast.success(`${result.deleted} publicación(es) eliminada(s)`);
+      if (result.failed.length > 0) toast.error(`${result.failed.length} no se pudieron eliminar`);
     },
     onError: () => toast.error('No se pudo eliminar en lote'),
   });
@@ -174,14 +136,7 @@ export default function PublicationInboxPage() {
   const rejected = data?.rejected ?? [];
   const notifications = data?.notifications ?? [];
   const todayIds = useMemo(() => getTodayContentIds(pending, ready), [pending, ready]);
-  const pendingRest = useMemo(
-    () => excludeTodayFromPending(pending, todayIds),
-    [pending, todayIds],
-  );
-
-  const handleRejected = (context: InboxRejectFollowUpContext) => {
-    setRejectFollowUp(context);
-  };
+  const pendingRest = useMemo(() => excludeTodayFromPending(pending, todayIds), [pending, todayIds]);
 
   useSohoBrowserNotifications(notifications, sohoMode);
   useInboxKeyboardHints(sohoMode);
@@ -201,31 +156,25 @@ export default function PublicationInboxPage() {
   };
 
   const toggleSelectAll = () => {
-    if (allPendingSelected) {
-      setSelectedIds(new Set());
-      return;
-    }
+    if (allPendingSelected) { setSelectedIds(new Set()); return; }
     setSelectedIds(new Set(pendingRest.map((item) => item.contentId)));
   };
 
-  const handleMarkNotificationRead = async (id: string) => {
-    await markNotificationRead(id);
-    void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+  const handleMarkRead = (id: string) => {
+    void markNotificationRead(id).then(() => queryClient.invalidateQueries({ queryKey: ['publication-inbox'] }));
   };
 
-  const handleMarkAllRead = async () => {
-    await markAllNotificationsRead();
-    void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
-    toast.message('Notificaciones marcadas como leídas');
+  const handleMarkAllRead = () => {
+    void markAllNotificationsRead().then(() => {
+      queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      toast.message('Notificaciones marcadas como leídas');
+    });
   };
 
   if (inboxQuery.isLoading) {
     return (
       <DashboardShell>
-        <PageHeader
-          title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'}
-          description="Preparar · Revisar · Publicar — el copiloto orquesta; tú apruebas y publicas"
-        />
+        <PageHeader title={sohoMode ? 'Tu copiloto de marketing' : 'Tu bandeja'} description="Preparar · Revisar · Publicar" />
         <InboxPageSkeleton />
       </DashboardShell>
     );
@@ -242,21 +191,14 @@ export default function PublicationInboxPage() {
         actions={
           <div className="flex flex-wrap items-center gap-[var(--spacing-sm)]">
             {!sohoMode && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-[var(--destructive)] hover:text-[var(--destructive)]"
-                onClick={() => setPurgeOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Limpiar contenido
+              <Button type="button" variant="outline" size="sm" className="gap-1.5 text-[var(--destructive)]"
+                onClick={() => setPurgeOpen(true)}>
+                <Trash2 className="h-4 w-4" /> Limpiar contenido
               </Button>
             )}
             <Link to="/calendario">
               <Button type="button" variant="outline" size="sm" className="gap-1.5">
-                <CalendarDays className="h-4 w-4" />
-                Calendario
+                <CalendarDays className="h-4 w-4" /> Calendario
               </Button>
             </Link>
           </div>
@@ -266,209 +208,92 @@ export default function PublicationInboxPage() {
       {sohoMode && (
         <div className="page-hero mb-[var(--spacing-lg)]">
           <div className="relative flex flex-col gap-[var(--spacing-sm)] pl-[var(--spacing-md)]">
-            <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
-              Flujo diario
-            </p>
-            <p className="type-ui-sans-medium max-w-2xl text-[var(--foreground)]">
-              Prepara la semana con IA, aprueba borradores y publica en tus redes con un clic.
-            </p>
-            <p className="type-body-serif-s max-w-xl text-[var(--foreground-muted)]">
-              El copiloto descubre competidores, genera copy y visuales; tú mantienes el control
-              editorial antes de publicar.
-            </p>
+            <p className="type-detail-xs font-semibold uppercase tracking-wider text-[var(--brand)]">Flujo diario</p>
+            <p className="type-ui-sans-medium max-w-2xl text-[var(--foreground)]">Prepara la semana con IA, aprueba borradores y publica.</p>
+            <p className="type-body-serif-s max-w-xl text-[var(--foreground-muted)]">El copiloto descubre competidores, genera copy y visuales.</p>
           </div>
         </div>
       )}
 
       {advancedNav && !advancedGuideDismissed && (
         <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-[var(--spacing-md)]">
-          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]" aria-hidden />
+          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]" />
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--foreground)]">Vista completa activada</p>
-            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
-              Tu flujo diario sigue en <strong>Inicio</strong>: prepara la semana, aprueba y copia
-              para publicar. <strong>Resumen</strong> muestra KPIs; el resto son herramientas cuando
-              las necesites.
-            </p>
+            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">Tu flujo diario sigue en Inicio.</p>
           </div>
-          <Button type="button" size="sm" variant="outline" onClick={dismissAdvancedGuide}>
-            Entendido
-          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={dismissAdvancedGuide}>Entendido</Button>
         </div>
       )}
 
       {prepareWeekInFlight && (
         <div className="mb-[var(--spacing-lg)]">
-          <AiThinkingPanel
-            state="weaving"
-            title="Tu copiloto está generando publicaciones"
-            description="Analiza competencia, redacta copy y prepara visuales. Aparecerán en «Por aprobar» en unos momentos."
-          />
+          <AiThinkingPanel state="weaving" title="Tu copiloto está generando publicaciones"
+            description="Aparecerán en «Por aprobar» en unos momentos." />
         </div>
       )}
 
-      {summary && sohoMode && (
-        <SohoResultsBanner
-          leadsToday={summary.leadsToday}
-          leadsThisWeek={summary.leadsThisWeek}
-          attributedLeadsThisWeek={summary.attributedLeadsThisWeek}
-        />
-      )}
+      {summary && sohoMode && <SohoResultsBanner leadsToday={summary.leadsToday} leadsThisWeek={summary.leadsThisWeek} attributedLeadsThisWeek={summary.attributedLeadsThisWeek} />}
 
       {welcome && (
         <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--success)]/30 bg-[var(--success)]/5 p-[var(--spacing-md)]">
-          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" aria-hidden />
+          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" />
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--success)]">¡Tu semana está lista!</p>
-            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
-              Revisa lo de hoy, aprueba lo que te guste y usa Copiar texto + Abrir red para publicar.
-            </p>
+            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">Revisa, aprueba y publica.</p>
           </div>
-          <Button type="button" size="sm" variant="outline" onClick={dismissWelcome}>
-            Entendido
-          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={dismissWelcome}>Entendido</Button>
         </div>
       )}
 
-      {notifications.length > 0 && (
-        <Card
-          id="inbox-notifications"
-          className="mb-[var(--spacing-lg)] scroll-mt-24"
-          title="Avisos"
-          subtitle="Del copiloto"
-        >
-          <div className="mb-[var(--spacing-md)] flex justify-end">
-            <Button type="button" size="sm" variant="ghost" onClick={() => void handleMarkAllRead()}>
-              <CheckCheck className="mr-1 h-4 w-4" />
-              Marcar todas leídas
-            </Button>
-          </div>
-          <ul className="space-y-[var(--spacing-sm)]">
-            {notifications.map((notification) => (
-              <li
-                key={notification.id}
-                className="flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)]"
-              >
-                <Bell className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[var(--foreground)]">{notification.title}</p>
-                  <p className="text-xs text-[var(--foreground-muted)]">{notification.body}</p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void handleMarkNotificationRead(notification.id)}
-                >
-                  Leído
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <InboxNotificationList notifications={notifications} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />
 
       {!(sohoMode && summary) && (
         <div className="mb-[var(--spacing-lg)] grid gap-[var(--spacing-md)] sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Por aprobar"
-            value={data?.stats.pendingCount ?? 0}
-            icon={<ClipboardCheck className="h-5 w-5" aria-hidden />}
-            iconTone="warning"
-          />
-          <StatsCard
-            title="Listas para publicar"
-            value={data?.stats.readyCount ?? 0}
-            icon={<Send className="h-5 w-5" aria-hidden />}
-            iconTone="success"
-          />
-          <StatsCard
-            title="Rechazadas"
-            value={data?.stats.rejectedCount ?? 0}
-            icon={<XCircle className="h-5 w-5" aria-hidden />}
-            iconTone="warning"
-          />
-          <StatsCard
-            title="Contactos hoy"
-            value={summary?.leadsToday ?? 0}
-            description={summary ? `${summary.leadsThisWeek} esta semana` : undefined}
-            icon={<Users className="h-5 w-5" aria-hidden />}
-            iconTone="primary"
-          />
+          <StatsCard title="Por aprobar" value={data?.stats.pendingCount ?? 0} icon={<ClipboardCheck className="h-5 w-5" />} iconTone="warning" />
+          <StatsCard title="Listas para publicar" value={data?.stats.readyCount ?? 0} icon={<Send className="h-5 w-5" />} iconTone="success" />
+          <StatsCard title="Rechazadas" value={data?.stats.rejectedCount ?? 0} icon={<XCircle className="h-5 w-5" />} iconTone="warning" />
+          <StatsCard title="Contactos hoy" value={summary?.leadsToday ?? 0} description={summary ? `${summary.leadsThisWeek} esta semana` : undefined} icon={<Users className="h-5 w-5" />} iconTone="primary" />
         </div>
       )}
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
         <div className="space-y-[var(--spacing-lg)] lg:col-span-2 lg:order-1">
-          <TodayPublishPanel
-            pending={pending}
-            ready={ready}
-            strategyFocus={summary?.strategyFocus}
-          />
+          <TodayPublishPanel pending={pending} ready={ready} strategyFocus={summary?.strategyFocus} />
 
-          <Card
-            id="inbox-pending"
-            className="scroll-mt-24"
+          <Card id="inbox-pending" className="scroll-mt-24"
             title={todayIds.size > 0 ? 'Resto por aprobar' : 'Por aprobar'}
-            subtitle={`${pendingRest.length} pieza(s) sugerida(s) por la agencia`}
+            subtitle={`${pendingRest.length} pieza(s) sugerida(s)`}
           >
             {pendingRest.length === 0 ? (
-              <EmptyState
-                compact
-                title={todayIds.size > 0 ? 'Nada más pendiente esta semana' : 'Sin pendientes'}
-                description={
-                  todayIds.size > 0
-                    ? 'Las piezas de hoy están arriba en «Hoy publicas esto».'
-                    : 'No hay publicaciones pendientes de aprobación esta semana.'
-                }
-              />
+              <EmptyState compact title={todayIds.size > 0 ? 'Nada más pendiente' : 'Sin pendientes'}
+                description={todayIds.size > 0 ? 'Las piezas de hoy están arriba.' : 'No hay publicaciones pendientes.'} />
             ) : (
               <div className="space-y-[var(--spacing-md)]">
                 {!sohoMode && (
                   <div className="flex flex-wrap items-center justify-between gap-[var(--spacing-sm)]">
                     <label className="flex items-center gap-[var(--spacing-sm)] text-xs text-[var(--foreground-muted)]">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--border)]"
-                        checked={allPendingSelected}
-                        onChange={toggleSelectAll}
-                      />
+                      <input type="checkbox" className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--border)]"
+                        checked={allPendingSelected} onChange={toggleSelectAll} />
                       Seleccionar todas
                     </label>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={selectedIds.size === 0 || bulkApproveMutation.isPending}
-                      onClick={() => bulkApproveMutation.mutate([...selectedIds])}
-                    >
-                      Aprobar seleccionadas ({selectedIds.size})
+                    <Button type="button" size="sm" disabled={selectedIds.size === 0 || bulkApproveMutation.isPending}
+                      onClick={() => bulkApproveMutation.mutate([...selectedIds])}>
+                      Aprobar ({selectedIds.size})
                     </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="text-[var(--destructive)] hover:text-[var(--destructive)]"
+                    <Button type="button" size="sm" variant="outline" className="text-[var(--destructive)]"
                       disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending}
-                      onClick={() => setBulkDeleteOpen(true)}
-                    >
-                      Eliminar seleccionadas ({selectedIds.size})
+                      onClick={() => setBulkDeleteOpen(true)}>
+                      Eliminar ({selectedIds.size})
                     </Button>
                   </div>
                 )}
-
                 <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
                   {pendingRest.map((item) => (
-                    <InboxItemCard
-                      key={item.contentId}
-                      item={item}
-                      selectable={!sohoMode}
-                      selected={selectedIds.has(item.contentId)}
-                      onToggleSelect={toggleSelect}
-                      showApproval
-                      showEditorLink={advancedNav}
-                      sohoMode
-                      onRejected={handleRejected}
-                    />
+                    <InboxItemCard key={item.contentId} item={item} selectable={!sohoMode}
+                      selected={selectedIds.has(item.contentId)} onToggleSelect={toggleSelect}
+                      showApproval showEditorLink={advancedNav} sohoMode
+                      onRejected={setRejectFollowUp} />
                   ))}
                 </StaggerGroup>
               </div>
@@ -476,18 +301,10 @@ export default function PublicationInboxPage() {
           </Card>
 
           {rejected.length > 0 && (
-            <Card
-              title="Rechazadas"
-              subtitle={`${rejected.length} pieza(s) — prueba otro formato o archívalas`}
-            >
+            <Card title="Rechazadas" subtitle={`${rejected.length} pieza(s)`}>
               <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
                 {rejected.map((item) => (
-                  <InboxItemCard
-                    key={item.contentId}
-                    item={item}
-                    sohoMode
-                    onRejected={handleRejected}
-                  />
+                  <InboxItemCard key={item.contentId} item={item} sohoMode onRejected={setRejectFollowUp} />
                 ))}
               </StaggerGroup>
             </Card>
@@ -496,113 +313,21 @@ export default function PublicationInboxPage() {
           {upcoming.length > 0 && (
             <Card title="Próximas" subtitle="Programadas a futuro">
               <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
-                {upcoming.map((item) => (
-                  <InboxItemCard key={item.contentId} item={item} sohoMode />
-                ))}
+                {upcoming.map((item) => <InboxItemCard key={item.contentId} item={item} sohoMode />)}
               </StaggerGroup>
             </Card>
           )}
         </div>
 
-        <div className="space-y-[var(--spacing-lg)] lg:order-2">
-          <CopilotStatusPanel productId={activeProductId ?? undefined} />
-
-          {showCopilotAgents && (
-            <Card title="Copiloto IA" subtitle="Complemento manual de tu semana">
-              <div className="space-y-[var(--spacing-sm)] text-sm">
-                <Link
-                  to={withActiveProductQuery(COPILOT_COMPETITORS_PATH)}
-                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--brand)]/30 bg-[var(--brand-muted)]/50 p-[var(--spacing-md)] transition-colors hover:border-[var(--brand)]"
-                >
-                  <Crosshair className="h-4 w-4 shrink-0 text-[var(--brand)]" />
-                  <span>
-                    <span className="block font-medium text-[var(--foreground)]">
-                      Análisis de competidores
-                    </span>
-                    <span className="text-xs text-[var(--foreground-muted)]">
-                      Descubre rivales y genera el reporte estratégico
-                    </span>
-                  </span>
-                </Link>
-                {[
-                  { to: '/agents', label: 'Catálogo de agentes', icon: Bot },
-                  { to: '/agents/brand-interview', label: 'Brand Analyst', icon: Bot },
-                  { to: '/agents/image-generator', label: 'Generador de imágenes', icon: Bot },
-                ].map((item) => (
-                  <Link
-                    key={item.to}
-                    to={withActiveProductQuery(item.to)}
-                    className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
-                  >
-                    <item.icon className="h-4 w-4 shrink-0 text-[var(--primary)]" />
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          <InboxKitPanel items={ready} />
-
-          <Card
-            title="Librería multimedia"
-            subtitle="Sube logos, fotos y material para tus publicaciones"
-          >
-            <Link
-              to={LIBRARY_ROUTE}
-              className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] text-sm transition-colors hover:border-[var(--primary)]"
-            >
-              <FolderOpen className="h-4 w-4 shrink-0 text-[var(--primary)]" />
-              Abrir librería de assets
-            </Link>
-          </Card>
-
-          {advancedNav && (
-            <Card title="Más herramientas" subtitle="Cuando necesites ir más allá del flujo diario">
-              <div className="space-y-[var(--spacing-sm)] text-sm">
-                <Link
-                  to="/agency-overview"
-                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
-                >
-                  Resumen y KPIs
-                </Link>
-                <Link
-                  to={`/community${activeProductId ? `?productId=${activeProductId}` : ''}`}
-                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
-                >
-                  Generar copy manual (Community Manager)
-                </Link>
-                <Link
-                  to="/calendar"
-                  className="flex items-center gap-[var(--spacing-sm)] rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]"
-                >
-                  Calendario editorial
-                </Link>
-              </div>
-            </Card>
-          )}
-        </div>
+        <InboxSidebar productId={activeProductId} showCopilotAgents={showCopilotAgents} advancedNav={advancedNav} readyItems={ready} />
       </div>
 
-      <InboxRejectFollowUpDialog
-        context={rejectFollowUp}
-        onClose={() => setRejectFollowUp(null)}
-      />
-
-      <InboxPurgeDialog
-        open={purgeOpen}
-        productId={activeProductId}
-        onClose={() => setPurgeOpen(false)}
-      />
-
-      <InboxContentDeleteDialog
-        open={bulkDeleteOpen}
-        title="Eliminar seleccionadas"
-        description={`¿Eliminar ${selectedIds.size} publicación(es)? Incluye aprobadas y todas sus versiones.`}
-        loading={bulkDeleteMutation.isPending}
-        onClose={() => setBulkDeleteOpen(false)}
-        onConfirm={() => bulkDeleteMutation.mutate([...selectedIds])}
-      />
+      <InboxRejectFollowUpDialog context={rejectFollowUp} onClose={() => setRejectFollowUp(null)} />
+      <InboxPurgeDialog open={purgeOpen} productId={activeProductId} onClose={() => setPurgeOpen(false)} />
+      <InboxContentDeleteDialog open={bulkDeleteOpen} title="Eliminar seleccionadas"
+        description={`¿Eliminar ${selectedIds.size} publicación(es)?`}
+        loading={bulkDeleteMutation.isPending} onClose={() => setBulkDeleteOpen(false)}
+        onConfirm={() => bulkDeleteMutation.mutate([...selectedIds])} />
     </DashboardShell>
   );
 }
