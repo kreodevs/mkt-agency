@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { feedbackRequestsMediaKit } from '../domain/feedback-visual-intent.util';
 import { styleDesignCue } from '../domain/visual-palette-expand.util';
 import { styleLabel } from '../domain/visual-brand-kit.util';
-import { LlmClient } from '../../../shared/ai/llm.client';
+import { LlmClient, type ToolDefinitionForLlm } from '../../../shared/ai/llm.client';
+import { ToolRegistryService } from '../../../shared/ai/tools/tool-registry.service';
+import type { JsonSchema, ToolContext } from '../../../shared/ai/tools/tool.interface';
 import {
   SocialCopyAdapterPort,
   SocialCopyBatch,
@@ -20,7 +22,10 @@ const PLATFORM_GUIDES: Record<string, string> = {
 
 @Injectable()
 export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
-  constructor(private readonly llm: LlmClient) {}
+  constructor(
+    private readonly llm: LlmClient,
+    private readonly toolRegistry: ToolRegistryService,
+  ) {}
 
   async generate(context: SocialCopyContext): Promise<SocialCopyBatch> {
     const platformGuides = context.platforms
@@ -135,7 +140,15 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
             ].join('\n')
           : 'No hay CM virtual lista: NO uses visualFormat talking-head. TikTok→image vertical.';
 
-    const systemPrompt =
+    const useTools = context.enableVisualTools !== false;
+
+    const toolContext: ToolContext = {
+      tenantId: context.tenantId,
+      productId: context.productId ?? null,
+      userId: null,
+    };
+
+    const systemPromptBuilder = (toolResults: string): string =>
       'Eres un Community Manager senior experto en marketing digital. ' +
       'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
       'Si hay un producto en foco, todos los posts deben vender o dar valor sobre ESE producto únicamente. ' +
@@ -181,13 +194,16 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
         publishingGuide:
           'guía de publicación en lenguaje de negocio explicando la estrategia detrás de los posts',
         generatedAt: 'ISO8601',
-      });
+      }) +
+      (toolResults
+        ? `\n\n---\nDATOS ENRIQUECIDOS DEL SISTEMA (usa esta información para contextualizar visualDescription, visualIntent, y la selección de estilo visual):\n${toolResults}`
+        : '');
 
     const countInstruction = context.postsPerPlatform
       ? `Genera exactamente ${context.postsPerPlatform} posts para CADA plataforma (${context.platforms.join(', ')}), ${context.count} posts en total. Cada plataforma debe aparecer ${context.postsPerPlatform} veces en el array posts con contenido distinto.`
       : `Genera ${context.count} posts de alta calidad para redes sociales siguiendo las guías de cada plataforma.`;
 
-    const userPrompt = [
+    const baseUserPrompt = [
       `Plataformas objetivo: ${context.platforms.join(', ')}`,
       context.postsPerPlatform
         ? `Cantidad: ${context.postsPerPlatform} posts por plataforma (${context.count} en total)`
@@ -233,9 +249,71 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
 
     const temperature = context.revisionBrief?.trim() ? 0.45 : 0.6;
 
+    if (useTools) {
+      const toolDefinitions = this.buildToolDefinitions();
+      const toolResults: string[] = [];
+
+      const firstResponse = await this.llm.chat(
+        systemPromptBuilder(''),
+        baseUserPrompt,
+        {
+          taskType: 'social_copy',
+          maxTokens: 1024,
+          temperature: 0.3,
+          tools: toolDefinitions,
+          toolChoice: 'auto',
+        },
+      );
+
+      for (const call of firstResponse.toolCalls) {
+        const tool = this.toolRegistry.get(call.name);
+        if (!tool) {
+          toolResults.push(`[${call.name}]: Tool not found`);
+          continue;
+        }
+        const executionResult = await tool.execute(call.args, toolContext);
+        const formattedResult = executionResult.success
+          ? `[${call.name}]: ${JSON.stringify(executionResult.result)}`
+          : `[${call.name}]: ERROR — ${executionResult.error}`;
+        toolResults.push(formattedResult);
+      }
+
+      const toolResultsBlock = toolResults.length > 0
+        ? toolResults.join('\n\n')
+        : '';
+
+      const result = await this.llm.chatJson<Record<string, unknown>>(
+        systemPromptBuilder(toolResultsBlock),
+        baseUserPrompt + (toolResultsBlock
+          ? `\n\nDATOS DEL SISTEMA (usa esta información para enriquecer tus decisiones visuales):\n${toolResultsBlock}`
+          : ''),
+        {
+          taskType: 'social_copy',
+          maxTokens: 8192,
+          temperature,
+        },
+      );
+
+      const normalized = normalizeSocialCopyBatch(result, {
+        count: context.count,
+        platforms: context.platforms,
+      });
+
+      if (!normalized.posts.length) {
+        throw new Error('Invalid social copy response from LLM');
+      }
+
+      return {
+        summary: normalized.summary,
+        posts: normalized.posts,
+        publishingGuide: normalized.publishingGuide,
+        generatedAt: normalized.generatedAt ?? new Date().toISOString(),
+      };
+    }
+
     const result = await this.llm.chatJson<Record<string, unknown>>(
-      systemPrompt,
-      userPrompt,
+      systemPromptBuilder(''),
+      baseUserPrompt,
       { taskType: 'social_copy', maxTokens: 8192, temperature },
     );
 
@@ -254,5 +332,14 @@ export class OpenRouterSocialCopyAdapter implements SocialCopyAdapterPort {
       publishingGuide: normalized.publishingGuide,
       generatedAt: normalized.generatedAt ?? new Date().toISOString(),
     };
+  }
+
+  private buildToolDefinitions(): ToolDefinitionForLlm[] {
+    const all = this.toolRegistry.getAllDefinitions();
+    return all.map((t) => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: t.inputSchema as unknown as Record<string, unknown>,
+    }));
   }
 }

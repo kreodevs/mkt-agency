@@ -404,6 +404,7 @@ export class CommunityManagerService {
           path, device, imageCount, videoCount,
         })),
         knowledgeContext: ctx.knowledgeContext,
+        enableVisualTools: true,
       }),
     );
   }

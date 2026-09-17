@@ -24,6 +24,7 @@ import {
 import { CommunityManagerBatchEntity } from './infrastructure/typeorm/community-manager-batch.entity';
 import { TonePresetEntity } from './infrastructure/typeorm/tone-preset.entity';
 import { AgentImageGenerationEntity } from '../agents/domain/agent-image-generation.entity';
+import { VisualToolsModule } from './visual-tools/visual-tools.module';
 import { ContentVisualComposerService } from './content-visual-composer.service';
 import { CmCharacterController } from './cm-character.controller';
 import { CmCharactersController } from './cm-characters.controller';
@@ -59,6 +60,7 @@ import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.s
     LlmModule,
     ContentModule,
     KnowledgeModule,
+    VisualToolsModule,
   ],
   controllers: [
     CommunityManagerController,

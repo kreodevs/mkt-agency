@@ -84,6 +84,8 @@ export interface SocialCopyContext {
   cmCharacters?: CmCharacterLlmOption[];
   /** Fragmentos RAG de marca (brief, posts aprobados, media kit). */
   knowledgeContext?: string | null;
+  /** Si usar el flujo de tools visuales para enriquecer el prompt (default: true). */
+  enableVisualTools?: boolean;
 }
 
 export interface SocialCopyAdapterPort {

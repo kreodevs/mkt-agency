@@ -13,9 +13,37 @@ interface ChatCompletionUsage {
   total_tokens?: number;
 }
 
+interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+interface ChatCompletionMessage {
+  content?: string | null;
+  tool_calls?: ToolCall[];
+}
+
+interface ChatCompletionChoice {
+  message?: ChatCompletionMessage;
+  finish_reason?: string;
+}
+
 interface ChatCompletionResponse {
-  choices?: Array<{ message?: { content?: string } }>;
+  choices?: ChatCompletionChoice[];
   usage?: ChatCompletionUsage;
+}
+
+interface OpenAiToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
 }
 
 export interface LlmChatOptions {
@@ -25,6 +53,22 @@ export interface LlmChatOptions {
   maxTokens?: number;
   tenantId?: string | null;
   userId?: string | null;
+}
+
+export interface ToolDefinitionForLlm {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export interface ChatResult {
+  content: string | null;
+  toolCalls: Array<{ name: string; args: Record<string, unknown>; id: string }>;
+}
+
+export interface DirectChatOptions extends LlmChatOptions {
+  tools?: ToolDefinitionForLlm[];
+  toolChoice?: 'auto' | 'none' | 'required';
 }
 
 @Injectable()
@@ -98,6 +142,82 @@ export class LlmClient {
           taskType: options.taskType,
           tenantId: options.tenantId,
           userId: options.userId,
+        });
+
+        this.circuitBreaker.recordSuccess(providerId);
+        return result;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        this.circuitBreaker.recordFailure(providerId, lastError);
+        const hasNextModel = index < modelsToTry.length - 1;
+
+        if (!hasNextModel || !this.shouldRetryWithFallback(lastError)) {
+          throw lastError;
+        }
+      }
+    }
+
+    throw lastError ?? new Error('LLM request failed');
+  }
+
+  async chat(
+    systemPrompt: string,
+    userPrompt: string,
+    options?: DirectChatOptions,
+  ): Promise<ChatResult> {
+    if (!options?.taskType) {
+      throw new Error('taskType is required for LLM requests');
+    }
+
+    const resolved = await this.llmConfig.resolve(options.taskType);
+
+    if (!resolved.enabled) {
+      throw new ServiceUnavailableException({
+        error: 'LLM task is disabled by platform configuration',
+        code: 'LLM_TASK_DISABLED',
+        taskType: resolved.taskType,
+      });
+    }
+
+    const primaryModel = options.model ?? resolved.model;
+    const modelsToTry = this.buildModelAttempts(primaryModel, resolved.fallbackModel);
+
+    if (!resolved.providerId) {
+      throw new ServiceUnavailableException({
+        error: 'No LLM provider configured for this task',
+        code: 'LLM_PROVIDER_MISSING',
+        taskType: resolved.taskType,
+      });
+    }
+
+    const providerId = resolved.providerId;
+    this.circuitBreaker.assertAllow(providerId, resolved.taskType);
+
+    let lastError: Error | null = null;
+
+    for (let index = 0; index < modelsToTry.length; index += 1) {
+      const model = modelsToTry[index];
+      const isFallbackAttempt = index > 0;
+
+      try {
+        if (isFallbackAttempt) {
+          this.logger.warn(
+            `Retrying LLM chat ${resolved.taskType} with fallback model ${model} (primary: ${primaryModel})`,
+          );
+        }
+
+        const result = await this.requestChat({
+          resolved,
+          systemPrompt,
+          userPrompt,
+          model,
+          temperature: options.temperature ?? resolved.temperature ?? 0.7,
+          maxTokens: options.maxTokens ?? resolved.maxTokens,
+          taskType: options.taskType,
+          tenantId: options.tenantId,
+          userId: options.userId,
+          tools: options.tools,
+          toolChoice: options.toolChoice,
         });
 
         this.circuitBreaker.recordSuccess(providerId);
@@ -211,5 +331,102 @@ export class LlmClient {
     });
 
     return JSON.parse(content) as T;
+  }
+
+  private async requestChat(params: {
+    resolved: ResolvedLlmExecutionConfig;
+    systemPrompt: string;
+    userPrompt: string;
+    model: string;
+    temperature: number;
+    maxTokens?: number;
+    taskType: LlmTaskType;
+    tenantId?: string | null;
+    userId?: string | null;
+    tools?: ToolDefinitionForLlm[];
+    toolChoice?: 'auto' | 'none' | 'required';
+  }): Promise<ChatResult> {
+    const {
+      resolved,
+      systemPrompt,
+      userPrompt,
+      model,
+      temperature,
+      maxTokens,
+      taskType,
+      tenantId,
+      userId,
+      tools,
+      toolChoice,
+    } = params;
+    const effectiveSystemPrompt =
+      resolved.systemPromptTemplate?.trim() || systemPrompt;
+
+    const body: Record<string, unknown> = {
+      model,
+      messages: [
+        { role: 'system', content: effectiveSystemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature,
+    };
+
+    if (maxTokens) {
+      body.max_tokens = maxTokens;
+    }
+
+    if (tools && tools.length > 0) {
+      body.tools = tools.map((t): OpenAiToolDefinition => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.inputSchema as Record<string, unknown>,
+        },
+      }));
+      if (toolChoice) {
+        body.tool_choice = toolChoice;
+      }
+    }
+
+    const response = await fetch(`${resolved.apiUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resolved.apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`LLM request failed (${response.status}): ${errorBody}`);
+    }
+
+    const payload = (await response.json()) as ChatCompletionResponse;
+    const message = payload.choices?.[0]?.message;
+
+    this.llmUsage.record({
+      tenantId,
+      userId,
+      taskType,
+      providerId: resolved.providerId,
+      model,
+      modality: 'chat',
+      promptTokens: payload.usage?.prompt_tokens ?? 0,
+      completionTokens: payload.usage?.completion_tokens ?? 0,
+      totalTokens: payload.usage?.total_tokens ?? 0,
+      status: 'success',
+    });
+
+    const content = message?.content ?? null;
+    const toolCalls: Array<{ name: string; args: Record<string, unknown>; id: string }> =
+      message?.tool_calls?.map((tc) => ({
+        name: tc.function.name,
+        args: JSON.parse(tc.function.arguments) as Record<string, unknown>,
+        id: tc.id,
+      })) ?? [];
+
+    return { content, toolCalls };
   }
 }
