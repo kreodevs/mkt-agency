@@ -13,15 +13,14 @@ describe('CommunityManagerService — extracted helpers', () => {
       {} as any, // llmProviders
       {} as any, // contentService
       {} as any, // imageGeneration
-      {} as any, // templateComposer
-      {} as any, // talkingHeadComposer
       {} as any, // productService
       { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
-      {} as any, // contextFacade
-      {} as any, // artPromptSelector
+      {} as any, // templateComposer
       {} as any, // artKitCompose
       {} as any, // sceneKitCompose
       {} as any, // cmCharacter
+      {} as any, // contextFacade
+      {} as any, // visualOrchestrator
     );
   });
 
@@ -111,22 +110,21 @@ describe('CommunityManagerService — extracted helpers', () => {
 
     beforeEach(() => {
       service = new CommunityManagerService(
-        {} as any,
-        {} as any,
-        {} as any,
-        {} as any,
-        {} as any,
-        {} as any,
+        {} as any, // batches
+        {} as any, // tenants
+        {} as any, // contents
+        {} as any, // adapter
+        {} as any, // llmProviders
+        {} as any, // contentService
         imageGeneration as any,
+        {} as any, // productService
+        {} as any, // productAppCaptureService
         templateComposer as any,
-        talkingHeadComposer as any,
-        {} as any,
-        { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
-        {} as any,
-        {} as any, // artPromptSelector
         {} as any, // artKitCompose
-        { tryCompose: jest.fn().mockResolvedValue({ attached: false, assetIds: [] }) } as any,
-        { resolveDefaultPortraitAssetId: jest.fn().mockResolvedValue(null) } as any,
+        {} as any, // sceneKitCompose
+        {} as any, // cmCharacter
+        {} as any, // contextFacade
+        {} as any, // visualOrchestrator
       );
       talkingHeadComposer.attachToContent.mockReset();
       templateComposer.tryComposeFromTemplate.mockReset();
@@ -210,15 +208,14 @@ describe('CommunityManagerService — extracted helpers', () => {
         {} as any,
         {} as any,
         imageGeneration as any,
-        templateComposer as any,
-        { attachToContent: jest.fn() } as any,
         {} as any,
         { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
+        templateComposer as any,
         {} as any,
-        {} as any, // artPromptSelector
-        {} as any, // artKitCompose
-        {} as any, // sceneKitCompose
-        {} as any, // cmCharacter
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
       );
       templateComposer.recomposeFromStoredTemplate.mockReset();
       templateComposer.tryComposeFromTemplate.mockReset();

@@ -110,7 +110,7 @@ export class ArtRecipeQueryTool implements AgentTool {
 
       if (input.includeSceneRecipes) {
         const sceneCandidates = filterArtPromptCandidates(
-          SCENE_RECIPES as unknown as typeof ART_PROMPT_RECIPES,
+          SCENE_PROMPT_RECIPES as unknown as typeof ART_PROMPT_RECIPES,
           filterInput,
         );
         const sceneRecipes: ArtRecipeSummary[] = sceneCandidates.slice(0, limit).map((c) => ({

@@ -15,8 +15,15 @@ import { ImageGenerationService } from '../agents/image-generation.service';
 import { ProductService } from '../product/product.service';
 import { ProductAppCaptureService } from '../product/product-app-capture.service';
 import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.constants';
-import { normalizeContentVisualFormat } from '../content/domain/content-visual-format.util';
+import { normalizeContentVisualFormat, visualFormatToFrameCount } from '../content/domain/content-visual-format.util';
 import { VisualTemplateComposerService } from './visual-template-composer.service';
+import { ArtKitComposeService } from './art-prompt-library/art-kit-compose.service';
+import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.service';
+import { buildMediaKitRevisionHint, parseFeedbackTargetFrames } from './domain/feedback-visual-intent.util';
+import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
+import { toLocalDateKey } from '../../shared/domain/date-key.util';
+import { wantsProductScreenShowcase, shouldUseCreativeScene } from './art-prompt-library/scene-routing.util';
+import { shouldUseArtKitCompose } from './art-prompt-library/visual-intent.util';
 import {
   SOCIAL_COPY_ADAPTER,
   SocialCopyAdapterPort,
@@ -77,6 +84,8 @@ export class CommunityManagerService {
     private readonly productService: ProductService,
     private readonly productAppCaptureService: ProductAppCaptureService,
     private readonly templateComposer: VisualTemplateComposerService,
+    private readonly artKitCompose: ArtKitComposeService,
+    private readonly sceneKitCompose: SceneKitComposeService,
     private readonly cmCharacter: CmCharacterService,
     private readonly contextFacade: GenerationContextFacade,
     private readonly visualOrchestrator: VisualOrchestratorService,
