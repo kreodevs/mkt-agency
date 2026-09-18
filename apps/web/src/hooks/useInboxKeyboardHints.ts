@@ -16,7 +16,7 @@ export function useInboxKeyboardHints(enabled: boolean) {
       if (isTypingTarget(event.target)) return;
       if (event.key === '?' && !event.metaKey && !event.ctrlKey) {
         toast.message(
-          'Tip: «Copiar texto» + «Abrir red» publican rápido. «Ver ficha completa» para aprobar con contexto.',
+          'Tip: «Copiar texto» + «Descargar artes» + «Abrir red» para publicar manual. «Ver ficha completa» para aprobar con contexto.',
           { duration: 6000 },
         );
       }

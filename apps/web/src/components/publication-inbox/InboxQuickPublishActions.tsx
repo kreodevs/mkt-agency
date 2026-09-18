@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   Check,
   Copy,
+  Download,
   ExternalLink,
   Link2,
   MessageCircle,
@@ -32,6 +33,7 @@ import { normalizeContentVisualFormat } from '@/lib/visual-format';
 import { VISUAL_DESIGN_PRESET_KINDS } from '@/lib/visual-template';
 import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
+import { useContentAssetDownload } from '@/hooks/useContentAssetDownload';
 import { useInboxPublishActions } from '@/hooks/useInboxPublishActions';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 import type { InboxRejectFollowUpContext } from '@/components/publication-inbox/InboxRejectFollowUpDialog';
@@ -246,6 +248,19 @@ export function InboxQuickPublishActions({
     canMarkPublishedManually,
   } = useInboxPublishActions(item);
 
+  const {
+    hasVisuals,
+    isDownloading,
+    assetIds,
+    downloadLabel,
+    downloadFirstVisual,
+    downloadAllVisuals,
+  } = useContentAssetDownload({
+    contentId: item.contentId,
+    title: item.title,
+    versionAssets: item.assets,
+  });
+
   const showN8nPublish = canPublishWithN8n && !hideArtPrimaryActions;
   const showMarkPublished = canMarkPublishedManually && !hideArtPrimaryActions;
 
@@ -400,6 +415,22 @@ export function InboxQuickPublishActions({
         <Copy className="mr-1 h-3.5 w-3.5" />
         Copiar texto
       </Button>
+      {hasVisuals ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={primaryButtonClass}
+          loading={isDownloading}
+          title="Descarga las imágenes o video para subir manualmente en la red"
+          onClick={() =>
+            void (assetIds.length === 1 ? downloadFirstVisual() : downloadAllVisuals())
+          }
+        >
+          <Download className="mr-1 h-3.5 w-3.5" />
+          {downloadLabel}
+        </Button>
+      ) : null}
       {showN8nPublish ? (
         <Button
           type="button"

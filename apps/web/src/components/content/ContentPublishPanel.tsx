@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Copy, Download, Check } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Select } from '@/components/atoms/Select';
 import { Card } from '@/components/molecules/Card';
 import { toast } from '@/components/molecules/Sonner';
-import { getImageGenerationByContentId } from '@/services/agents';
-import { getAssetDownloadUrl } from '@/services/assets';
 import {
   buildPostCopyText,
   CONTENT_PLATFORM_HINTS,
@@ -17,10 +14,7 @@ import {
   slugifyForFilename,
 } from '@/lib/content-platform';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
-import {
-  isVideoGeneration,
-  resolveContentVisualAssetIds,
-} from '@/lib/image-generation';
+import { useContentAssetDownload } from '@/hooks/useContentAssetDownload';
 import type { CmPlatform } from '@/services/community-manager';
 import { ContentPlatformBadge } from './ContentPlatformBadge';
 
@@ -46,20 +40,17 @@ export function ContentPublishPanel({
   savingPlatform = false,
 }: ContentPublishPanelProps) {
   const [copied, setCopied] = useState(false);
-  const [downloadingAssetId, setDownloadingAssetId] = useState<string | null>(null);
 
-  const generationQuery = useQuery({
-    queryKey: ['image-generation-by-content', contentId],
-    queryFn: () => getImageGenerationByContentId(contentId),
-  });
-
-  const generation = generationQuery.data?.generation ?? null;
-  const assetIds = resolveContentVisualAssetIds({ generation, versionAssets });
-  const isVideo = isVideoGeneration(generation?.metadata);
+  const {
+    assetIds,
+    isVideo,
+    downloadingAssetId,
+    downloadAsset,
+    downloadAllVisuals,
+  } = useContentAssetDownload({ contentId, title, versionAssets });
 
   const copyText = buildPostCopyText(title, sanitizePublishableCopy(body));
   const platformLabel = getContentPlatformLabel(platform);
-  const visualLabel = isVideo ? 'video' : assetIds.length > 1 ? 'carrusel' : 'imagen';
   const platformValue = isContentPlatform(platform) ? platform : '';
 
   const copyPost = async () => {
@@ -89,30 +80,6 @@ export function ContentPublishPanel({
     anchor.click();
     URL.revokeObjectURL(url);
     toast.success('Copy descargado');
-  };
-
-  const downloadAsset = async (assetId: string, index: number) => {
-    setDownloadingAssetId(assetId);
-    try {
-      const { url } = await getAssetDownloadUrl(assetId);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `${slugifyForFilename(title)}-${visualLabel}-${index + 1}`;
-      anchor.rel = 'noopener noreferrer';
-      anchor.target = '_blank';
-      anchor.click();
-      toast.success('Descarga iniciada');
-    } catch {
-      toast.error('No se pudo descargar el archivo');
-    } finally {
-      setDownloadingAssetId(null);
-    }
-  };
-
-  const downloadAllVisuals = async () => {
-    for (let index = 0; index < assetIds.length; index += 1) {
-      await downloadAsset(assetIds[index], index);
-    }
   };
 
   return (
