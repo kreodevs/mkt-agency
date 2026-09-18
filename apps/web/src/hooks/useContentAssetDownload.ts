@@ -31,7 +31,11 @@ export function useContentAssetDownload({
   const hasVisuals = assetIds.length > 0;
   const isDownloading = downloadingAssetId !== null;
 
-  const downloadAsset = async (assetId: string, index: number) => {
+  const downloadAsset = async (
+    assetId: string,
+    index: number,
+    options?: { quiet?: boolean },
+  ): Promise<boolean> => {
     setDownloadingAssetId(assetId);
     try {
       const { url } = await getAssetDownloadUrl(assetId);
@@ -41,18 +45,29 @@ export function useContentAssetDownload({
       anchor.rel = 'noopener noreferrer';
       anchor.target = '_blank';
       anchor.click();
-      toast.success('Descarga iniciada');
+      if (!options?.quiet) {
+        toast.success('Descarga iniciada');
+      }
+      return true;
     } catch {
-      toast.error('No se pudo descargar el archivo');
+      if (!options?.quiet) {
+        toast.error('No se pudo descargar el archivo');
+      }
+      return false;
     } finally {
       setDownloadingAssetId(null);
     }
   };
 
-  const downloadAllVisuals = async () => {
+  const downloadAllVisuals = async (options?: { quiet?: boolean }) => {
+    let allSucceeded = true;
     for (let index = 0; index < assetIds.length; index += 1) {
-      await downloadAsset(assetIds[index], index);
+      const succeeded = await downloadAsset(assetIds[index], index, options);
+      if (!succeeded) {
+        allSucceeded = false;
+      }
     }
+    return allSucceeded;
   };
 
   const downloadLabel =
@@ -69,6 +84,6 @@ export function useContentAssetDownload({
     downloadLabel,
     downloadAsset,
     downloadAllVisuals,
-    downloadFirstVisual: () => downloadAsset(assetIds[0], 0),
+    downloadFirstVisual: (options?: { quiet?: boolean }) => downloadAsset(assetIds[0], 0, options),
   };
 }

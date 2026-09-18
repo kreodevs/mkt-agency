@@ -250,6 +250,7 @@ export function InboxQuickPublishActions({
 
   const {
     hasVisuals,
+    isVideo,
     isDownloading,
     assetIds,
     downloadLabel,
@@ -282,9 +283,35 @@ export function InboxQuickPublishActions({
     void navigator.clipboard.writeText(copyText);
   };
 
-  const shareWhatsApp = () => {
-    window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
+  const shareWhatsApp = async () => {
     setMoreOpen(false);
+
+    if (hasVisuals) {
+      await navigator.clipboard.writeText(copyText);
+
+      const downloaded =
+        assetIds.length === 1
+          ? await downloadFirstVisual({ quiet: true })
+          : await downloadAllVisuals({ quiet: true });
+
+      window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
+
+      const mediaLabel = isVideo ? 'video' : assetIds.length > 1 ? 'archivos' : 'imagen';
+      if (downloaded) {
+        toast.message(
+          `Texto copiado y ${mediaLabel} descargado — en WhatsApp pulsa el clip para adjuntar el archivo`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.message(
+          'Texto copiado — no se pudo descargar el archivo. Usa «Descargar arte» y adjúntalo en WhatsApp.',
+          { duration: 8000 },
+        );
+      }
+      return;
+    }
+
+    window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
   };
 
   const copyCaptureLink = async () => {
@@ -307,7 +334,18 @@ export function InboxQuickPublishActions({
 
   const moreActions = (
     <>
-      <Button type="button" size="sm" variant="ghost" className="w-full justify-start" onClick={shareWhatsApp}>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="w-full justify-start"
+        title={
+          hasVisuals
+            ? 'Copia el texto, descarga el archivo y abre WhatsApp (adjunta el video o imagen manualmente)'
+            : 'Compartir texto por WhatsApp'
+        }
+        onClick={() => void shareWhatsApp()}
+      >
         <MessageCircle className="mr-2 h-3.5 w-3.5" />
         WhatsApp
       </Button>

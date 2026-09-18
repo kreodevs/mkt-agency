@@ -163,7 +163,7 @@ export function ContentPublishPanel({
             variant="outline"
             className="gap-2"
             loading={downloadingAssetId !== null}
-            onClick={downloadAllVisuals}
+            onClick={() => void downloadAllVisuals()}
           >
             <Download className="h-4 w-4" />
             Descargar {assetIds.length} archivos

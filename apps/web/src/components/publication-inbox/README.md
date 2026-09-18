@@ -24,6 +24,8 @@ La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, pró
 
 Hook: `hooks/useSohoBrowserNotifications.ts` — avisos del navegador para `week_ready`, `publish_reminder`, `approval_reminder`.
 
+**WhatsApp:** menú «Más» → copia texto, descarga visual si existe y abre `wa.me` (el archivo se adjunta manualmente con el clip; la API de enlace no soporta video).
+
 **Fase C pendiente (no en scope):** scheduling nativo Meta/LinkedIn, WhatsApp Business API, atribución lead↔post.
 
 ## Calendarios: `/calendario` vs `/calendar`

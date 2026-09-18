@@ -68,7 +68,10 @@ export function getPlatformPublishUrl(platform: string | null | undefined): stri
   return urls[platform];
 }
 
-/** Compartir copy por WhatsApp (útil para SOHO local). */
+/**
+ * Compartir copy por WhatsApp (útil para SOHO local).
+ * Solo admite texto: imágenes y videos hay que adjuntarlos manualmente en la app.
+ */
 export function buildWhatsAppShareUrl(text: string): string {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
