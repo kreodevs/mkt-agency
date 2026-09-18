@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays } from 'lucide-react';
 import { ApprovalActions } from '@/components/content/ApprovalActions';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { ContentVisualDesignPanel } from '@/components/content/ContentVisualDesignPanel';
@@ -7,6 +6,7 @@ import { ContentVisualPanel } from '@/components/content/ContentVisualPanel';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { Button } from '@/components/atoms/Button';
 import { Dialog } from '@/components/molecules/Dialog';
+import { InboxItemMetadata } from '@/components/publication-inbox/InboxItemMetadata';
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxArtPublishBar } from '@/components/publication-inbox/InboxArtPublishBar';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
@@ -22,18 +22,6 @@ const STATUS_LABELS: Record<string, string> = {
   in_review: 'En revisión',
   in_changes: 'En cambios',
 };
-
-function formatScheduledDate(dateKey: string): string {
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(dateKey);
-  if (!match) {
-    return 'Sin fecha';
-  }
-  return new Date(`${match[1]}T12:00:00`).toLocaleDateString('es-MX', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-}
 
 function statusToPill(status: string): 'success' | 'warning' | 'error' | 'neutral' {
   if (status === 'approved') return 'success';
@@ -108,14 +96,9 @@ export function InboxContentDetailDialog({
             {STATUS_LABELS[item.status] ?? item.status}
           </StatusPill>
           <ContentPlatformBadge platform={item.platform} size="sm" />
-          <span className="inline-flex items-center gap-1 text-xs text-[var(--foreground-muted)]">
-            <CalendarDays className="h-3.5 w-3.5" />
-            {formatScheduledDate(item.scheduledDate)}
-          </span>
-          {item.productName && (
-            <span className="text-xs text-[var(--foreground-muted)]">{item.productName}</span>
-          )}
         </div>
+
+        <InboxItemMetadata item={item} scheduledStyle="long" />
 
         <InboxItemVisualPreview item={item} variant="detail" />
         <InboxArtPublishBar item={item} />

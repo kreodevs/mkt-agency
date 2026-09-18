@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, Maximize2 } from 'lucide-react';
+import { Maximize2 } from 'lucide-react';
 import { ContentPlatformBadge } from '@/components/content/ContentPlatformBadge';
 import { Button } from '@/components/atoms/Button';
 import { StatusPill } from '@/components/atoms/StatusPill';
@@ -8,6 +8,7 @@ import { InboxContentDetailDialog } from '@/components/publication-inbox/InboxCo
 import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItemVisualPreview';
 import { InboxArtPublishBar } from '@/components/publication-inbox/InboxArtPublishBar';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
+import { InboxItemMetadata } from '@/components/publication-inbox/InboxItemMetadata';
 import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
@@ -20,18 +21,6 @@ const STATUS_LABELS: Record<string, string> = {
   in_review: 'En revisión',
   in_changes: 'En cambios',
 };
-
-function formatScheduledDate(dateKey: string): string {
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(dateKey);
-  if (!match) {
-    return 'Sin fecha';
-  }
-  return new Date(`${match[1]}T12:00:00`).toLocaleDateString('es-MX', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-}
 
 function statusToPill(status: string): 'success' | 'warning' | 'error' | 'neutral' {
   if (status === 'approved') return 'success';
@@ -64,7 +53,6 @@ export function InboxItemCard({
   onRejected,
 }: InboxItemCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
-  const formattedDate = formatScheduledDate(item.scheduledDate);
   const displayBody = sanitizePublishableCopy(item.body);
   const showBodyClamp = displayBody.length > 320;
   const isRejected = item.status === 'rejected';
@@ -103,13 +91,8 @@ export function InboxItemCard({
             <ContentPlatformBadge platform={item.platform} size="sm" />
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--foreground-muted)]">
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" />
-              {formattedDate}
-            </span>
-            {item.productName && <span>{item.productName}</span>}
-            {item.type && <span className="uppercase">{item.type}</span>}
+          <div className="mt-1">
+            <InboxItemMetadata item={item} />
           </div>
 
           <InboxItemVisualPreview item={item} />

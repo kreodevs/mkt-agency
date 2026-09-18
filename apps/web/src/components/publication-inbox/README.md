@@ -6,7 +6,8 @@ La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, pró
 
 | Archivo | Rol |
 |---------|-----|
-| `InboxItemCard.tsx` | Tarjeta resumida + etiqueta **Nuevo** tras generar + botón «Ver ficha completa» (modal con texto, visual y aprobación) |
+| `InboxItemCard.tsx` | Tarjeta resumida + etiqueta **Nuevo** tras generar + fechas programado/creado/actualizado + botón «Ver ficha completa» |
+| `InboxItemMetadata.tsx` | Metadatos de fecha (programado, creado, actualizado) reutilizados en tarjeta y ficha |
 | `InboxContentDetailDialog.tsx` | Ficha en modal; diseño de plantilla (`ContentVisualDesignPanel`), recomponer imagen (`ContentVisualPanel`), aprobación formal |
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; prioriza `content.assets` (plantilla + media kit) sobre generaciones IA antiguas |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
