@@ -264,9 +264,14 @@ export class CommunityManagerService {
     contentDto.body = this.formatPostBody(post);
     contentDto.campaignId = dto.campaignId;
     contentDto.productId = effectiveProductId;
-    const scheduleDate = new Date(today);
-    scheduleDate.setDate(scheduleDate.getDate() + index);
-    contentDto.scheduledDate = toLocalDateKey(scheduleDate);
+    if (dto.postsPerPlatform) {
+      // Modo «preparar mi día»: todas las piezas van para hoy.
+      contentDto.scheduledDate = toLocalDateKey(today);
+    } else {
+      const scheduleDate = new Date(today);
+      scheduleDate.setDate(scheduleDate.getDate() + index);
+      contentDto.scheduledDate = toLocalDateKey(scheduleDate);
+    }
     contentDto.platform = post.platform;
     contentDto.visualFormat = post.visualFormat;
     contentDto.visualPrompt = sanitizeVisualPromptForArt(post.visualDescription, post.body) || null;

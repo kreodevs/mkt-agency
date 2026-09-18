@@ -25,6 +25,7 @@ export interface PublicationInboxItem {
   publishedAt?: string | null;
   canPublishWithN8n?: boolean;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AgencyNotification {

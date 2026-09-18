@@ -39,6 +39,7 @@ interface InboxRow {
   currentVersionId: string | null;
   scheduledDate: string | null;
   createdAt: Date;
+  updatedAt: Date;
   versionNumber: number | null;
   versionId: string | null;
   body: string | null;
@@ -99,21 +100,26 @@ export class PublicationInboxService {
     const sortByScheduledDate = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) =>
       a.scheduledDate.localeCompare(b.scheduledDate);
 
-    const sortPendingNewestFirst = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) => {
-      const aCreated = Date.parse(a.createdAt);
-      const bCreated = Date.parse(b.createdAt);
-      const aMs = Number.isFinite(aCreated) ? aCreated : 0;
-      const bMs = Number.isFinite(bCreated) ? bCreated : 0;
-      if (bMs !== aMs) {
-        return bMs - aMs;
+    const inboxActivityMs = (item: PublicationInboxItemDto): number => {
+      const created = Date.parse(item.createdAt);
+      const updated = Date.parse(item.updatedAt);
+      const createdMs = Number.isFinite(created) ? created : 0;
+      const updatedMs = Number.isFinite(updated) ? updated : 0;
+      return Math.max(createdMs, updatedMs);
+    };
+
+    const sortNewestFirst = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) => {
+      const activityDiff = inboxActivityMs(b) - inboxActivityMs(a);
+      if (activityDiff !== 0) {
+        return activityDiff;
       }
       return b.scheduledDate.localeCompare(a.scheduledDate);
     };
 
-    pendingApproval.sort(sortPendingNewestFirst);
-    readyToPublish.sort(sortByScheduledDate);
+    pendingApproval.sort(sortNewestFirst);
+    readyToPublish.sort(sortNewestFirst);
     upcoming.sort(sortByScheduledDate);
-    rejected.sort(sortPendingNewestFirst);
+    rejected.sort(sortNewestFirst);
 
     const notificationQb = this.notifications
       .createQueryBuilder('n')
@@ -362,6 +368,7 @@ export class PublicationInboxService {
         'c.current_version_id AS "currentVersionId"',
         'c.scheduled_date AS "scheduledDate"',
         'c.created_at AS "createdAt"',
+        'c.updated_at AS "updatedAt"',
         'v.version_number AS "versionNumber"',
         'v.id AS "versionId"',
         'v.body AS body',
@@ -429,6 +436,10 @@ export class PublicationInboxService {
         row.createdAt instanceof Date
           ? row.createdAt.toISOString()
           : new Date(row.createdAt).toISOString(),
+      updatedAt:
+        row.updatedAt instanceof Date
+          ? row.updatedAt.toISOString()
+          : new Date(row.updatedAt).toISOString(),
     };
   }
 

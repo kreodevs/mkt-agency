@@ -41,6 +41,7 @@ export class PublicationInboxItemDto {
   publishedAt!: string | null;
   canPublishWithN8n!: boolean;
   createdAt!: string;
+  updatedAt!: string;
 }
 
 export class AgencyNotificationDto {

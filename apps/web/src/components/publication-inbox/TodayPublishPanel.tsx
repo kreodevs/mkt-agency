@@ -11,18 +11,20 @@ interface TodayPublishPanelProps {
   pending: PublicationInboxItem[];
   ready: PublicationInboxItem[];
   strategyFocus?: string | null;
+  newContentIds?: ReadonlySet<string>;
 }
 
 export function TodayPublishPanel({
   pending,
   ready,
   strategyFocus,
+  newContentIds,
 }: TodayPublishPanelProps) {
   const todayItems = useMemo(() => {
     const pendingToday = pending.filter(isInboxItemToday);
     const readyToday = ready.filter(isInboxItemToday);
-    return sortInboxItemsNewestFirst([...readyToday, ...pendingToday]);
-  }, [pending, ready]);
+    return sortInboxItemsNewestFirst([...readyToday, ...pendingToday], newContentIds);
+  }, [pending, ready, newContentIds]);
 
   if (todayItems.length === 0) {
     return (
@@ -59,6 +61,7 @@ export function TodayPublishPanel({
           <InboxItemCard
             key={item.contentId}
             item={item}
+            isNew={newContentIds?.has(item.contentId) ?? false}
             showApproval={item.status !== 'approved' || !item.signatureHash}
             sohoMode
           />

@@ -36,7 +36,11 @@ export async function syncInboxAfterGeneration(
       pending + (data?.stats.readyCount ?? 0) + (data?.stats.upcomingCount ?? 0);
 
     if (expectedPosts <= 0 || pending >= expectedPosts || totalVisible >= expectedPosts) {
-      const afterIds = data?.pendingApproval.map((item) => item.contentId) ?? [];
+      const afterIds = [
+        ...(data?.pendingApproval ?? []).map((item) => item.contentId),
+        ...(data?.readyToPublish ?? []).map((item) => item.contentId),
+        ...(data?.upcoming ?? []).map((item) => item.contentId),
+      ];
       const beforeIds = pendingIdsBefore ?? consumeInboxPendingSnapshot(productId);
       const newIds = beforeIds ? diffNewInboxContentIds(beforeIds, afterIds) : [];
       if (newIds.length > 0) {

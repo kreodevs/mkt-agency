@@ -140,11 +140,11 @@ export default function PublicationInboxPage() {
   const rejected = data?.rejected ?? [];
   const notifications = data?.notifications ?? [];
   const todayIds = useMemo(() => getTodayContentIds(pending, ready), [pending, ready]);
-  const pendingRest = useMemo(
-    () => sortInboxItemsNewestFirst(excludeTodayFromPending(pending, todayIds)),
-    [pending, todayIds],
-  );
   const newContentIds = useInboxNewContentIds(activeProductId);
+  const pendingRest = useMemo(
+    () => sortInboxItemsNewestFirst(excludeTodayFromPending(pending, todayIds), newContentIds),
+    [pending, todayIds, newContentIds],
+  );
 
   useSohoBrowserNotifications(notifications, sohoMode);
   useInboxKeyboardHints(sohoMode);
@@ -269,7 +269,12 @@ export default function PublicationInboxPage() {
 
       <div className="grid gap-[var(--spacing-lg)] lg:grid-cols-3">
         <div className="space-y-[var(--spacing-lg)] lg:col-span-2 lg:order-1">
-          <TodayPublishPanel pending={pending} ready={ready} strategyFocus={summary?.strategyFocus} />
+          <TodayPublishPanel
+            pending={pending}
+            ready={ready}
+            strategyFocus={summary?.strategyFocus}
+            newContentIds={newContentIds}
+          />
 
           <Card id="inbox-pending" className="scroll-mt-24"
             title={todayIds.size > 0 ? 'Resto por aprobar' : 'Por aprobar'}

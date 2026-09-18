@@ -90,7 +90,11 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
       const inbox = queryClient.getQueryData<PublicationInboxData>(inboxQueryKey(productId));
       saveInboxPendingSnapshot(
         productId,
-        inbox?.pendingApproval.map((item) => item.contentId) ?? [],
+        [
+          ...(inbox?.pendingApproval ?? []).map((item) => item.contentId),
+          ...(inbox?.readyToPublish ?? []).map((item) => item.contentId),
+          ...(inbox?.upcoming ?? []).map((item) => item.contentId),
+        ],
       );
       return prepareWeek(productId, horizon);
     },

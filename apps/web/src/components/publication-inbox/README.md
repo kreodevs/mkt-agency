@@ -10,7 +10,7 @@ La página `PublicationInboxPage` envuelve listas (por aprobar, rechazadas, pró
 | `InboxContentDetailDialog.tsx` | Ficha en modal; diseño de plantilla (`ContentVisualDesignPanel`), recomponer imagen (`ContentVisualPanel`), aprobación formal |
 | `InboxItemVisualPreview.tsx` | Imagen/video con `SocialPostMockup`; prioriza `content.assets` (plantilla + media kit) sobre generaciones IA antiguas |
 | `SocialPostMockup.tsx` | Marco tipo red social (Instagram, LinkedIn, …) |
-| `TodayPublishPanel.tsx` | **Hoy publicas esto** — prioridad del día; entradas con `StaggerGroup` |
+| `TodayPublishPanel.tsx` | **Hoy publicas esto** — más recientes arriba + etiqueta **Nuevo** tras generar |
 | `SohoCalendarDayPanel.tsx` | Publicaciones del día con **Aprobar/Rechazar** en cada tarjeta (inbox + `/calendar/:date`) |
 | `SohoCalendarLegend.tsx` | Leyenda verde/amarillo/rojo del calendario |
 | `SohoResultsBanner.tsx` | Contactos semana + enfoque estratégico |
