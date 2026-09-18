@@ -23,8 +23,24 @@ function readStore(): NewInboxStore {
   }
 }
 
+const EMPTY_NEW_CONTENT_IDS = new Set<string>();
+const snapshotCache = new Map<string, { ids: string[]; set: Set<string> }>();
+
+function idsAreEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
+function invalidateSnapshotCache(): void {
+  snapshotCache.clear();
+}
+
 function writeStore(store: NewInboxStore): void {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  invalidateSnapshotCache();
   window.dispatchEvent(new CustomEvent('inbox-new-items-changed'));
 }
 
@@ -35,8 +51,21 @@ export function subscribeInboxNewItems(listener: () => void): () => void {
 }
 
 export function getNewInboxContentIds(productId: string | null | undefined): Set<string> {
-  const store = readStore();
-  return new Set(store[storageKey(productId)] ?? []);
+  const key = storageKey(productId);
+  const ids = readStore()[key] ?? [];
+
+  if (ids.length === 0) {
+    return EMPTY_NEW_CONTENT_IDS;
+  }
+
+  const cached = snapshotCache.get(key);
+  if (cached && idsAreEqual(cached.ids, ids)) {
+    return cached.set;
+  }
+
+  const set = new Set(ids);
+  snapshotCache.set(key, { ids: [...ids], set });
+  return set;
 }
 
 export function markNewInboxContentIds(
