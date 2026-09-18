@@ -414,6 +414,10 @@ export class PublicationInboxService {
           : new Date(row.publishedAt).toISOString()
         : null,
       canPublishWithN8n: isProductPublishWebhookConfigured(this.parseProductMetadata(row.productMetadata)),
+      createdAt:
+        row.createdAt instanceof Date
+          ? row.createdAt.toISOString()
+          : new Date(row.createdAt).toISOString(),
     };
   }
 

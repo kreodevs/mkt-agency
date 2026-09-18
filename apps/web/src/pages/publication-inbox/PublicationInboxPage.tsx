@@ -24,8 +24,10 @@ import { InboxPageSkeleton } from '@/components/molecules/PageSkeleton';
 import { AiThinkingPanel } from '@/components/molecules/AiThinkingPanel';
 import { StaggerGroup } from '@/components/molecules/Reveal';
 import { toast } from '@/components/molecules/Sonner';
-import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import { useInboxKeyboardHints } from '@/hooks/useInboxKeyboardHints';
+import { useInboxNewContentIds } from '@/hooks/useInboxNewContentIds';
+import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
+import { clearNewInboxContentId } from '@/lib/inbox-new-items';
 import { excludeTodayFromPending, getTodayContentIds } from '@/lib/inbox-today.util';
 import {
   bulkApproveInbox, bulkDeleteInboxContents, getPublicationInbox, getSohoSummary,
@@ -101,7 +103,8 @@ export default function PublicationInboxPage() {
 
   const bulkApproveMutation = useMutation({
     mutationFn: (ids: string[]) => bulkApproveInbox(ids),
-    onSuccess: (result) => {
+    onSuccess: (result, ids) => {
+      ids.forEach((contentId) => clearNewInboxContentId(activeProductId, contentId));
       void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
       void queryClient.invalidateQueries({ queryKey: ['calendar'] });
       setSelectedIds(new Set());
@@ -137,6 +140,15 @@ export default function PublicationInboxPage() {
   const notifications = data?.notifications ?? [];
   const todayIds = useMemo(() => getTodayContentIds(pending, ready), [pending, ready]);
   const pendingRest = useMemo(() => excludeTodayFromPending(pending, todayIds), [pending, todayIds]);
+  const newContentIds = useInboxNewContentIds(activeProductId);
+  const pendingNew = useMemo(
+    () => pendingRest.filter((item) => newContentIds.has(item.contentId)),
+    [pendingRest, newContentIds],
+  );
+  const pendingOlder = useMemo(
+    () => pendingRest.filter((item) => !newContentIds.has(item.contentId)),
+    [pendingRest, newContentIds],
+  );
 
   useSohoBrowserNotifications(notifications, sohoMode);
   useInboxKeyboardHints(sohoMode);
@@ -240,7 +252,9 @@ export default function PublicationInboxPage() {
           <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" />
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--success)]">¡Tu semana está lista!</p>
-            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">Revisa, aprueba y publica.</p>
+            <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
+              Las piezas nuevas aparecen arriba con la etiqueta «Nuevo».
+            </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={dismissWelcome}>Entendido</Button>
         </div>
@@ -289,12 +303,49 @@ export default function PublicationInboxPage() {
                   </div>
                 )}
                 <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
-                  {pendingRest.map((item) => (
-                    <InboxItemCard key={item.contentId} item={item} selectable={!sohoMode}
-                      selected={selectedIds.has(item.contentId)} onToggleSelect={toggleSelect}
-                      showApproval showEditorLink={advancedNav} sohoMode
-                      onRejected={setRejectFollowUp} />
-                  ))}
+                  {pendingNew.length > 0 ? (
+                    <div className="space-y-[var(--spacing-md)]">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+                        Recién generados ({pendingNew.length})
+                      </p>
+                      {pendingNew.map((item) => (
+                        <InboxItemCard
+                          key={item.contentId}
+                          item={item}
+                          isNew
+                          selectable={!sohoMode}
+                          selected={selectedIds.has(item.contentId)}
+                          onToggleSelect={toggleSelect}
+                          showApproval
+                          showEditorLink={advancedNav}
+                          sohoMode
+                          onRejected={setRejectFollowUp}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  {pendingOlder.length > 0 ? (
+                    <div className="space-y-[var(--spacing-md)]">
+                      {pendingNew.length > 0 ? (
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+                          Pendientes anteriores ({pendingOlder.length})
+                        </p>
+                      ) : null}
+                      {pendingOlder.map((item) => (
+                        <InboxItemCard
+                          key={item.contentId}
+                          item={item}
+                          selectable={!sohoMode}
+                          selected={selectedIds.has(item.contentId)}
+                          onToggleSelect={toggleSelect}
+                          showApproval
+                          showEditorLink={advancedNav}
+                          sohoMode
+                          onRejected={setRejectFollowUp}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </StaggerGroup>
               </div>
             )}

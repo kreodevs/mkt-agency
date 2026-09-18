@@ -18,22 +18,58 @@ export interface BrandedImagePromptInput {
   competitorAngle?: string | null;
 }
 
+/** Remove renderable brand name tokens when the official logo is composited afterwards. */
+export function sanitizeVisualPromptForLogoOverlay(
+  prompt: string,
+  productName: string,
+): string {
+  const name = productName.trim();
+  if (!name || !prompt.trim()) {
+    return prompt;
+  }
+
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return prompt
+    .replace(new RegExp(`"${escaped}"`, 'gi'), '"la marca"')
+    .replace(new RegExp(`'${escaped}'`, 'gi'), "'la marca'")
+    .replace(new RegExp(`\\b${escaped}\\b`, 'gi'), 'la marca');
+}
+
 export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string {
   const productName = input.productName.trim() || 'la marca';
-  const parts = [
-    `Imagen de marketing para el producto "${productName}".`,
-    'Debe ser claramente sobre este producto/marca, no un visual genérico intercambiable.',
-    'NO renderices el texto del post, hashtags, captions ni copy publicable dentro de la imagen.',
-  ];
+  const hasLogo = input.hasLogo;
 
-  if (input.artRecipeBasePrompt?.trim()) {
+  const rawScene =
+    input.artRecipeBasePrompt?.trim() ||
+    input.visualDescription?.trim() ||
+    (input.title?.trim() ? `Tema: ${input.title.trim()}` : '');
+  const scene = hasLogo
+    ? sanitizeVisualPromptForLogoOverlay(rawScene, productName)
+    : rawScene;
+
+  const parts: string[] = [];
+
+  if (hasLogo) {
     parts.push(
-      `Escena visual (receta de arte curada — composición/fotografía/ilustración): ${input.artRecipeBasePrompt.trim()}`,
+      'Imagen de marketing para redes sociales. El logo oficial de la marca se superpone después por software.',
+      'CRÍTICO: NO escribas el nombre de la marca, ni wordmarks, ni logotipos tipográficos, ni titulares con el nombre del producto dentro de la imagen.',
+      `Deja limpia la ${LOGO_CORNER_LABEL_ES} — sin texto, sin cajas vacías, sin placeholders.`,
+      'NO incluyas logos, monogramas, marcas de agua ni símbolos de marca generados por IA.',
     );
-  } else if (input.visualDescription?.trim()) {
-    parts.push(`Escena visual (solo composición/fotografía/ilustración): ${input.visualDescription.trim()}`);
-  } else if (input.title?.trim()) {
-    parts.push(`Tema ilustrado (sin copiar el texto del post): "${input.title.trim()}".`);
+  } else {
+    parts.push(
+      `Imagen de marketing para el producto "${productName}".`,
+      'Debe ser claramente sobre este producto/marca, no un visual genérico intercambiable.',
+      `La imagen debe estar claramente asociada al producto/marca "${productName}" — incluye el nombre de forma legible en el diseño.`,
+    );
+  }
+
+  parts.push(
+    'NO renderices el texto del post, hashtags, captions ni copy publicable dentro de la imagen.',
+  );
+
+  if (scene) {
+    parts.push(`Escena visual (solo composición/fotografía/ilustración): ${scene}`);
   }
 
   if (input.visualFormat === 'carousel') {
@@ -52,16 +88,9 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     parts.push(`Diferenciación visual frente a competencia: ${input.competitorAngle.trim()}`);
   }
 
-  if (input.hasLogo) {
+  if (hasLogo) {
     parts.push(
-      'NO incluyas logos, monogramas, marcas de agua, iconos de redes (LinkedIn, Instagram, etc.) ni símbolos de marca generados por IA.',
-      'NO dejes recuadros vacíos, cajas blancas, marcos en blanco ni placeholders en ninguna esquina — el lienzo debe estar totalmente compuesto.',
-      `El logo oficial del producto se superpone después por software en la ${LOGO_CORNER_LABEL_ES}; no simules ni reserves un hueco para él.`,
-      `Evita titulares grandes con el nombre "${productName}"; el branding lo aporta el logo superpuesto, no texto inventado.`,
-    );
-  } else {
-    parts.push(
-      `La imagen debe estar claramente asociada al producto/marca "${productName}" — incluye el nombre de forma legible en el diseño.`,
+      `El branding lo aporta únicamente el logo superpuesto en la ${LOGO_CORNER_LABEL_ES}; la escena no debe duplicar el nombre.`,
     );
   }
 

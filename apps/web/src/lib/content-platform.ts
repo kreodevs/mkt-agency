@@ -76,6 +76,17 @@ export function buildWhatsAppShareUrl(text: string): string {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
+/** Abre URL externa en el gesto del clic (evita bloqueo de ventanas emergentes). */
+export function openExternalUrl(url: string): void {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 export function slugifyForFilename(value: string): string {
   return (
     value

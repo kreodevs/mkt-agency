@@ -19,7 +19,7 @@ import { Button } from '@/components/atoms/Button';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { StatusPill } from '@/components/atoms/StatusPill';
 import { toast } from '@/components/molecules/Sonner';
-import { listAssetFolders, listAssets, getAssetDownloadUrl } from '@/services/assets';
+import { listAssetFolders, listAssets, downloadAssetFile } from '@/services/assets';
 import { resolveFolderPath } from '@/lib/asset-folder-tree';
 import { ASSET_TYPE_LABELS, type Asset, type AssetType } from '@/types/assets';
 import { AssetSection, isAssetLocked } from './AssetSection';
@@ -144,8 +144,11 @@ export default function AssetLibraryPage() {
   const lockedSelectedCount = selectedAssets.length - deletableSelected.length;
 
   const handleDownload = async (asset: Asset) => {
-    const { url } = await getAssetDownloadUrl(asset.id);
-    window.open(url, '_blank', 'noopener,noreferrer');
+    try {
+      await downloadAssetFile(asset.id, asset.name || 'archivo');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo descargar el archivo');
+    }
   };
 
   const handleBulkDelete = () => {

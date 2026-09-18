@@ -11,4 +11,4 @@
 | `AuthenticatedAssetImage.tsx` | `<img>` vía `fetch` + Bearer (sin JWT en URL); fallback «No disponible» |
 | `AuthenticatedAssetVideo.tsx` | `<video>` con el mismo patrón autenticado |
 
-Servicio: `src/services/assets.ts` (`getAssetFileUrl`, `resolveAssetPreviewUrl` con `variant: 'thumb' | 'full'`).
+Servicio: `src/services/assets.ts` (`getAssetFileUrl`, `downloadAssetFile`, `resolveAssetPreviewUrl` con `variant: 'thumb' | 'full'`). Las descargas en navegador usan el proxy `/api/v1/assets/:id/file`, no URLs firmadas de MinIO.

@@ -1,4 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
+import {
+  consumeInboxPendingSnapshot,
+  diffNewInboxContentIds,
+  markNewInboxContentIds,
+} from '@/lib/inbox-new-items';
 import type { PublicationInboxData } from '@/types/publication-inbox';
 
 const INBOX_SYNC_ATTEMPTS = 10;
@@ -17,7 +22,8 @@ export async function syncInboxAfterGeneration(
   queryClient: QueryClient,
   productId: string | null | undefined,
   expectedPosts: number,
-): Promise<void> {
+  pendingIdsBefore?: Set<string>,
+): Promise<string[]> {
   const key = inboxQueryKey(productId);
 
   for (let attempt = 0; attempt < INBOX_SYNC_ATTEMPTS; attempt += 1) {
@@ -30,13 +36,21 @@ export async function syncInboxAfterGeneration(
       pending + (data?.stats.readyCount ?? 0) + (data?.stats.upcomingCount ?? 0);
 
     if (expectedPosts <= 0 || pending >= expectedPosts || totalVisible >= expectedPosts) {
-      return;
+      const afterIds = data?.pendingApproval.map((item) => item.contentId) ?? [];
+      const beforeIds = pendingIdsBefore ?? consumeInboxPendingSnapshot(productId);
+      const newIds = beforeIds ? diffNewInboxContentIds(beforeIds, afterIds) : [];
+      if (newIds.length > 0) {
+        markNewInboxContentIds(productId, newIds);
+      }
+      return newIds;
     }
 
     if (attempt < INBOX_SYNC_ATTEMPTS - 1) {
       await sleep(INBOX_SYNC_DELAY_MS);
     }
   }
+
+  return [];
 }
 
 /** Aviso week_ready con bandeja vacía → seguir refrescando. */

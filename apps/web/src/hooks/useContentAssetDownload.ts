@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getImageGenerationByContentId } from '@/services/agents';
-import { getAssetDownloadUrl } from '@/services/assets';
+import { downloadAssetFile } from '@/services/assets';
 import { slugifyForFilename } from '@/lib/content-platform';
 import { isVideoGeneration, resolveContentVisualAssetIds } from '@/lib/image-generation';
 import { toast } from '@/components/molecules/Sonner';
@@ -38,13 +38,10 @@ export function useContentAssetDownload({
   ): Promise<boolean> => {
     setDownloadingAssetId(assetId);
     try {
-      const { url } = await getAssetDownloadUrl(assetId);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `${slugifyForFilename(title)}-${visualLabel}-${index + 1}`;
-      anchor.rel = 'noopener noreferrer';
-      anchor.target = '_blank';
-      anchor.click();
+      await downloadAssetFile(
+        assetId,
+        `${slugifyForFilename(title)}-${visualLabel}-${index + 1}`,
+      );
       if (!options?.quiet) {
         toast.success('Descarga iniciada');
       }

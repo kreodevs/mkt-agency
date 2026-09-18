@@ -42,6 +42,7 @@ function statusToPill(status: string): 'success' | 'warning' | 'error' | 'neutra
 
 interface InboxItemCardProps {
   item: PublicationInboxItem;
+  isNew?: boolean;
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: (contentId: string) => void;
@@ -53,6 +54,7 @@ interface InboxItemCardProps {
 
 export function InboxItemCard({
   item,
+  isNew = false,
   selectable = false,
   selected = false,
   onToggleSelect,
@@ -68,7 +70,14 @@ export function InboxItemCard({
   const isRejected = item.status === 'rejected';
 
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] p-[var(--spacing-md)] transition-colors hover:border-[var(--primary)]/40">
+    <article
+      className={[
+        'rounded-[var(--radius-md)] border p-[var(--spacing-md)] transition-colors',
+        isNew
+          ? 'border-[var(--brand)]/50 bg-[var(--brand-muted)]/25 hover:border-[var(--brand)]'
+          : 'border-[var(--border)] hover:border-[var(--primary)]/40',
+      ].join(' ')}
+    >
       <div className="flex items-start gap-[var(--spacing-md)]">
         {selectable && (
           <input
@@ -86,6 +95,11 @@ export function InboxItemCard({
             <StatusPill status={statusToPill(item.status)} size="sm">
               {STATUS_LABELS[item.status] ?? item.status}
             </StatusPill>
+            {isNew ? (
+              <StatusPill status="warning" size="sm">
+                Nuevo
+              </StatusPill>
+            ) : null}
             <ContentPlatformBadge platform={item.platform} size="sm" />
           </div>
 

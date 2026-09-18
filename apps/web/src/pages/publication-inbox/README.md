@@ -32,6 +32,7 @@ Pantallas alineadas a tokens Kreo y moléculas `PageHeader`, `StatsCard`, `Empty
 | `components/copilot/CmCharacterSetupPanel.tsx` | Biblioteca de CMs virtuales (varias por producto) |
 | `services/publication-inbox.ts` | Cliente API (incl. copilot-status, prepare-week con `horizon`, delete, bulk-delete, purge) |
 | `lib/inbox-sync.util.ts` | Sincroniza bandeja tras generación (reintentos + heal si aviso `week_ready` sin piezas) |
+| `lib/inbox-new-items.ts` | Marca piezas nuevas tras «Preparar mi día/semana» (sección «Recién generados») |
 | `store/copilot-ui.ts` | Persistencia modo avanzado |
 | `lib/tenant-navigation.ts` | Nav SOHO vs avanzado |
 

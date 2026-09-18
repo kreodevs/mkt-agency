@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { toast } from '@/components/molecules/Sonner';
 import { AssetLibraryPickerDialog } from '@/components/assets/AssetLibraryPickerDialog';
 import { AssetPreviewDialog } from '@/components/assets/AssetPreviewDialog';
-import { getAssetDownloadUrl } from '@/services/assets';
+import { downloadAssetFile } from '@/services/assets';
 import { ApiError } from '@/services/api';
 import {
   linkProductMediaKit,
@@ -136,8 +136,7 @@ export function ProductMediaKitPanel({ productId, productName, disabled }: Produ
 
   const handleDownloadPreview = async (asset: Asset) => {
     try {
-      const { url } = await getAssetDownloadUrl(asset.id);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      await downloadAssetFile(asset.id, asset.name || 'archivo');
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'No se pudo descargar el archivo');
     }

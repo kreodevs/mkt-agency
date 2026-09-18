@@ -147,6 +147,7 @@ export class SceneKitComposeService {
           basePrompt,
           brandKit,
           ctx.competitorIntelBrief,
+          { hasLogo: Boolean(brandKit.logoAssetId) },
         );
       }
 

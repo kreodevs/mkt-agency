@@ -22,6 +22,17 @@ describe('art-kit-compose.util', () => {
     expect(result).toContain('Hero visual for SaaS app');
     expect(result).toContain('Do NOT generate fake UI');
     expect(result).toContain('mockup overlay');
+    expect(result).toContain('must NOT include any person');
+  });
+
+  it('adds logo-only rule when logo will be composited', () => {
+    const recipe = recipeById('product-hero-json-050');
+    const result = buildKitOverlayPrompt('Hero visual', recipe, undefined, null, {
+      logoOverlay: true,
+    });
+
+    expect(result).toContain('official brand logo is added later');
+    expect(result).toContain('Do NOT render the brand name');
   });
 
   it('uses center-panel hint for infographic recipes', () => {

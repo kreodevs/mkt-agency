@@ -5,6 +5,7 @@ import {
   buildDeviceShadow,
   renderDeviceFrame,
   resolveDeviceFrameType,
+  resolveDevicePlacement,
   resolveHeroDevicePlacement,
   readCaptureImageSize,
   resolveMockupDeviceHint,
@@ -36,9 +37,17 @@ const LAPTOP_MOCKUP_HINT =
 const TABLET_MOCKUP_HINT =
   'Reserve a prominent empty zone shaped like a tablet device (rounded rectangle, moderate aspect ratio).';
 
+const MOCKUP_BACKGROUND_RULE =
+  'The generated image must NOT include any person, face, hands, phone, tablet, or laptop. ' +
+  'Use only abstract gradient, soft office bokeh, or minimal brand-colored negative space — a real screenshot will be composited on top.';
+
+const LOGO_OVERLAY_RULE =
+  'The official brand logo is added later in the top-left corner by software. ' +
+  'Do NOT render the brand name, product name, wordmark, logotype, or any typographic spelling of the brand anywhere in the image.';
+
 const LAYOUT_HINTS: Record<ArtKitLayoutMode, string> = {
   mockup:
-    'Reserve a prominent empty zone on the center-right for a phone or laptop mockup overlay (device-shaped negative space).',
+    'Reserve a clean empty zone on the RIGHT side (about 45% of canvas width) for a phone or laptop mockup overlay. Keep the LEFT side as soft abstract background only.',
   'center-panel':
     'Reserve a centered rectangular panel (about 45–55% of canvas width) with neutral fill for screenshot overlay.',
   'split-bottom':
@@ -78,10 +87,13 @@ export function buildKitOverlayPrompt(
   recipe: ArtPromptRecipe,
   post?: Pick<SocialCopyPost, 'visualTemplateId' | 'platform'>,
   deviceHint?: AssetDeviceHint | null,
+  options?: { logoOverlay?: boolean },
 ): string {
   const layout = resolveArtKitLayout(recipe, post?.platform ?? 'instagram', post);
   const hint = resolveKitOverlayHint(layout, post, deviceHint);
-  return `${basePrompt.trim()}. ${KIT_OVERLAY_BASE} ${hint}`;
+  const noPeopleRule = layout === 'mockup' ? ` ${MOCKUP_BACKGROUND_RULE}` : '';
+  const logoRule = options?.logoOverlay ? ` ${LOGO_OVERLAY_RULE}` : '';
+  return `${basePrompt.trim()}. ${KIT_OVERLAY_BASE} ${hint}${noPeopleRule}${logoRule}`;
 }
 
 /** Resolve compositing layout from recipe family or explicit kitLayout. */
@@ -119,20 +131,24 @@ async function compositeMockupLayout(
   const size = `${width}x${height}` as ImageGenerationSize;
   const aspectRatio = resolveVisualAspectRatio(size);
   const frameType = resolveDeviceFrameType(platform, aspectRatio, device);
-  const placement = resolveHeroDevicePlacement(width, height, frameType, aspectRatio);
-  const left = Math.min(
-    Math.round(width * 0.58 - placement.frameWidth / 2),
-    Math.round(width - placement.frameWidth - width * 0.04),
-  );
+  const placement =
+    aspectRatio === 'square'
+      ? resolveDevicePlacement(width, height, frameType, aspectRatio)
+      : resolveHeroDevicePlacement(width, height, frameType, aspectRatio);
+  const margin = Math.round(width * 0.06);
+  const left =
+    aspectRatio === 'square'
+      ? Math.max(margin, width - placement.frameWidth - margin)
+      : placement.left;
   const top = placement.top;
 
   const deviceFrame = await renderDeviceFrame(photoBuffer, {
     ...placement,
-    left: Math.max(left, Math.round(width * 0.32)),
+    left,
     top,
   });
   const shadow = await buildDeviceShadow(placement.frameWidth, placement.frameHeight, 24);
-  const shadowLeft = Math.max(left, Math.round(width * 0.32));
+  const shadowLeft = left;
 
   return sharp(canvas)
     .composite([

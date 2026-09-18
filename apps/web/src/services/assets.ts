@@ -97,6 +97,31 @@ export async function getAssetDownloadUrl(id: string): Promise<AssetDownloadUrlR
   return apiFetch<AssetDownloadUrlResponse>(`/assets/${id}/download-url`);
 }
 
+/** Descarga vía API (evita URLs internas tipo minio:9000 en el navegador). */
+export async function downloadAssetFile(assetId: string, fileName: string): Promise<void> {
+  const token = getAccessToken();
+  if (!token || !assetId) {
+    throw new Error('No autenticado');
+  }
+
+  const response = await fetch(`${API_BASE}/assets/${assetId}/file`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo descargar el archivo (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export async function listAssetFolders(): Promise<{ items: AssetFolder[] }> {
   return apiFetch<{ items: AssetFolder[] }>('/asset-folders');
 }

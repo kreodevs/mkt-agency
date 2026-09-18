@@ -20,6 +20,7 @@ import { ProductService } from '../../product/product.service';
 import { ProductMediaKitService } from '../../product/product-media-kit.service';
 import type { ProductMediaKitItemEntity } from '../../product/infrastructure/typeorm/product-media-kit-item.entity';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
+import { sanitizeVisualPromptForLogoOverlay } from '../../agents/domain/image-branding.util';
 import { enrichVisualDescriptionForAi } from '../domain/visual-prompt-enrichment.util';
 import {
   persistDerivedBrandVisualKit,
@@ -124,13 +125,19 @@ export class ArtKitComposeService {
         return { attached: false, assetIds: [] };
       }
 
+      const willBrandLogo = Boolean(brandKit.logoAssetId);
+
       let basePrompt = selection.filledPrompt.trim();
       if (brandKit) {
         basePrompt = enrichVisualDescriptionForAi(
           basePrompt,
           brandKit,
           ctx.competitorIntelBrief,
+          { hasLogo: willBrandLogo },
         );
+        if (willBrandLogo) {
+          basePrompt = sanitizeVisualPromptForLogoOverlay(basePrompt, brandKit.productName);
+        }
       }
 
       const assetIds: string[] = [];
@@ -153,7 +160,9 @@ export class ArtKitComposeService {
           const mockupDevice = resolveMockupDeviceHint(pick?.device ?? null, captureSize);
 
           const slidePrompt = useKitOverlay
-            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post, mockupDevice)
+            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post, mockupDevice, {
+                logoOverlay: willBrandLogo,
+              })
             : basePrompt;
 
           const artBuffer = await this.imageGeneration.generateImageBuffer(

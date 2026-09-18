@@ -21,6 +21,7 @@ import {
   buildPostCopyText,
   buildWhatsAppShareUrl,
   getPlatformPublishUrl,
+  openExternalUrl,
 } from '@/lib/content-platform';
 import { buildCapturePageUrl } from '@/lib/capture-attribution';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
@@ -33,6 +34,7 @@ import { normalizeContentVisualFormat } from '@/lib/visual-format';
 import { VISUAL_DESIGN_PRESET_KINDS } from '@/lib/visual-template';
 import { regenerateInboxContent, deleteInboxContent } from '@/services/publication-inbox';
 import { ApiError } from '@/services/api';
+import { clearNewInboxContentId } from '@/lib/inbox-new-items';
 import { useContentAssetDownload } from '@/hooks/useContentAssetDownload';
 import { useInboxPublishActions } from '@/hooks/useInboxPublishActions';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
@@ -143,6 +145,7 @@ export function InboxQuickPublishActions({
   const approveMutation = useMutation({
     mutationFn: () => approveContentVersion(item.contentId, item.versionId!),
     onSuccess: () => {
+      clearNewInboxContentId(item.productId, item.contentId);
       invalidate();
       toast.success('Publicación aprobada');
     },
@@ -230,6 +233,7 @@ export function InboxQuickPublishActions({
   const deleteMutation = useMutation({
     mutationFn: () => deleteInboxContent(item.contentId),
     onSuccess: async () => {
+      clearNewInboxContentId(item.productId, item.contentId);
       await invalidate();
       setDeleteOpen(false);
       setMoreOpen(false);
@@ -278,23 +282,26 @@ export function InboxQuickPublishActions({
       void copyAll();
       return;
     }
-    window.open(url, '_blank', 'noopener,noreferrer');
+    openExternalUrl(url);
     toast.message('Red abierta — el copy ya está en tu portapapeles');
     void navigator.clipboard.writeText(copyText);
   };
 
-  const shareWhatsApp = async () => {
+  const shareWhatsApp = () => {
     setMoreOpen(false);
+    openExternalUrl(buildWhatsAppShareUrl(copyText));
 
-    if (hasVisuals) {
+    if (!hasVisuals) {
+      return;
+    }
+
+    void (async () => {
       await navigator.clipboard.writeText(copyText);
 
       const downloaded =
         assetIds.length === 1
           ? await downloadFirstVisual({ quiet: true })
           : await downloadAllVisuals({ quiet: true });
-
-      window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
 
       const mediaLabel = isVideo ? 'video' : assetIds.length > 1 ? 'archivos' : 'imagen';
       if (downloaded) {
@@ -308,10 +315,7 @@ export function InboxQuickPublishActions({
           { duration: 8000 },
         );
       }
-      return;
-    }
-
-    window.open(buildWhatsAppShareUrl(copyText), '_blank', 'noopener,noreferrer');
+    })();
   };
 
   const copyCaptureLink = async () => {
@@ -344,7 +348,7 @@ export function InboxQuickPublishActions({
             ? 'Copia el texto, descarga el archivo y abre WhatsApp (adjunta el video o imagen manualmente)'
             : 'Compartir texto por WhatsApp'
         }
-        onClick={() => void shareWhatsApp()}
+        onClick={shareWhatsApp}
       >
         <MessageCircle className="mr-2 h-3.5 w-3.5" />
         WhatsApp

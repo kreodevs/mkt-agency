@@ -40,6 +40,7 @@ export class PublicationInboxItemDto {
   assets!: unknown[];
   publishedAt!: string | null;
   canPublishWithN8n!: boolean;
+  createdAt!: string;
 }
 
 export class AgencyNotificationDto {

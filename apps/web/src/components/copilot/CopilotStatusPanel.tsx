@@ -20,7 +20,9 @@ import { ApiError } from '@/services/api';
 import { getCopilotStatus, prepareWeek } from '@/services/publication-inbox';
 import type { CopilotPrepareHorizon } from '@/types/publication-inbox';
 import { CmCharacterSetupPanel } from '@/components/copilot/CmCharacterSetupPanel';
-import { syncInboxAfterGeneration } from '@/lib/inbox-sync.util';
+import { saveInboxPendingSnapshot } from '@/lib/inbox-new-items';
+import { inboxQueryKey, syncInboxAfterGeneration } from '@/lib/inbox-sync.util';
+import type { PublicationInboxData } from '@/types/publication-inbox';
 import { useActiveProductStore, withActiveProductQuery } from '@/store/active-product';
 
 const COPILOT_COMPETITORS_PATH = '/copilot/competitors';
@@ -84,7 +86,14 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
   const prepareMutation = useMutation({
     mutationKey: ['copilot-prepare-week', productId ?? 'primary'],
-    mutationFn: () => prepareWeek(productId, horizon),
+    mutationFn: () => {
+      const inbox = queryClient.getQueryData<PublicationInboxData>(inboxQueryKey(productId));
+      saveInboxPendingSnapshot(
+        productId,
+        inbox?.pendingApproval.map((item) => item.contentId) ?? [],
+      );
+      return prepareWeek(productId, horizon);
+    },
     onSuccess: async (result) => {
       if (result.productId) {
         setActiveProduct(result.productId, result.productName);
@@ -103,7 +112,7 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
 
       if (result.status === 'completed') {
         toast.success(
-          `${result.postsGenerated} publicación(es) en «Por aprobar». Revísalas arriba en la bandeja.`,
+          `${result.postsGenerated} publicación(es) nuevas en «Recién generados». Revísalas en la bandeja.`,
         );
         navigate('/?welcome=1', { replace: true });
         requestAnimationFrame(() => {
