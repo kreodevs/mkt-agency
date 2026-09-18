@@ -29,6 +29,7 @@ import { useInboxNewContentIds } from '@/hooks/useInboxNewContentIds';
 import { useSohoBrowserNotifications } from '@/hooks/useSohoBrowserNotifications';
 import { clearNewInboxContentId } from '@/lib/inbox-new-items';
 import { excludeTodayFromPending, getTodayContentIds } from '@/lib/inbox-today.util';
+import { sortInboxItemsNewestFirst } from '@/lib/inbox-sort.util';
 import {
   bulkApproveInbox, bulkDeleteInboxContents, getPublicationInbox, getSohoSummary,
   markAllNotificationsRead, markNotificationRead,
@@ -139,16 +140,11 @@ export default function PublicationInboxPage() {
   const rejected = data?.rejected ?? [];
   const notifications = data?.notifications ?? [];
   const todayIds = useMemo(() => getTodayContentIds(pending, ready), [pending, ready]);
-  const pendingRest = useMemo(() => excludeTodayFromPending(pending, todayIds), [pending, todayIds]);
+  const pendingRest = useMemo(
+    () => sortInboxItemsNewestFirst(excludeTodayFromPending(pending, todayIds)),
+    [pending, todayIds],
+  );
   const newContentIds = useInboxNewContentIds(activeProductId);
-  const pendingNew = useMemo(
-    () => pendingRest.filter((item) => newContentIds.has(item.contentId)),
-    [pendingRest, newContentIds],
-  );
-  const pendingOlder = useMemo(
-    () => pendingRest.filter((item) => !newContentIds.has(item.contentId)),
-    [pendingRest, newContentIds],
-  );
 
   useSohoBrowserNotifications(notifications, sohoMode);
   useInboxKeyboardHints(sohoMode);
@@ -253,7 +249,7 @@ export default function PublicationInboxPage() {
           <div className="flex-1 text-sm">
             <p className="font-semibold text-[var(--success)]">¡Tu semana está lista!</p>
             <p className="mt-[var(--spacing-xs)] text-[var(--foreground-muted)]">
-              Las piezas nuevas aparecen arriba con la etiqueta «Nuevo».
+              Las más recientes están arriba; las recién generadas llevan la etiqueta «Nuevo».
             </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={dismissWelcome}>Entendido</Button>
@@ -277,7 +273,7 @@ export default function PublicationInboxPage() {
 
           <Card id="inbox-pending" className="scroll-mt-24"
             title={todayIds.size > 0 ? 'Resto por aprobar' : 'Por aprobar'}
-            subtitle={`${pendingRest.length} pieza(s) sugerida(s)`}
+            subtitle={`${pendingRest.length} pieza(s) — más recientes arriba`}
           >
             {pendingRest.length === 0 ? (
               <EmptyState compact title={todayIds.size > 0 ? 'Nada más pendiente' : 'Sin pendientes'}
@@ -303,49 +299,20 @@ export default function PublicationInboxPage() {
                   </div>
                 )}
                 <StaggerGroup className="space-y-[var(--spacing-md)]" stagger={80} variant="fade-up">
-                  {pendingNew.length > 0 ? (
-                    <div className="space-y-[var(--spacing-md)]">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
-                        Recién generados ({pendingNew.length})
-                      </p>
-                      {pendingNew.map((item) => (
-                        <InboxItemCard
-                          key={item.contentId}
-                          item={item}
-                          isNew
-                          selectable={!sohoMode}
-                          selected={selectedIds.has(item.contentId)}
-                          onToggleSelect={toggleSelect}
-                          showApproval
-                          showEditorLink={advancedNav}
-                          sohoMode
-                          onRejected={setRejectFollowUp}
-                        />
-                      ))}
-                    </div>
-                  ) : null}
-                  {pendingOlder.length > 0 ? (
-                    <div className="space-y-[var(--spacing-md)]">
-                      {pendingNew.length > 0 ? (
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-                          Pendientes anteriores ({pendingOlder.length})
-                        </p>
-                      ) : null}
-                      {pendingOlder.map((item) => (
-                        <InboxItemCard
-                          key={item.contentId}
-                          item={item}
-                          selectable={!sohoMode}
-                          selected={selectedIds.has(item.contentId)}
-                          onToggleSelect={toggleSelect}
-                          showApproval
-                          showEditorLink={advancedNav}
-                          sohoMode
-                          onRejected={setRejectFollowUp}
-                        />
-                      ))}
-                    </div>
-                  ) : null}
+                  {pendingRest.map((item) => (
+                    <InboxItemCard
+                      key={item.contentId}
+                      item={item}
+                      isNew={newContentIds.has(item.contentId)}
+                      selectable={!sohoMode}
+                      selected={selectedIds.has(item.contentId)}
+                      onToggleSelect={toggleSelect}
+                      showApproval
+                      showEditorLink={advancedNav}
+                      sohoMode
+                      onRejected={setRejectFollowUp}
+                    />
+                  ))}
                 </StaggerGroup>
               </div>
             )}

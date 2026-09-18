@@ -96,13 +96,24 @@ export class PublicationInboxService {
       }
     }
 
-    const sortByDate = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) =>
+    const sortByScheduledDate = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) =>
       a.scheduledDate.localeCompare(b.scheduledDate);
 
-    pendingApproval.sort(sortByDate);
-    readyToPublish.sort(sortByDate);
-    upcoming.sort(sortByDate);
-    rejected.sort(sortByDate);
+    const sortPendingNewestFirst = (a: PublicationInboxItemDto, b: PublicationInboxItemDto) => {
+      const aCreated = Date.parse(a.createdAt);
+      const bCreated = Date.parse(b.createdAt);
+      const aMs = Number.isFinite(aCreated) ? aCreated : 0;
+      const bMs = Number.isFinite(bCreated) ? bCreated : 0;
+      if (bMs !== aMs) {
+        return bMs - aMs;
+      }
+      return b.scheduledDate.localeCompare(a.scheduledDate);
+    };
+
+    pendingApproval.sort(sortPendingNewestFirst);
+    readyToPublish.sort(sortByScheduledDate);
+    upcoming.sort(sortByScheduledDate);
+    rejected.sort(sortPendingNewestFirst);
 
     const notificationQb = this.notifications
       .createQueryBuilder('n')

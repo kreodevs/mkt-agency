@@ -4,6 +4,7 @@ import { InboxItemCard } from '@/components/publication-inbox/InboxItemCard';
 import { Card } from '@/components/molecules/Card';
 import { StaggerGroup } from '@/components/molecules/Reveal';
 import { isInboxItemToday } from '@/lib/inbox-today.util';
+import { sortInboxItemsNewestFirst } from '@/lib/inbox-sort.util';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
 
 interface TodayPublishPanelProps {
@@ -20,7 +21,7 @@ export function TodayPublishPanel({
   const todayItems = useMemo(() => {
     const pendingToday = pending.filter(isInboxItemToday);
     const readyToday = ready.filter(isInboxItemToday);
-    return [...readyToday, ...pendingToday];
+    return sortInboxItemsNewestFirst([...readyToday, ...pendingToday]);
   }, [pending, ready]);
 
   if (todayItems.length === 0) {
