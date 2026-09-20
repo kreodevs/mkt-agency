@@ -51,7 +51,7 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     name: 'Product Hero Spotlight',
     description: 'Hero product shot with dramatic lighting and brand color glow.',
     template:
-      'Hero product visual for {{productName}}: {{subject}}. Centered product mockup, soft studio lighting, {{primaryColor}} rim light, subtle gradient backdrop. Premium {{style}} marketing photo, no UI chrome.',
+      'Hero brand atmosphere for {{productName}}: {{subject}}. Soft studio lighting, {{primaryColor}} rim light, subtle abstract gradient backdrop. Premium {{style}} marketing background, no devices, no UI, no text.',
     slots: ['productName', 'subject', 'primaryColor', 'style'],
     intents: ['promote', 'product', 'announce'],
     industries: ['saas', 'ecommerce', 'tech', 'general'],
@@ -91,7 +91,7 @@ export const ART_PROMPT_RECIPES: ArtPromptRecipe[] = [
     name: 'DTC Carousel Cover',
     description: 'Direct-to-consumer carousel opener with lifestyle + product.',
     template:
-      'DTC carousel cover slide: {{subject}} by {{productName}}. Lifestyle context, product in hand, warm natural light, {{style}} aesthetic. Leave lower third clean for text overlay. {{primaryColor}} accent props.',
+      'DTC carousel cover slide: {{subject}} by {{productName}}. Soft lifestyle atmosphere, warm natural light, {{style}} aesthetic. Leave lower third clean for text overlay. {{primaryColor}} accent props. No devices, no hands holding phones.',
     slots: ['subject', 'productName', 'style', 'primaryColor'],
     intents: ['promote', 'story', 'product'],
     industries: ['ecommerce', 'beauty', 'food', 'retail'],

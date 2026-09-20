@@ -2,6 +2,7 @@ import { ART_PROMPT_RECIPES } from './art-prompt-recipes.data';
 import {
   buildKitOverlayPrompt,
   resolveArtKitLayout,
+  stripDeviceDrawingLanguage,
   wantsProductMockupPreset,
 } from './art-kit-compose.util';
 import type { ArtPromptRecipe } from './art-prompt.types';
@@ -22,7 +23,9 @@ describe('art-kit-compose.util', () => {
     expect(result).toContain('Hero visual for SaaS app');
     expect(result).toContain('Do NOT generate fake UI');
     expect(result).toContain('mockup overlay');
-    expect(result).toContain('must NOT include any person');
+    expect(result).toContain('Forbidden objects');
+    expect(result).not.toMatch(/shaped like a modern smartphone/i);
+    expect(result).not.toMatch(/phone silhouette/i);
   });
 
   it('adds logo-only rule when logo will be composited', () => {
@@ -83,11 +86,25 @@ describe('art-kit-compose.util', () => {
 
     expect(wantsProductMockupPreset(post)).toBe(true);
     expect(resolveArtKitLayout(recipe, 'twitter', post)).toBe('mockup');
-    expect(buildKitOverlayPrompt('Hero', recipe, post, 'ios')).toContain('portrait orientation');
+    expect(buildKitOverlayPrompt('Hero', recipe, post, 'ios')).toContain('vertical iPhone');
+    expect(buildKitOverlayPrompt('Hero', recipe, post, 'ios')).not.toMatch(
+      /shaped like a modern smartphone/i,
+    );
     expect(buildKitOverlayPrompt('Hero', recipe, post, 'pc')).toContain('laptop');
     expect(buildKitOverlayPrompt('Hero', recipe, post, 'pc')).not.toContain(
       'centered rectangular panel',
     );
+  });
+
+  it('strips device-drawing language from the creative brief', () => {
+    expect(stripDeviceDrawingLanguage('Centered product mockup of the app')).toBe(
+      'abstract brand atmosphere of the app',
+    );
+    const recipe = recipeById('product-hero-json-050');
+    const post = { visualTemplateId: 'product-hero', platform: 'twitter' as const };
+    const result = buildKitOverlayPrompt('Centered product mockup of the app', recipe, post, 'ios');
+    expect(result).not.toMatch(/Centered product mockup/i);
+    expect(result).toContain('BACKGROUND ONLY');
   });
 
   it('marks overlay-capable recipes in catalog', () => {

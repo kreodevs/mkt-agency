@@ -5,7 +5,6 @@ import {
   buildDeviceShadow,
   renderDeviceFrame,
   resolveDeviceFrameType,
-  resolveDevicePlacement,
   resolveHeroDevicePlacement,
   readCaptureImageSize,
   resolveMockupDeviceHint,
@@ -21,25 +20,22 @@ import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import type { ArtKitLayoutMode, ArtPromptRecipe } from './art-prompt.types';
 
 const KIT_OVERLAY_BASE =
-  'IMPORTANT: Leave clean negative space or an empty panel for a real product screenshot overlay to be composited later. ' +
-  'Do NOT generate fake UI, app interfaces, device screens, or mock product screenshots. ' +
-  'Create abstract background art only, OR a split layout with an empty device-shaped zone reserved for overlay. ' +
-  'The reserved zone must have neutral background with no text or UI elements inside it.';
+  'CRITICAL BACKGROUND RULES: This image is BACKGROUND ART ONLY. Software will composite a real product screenshot later. ' +
+  'Do NOT generate fake UI, app interfaces, device screens, mock product screenshots, smartphones, tablets, laptops, monitors, bezels, blank screens, or device silhouettes. ' +
+  'Do not draw an empty phone-shaped object. Abstract atmosphere only.';
 
 const PHONE_MOCKUP_HINT =
-  'Reserve a prominent empty zone shaped like a modern smartphone in portrait orientation (tall rounded rectangle). ' +
-  'No landscape monitor — only vertical phone silhouette for a mobile app screenshot overlay.';
+  'The overlay will be a vertical iPhone mockup placed by software. Do not draw a phone. No landscape monitor.';
 
 const LAPTOP_MOCKUP_HINT =
-  'Reserve a prominent empty zone shaped like a modern laptop or desktop monitor (wide landscape rectangle with thin bezel). ' +
-  'No vertical phone silhouette — the overlay will be a desktop/web app screenshot.';
+  'The overlay will be a laptop mockup placed by software. Do not draw a laptop, desktop, or monitor. No vertical phone.';
 
 const TABLET_MOCKUP_HINT =
-  'Reserve a prominent empty zone shaped like a tablet device (rounded rectangle, moderate aspect ratio).';
+  'The overlay will be a tablet mockup placed by software. Do not draw a tablet or iPad.';
 
 const MOCKUP_BACKGROUND_RULE =
-  'The generated image must NOT include any person, face, hands, phone, tablet, or laptop. ' +
-  'Use only abstract gradient, soft office bokeh, or minimal brand-colored negative space — a real screenshot will be composited on top.';
+  'Forbidden objects: people, faces, hands, phones, tablets, laptops, monitors, screens, device silhouettes, blank white screens. ' +
+  'Use only abstract gradient, soft office bokeh, or minimal brand-colored negative space.';
 
 const LOGO_OVERLAY_RULE =
   'The official brand logo is added later in the top-left corner by software. ' +
@@ -47,12 +43,26 @@ const LOGO_OVERLAY_RULE =
 
 const LAYOUT_HINTS: Record<ArtKitLayoutMode, string> = {
   mockup:
-    'Reserve a clean empty zone on the RIGHT side (about 45% of canvas width) for a phone or laptop mockup overlay. Keep the LEFT side as soft abstract background only.',
+    'Fill the whole canvas with soft abstract background. A device mockup overlay is added later by software — do not leave a device-shaped hole and do not draw any device.',
   'center-panel':
-    'Reserve a centered rectangular panel (about 45–55% of canvas width) with neutral fill for screenshot overlay.',
+    'Reserve a centered rectangular panel (about 45–55% of canvas width) with neutral fill for screenshot overlay. Do not draw devices inside it.',
   'split-bottom':
     'Reserve the bottom 40% of the canvas as clean empty space or subtle gradient for a real photo overlay.',
 };
+
+const DEVICE_DRAWING_PHRASES: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bcentered product mockup\b/gi, replacement: 'abstract brand atmosphere' },
+  { pattern: /\bproduct mockup\b/gi, replacement: 'brand atmosphere' },
+  { pattern: /\bproduct in hand\b/gi, replacement: 'ambient setting' },
+  { pattern: /\bholding a smartphone\b/gi, replacement: 'in a premium setting' },
+];
+
+export function stripDeviceDrawingLanguage(prompt: string): string {
+  return DEVICE_DRAWING_PHRASES.reduce((text, { pattern, replacement }) => {
+    const fresh = new RegExp(pattern.source, pattern.flags);
+    return text.replace(fresh, replacement);
+  }, prompt);
+}
 
 export function wantsProductMockupPreset(
   post: Pick<SocialCopyPost, 'visualTemplateId'>,
@@ -66,22 +76,22 @@ function resolveKitOverlayHint(
   post?: Pick<SocialCopyPost, 'visualTemplateId'>,
   deviceHint?: AssetDeviceHint | null,
 ): string {
-  if (post && wantsProductMockupPreset(post)) {
-    if (deviceHint === 'pc') {
-      return LAPTOP_MOCKUP_HINT;
-    }
-    if (deviceHint === 'ipad') {
-      return TABLET_MOCKUP_HINT;
-    }
-    if (deviceHint === 'ios') {
-      return PHONE_MOCKUP_HINT;
-    }
-    return LAYOUT_HINTS.mockup;
+  if (layout !== 'mockup' && !(post && wantsProductMockupPreset(post))) {
+    return LAYOUT_HINTS[layout];
   }
-  return LAYOUT_HINTS[layout];
+
+  const parts = [LAYOUT_HINTS.mockup];
+  if (deviceHint === 'pc') {
+    parts.push(LAPTOP_MOCKUP_HINT);
+  } else if (deviceHint === 'ipad') {
+    parts.push(TABLET_MOCKUP_HINT);
+  } else if (deviceHint === 'ios') {
+    parts.push(PHONE_MOCKUP_HINT);
+  }
+  return parts.join(' ');
 }
 
-/** Append kit-overlay instructions so IA leaves room for real screenshot compositing. */
+/** Prepend kit-overlay rules so IA never draws a blank device the overlay must fight. */
 export function buildKitOverlayPrompt(
   basePrompt: string,
   recipe: ArtPromptRecipe,
@@ -91,9 +101,20 @@ export function buildKitOverlayPrompt(
 ): string {
   const layout = resolveArtKitLayout(recipe, post?.platform ?? 'instagram', post);
   const hint = resolveKitOverlayHint(layout, post, deviceHint);
-  const noPeopleRule = layout === 'mockup' ? ` ${MOCKUP_BACKGROUND_RULE}` : '';
-  const logoRule = options?.logoOverlay ? ` ${LOGO_OVERLAY_RULE}` : '';
-  return `${basePrompt.trim()}. ${KIT_OVERLAY_BASE} ${hint}${noPeopleRule}${logoRule}`;
+  const noPeopleRule = layout === 'mockup' ? MOCKUP_BACKGROUND_RULE : '';
+  const logoRule = options?.logoOverlay ? LOGO_OVERLAY_RULE : '';
+  const brief = stripDeviceDrawingLanguage(basePrompt.trim());
+  return [
+    KIT_OVERLAY_BASE,
+    hint,
+    noPeopleRule,
+    logoRule,
+    `Creative brief for the BACKGROUND ONLY (ignore any instruction to draw devices, screens, UI, or mockups): ${brief}.`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** Resolve compositing layout from recipe family or explicit kitLayout. */
@@ -131,22 +152,10 @@ async function compositeMockupLayout(
   const size = `${width}x${height}` as ImageGenerationSize;
   const aspectRatio = resolveVisualAspectRatio(size);
   const frameType = resolveDeviceFrameType(platform, aspectRatio, device);
-  const placement =
-    aspectRatio === 'square'
-      ? resolveDevicePlacement(width, height, frameType, aspectRatio)
-      : resolveHeroDevicePlacement(width, height, frameType, aspectRatio);
-  const margin = Math.round(width * 0.06);
-  const left =
-    aspectRatio === 'square'
-      ? Math.max(margin, width - placement.frameWidth - margin)
-      : placement.left;
-  const top = placement.top;
+  const placement = resolveHeroDevicePlacement(width, height, frameType, aspectRatio);
+  const { left, top } = placement;
 
-  const deviceFrame = await renderDeviceFrame(photoBuffer, {
-    ...placement,
-    left,
-    top,
-  });
+  const deviceFrame = await renderDeviceFrame(photoBuffer, placement);
   const shadow = await buildDeviceShadow(placement.frameWidth, placement.frameHeight, 24);
   const shadowLeft = left;
 
