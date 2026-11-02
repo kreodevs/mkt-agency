@@ -56,6 +56,11 @@ export function wantsProductScreenShowcase(post: SocialCopyPost): boolean {
     return false;
   }
 
+  // Reels / Stories / TikTok: mockup with the real kit screenshot, not a lifestyle blank phone.
+  if (wouldUseRigidStoryTemplate(post)) {
+    return true;
+  }
+
   const text = [
     intent.goal,
     intent.subject,
@@ -181,7 +186,7 @@ export function shouldUseCreativeScene(
   if (explicitCreative) return true;
 
   if (wouldUseRigidStoryTemplate(post)) {
-    return true;
+    return !hasKit;
   }
 
   // Default: image posts with media kit → creative scene (not product-hero template)

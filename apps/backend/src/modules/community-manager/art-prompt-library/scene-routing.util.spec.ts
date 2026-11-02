@@ -57,12 +57,23 @@ describe('scene-routing.util', () => {
     expect(wouldUseRigidStoryTemplate(basePost({ visualFormat: 'talking-head' }))).toBe(false);
   });
 
-  it('routes stories with media kit to creative scene by default', () => {
+  it('routes Instagram Reels/Stories with media kit to product mockup, not lifestyle scene', () => {
     const post = basePost({
       platform: 'instagram',
       imageDestination: 'story',
       visualTemplateId: 'story-vertical',
     });
+    expect(wantsProductScreenShowcase(post)).toBe(true);
+    expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(false);
+  });
+
+  it('keeps explicit creative-scene on stories as lifestyle', () => {
+    const post = basePost({
+      platform: 'instagram',
+      imageDestination: 'story',
+      visualTemplateId: 'creative-scene',
+    });
+    expect(wantsProductScreenShowcase(post)).toBe(false);
     expect(shouldUseCreativeScene(post, kitWithScreenshots, { postIndex: 0 })).toBe(true);
   });
 

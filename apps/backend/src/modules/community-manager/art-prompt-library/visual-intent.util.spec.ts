@@ -47,4 +47,17 @@ describe('visual-intent.util', () => {
       ),
     ).toBe(false);
   });
+
+  it('uses art-kit compose for Instagram Reels with media kit', () => {
+    expect(
+      shouldUseArtKitCompose(
+        basePost({
+          platform: 'instagram',
+          imageDestination: 'story',
+          visualTemplateId: 'story-vertical',
+        }),
+        kitWithScreenshots,
+      ),
+    ).toBe(true);
+  });
 });

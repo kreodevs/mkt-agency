@@ -96,6 +96,18 @@ describe('art-kit-compose.util', () => {
     );
   });
 
+  it('forces mockup layout for Instagram Reels and Stories', () => {
+    const recipe = recipeById('infographic-educational-012');
+    const reel = { visualTemplateId: 'story-vertical', platform: 'instagram' as const, imageDestination: 'story' as const };
+
+    expect(wantsProductMockupPreset(reel)).toBe(true);
+    expect(resolveArtKitLayout(recipe, 'instagram', reel)).toBe('mockup');
+    expect(buildKitOverlayPrompt('Reel', recipe, reel, 'ios')).toContain('vertical iPhone');
+    expect(buildKitOverlayPrompt('Reel', recipe, reel, 'ios')).not.toContain(
+      'centered rectangular panel',
+    );
+  });
+
   it('strips device-drawing language from the creative brief', () => {
     expect(stripDeviceDrawingLanguage('Centered product mockup of the app')).toBe(
       'abstract brand atmosphere of the app',

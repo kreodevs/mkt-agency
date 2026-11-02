@@ -75,12 +75,12 @@ When media kit has compose roles and routing selects creative scene (stories, `p
 2. `ArtPromptSelectorService.selectSceneRecipe()` picks from `SCENE_PROMPT_RECIPES`.
 3. CM portrait (if ready) is passed as `input_references` to OpenRouter image API for identity.
 4. IA generates photorealistic scene with **blank device screen**.
-5. By default **no kit overlay** — lifestyle photography only. Captures are composited only when `wantsProductScreenShowcase()` (explicit `product-hero` or UI-focused copy); those posts use **art-kit-compose** mockup geometry instead of fixed inpainting.
+5. By default **no kit overlay** — lifestyle photography only. Captures are composited only when `wantsProductScreenShowcase()` (explicit `product-hero`, **Reels/Stories/TikTok**, or UI-focused copy); those posts use **art-kit-compose** mockup geometry instead of fixed inpainting. Instagram Reels and Stories with media kit skip lifestyle scene-kit so the real screenshot lands in a device frame.
 6. Generation metadata uses `pipeline: 'scene-kit-compose'` with `kitScreenComposited: false` for pure lifestyle scenes.
 
 ## Art + kit compose (hybrid)
 
-When the product media kit has compose image roles (`product-screenshot`, etc.) and `preferLayout` is `ai-art` or `auto`:
+When the product media kit has compose image roles (`product-screenshot`, etc.) and `preferLayout` is `ai-art` or `auto` (also **Reels/Stories/TikTok** and `product-hero`):
 
 1. `ArtPromptSelectorService.selectRecipeForKitCompose()` picks a recipe with `supportsMediaKitOverlay: true`.
 2. `buildKitOverlayPrompt()` tells the image model to leave negative space for a real screenshot.

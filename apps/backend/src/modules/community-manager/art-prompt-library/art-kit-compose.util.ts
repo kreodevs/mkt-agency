@@ -64,16 +64,25 @@ export function stripDeviceDrawingLanguage(prompt: string): string {
   }, prompt);
 }
 
-export function wantsProductMockupPreset(
-  post: Pick<SocialCopyPost, 'visualTemplateId'>,
-): boolean {
+type KitComposePost = Partial<
+  Pick<SocialCopyPost, 'visualTemplateId' | 'platform' | 'imageDestination' | 'visualFormat'>
+>;
+
+export function wantsProductMockupPreset(post: KitComposePost): boolean {
   const id = post.visualTemplateId?.trim();
-  return id === 'product-hero' || id === 'promo-cta';
+  if (id === 'product-hero' || id === 'promo-cta') {
+    return true;
+  }
+  return (
+    post.imageDestination === 'story' ||
+    post.platform === 'tiktok' ||
+    id === 'story-vertical'
+  );
 }
 
 function resolveKitOverlayHint(
   layout: ArtKitLayoutMode,
-  post?: Pick<SocialCopyPost, 'visualTemplateId'>,
+  post?: KitComposePost,
   deviceHint?: AssetDeviceHint | null,
 ): string {
   if (layout !== 'mockup' && !(post && wantsProductMockupPreset(post))) {
@@ -95,7 +104,7 @@ function resolveKitOverlayHint(
 export function buildKitOverlayPrompt(
   basePrompt: string,
   recipe: ArtPromptRecipe,
-  post?: Pick<SocialCopyPost, 'visualTemplateId' | 'platform'>,
+  post?: KitComposePost,
   deviceHint?: AssetDeviceHint | null,
   options?: { logoOverlay?: boolean },
 ): string {
@@ -121,7 +130,7 @@ export function buildKitOverlayPrompt(
 export function resolveArtKitLayout(
   recipe: ArtPromptRecipe,
   _platform: string,
-  post?: Pick<SocialCopyPost, 'visualTemplateId'>,
+  post?: KitComposePost,
 ): ArtKitLayoutMode {
   if (post && wantsProductMockupPreset(post)) {
     return 'mockup';
@@ -250,11 +259,17 @@ export async function compositeKitOnArtBackground(
   platform: string,
   device?: AssetDeviceHint | null,
   visualTemplateId?: string | null,
+  imageDestination?: SocialCopyPost['imageDestination'] | null,
 ): Promise<Buffer> {
   const captureSize = await readCaptureImageSize(photoBuffer);
   const effectiveDevice = resolveMockupDeviceHint(device, captureSize);
-  const effectiveLayout =
-    visualTemplateId && wantsProductMockupPreset({ visualTemplateId }) ? 'mockup' : layout;
+  const effectiveLayout = wantsProductMockupPreset({
+    visualTemplateId: visualTemplateId ?? undefined,
+    platform: platform as SocialCopyPost['platform'],
+    imageDestination: imageDestination ?? undefined,
+  })
+    ? 'mockup'
+    : layout;
   const { width, height } = parseImageSize(size);
   const canvas = await sharp(artBuffer)
     .resize(width, height, { fit: 'cover', position: 'centre' })

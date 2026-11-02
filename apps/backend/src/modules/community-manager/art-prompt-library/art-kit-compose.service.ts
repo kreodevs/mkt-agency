@@ -159,11 +159,9 @@ export class ArtKitComposeService {
             : null;
           const mockupDevice = resolveMockupDeviceHint(pick?.device ?? null, captureSize);
 
-          const slidePrompt = useKitOverlay
-            ? buildKitOverlayPrompt(basePrompt, selection.recipe, post, mockupDevice, {
-                logoOverlay: willBrandLogo,
-              })
-            : basePrompt;
+          const slidePrompt = buildKitOverlayPrompt(basePrompt, selection.recipe, post, mockupDevice, {
+            logoOverlay: willBrandLogo,
+          });
 
           const artBuffer = await this.imageGeneration.generateImageBuffer(
             tenantId,
@@ -182,6 +180,7 @@ export class ArtKitComposeService {
               post.platform,
               mockupDevice,
               post.visualTemplateId ?? null,
+              post.imageDestination ?? null,
             );
           }
 

@@ -1,7 +1,17 @@
+# Changelog
+
 ## [Unreleased]
+
+## [0.3.0] — 2026-11-02
 
 ### Added
 
+- **Pipeline híbrido de composición visual (`art-kit-compose` & `scene-kit-compose`)**:
+  - Biblioteca de recetas de prompts MeiGen con selección contextual automática según objetivos del post.
+  - Generación de mockups automáticos para Reels, TikTok y Stories usando capturas reales del Media Kit de producto.
+  - Enrutamiento inteligente de escenas (`scene-routing` y `visual-intent`) que prioriza vitrinas de pantalla real frente a lienzos en blanco o renders lifestyle abstractos.
+  - Herramientas visuales (`visual tools`) expuestas para el generador de copy en redes sociales.
+  - Recomposición y regeneración de artes por escena y plantilla (`creative-scene`, `product-hero`, carruseles y talking heads con overlay de marca).
 - **Apple Design System**: Implementación completa de principios de diseño fluido (inspirado en WWDC *Designing Fluid Interfaces*).
   - **Elevación con sombras**: eliminada la regla global `box-shadow: none !important`; sistema de 4 niveles de elevación (`--shadow-sm/md/lg/xl`) para codificar jerarquía visual.
   - **Materiales translúcidos**: header y sidebar usan `backdrop-filter: blur() + saturate()` con fondos semitransparentes; el contenido scrollea debajo del chrome.
@@ -24,11 +34,24 @@
     - **Swipe-to-open sidebar**: gesto swipe-right desde borde izquierdo (< 24px) abre el drawer; swipe-left lo cierra.
     - **Materiales mobile-optimized**: `blur(12px)` en mobile vs `blur(20-32px)` en desktop para rendimiento.
     - **Drawer accesible**: `aria-modal`, `role="dialog"`, `aria-label` en mobile sidebar.
+- **Generación y segmentación de video**:
+  - Segmentación automática para textos que superan el límite del modelo.
+  - Concatenación FFmpeg en segundo plano con transiciones crossfade de 0.5s sin alterar audio.
+  - Captura y reporte de stderr para diagnósticos visibles de errores FFmpeg en UI.
+- **Refactor de arquitectura (Anti-Spaghetti & God-Killer)**:
+  - `GenerationContextFacade` (`community-manager/generation-context.facade.ts`): desacopla dependencias inyectadas en CM de 21 a 11.
+  - `VideoGenerationService` (`agents/video-generation.service.ts`): separado de `ImageGenerationService`.
+  - Descomposición modular de páginas y componentes (`AssetLibraryPage`, `CommunityManagerPage`, `CmCharacterSetupPanel`).
+  - Cobertura de caracterización con Jest y scripts de testing.
+- **Bandeja de publicación y descarga**:
+  - Descarga directa de artes e imágenes generadas desde la bandeja.
+  - Compartición por WhatsApp con descarga adjunta del visual.
+  - Muestra fechas de creación y actualización de piezas, con ordenamiento por actividad reciente.
 
 ### Changed
 
 - Paquetes añadidos: `motion` (v12.42), `tailwindcss-animate` (v1.0.7).
-- **Modo copiloto SOHO** (UX por defecto para tenants): menú reducido (Inicio, Mi producto, Ajustes), panel de estado del pipeline en bandeja y botón **Preparar mi semana**.
+- **Modo copiloto SOHO** (UX por defecto para tenants): menú reducido (Inicio, Mi producto, Ajustes), panel de estado del pipeline en bandeja y botón **Preparar mi semana** / **Preparar día**.
 - **API copiloto**: `GET /publication-inbox/copilot-status` y `POST /publication-inbox/prepare-week` (descubre competidores, Competitor Intel, estrategia + CM bajo demanda).
 - **Página Ajustes** (`/settings/copilot`): redes sociales, volumen semanal y toggle menú avanzado (`mkt-advanced-nav` en localStorage).
 - **CTA Copiar y publicar** en tarjetas de bandeja (modo SOHO); `/contents/:id` sigue disponible para copiar/descargar.
@@ -36,54 +59,18 @@
 - **SOHO éxito (Fase A/B)**: «Hoy publicas esto», contactos semanales, regenerar un clic, publicación asistida (copiar/abrir red/WhatsApp), mockup por red, `GET /dashboard/soho-summary`, recordatorio `publish_reminder`, notificaciones navegador.
 - **Atribución post → lead**: `GET /forms/capture`, página pública `/c/:formId`, UTM + `contentId` en submit y `lead.metadata`, botón «Link captura» en bandeja, métrica `attributedLeadsThisWeek` en resumen SOHO.
 - **Kit de medios por producto**: tabla `product_media_kit_items`, API CRUD en `/products/:id/media-kit`, panel en detalle de producto; el Community Manager compone visuales reales (Ken Burns / video demo) antes de recurrir a IA generativa.
-- **Sanitización de copy**: elimina indicaciones internas «(mostrar fotos…)» del texto publicable.
-
-### Changed
-
-- **Librería multimedia (`/libreria`)**: paginación server-side de **20 activos por página** en vista grid y tabla; el picker «Desde librería» usa el mismo tamaño de página.
+- **Librería multimedia (`/libreria`)**: paginación server-side de **20 activos por página** en vista grid y tabla; selector de carpetas y picker modal coordinado.
 - Navegación tenant extraída a `lib/tenant-navigation.ts`; toggle «Modo agencia (avanzado)» en sidebar.
-
-### Added (video)
-- Video segmentation for texts exceeding model duration limits
-- Automatic FFmpeg concatenation of multiple video clips into single asset
-- Crossfade fade-in transitions (0.5s) between video clips without audio alteration
+- Sanitización de copy: eliminación automática de indicaciones internas o comentarios de dirección de arte.
 
 ### Fixed
-- **FFmpeg crossfade filter**: Corrected filter_complex syntax to properly chain video transitions and audio concatenation (separate video xfade chain from audio concat chain)
-- **FFmpeg error visibility**: Added stderr capture to surface FFmpeg failures instead of silent failures
-- **Job status synchronization**: Fixed job not updating to completed after video concatenation, resolving persistent spinner in UI
 
-### Added (refactor: Anti-Spaghetti & God-Killer)
-
-- **GenerationContextFacade** (`community-manager/generation-context.facade.ts`): encapsula `ProductService`, `CompanyProfileService`, `CompetitorIntelService`, `CompetitorService`, `ProductMediaKitService`, `AssetFolderService`, `CmCharacterService` + repos de `Campaign` y `Content`. Expone `buildGenerationContext()`, `buildRegenerationContext()` y `refreshCampaignLinkedContent()`.
-- **VideoGenerationService** (`agents/video-generation.service.ts`): separado de `ImageGenerationService` — contiene `runVideoGeneration`, `runSegmentedVideoGeneration`, `concatVideoClips`, `uploadGeneratedVideo`, `resolveVideoPayload`, `resolveClipBuffer`.
-- **Util-split — competitor-discovery-context**: `competitor-discovery-context.util.ts` (601 lns) → barrel re-export (37 lns) + `competitor-context.constants.ts`, `competitor-context.helpers.ts`, `competitor-search-queries.ts`, `competitor-filtering.ts`, `competitor-web-evidence.ts`.
-- **Util-split — image-generation-utils**: `image-generation.utils.ts` (437 lns) → barrel re-export (100 lns) + `generation-media-type.ts`, `video-duration-policy.ts`, `video-narration.utils.ts`, `image-frame.utils.ts`, `generation-error.utils.ts`.
-- **AssetLibraryPage split**: `AssetLibraryPage.tsx` (726→423 lns) → `AssetSection.tsx` (136 lns), `AssetFilterBar.tsx` (154 lns), `useAssetLibraryMutations.ts` (136 lns).
-- **CommunityManagerPage split**: `CommunityManagerPage.tsx` (688→339 lns) → `CmGeneratorForm.tsx` (217 lns), `CmPostCard.tsx` (166 lns), `community-manager.constants.ts` (30 lns), `community-manager.types.ts` (19 lns).
-- **CmCharacterSetupPanel split**: `CmCharacterSetupPanel.tsx` (684→561 lns) → `CmCharacterAppearanceForm.tsx` (123 lns), `PortraitPickerDialog.tsx` (93 lns).
-- **Tests de regresión**: Jest configurado para NestJS backend (`jest.config.ts`, `ts-jest`). 65 tests de caracterización en 6 suites:
-  - `generation-error.utils.spec.ts` — `formatGenerationError`, `isStaleProcessingGeneration`
-  - `image-generation.service.spec.ts` — `handleExistingGeneration`, `applyLogoOverlay`, `generationHasVisual`, `toResult`
-  - `video-generation.service.spec.ts` — `resolveClipBuffer`, `resolveVideoPayload`, `concatVideoClips`
-  - `content.service.spec.ts` — `validateUpdateDto`, `isMetadataOnlyUpdate`, routing metadata-only vs versionado
-  - `community-manager.service.spec.ts` — `isProductReadyForCM`, `extractErrorMessage`, `normalizePlatforms`
-  - `generation-context.facade.spec.ts` — `buildGenerationContext`, `refreshCampaignLinkedContent`, `buildRegenerationContext`
-- Scripts: `yarn test`, `yarn test:watch`, `yarn test:cov` en `@mkt-agency/backend`.
-
-### Changed (refactor: Anti-Spaghetti & God-Killer)
-
-- **`community-manager.service.ts`** (748→656 lns, 21→11 deps): métodos `generate()` y `regeneratePostForContent()` reducidos a ≤40 lns cada uno extrayendo `resolveGenerationContext()`, `savePostsAsContent()`, `handleGenerationError()`, `saveSinglePost()`, `extractErrorMessage()`, `isProductReadyForCM()`, `regenerateVisualWithoutFeedback()`. Anidamiento >2 niveles eliminado con early returns y guard clauses.
-- **`image-generation.service.ts`** (1173→920 lns): video delegado a `VideoGenerationService`; métodos extraídos `applyLogoOverlay()`, `handleExistingGeneration()`, `refreshBrandedPrompt()`; condicionales anidados reemplazados con early return y extracción a helper semántico.
-- **`content.service.ts`**: `update()` separado en `updateMetadataOnly()` y `updateWithVersion()`; DTO validation extraída a `validateUpdateDto()` e `isMetadataOnlyUpdate()`.
-- **`generation-context.facade.ts`**: `resolveProductForGeneration()` aplanado extrayendo `resolveProductFromCampaign()`.
-- **`video-generation.service.ts`**: nesting de 3 niveles en `runVideoGeneration()` (FFmpeg availability check) aplanado; `resolveClipBuffer()` extraído del ternario anidado en `concatVideoClips()`.
-
-### Fixed (refactor)
-
+- **iPhone / Mockup en blanco**: corregida la selección de escenas y templates en Reels/Stories con kit para evitar teléfonos vacíos sin overlay.
+- **Bandeja de publicación**: previene bucles infinitos en snapshot de piezas nuevas y ajusta ordenamiento por fecha de creación descendente.
+- **Sincronización de jobs BullMQ**: corrige estado atascado en completed tras concatenación de clips de video.
+- **Filtro crossfade FFmpeg**: corrección en sintaxis de filter_complex separando la cadena de audio y video concat.
+- **Permisos de impersonación**: permite listado de inquilinos durante impersonación sin requerir token directo de plataforma.
 - **Bug introducido en refactor**: `regenerateVisualWithoutFeedback()` referenciaba `content.productId` (variable inexistente) → corregido a `productContext?.id`.
-
-# Changelog
 
 ## [0.2.3] — 2026-07-03
 

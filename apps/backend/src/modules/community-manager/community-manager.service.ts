@@ -22,7 +22,7 @@ import { SceneKitComposeService } from './art-prompt-library/scene-kit-compose.s
 import { buildMediaKitRevisionHint, parseFeedbackTargetFrames } from './domain/feedback-visual-intent.util';
 import { sanitizePublishableCopy } from '../../shared/domain/sanitize-publishable-copy.util';
 import { toLocalDateKey } from '../../shared/domain/date-key.util';
-import { wantsProductScreenShowcase, shouldUseCreativeScene } from './art-prompt-library/scene-routing.util';
+import { shouldUseCreativeScene } from './art-prompt-library/scene-routing.util';
 import { shouldUseArtKitCompose } from './art-prompt-library/visual-intent.util';
 import {
   SOCIAL_COPY_ADAPTER,
@@ -593,7 +593,7 @@ export class CommunityManagerService {
       cmPortraitReady: Boolean(cmPortraitAssetId),
     };
 
-    if (wantsProductScreenShowcase(post) && shouldUseArtKitCompose(post, ctx.kit, creativeSceneOptions)) {
+    if (shouldUseArtKitCompose(post, ctx.kit, creativeSceneOptions)) {
       const artKitResult = await this.artKitCompose.tryCompose(
         tenantId,
         userId,

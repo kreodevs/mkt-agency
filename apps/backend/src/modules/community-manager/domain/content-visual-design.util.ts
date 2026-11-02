@@ -5,7 +5,10 @@ import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import { isVisualSceneId } from './visual-template.constants';
 
 export function resolveContentImageDestination(
-  post: Pick<SocialCopyPost, 'imageDestination' | 'visualTemplateId'>,
+  post: {
+    imageDestination?: string | null;
+    visualTemplateId?: string | null;
+  },
 ): ContentImageDestination {
   if (post.imageDestination === 'story') {
     return 'story';
@@ -62,8 +65,10 @@ export function socialCopyPostFromContent(
     visualHeadline: content.visualHeadline ?? undefined,
     visualSubline: content.visualSubline ?? undefined,
     visualCta: content.visualCta ?? undefined,
-    imageDestination:
-      content.imageDestination === 'story' ? 'story' : ('feed' as ContentImageDestination),
+    imageDestination: resolveContentImageDestination({
+      imageDestination: content.imageDestination,
+      visualTemplateId: content.visualTemplateId,
+    }),
     bestTime: '',
     targetAudience: '',
     callToAction: content.visualCta?.trim() || 'Ver más',
