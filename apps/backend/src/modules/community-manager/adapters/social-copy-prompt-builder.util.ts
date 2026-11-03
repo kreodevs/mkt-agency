@@ -136,7 +136,11 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
         'talking-head en TikTok o Instagram Reels: platform instagram/tiktok, visualTemplateId story-vertical, imageDestination story.',
         'Elige cmCharacterId según tono (formal → ejecutiva, cercano → juvenil).',
         'visualDescription en talking-head: solo fondo/ambiente del reel (consultorio, oficina moderna, luz natural). NO describas otra persona.',
-        'El body del talking-head = guion hablado 15-45 s, natural, sin timestamps ni direcciones de escena.',
+        'REGLAS CRÍTICAS PARA EL BODY DE TALKING-HEAD (guion hablado para avatar):',
+        '1. LONGITUD: Máximo 45 a 60 palabras (18 a 24 segundos). El avatar de video tiene un límite de duración estricto; textos más largos se cortan antes de terminar la frase final.',
+        '2. ESTRICTAMENTE CERO EMOJIS: Prohibido incluir emojis en el body hablado (la voz sintética no los lee y provocan cortes de sincronización labial).',
+        '3. CERO HASHTAGS: Prohibido incluir hashtags (#) en el body hablado. Los hashtags van únicamente en el campo hashtags.',
+        '4. TONO: Natural, primera persona, conversacional, sin timestamps ni acotaciones de producción entre paréntesis.',
         'En posts estáticos/carousel el sistema superpone el retrato de la CM en la portada.',
         'En talking-head el sistema añade automáticamente capturas del media kit: intro de producto (~3 s) + PiP con la app durante el reel.',
       ].join('\n')
@@ -145,7 +149,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
           'La marca tiene CM virtual lista (retrato + lip-sync en español).',
           'OBLIGATORIO: al menos 1 post talking-head en TikTok o Instagram Reels (story-vertical).',
           'visualDescription en talking-head: fondo/ambiente del reel, NO otra persona.',
-          'Guion hablado 15-45 s, sin timestamps ni direcciones de escena.',
+          'REGLAS DEL BODY TALKING-HEAD: 45-60 palabras máximo (18-24 s), CERO emojis, CERO hashtags en el texto hablado, sin timestamps ni direcciones de escena.',
         ].join('\n')
       : 'No hay CM virtual lista: NO uses visualFormat talking-head. TikTok→image vertical.';
 
@@ -173,7 +177,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     viralHooksGuide,
     `Instrucción: ${countInstruction}`,
     context.cmCharacterReady
-      ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image.'
+      ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels; body = guion hablado 45-60 palabras, CERO emojis, CERO hashtags, 18-24 s); carruseles educativos→carousel; resto→image.'
       : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
     'visualDescription = brief de arte (ambiente, luz, emoción).',
     'visualTemplateId: product-hero (mockup con UI real para SaaS/software/apps), promo-cta (oferta directa con mockup), stat-highlight (métrica impactante), tip-card (consejo accionable), quote-insight (autoridad), creative-scene (foto lifestyle/ambiente), ai-art (infografía/concepto IA).',

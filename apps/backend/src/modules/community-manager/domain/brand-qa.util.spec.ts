@@ -61,4 +61,22 @@ describe('brand-qa.util', () => {
     expect(result.warnings.some((w) => w.includes('al alcance de un clic'))).toBe(true);
     expect(result.score).toBeLessThan(100);
   });
+
+  it('audits talking-head script to remove emojis, spoken hashtags and fits duration', () => {
+    const post: Partial<SocialCopyPost> & { body: string } = {
+      title: 'Reel CM',
+      body: 'Mira, te voy a ser honesta: llevar un consultorio dental no es fácil. Entre citas, pacientes y papeleo, todo se vuelve un caos. 😩 Pero, ¿y si te dijera que existe una forma más sencilla? Oraltrack centraliza todo: tus citas, tus expedientes y hasta tus cobros. Todo en un solo lugar, sin complicaciones. Yo también pensé que iba a ser difícil de usar, pero es tan intuitivo que en una tarde ya lo dominaba. Y lo mejor: mis pacientes notan la diferencia. Se sienten más atendidos y yo me siento más tranquila. Si tú también quieres dar el salto a la organización digital, dale like a este video y cuéntame en los comentarios: ¿qué es lo que más se te complica de tu consultorio? #OralTrack 👇',
+      platform: 'tiktok',
+      visualFormat: 'talking-head',
+    };
+
+    const result = runBrandQaAudit(post);
+    expect(result.sanitizedBody).not.toContain('😩');
+    expect(result.sanitizedBody).not.toContain('👇');
+    expect(result.sanitizedBody).not.toContain('#OralTrack');
+    expect(result.warnings.some((w) => w.includes('emojis'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('extenso'))).toBe(true);
+    const words = result.sanitizedBody.split(/\s+/).filter(Boolean);
+    expect(words.length).toBeLessThanOrEqual(65);
+  });
 });

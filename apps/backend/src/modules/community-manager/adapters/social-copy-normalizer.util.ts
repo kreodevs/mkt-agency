@@ -125,6 +125,14 @@ export function normalizeSocialCopyBatch(
         post.cmCharacterId = cmCharacterId;
       }
 
+      if (post.visualFormat === 'talking-head') {
+        post.body = post.body
+          .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
+          .replace(/#\w+/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
       const visualTemplateId = pickString(row, [
         'visualTemplateId',
         'visual_template_id',

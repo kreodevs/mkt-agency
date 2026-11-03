@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AssetService } from '../assets/asset.service';
 import { LlmConfigService } from '../../shared/ai/llm-config.service';
 import { LlmProviderService } from '../../shared/ai/llm-provider.service';
-import { sanitizeSpanishNarrationScript } from './domain/image-generation.utils';
+import { fitNarrationBodyForDuration } from './domain/video-narration.utils';
 import {
   ReplicateTalkingHeadAdapter,
   StubTalkingHeadAdapter,
@@ -54,7 +54,7 @@ export class TalkingHeadComposerService {
   ) {}
 
   async compose(options: ComposeTalkingHeadOptions): Promise<ComposeTalkingHeadResult> {
-    const script = sanitizeSpanishNarrationScript(options.script);
+    const script = fitNarrationBodyForDuration(options.script, 25);
     if (!script) {
       throw new Error('El guion de narración está vacío');
     }

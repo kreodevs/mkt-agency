@@ -1,4 +1,5 @@
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
+import { fitNarrationBodyForDuration } from '../../agents/domain/video-narration.utils';
 
 const BANNED_AD_TERMS = [
   'dinero fácil',
@@ -105,6 +106,26 @@ export function runBrandQaAudit(post: Partial<SocialCopyPost> & { body: string }
     warnings.push(`Exceso de hashtags (${post.hashtags.length}). Se recomienda entre 1 y 3 hashtags de nicho.`);
     post.hashtags = post.hashtags.slice(0, 3);
     score -= 5;
+  }
+
+  // 5. Talking-head spoken script audit (strictly no emojis, no spoken hashtags, max word count)
+  if (post.visualFormat === 'talking-head') {
+    if (/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu.test(body)) {
+      warnings.push('El guion de talking-head contenía emojis. Se eliminaron para que la voz sintética no tropiece.');
+      body = body.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
+      score -= 10;
+    }
+    if (/#\w+/g.test(body)) {
+      warnings.push('El guion de talking-head contenía hashtags en el texto hablado. Se retiraron.');
+      body = body.replace(/#\w+/g, '').replace(/\s+/g, ' ').trim();
+      score -= 5;
+    }
+    const words = body.split(/\s+/).filter(Boolean);
+    if (words.length > 65) {
+      warnings.push(`Guion de talking-head demasiado extenso (${words.length} palabras). Se ajustó a ≤25 segundos para evitar que el avatar corte la frase final.`);
+      body = fitNarrationBodyForDuration(body, 25);
+      score -= 10;
+    }
   }
 
   const passed = violations.length === 0;
