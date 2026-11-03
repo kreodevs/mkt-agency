@@ -42,12 +42,21 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
   const rawScene =
     input.artRecipeBasePrompt?.trim() ||
     input.visualDescription?.trim() ||
-    (input.title?.trim() ? `Tema: ${input.title.trim()}` : '');
+    (input.title?.trim() ? `Concepto visual fotográfico para ${input.title.trim()}` : '');
   const scene = hasLogo
     ? sanitizeVisualPromptForLogoOverlay(rawScene, productName)
     : rawScene;
 
   const parts: string[] = [];
+
+  parts.push(
+    'CRITICAL REQUIREMENT - ABSOLUTELY ZERO TEXT IN IMAGE: ' +
+      'Do NOT paint, write, or generate ANY words, letters, phrases, headlines, subtitles, quotes, or typography inside the image. ' +
+      'The generated background must be 100% clean photography/artwork with NO written words in any language (no Spanish, no Italian, no English words painted in the image). ' +
+      'All words, headlines, and copywriting are composited digitally in post-processing. Clean negative space only.',
+    'ESTRICTAMENTE PROHIBIDO: CERO PALABRAS, CERO TEXTO Y CERO LETRAS DENTRO DE LA IMAGEN. ' +
+      'NO dibujes ni escribas ningún titular, ni frases en la imagen. La foto debe ser 100% limpia de texto.',
+  );
 
   if (hasLogo) {
     parts.push(

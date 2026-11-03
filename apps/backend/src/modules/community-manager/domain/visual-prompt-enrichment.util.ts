@@ -22,6 +22,7 @@ export function enrichVisualDescriptionForAi(
   if (hasLogo) {
     parts.push(
       'Identidad de marca solo mediante logo superpuesto después — NO escribas el nombre de la marca ni wordmarks en la escena.',
+    'CERO TEXTO DENTRO DE LA FOTOGRAFÍA: La imagen debe ser 100% limpia sin ninguna palabra, título, frase, letra ni texto en ningún idioma (sin texto en inglés, italiano ni español). Toda la tipografía se superpone después mediante software. Genera únicamente la escena fotográfica.',
     );
   } else {
     parts.push(

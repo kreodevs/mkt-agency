@@ -29,7 +29,7 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
 
     const body: Record<string, unknown> = {
       model,
-      prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}`,
+      prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}. Clean photography, absolutely zero text, no words, no letters, no labels in the image.`,
       n: 1,
       size,
       output_format: 'png',
