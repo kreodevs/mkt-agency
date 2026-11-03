@@ -78,7 +78,10 @@ export async function compositeVisualTextOverlay(
     return canvasBuffer;
   }
 
-  const { width, height } = parseImageSize(input.size);
+  const meta = await sharp(canvasBuffer).metadata();
+  const fallbackSize = parseImageSize(input.size);
+  const width = meta.width ?? fallbackSize.width;
+  const height = meta.height ?? fallbackSize.height;
   const fontStack = input.brandKit?.fontFamily
     ? normalizeBrandFontFamily(input.brandKit.fontFamily)
     : 'Helvetica Neue, Arial, sans-serif';

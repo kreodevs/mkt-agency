@@ -59,4 +59,28 @@ describe('visual-text-overlay.util', () => {
     const meta = await sharp(res).metadata();
     expect(meta.width).toBe(1024);
   });
+
+  it('adapts to real canvas resolution (1920x1920) even when size parameter defaults to 1024', async () => {
+    const largeCanvas = await sharp({
+      create: {
+        width: 1920,
+        height: 1920,
+        channels: 4,
+        background: { r: 200, g: 200, b: 200, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const res = await compositeVisualTextOverlay(largeCanvas, {
+      headline: '¿Un solo fotógrafo?',
+      subline: 'QR + WhatsApp + IA = Álbum',
+      cta: 'Descubre',
+      size: '1024x1024',
+    });
+
+    const meta = await sharp(res).metadata();
+    expect(meta.width).toBe(1920);
+    expect(meta.height).toBe(1920);
+  });
 });

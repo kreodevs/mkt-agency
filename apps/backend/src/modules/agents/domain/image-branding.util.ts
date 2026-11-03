@@ -66,6 +66,10 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
   parts.push(
     'NO renderices el texto del post, hashtags, captions ni copy publicable dentro de la imagen.',
+    'ESTILO Y COMPOSICIÓN: Fotografía publicitaria cinematográfica o arte editorial de alta gama. ' +
+      'ESTRICTAMENTE PROHIBIDO: NO generes clip-art, iconos vectoriales 2D, diagramas, esquemas, infografías, ' +
+      'códigos QR falsos, logos de WhatsApp o terceras empresas, ni texto dibujado a mano. ' +
+      'La imagen debe ser una escena fotográfica o visual orgánica y completa.',
   );
 
   if (scene) {
