@@ -113,8 +113,9 @@ export class VisualOrchestratorService {
     }
 
     const skipCreative = shouldSkipTemplateForCreativeScene(post, kit, sceneOptions);
+    const hasKit = kitHasComposeImageRoles(kit ?? []);
 
-    if (productId && !skipAiArt && !skipCreative) {
+    if (productId && hasKit && !skipAiArt && !skipCreative) {
       const templated = await this.templateComposer.tryComposeFromTemplate(
         tenantId, userId, contentId, post, productId, kit, postIndex,
         { resolvedProfile: ctx.resolvedProfile },
@@ -140,7 +141,7 @@ export class VisualOrchestratorService {
     }
 
     if (!post.visualDescription?.trim() && !post.visualIntent?.subject?.trim()) {
-      return false;
+      post.visualDescription = `${post.title}. Professional marketing photograph, cinematic lighting, authentic atmosphere.`;
     }
 
     return this.generateAiImage(tenantId, userId, contentId, post, productId, kit, ctx, recentRecipeIds);
@@ -189,7 +190,13 @@ export class VisualOrchestratorService {
 
       const imageResult = await this.imageGeneration.attachVisualToContent(
         tenantId, userId, contentId, visualDescription, productId ?? undefined,
-        { artRecipeBasePrompt, artRecipeId },
+        {
+          artRecipeBasePrompt,
+          artRecipeId,
+          visualHeadline: post.visualHeadline,
+          visualSubline: post.visualSubline,
+          visualCta: post.visualCta,
+        },
       );
       return imageResult?.status === 'completed';
     } catch (error) {

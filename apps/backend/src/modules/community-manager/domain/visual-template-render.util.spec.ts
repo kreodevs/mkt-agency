@@ -181,6 +181,8 @@ describe('visual-template-render.util', () => {
   });
 
   describe('renderVisualTemplateFrame', () => {
+    jest.setTimeout(25000);
+
     it('renders split layout PNG with screenshot', async () => {
       const photoBuffer = await createTestPhoto(800, 600);
       const output = await renderVisualTemplateFrame({

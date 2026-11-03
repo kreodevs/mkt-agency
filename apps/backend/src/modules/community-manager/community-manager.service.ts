@@ -680,6 +680,24 @@ export class CommunityManagerService {
     );
 
     if (!result.attached) {
+      const aiAttached = await this.visualOrchestrator.attachVisualForPost(
+        tenantId,
+        userId,
+        contentId,
+        post,
+        productId,
+        ctx.kit,
+        visualVariantIndex,
+        ctx,
+      );
+      if (aiAttached) {
+        const updated = await this.contentService.findOne(tenantId, contentId);
+        return {
+          contentId,
+          attached: true,
+          assetIds: this.extractVersionAssetIds(updated.currentVersion),
+        };
+      }
       throw new BadRequestException({
         error: 'No se pudo regenerar el visual. Verifica el kit de medios y el estilo visual del contenido.',
         code: 'VISUAL_RECOMPOSE_FAILED',

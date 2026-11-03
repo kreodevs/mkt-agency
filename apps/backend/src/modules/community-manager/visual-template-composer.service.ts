@@ -107,6 +107,13 @@ export class VisualTemplateComposerService {
         post.platform,
       );
 
+      if (!imagePicks.length && !options?.forceTemplateId) {
+        this.logger.debug(
+          `tryComposeFromTemplate: skipping for content ${contentId} because media kit has no images for mockups`,
+        );
+        return { attached: false, assetIds: [] };
+      }
+
       const cmPortraitAssetId = await this.cmCharacter.resolveDefaultPortraitAssetId(
         tenantId,
         productId,
@@ -136,6 +143,13 @@ export class VisualTemplateComposerService {
         const photoFile = photoAssetId
           ? await this.assetService.readFile(tenantId, photoAssetId).catch(() => null)
           : null;
+
+        if (!photoFile?.buffer && !options?.forceTemplateId) {
+          this.logger.debug(
+            `tryComposeFromTemplate: skipping for content ${contentId} because pick has no photo buffer`,
+          );
+          return { attached: false, assetIds: [] };
+        }
 
         const slots = buildVisualTemplateSlots(
           {

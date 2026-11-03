@@ -104,9 +104,10 @@ describe('CommunityManagerService — extracted helpers', () => {
   });
 
   describe('attachVisualForPost (private)', () => {
-    const talkingHeadComposer = { attachToContent: jest.fn() };
-    const templateComposer = { tryComposeFromTemplate: jest.fn() };
-    const imageGeneration = { attachVisualToContent: jest.fn() };
+    const visualOrchestrator = {
+      attachVisualForPost: jest.fn().mockResolvedValue(true),
+      handlePostRegenerationVisual: jest.fn().mockResolvedValue(undefined),
+    };
 
     beforeEach(() => {
       service = new CommunityManagerService(
@@ -116,19 +117,18 @@ describe('CommunityManagerService — extracted helpers', () => {
         {} as any, // adapter
         {} as any, // llmProviders
         {} as any, // contentService
-        imageGeneration as any,
+        {} as any, // imageGeneration
         {} as any, // productService
         {} as any, // productAppCaptureService
-        templateComposer as any,
+        {} as any, // templateComposer
         {} as any, // artKitCompose
         {} as any, // sceneKitCompose
         {} as any, // cmCharacter
         {} as any, // contextFacade
-        {} as any, // visualOrchestrator
+        visualOrchestrator as any,
       );
-      talkingHeadComposer.attachToContent.mockReset();
-      templateComposer.tryComposeFromTemplate.mockReset();
-      imageGeneration.attachVisualToContent.mockReset();
+      visualOrchestrator.attachVisualForPost.mockReset();
+      visualOrchestrator.attachVisualForPost.mockResolvedValue(true);
     });
 
     const attach = (
@@ -146,12 +146,8 @@ describe('CommunityManagerService — extracted helpers', () => {
         { resolvedProfile: null },
       );
 
-    it('falls back to template compose when talking-head fails', async () => {
-      talkingHeadComposer.attachToContent.mockResolvedValue(false);
-      templateComposer.tryComposeFromTemplate.mockResolvedValue({
-        attached: true,
-        assetIds: ['rendered-1'],
-      });
+    it('delegates to visualOrchestrator.attachVisualForPost', async () => {
+      visualOrchestrator.attachVisualForPost.mockResolvedValue(true);
 
       const result = await attach({
         platform: 'tiktok',
@@ -161,21 +157,11 @@ describe('CommunityManagerService — extracted helpers', () => {
       });
 
       expect(result).toBe(true);
-      expect(talkingHeadComposer.attachToContent).toHaveBeenCalled();
-      expect(templateComposer.tryComposeFromTemplate).toHaveBeenCalledWith(
-        'tenant-1',
-        'user-1',
-        'content-1',
-        expect.objectContaining({ visualFormat: 'image', platform: 'tiktok' }),
-        'product-1',
-        expect.any(Array),
-        0,
-        { resolvedProfile: null },
-      );
+      expect(visualOrchestrator.attachVisualForPost).toHaveBeenCalled();
     });
 
-    it('returns true when talking-head succeeds without template fallback', async () => {
-      talkingHeadComposer.attachToContent.mockResolvedValue(true);
+    it('returns false when visualOrchestrator fails', async () => {
+      visualOrchestrator.attachVisualForPost.mockResolvedValue(false);
 
       const result = await attach({
         platform: 'tiktok',
@@ -184,20 +170,16 @@ describe('CommunityManagerService — extracted helpers', () => {
         title: 'Título',
       });
 
-      expect(result).toBe(true);
-      expect(templateComposer.tryComposeFromTemplate).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+      expect(visualOrchestrator.attachVisualForPost).toHaveBeenCalled();
     });
   });
 
   describe('handlePostRegenerationVisual (private)', () => {
-    const templateComposer = {
-      recomposeFromStoredTemplate: jest.fn(),
-      tryComposeFromTemplate: jest.fn(),
-      tryComposeFromKit: jest.fn(),
+    const visualOrchestrator = {
+      attachVisualForPost: jest.fn().mockResolvedValue(true),
+      handlePostRegenerationVisual: jest.fn().mockResolvedValue(undefined),
     };
-    const imageGeneration = { regenerateForContent: jest.fn() };
-
-    const kitItem = { assetId: 'asset-1', role: 'product-screenshot' };
 
     beforeEach(() => {
       service = new CommunityManagerService(
@@ -207,20 +189,17 @@ describe('CommunityManagerService — extracted helpers', () => {
         {} as any,
         {} as any,
         {} as any,
-        imageGeneration as any,
+        {} as any,
         {} as any,
         { ensureScreenshotsBeforeGenerate: jest.fn().mockResolvedValue(undefined) } as any,
-        templateComposer as any,
         {} as any,
         {} as any,
         {} as any,
         {} as any,
         {} as any,
+        visualOrchestrator as any,
       );
-      templateComposer.recomposeFromStoredTemplate.mockReset();
-      templateComposer.tryComposeFromTemplate.mockReset();
-      imageGeneration.regenerateForContent.mockReset();
-      templateComposer.tryComposeFromTemplate.mockResolvedValue({ attached: false, assetIds: [] });
+      visualOrchestrator.handlePostRegenerationVisual.mockReset();
     });
 
     const handleVisual = (feedback?: string) =>
@@ -236,41 +215,21 @@ describe('CommunityManagerService — extracted helpers', () => {
           visualDescription: 'empaque de producto en mostrador',
         },
         { productId: 'product-1' },
-        { kit: [kitItem], resolvedProfile: null, effectiveProductId: 'product-1' },
+        { kit: [{ assetId: 'asset-1', role: 'product-screenshot' }], resolvedProfile: null, effectiveProductId: 'product-1' },
         { versionNumber: 2 },
         feedback,
       );
 
-    it('skips AI fallback when feedback requests media kit and kit has images', async () => {
-      templateComposer.recomposeFromStoredTemplate.mockResolvedValue(false);
-      jest.spyOn(service as any, 'attachVisualForPost').mockResolvedValue(false);
-
+    it('delegates to visualOrchestrator.handlePostRegenerationVisual', async () => {
       await handleVisual('usa imágenes de mi media kit, no inventes escenas');
 
-      expect(imageGeneration.regenerateForContent).not.toHaveBeenCalled();
+      expect(visualOrchestrator.handlePostRegenerationVisual).toHaveBeenCalled();
     });
 
-    it('falls back to AI when there is no media kit and feedback changes the visual', async () => {
-      jest.spyOn(service as any, 'attachVisualForPost').mockResolvedValue(false);
+    it('delegates to visualOrchestrator on revision', async () => {
+      await handleVisual('haz la imagen más corporativa');
 
-      await (service as any).handlePostRegenerationVisual(
-        'tenant-1',
-        'user-1',
-        'content-1',
-        {
-          title: 'Título',
-          body: 'Cuerpo',
-          platform: 'twitter',
-          visualFormat: 'image',
-          visualDescription: 'escena de oficina moderna',
-        },
-        { productId: 'product-1' },
-        { kit: [], resolvedProfile: null, effectiveProductId: 'product-1' },
-        { versionNumber: 1 },
-        'haz la imagen más corporativa',
-      );
-
-      expect(imageGeneration.regenerateForContent).toHaveBeenCalled();
+      expect(visualOrchestrator.handlePostRegenerationVisual).toHaveBeenCalled();
     });
   });
 });

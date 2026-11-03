@@ -1248,14 +1248,14 @@ async function compositeLogo(
   mimeType: string | null,
   width: number,
   height: number,
-  _corner: LogoCorner = 'top-left',
+  corner: LogoCorner = 'top-right',
 ): Promise<Buffer> {
   const logoWidth = Math.max(88, Math.round(Math.min(width, height) * 0.14));
   const pipeline =
     mimeType === 'image/svg+xml' ? sharp(logoBuffer, { density: 300 }) : sharp(logoBuffer);
   const logo = await pipeline.resize({ width: logoWidth, withoutEnlargement: true }).png().toBuffer();
   const padding = Math.round(Math.min(width, height) * 0.04);
-  const left = padding;
+  const left = corner === 'top-right' ? width - logoWidth - padding : padding;
   return sharp(base).composite([{ input: logo, top: padding, left }]).png().toBuffer();
 }
 
@@ -1412,7 +1412,7 @@ export async function renderVisualTemplateFrame(
       input.logoMimeType ?? 'image/png',
       width,
       height,
-      'top-left',
+      'top-right',
     );
   }
 

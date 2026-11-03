@@ -62,8 +62,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
           : '',
         'Genera una versión nueva que incorpore el feedback (tono, titular visual, CTA).',
         revisionWantsMediaKit
-          ? 'NO inventes escenas, empaques, productos físicos ni logos ficticios. El sistema usará capturas/fotos REALES del media kit con plantillas. visualDescription = cómo se verá el asset real (ej. captura desktop en MacBook).'
-          : 'Si el feedback critica la imagen y NO hay media kit, describe en visualDescription una escena acorde al nicho y al comentario.',
+          ? 'Si hay kit de medios con capturas reales de software, en visualDescription indica cómo se enmarcará (ej. captura en MacBook o iPhone con la UI real). NO inventes empaques físicos ni logos ficticios.'
+          : 'visualDescription: describe una escena fotográfica hiperrealista, cinematográfica y acorde al nicho y al feedback (ej. para eventos/bodas: invitados sonrientes capturando momentos con teléfonos al atardecer con luces cálidas; para salud: consultorio moderno y cálido; para servicios: clientes felices en situación real). Transmite emoción auténtica y deseo de compra.',
       ]
         .filter(Boolean)
         .join('\n')
@@ -179,8 +179,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     context.cmCharacterReady
       ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels; body = guion hablado 45-60 palabras, CERO emojis, CERO hashtags, 18-24 s); carruseles educativos→carousel; resto→image.'
       : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
-    'visualDescription = brief de arte (ambiente, luz, emoción).',
-    'visualTemplateId: product-hero (mockup de dispositivo con UI real de la app), promo-cta (mockup con oferta directa y botón CTA), creative-scene (foto lifestyle o escena real del nicho), ai-art (imagen conceptual o ilustración IA).',
+    'visualDescription = brief de arte para fotografía o escena IA (ambiente, iluminación cinematográfica, personas reales, emoción auténtica, detalles del nicho). Piensa en un anuncio publicitario de alta gama (editorial / Vogue / Apple / documental), NUNCA en stock genérico, wireframes ni fondos planos vacíos.',
+    'visualTemplateId: si hay capturas en el kit y es software → product-hero o promo-cta; para eventos, bodas, servicios presenciales, lifestyle o productos sin kit → creative-scene o ai-art.',
     revisionWantsMediaKit
       ? [
           'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit.',
@@ -195,8 +195,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     'strategicAngle = ángulo de diferenciación competitiva frente al mercado o rivales (ej: "Configuración en 3 minutos sin código vs 48 horas de consultoría").',
     'persuasionFramework = marco de persuasión aplicado (PAS, BAB, SocialProof, Contrarian, FOMO o DirectOffer).',
     'visualIntent = intención visual estructurada (goal, subject, style, preferLayout, scene, carouselStructure).',
-    'Para software, SaaS o plataformas digitales con capturas en el kit: prioriza visualTemplateId=product-hero o promo-cta.',
-    'visualIntent.scene=clinical para salud; hand-phone para stories; workspace para SaaS; abstract-premium para marca.',
+    'Para software, SaaS o plataformas digitales con capturas en el kit: prioriza visualTemplateId=product-hero o promo-cta. Si NO hay capturas en el kit o es un servicio/evento/lifestyle: USA visualTemplateId=creative-scene o ai-art.',
+    'visualIntent.scene=clinical para salud; workspace para oficina/SaaS; hand-phone para stories; abstract-premium para arte de marca; y para eventos/bodas/lifestyle describe el entorno real en visualDescription.',
     'Si usas creative-scene, rellena visualIntent.scene según industria/plataforma.',
     'body = copy publicable listo, sin marcadores de tiempo ni direcciones de escena.',
   ]

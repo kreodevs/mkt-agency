@@ -202,4 +202,53 @@ export const SCENE_PROMPT_RECIPES: ScenePromptRecipe[] = [
     requiresCmReference: true,
     requiresKitScreen: false,
   },
+  {
+    id: 'scene-events-celebration',
+    family: 'creative-scene',
+    name: 'Event celebration & guests',
+    description: 'Joyful wedding or event guests capturing memories — authentic emotion, high engagement.',
+    template:
+      'Cinematic documentary advertising photograph for {{productName}}. ' +
+      'Well-dressed guests at an outdoor wedding or celebratory event at twilight, laughing joyfully and using their smartphones to capture memories and scan a code. ' +
+      'Warm ambient fairy lights in the background, authentic smiles, romantic festive atmosphere, soft bokeh, ' +
+      'subtle {{primaryColor}} festive details. Rich colors, professional editorial photography, shallow depth of field. ' +
+      'No watermarks, no logos, no fake text.',
+    slots: ['productName', 'primaryColor'],
+    intents: ['promote', 'brand', 'educate', 'inspire', 'product'],
+    industries: ['events', 'weddings', 'photography', 'general', 'ecommerce'],
+    formats: ['9:16', '4:5', '1:1'],
+    platforms: ['instagram', 'tiktok', 'facebook', 'twitter', 'linkedin'],
+    carouselRoles: ['hook', 'feature'],
+    typographyInImage: false,
+    requiresReferenceImage: false,
+    priority: 95,
+    sceneType: 'workspace',
+    screenLayout: 'none',
+    requiresCmReference: false,
+    requiresKitScreen: false,
+  },
+  {
+    id: 'scene-lifestyle-client-moment',
+    family: 'creative-scene',
+    name: 'Real client success moment',
+    description: 'Authentic customer using service in real life — emotional connection and relief.',
+    template:
+      'Hyper-realistic editorial lifestyle photo for {{productName}}. ' +
+      'A happy customer experiencing genuine relief and delight in an authentic modern environment related to {{industry}}. ' +
+      'Natural daylight, candid expression, premium advertising aesthetic, subtle {{primaryColor}} color grading. ' +
+      'Photorealistic, cinematic composition. No watermarks, no artificial stock poses.',
+    slots: ['productName', 'industry', 'primaryColor'],
+    intents: ['promote', 'tips', 'educate', 'brand'],
+    industries: ['general', 'health', 'saas', 'events', 'retail', 'services'],
+    formats: ['9:16', '4:5', '1:1'],
+    platforms: ['instagram', 'facebook', 'linkedin', 'twitter'],
+    carouselRoles: ['hook'],
+    typographyInImage: false,
+    requiresReferenceImage: false,
+    priority: 91,
+    sceneType: 'workspace',
+    screenLayout: 'none',
+    requiresCmReference: false,
+    requiresKitScreen: false,
+  },
 ];

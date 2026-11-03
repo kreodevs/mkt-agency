@@ -179,8 +179,10 @@ export function shouldUseCreativeScene(
     return true;
   }
 
-  if (!hasKit && !explicitCreative) {
-    return false;
+  // When there is NO media kit screenshots, mockup templates cannot be rendered.
+  // We MUST route to creative AI scenes or generative visuals.
+  if (!hasKit) {
+    return true;
   }
 
   if (explicitCreative) return true;

@@ -67,6 +67,8 @@ import { kitHasComposeImageRoles } from '../product/domain/product-media-kit.con
 import { ProductMediaKitService } from '../product/product-media-kit.service';
 import { ProductService } from '../product/product.service';
 import { ImageBrandingService } from './image-branding.service';
+import { compositeVisualTextOverlay } from '../community-manager/domain/visual-text-overlay.util';
+import { resolveVisualBrandKit } from '../community-manager/domain/visual-brand-kit.util';
 import {
   VIDEO_GENERATION_ADAPTER,
   VideoGenerationAdapterPort,
@@ -94,6 +96,9 @@ export interface GenerateImageOptions {
   artRecipeId?: string;
   /** Skip logo overlay (e.g. art-kit-compose applies logo after compositing). */
   skipLogoOverlay?: boolean;
+  visualHeadline?: string | null;
+  visualSubline?: string | null;
+  visualCta?: string | null;
 }
 
 export interface GenerateImageBufferOptions {
@@ -110,6 +115,9 @@ export interface GenerateImageBufferOptions {
 export interface AttachVisualToContentOptions {
   artRecipeBasePrompt?: string;
   artRecipeId?: string;
+  visualHeadline?: string | null;
+  visualSubline?: string | null;
+  visualCta?: string | null;
 }
 
 export interface GenerateImageResult {
@@ -342,6 +350,9 @@ export class ImageGenerationService implements OnModuleInit {
         forcedFrameCount: visualFormatToFrameCount(visualFormat),
         artRecipeBasePrompt: options?.artRecipeBasePrompt,
         artRecipeId: options?.artRecipeId,
+        visualHeadline: options?.visualHeadline ?? content.visualHeadline ?? undefined,
+        visualSubline: options?.visualSubline ?? content.visualSubline ?? undefined,
+        visualCta: options?.visualCta ?? content.visualCta ?? undefined,
       },
     );
   }
@@ -537,6 +548,10 @@ export class ImageGenerationService implements OnModuleInit {
             contentId: options.contentId ?? record.contentId ?? undefined,
             generationId: record.id,
             platform: contentMeta?.platform ?? null,
+            visualHeadline: options.visualHeadline ?? contentMeta?.visualHeadline ?? undefined,
+            visualSubline: options.visualSubline ?? contentMeta?.visualSubline ?? undefined,
+            visualCta: options.visualCta ?? contentMeta?.visualCta ?? undefined,
+            size: options.size,
           },
         );
         frames.push({ assetId: asset.id, index });
@@ -600,14 +615,43 @@ export class ImageGenerationService implements OnModuleInit {
       contentId?: string;
       generationId?: string;
       platform?: string | null;
+      visualHeadline?: string | null;
+      visualSubline?: string | null;
+      visualCta?: string | null;
+      size?: string;
     } = {},
   ) {
-    const { productId } = context;
+    const { productId, contentId } = context;
     const { buffer: imageBuffer, contentType } = await this.resolveImagePayload(result);
     let finalBuffer = imageBuffer;
 
+    let headline = context.visualHeadline?.trim();
+    let subline = context.visualSubline?.trim();
+    let cta = context.visualCta?.trim();
+
+    if (headline && (index === 0 || frameCount === 1)) {
+      try {
+        const product = productId
+          ? await this.productService.findOwnedEntity(tenantId, productId).catch(() => null)
+          : null;
+        const brandKit = product ? resolveVisualBrandKit(product, null) : null;
+        finalBuffer = await compositeVisualTextOverlay(finalBuffer, {
+          headline,
+          subline: subline ?? null,
+          cta: cta ?? null,
+          brandKit,
+          size: (context.size as any) ?? '1024x1024',
+          platform: context.platform ?? 'instagram',
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to composite text overlay on generated image: ${err instanceof Error ? err.message : err}`,
+        );
+      }
+    }
+
     if (productId) {
-      finalBuffer = await this.applyLogoOverlay(tenantId, productId, imageBuffer);
+      finalBuffer = await this.applyLogoOverlay(tenantId, productId, finalBuffer);
     }
 
     const extension = contentType.split('/').pop() || 'png';
