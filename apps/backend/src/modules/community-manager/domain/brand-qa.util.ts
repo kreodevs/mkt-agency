@@ -26,6 +26,16 @@ const PASSIVE_GREETINGS = [
   /^buenas tardes a todos/i,
 ];
 
+const BORING_CORPORATE_CLICHES = [
+  { pattern: /^con\s+[a-z0-9_\-\s]+,\s*olv[ií]date de/i, label: 'Fórmula pasiva cliché "Con X, olvídate de..."' },
+  { pattern: /al alcance de un clic/i, label: 'Cliché trillado "al alcance de un clic"' },
+  { pattern: /a un solo clic/i, label: 'Cliché trillado "a un solo clic"' },
+  { pattern: /la herramienta que necesitas/i, label: 'Frase genérica "la herramienta que necesitas"' },
+  { pattern: /en el vertiginoso mundo/i, label: 'Cliché narrativo "en el vertiginoso mundo"' },
+  { pattern: /en el mundo actual/i, label: 'Cliché narrativo "en el mundo actual"' },
+  { pattern: /en la era digital de hoy/i, label: 'Cliché narrativo "en la era digital de hoy"' },
+];
+
 export interface BrandQaAuditResult {
   passed: boolean;
   score: number; // 0 - 100
@@ -65,6 +75,14 @@ export function runBrandQaAudit(post: Partial<SocialCopyPost> & { body: string }
         body = lines.join('\n\n');
       }
       break;
+    }
+  }
+
+  // 2b. Audit boring corporate clichés
+  for (const cliche of BORING_CORPORATE_CLICHES) {
+    if (cliche.pattern.test(body)) {
+      warnings.push(`Detección de cliché corporativo: ${cliche.label}. Se penaliza creatividad.`);
+      score -= 10;
     }
   }
 

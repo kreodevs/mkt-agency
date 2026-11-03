@@ -60,22 +60,22 @@ export const SCENE_PROMPT_RECIPES: ScenePromptRecipe[] = [
     id: 'scene-cm-clinical-dental',
     family: 'creative-scene',
     name: 'Clinical workspace (dental/health)',
-    description: 'Clean clinical office with CM — trust and warmth, no app composite.',
+    description: 'Clean clinical office with CM — trust, authority and modern environment.',
     template:
-      'Hyper-realistic premium healthcare marketing photo for {{productName}} dental practice software. ' +
-      'A professional female dentist or clinic manager in a pristine modern dental office, white coat, ' +
-      'standing or seated confidently, warm smile toward camera. No monitors or phones facing the viewer. ' +
+      'Hyper-realistic premium healthcare marketing photo for {{productName}}. ' +
+      'A professional female dentist or healthcare specialist in a pristine modern dental clinic, white coat, ' +
+      'standing or seated confidently with warm approachable expression toward camera. Modern clinical interior. ' +
       'Soft clinical lighting, calming whites and {{primaryColor}} accents, trustworthy and premium. ' +
-      'Cinematic depth of field. No medical procedures, no blood, no watermarks, no text.',
+      'Cinematic depth of field. No medical procedures, no blood, no watermarks.',
     slots: ['productName', 'primaryColor'],
     intents: ['educate', 'promote', 'tips'],
-    industries: ['health', 'saas', 'general'],
+    industries: ['health'],
     formats: ['9:16', '4:5', '1:1'],
     platforms: ['instagram', 'linkedin', 'facebook', 'twitter'],
     carouselRoles: ['hook', 'feature'],
     typographyInImage: false,
     requiresReferenceImage: true,
-    priority: 97,
+    priority: 82,
     sceneType: 'clinical',
     screenLayout: 'none',
     requiresCmReference: true,

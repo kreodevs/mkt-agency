@@ -37,6 +37,7 @@ import {
   compositeKitOnArtBackground,
   resolveArtKitLayout,
 } from './art-kit-compose.util';
+import { compositeVisualTextOverlay } from '../domain/visual-text-overlay.util';
 
 export interface ArtKitComposeContext {
   resolvedProfile: ResolvedProfileValues | null;
@@ -182,6 +183,20 @@ export class ArtKitComposeService {
               post.visualTemplateId ?? null,
               post.imageDestination ?? null,
             );
+          }
+
+          if (post.visualHeadline?.trim() && (slideIndex === 0 || frameCount === 1)) {
+            buffer = await compositeVisualTextOverlay(buffer, {
+              headline: post.visualHeadline.trim(),
+              subline: post.visualSubline?.trim() ?? null,
+              cta: post.visualCta?.trim() ?? null,
+              brandKit,
+              size,
+              platform: post.platform,
+            }).catch((err) => {
+              this.logger.warn(`Failed to composite text overlay on art frame: ${err.message}`);
+              return buffer;
+            });
           }
 
           const shouldBrandLogo =

@@ -7,7 +7,7 @@ import { sampleViralHooksForPrompt } from './social-copy-hooks.constants';
 const PLATFORM_GUIDES: Record<string, string> = {
   instagram: 'Instagram: contenido visual, tono aspiracional, stories + feed, máx 2200 caracteres',
   linkedin: 'LinkedIn: tono profesional, liderazgo de pensamiento, 150-300 palabras, 3-5 hashtags',
-  twitter: 'X/Twitter: conciso, máx 280 caracteres, 1-2 hashtags, tono conversacional',
+  twitter: 'X/Twitter: gancho demoledor en línea 1 (sin saludos ni frases de relleno), problema o cifra alarmante en 1-2 bullets concisos, solución y CTA de alto impacto al final. Máx 280 caracteres, 1-2 hashtags de nicho. Prohibido tono institucional blando o fórmulas trilladas.',
   facebook: 'Facebook: tono cercano, 80-150 palabras, incluir llamado a la acción claro',
   tiktok: 'TikTok: contenido breve y entretenido, copy para video de 15-60 segundos, tono juvenil',
 };
@@ -78,8 +78,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
         'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
         'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup grande tipo anuncio (no miniaturas).',
         'visualHeadline solo en slide 1; slide 2 = beneficio concreto del bullet 2; slide 3 = CTA corto (2-4 palabras).',
-        'Posts estáticos (image) con kit: visualIntent.preferLayout=creative-scene y scene=clinical|workspace según industria (foto CM lifestyle, SIN captura de app en la imagen).',
-        'Solo usa visualTemplateId=product-hero o menciona "captura/interfaz" en visualDescription cuando el post DEBE mostrar la UI del producto.',
+        'Para software, SaaS, apps o herramientas digitales con kit de medios: OBLIGATORIO visualTemplateId=product-hero o promo-cta con dispositivo mockup (MacBook/iPad/iPhone) mostrando la UI real. Los compradores de software necesitan VER el software funcionando, no una foto de stock de alguien sonriendo.',
+        'Usa visualTemplateId=creative-scene únicamente para servicios físicos/presenciales o momentos lifestyle donde la UI no sea relevante.',
       ].join('\n')
     : '';
 
@@ -123,6 +123,10 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     '5. OPTIMIZACIÓN ALGORÍTMICA 2026 (SEO Semántico):',
     '   - Los algoritmos de Instagram, TikTok y LinkedIn indexan las primeras 2 líneas como motor de búsqueda semántica: incluye términos de búsqueda naturales de tu cliente.',
     '   - MÁXIMO 1 a 3 hashtags hiper-específicos al final (prohibido hashtag stuffing como #viral, #fyp, #trending).',
+    '6. FÓRMULAS TRILLEDAS PROHIBIDAS (EXPULSIÓN DE CLICHÉS CORPORATIVOS):',
+    '   - NUNCA uses "Con [Producto], olvídate de..." ni "al alcance de un clic" ni "la herramienta que necesitas" ni "en el mundo actual / en el vertiginoso mundo".',
+    '   - NUNCA uses eslóganes pasivos o descriptivos como "Tu consultorio más organizado" o "Gestiona tu negocio".',
+    '   - El titular visual (visualHeadline) debe generar tensión, urgencia o curiosidad: "¿Cuánto dinero te cuesta cada cita no confirmada?", "De agendas en papel a 40 pacientes confirmados", "Lo que las clínicas más rentables nunca te contaron".',
   ].join('\n');
 
   const cmCharacterGuide = context.cmCharacterReady && context.cmCharacters?.length
@@ -172,7 +176,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
       ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image.'
       : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
     'visualDescription = brief de arte (ambiente, luz, emoción).',
-    'visualTemplateId: creative-scene (CM lifestyle sin captura), ai-art (infografía/arte IA pura), product-hero (mockup con captura).',
+    'visualTemplateId: product-hero (mockup con UI real para SaaS/software/apps), promo-cta (oferta directa con mockup), stat-highlight (métrica impactante), tip-card (consejo accionable), quote-insight (autoridad), creative-scene (foto lifestyle/ambiente), ai-art (infografía/concepto IA).',
     revisionWantsMediaKit
       ? [
           'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit.',
@@ -187,9 +191,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     'strategicAngle = ángulo de diferenciación competitiva frente al mercado o rivales (ej: "Configuración en 3 minutos sin código vs 48 horas de consultoría").',
     'persuasionFramework = marco de persuasión aplicado (PAS, BAB, SocialProof, Contrarian, FOMO o DirectOffer).',
     'visualIntent = intención visual estructurada (goal, subject, style, preferLayout, scene, carouselStructure).',
-    'visualTemplateId=creative-scene para confianza/educación/marca. visualTemplateId=ai-art para infografías.',
+    'Para software, SaaS o plataformas digitales con capturas en el kit: prioriza visualTemplateId=product-hero o promo-cta.',
     'visualIntent.scene=clinical para salud; hand-phone para stories; workspace para SaaS; abstract-premium para marca.',
-    'visualTemplateId=product-hero SOLO si debe verse la captura real del producto.',
     'Si usas creative-scene, rellena visualIntent.scene según industria/plataforma.',
     'body = copy publicable listo, sin marcadores de tiempo ni direcciones de escena.',
   ]

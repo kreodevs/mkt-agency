@@ -36,6 +36,7 @@ import {
   compositeScreenIntoScene,
   shouldCompositeKitScreenIntoScene,
 } from './scene-kit-compose.util';
+import { compositeVisualTextOverlay } from '../domain/visual-text-overlay.util';
 
 export interface SceneKitComposeContext {
   resolvedProfile: ResolvedProfileValues | null;
@@ -190,6 +191,20 @@ export class SceneKitComposeService {
                 size,
               );
             }
+          }
+
+          if (post.visualHeadline?.trim() && (slideIndex === 0 || frameCount === 1)) {
+            buffer = await compositeVisualTextOverlay(buffer, {
+              headline: post.visualHeadline.trim(),
+              subline: post.visualSubline?.trim() ?? null,
+              cta: post.visualCta?.trim() ?? null,
+              brandKit,
+              size,
+              platform: post.platform,
+            }).catch((err) => {
+              this.logger.warn(`Failed to composite text overlay on scene frame: ${err.message}`);
+              return buffer;
+            });
           }
 
           const shouldBrandLogo =

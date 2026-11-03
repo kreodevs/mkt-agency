@@ -47,4 +47,18 @@ describe('brand-qa.util', () => {
     expect(post.visualHeadline).toBe('Automatiza Ya');
     expect(post.hashtags?.length).toBeLessThanOrEqual(3);
   });
+
+  it('detects and flags boring corporate clichés', () => {
+    const post: Partial<SocialCopyPost> & { body: string } = {
+      title: 'Post aburrido',
+      body: 'Con Oraltrack, olvídate de las agendas perdidas. Tus citas al alcance de un clic.',
+      platform: 'twitter',
+      visualFormat: 'image',
+    };
+
+    const result = runBrandQaAudit(post);
+    expect(result.warnings.some((w) => w.includes('Con X, olvídate de'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('al alcance de un clic'))).toBe(true);
+    expect(result.score).toBeLessThan(100);
+  });
 });
