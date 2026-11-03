@@ -291,6 +291,10 @@ export class VisualTemplateComposerService {
       return false;
     }
 
+    if (!kit.length) {
+      return false;
+    }
+
     const result = await this.tryComposeFromTemplate(
       tenantId,
       userId,

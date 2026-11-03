@@ -656,7 +656,7 @@ export class CommunityManagerService {
     if (mode === 'recompose') {
       throw new BadRequestException({
         error:
-          'Este visual es una escena generada con IA. Guarda el estilo visual y pulsa «Regenerar escena» para aplicarlo.',
+          'Para aplicar el nuevo estilo visual con IA o si el producto no tiene capturas de pantalla, pulsa «Regenerar escena».',
         code: 'VISUAL_RECOMPOSE_NOT_APPLICABLE',
       });
     }
