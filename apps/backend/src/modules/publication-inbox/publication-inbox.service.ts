@@ -52,6 +52,9 @@ interface InboxRow {
   visualSubline: string | null;
   visualCta: string | null;
   imageDestination: string | null;
+  targetPainPoint: string | null;
+  strategicAngle: string | null;
+  persuasionFramework: string | null;
   assets: unknown;
   publishedAt: Date | null;
   productMetadata: Record<string, unknown> | null;
@@ -382,6 +385,9 @@ export class PublicationInboxService {
         'c.visual_subline AS "visualSubline"',
         'c.visual_cta AS "visualCta"',
         'c.image_destination AS "imageDestination"',
+        'c.target_pain_point AS "targetPainPoint"',
+        'c.strategic_angle AS "strategicAngle"',
+        'c.persuasion_framework AS "persuasionFramework"',
         'c.published_at AS "publishedAt"',
         'prod.metadata AS "productMetadata"',
       ])
@@ -425,6 +431,9 @@ export class PublicationInboxService {
       visualSubline: row.visualSubline,
       visualCta: row.visualCta,
       imageDestination: row.imageDestination ?? 'feed',
+      targetPainPoint: row.targetPainPoint,
+      strategicAngle: row.strategicAngle,
+      persuasionFramework: row.persuasionFramework,
       assets,
       publishedAt: row.publishedAt
         ? row.publishedAt instanceof Date

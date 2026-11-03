@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-02
+
+### Added
+
+- **Plan de Mejoras Noviembre 2026 (Roadmap Estratégico, Creativo & Agéntico)**:
+  - **Sprint 1 — Democratización Estratégica en Modo SOHO**:
+    - Migración de base de datos `AddStrategicInsightFieldsToContents`: añade `target_pain_point`, `strategic_angle` y `persuasion_framework` a la tabla `contents`.
+    - Componente `InboxStrategicCapsule.tsx` integrado en `InboxItemCard.tsx`: píldora colapsable que expone el dolor atacado, la ventaja diferencial contra competidores y el marco de persuasión sin añadir ruido cognitivo.
+    - Banner translúcido `WeeklyRadarBanner.tsx` en `PublicationInboxPage.tsx`: radar ejecutivo con descubrimientos y brechas de mercado detectadas por `CompetitorIntel`.
+    - Endpoint `POST /publication-inbox/pivot-angle/:contentId` para pivotar el enfoque persuasivo del post en 1 clic manteniendo media kit y diseño visual.
+  - **Sprint 2 — Motor Creativo de Alto Rendimiento & Viralidad**:
+    - Biblioteca de 50 fórmulas de ganchos virales (`social-copy-hooks.constants.ts`) con 7 categorías: `pattern_interrupt`, `contrarian`, `negative_warning`, `insider_secret`, `transformation`, `direct_callout` y `curiosity_gap`.
+    - Generador de prompts reestructurado como *Director Creativo y Copywriter de Respuesta Directa*: detención de scroll en primeros 3 segundos, marcos psicológicos estructurados (`PAS`, `BAB`, `SocialProof`, `Contrarian`, `FOMO`, `DirectOffer`) y erradicación de saludos pasivos.
+    - Optimización algorítmica para SEO semántico de Instagram y TikTok (indexación en líneas 1 y 2) y reducción de hashtags a 1-3 hiper-específicos.
+    - Recetas de arte MeiGen de alta conversión: `social-proof-badge-060` (rating 4.9/5 y verified badge flotante con mockup) y `before-after-split-065` (pantalla dividida de contraste de transformación).
+  - **Sprint 3 — Refinamiento UX/UI & Navegación Canónica**:
+    - Unificación de calendarios en ruta canónica `/calendar`: selector *Foco Copiloto* (SOHO) vs *Editorial Completo* (Growth). `/calendario` redirige limpiamente.
+    - Unificación de estrategia en ruta canónica `/strategy`: pestañas de *Planes Comerciales & Embudo* y *Diagnóstico & Ajustes Tácticos*. `/agency/strategy` redirige limpiamente.
+    - `GrowthSpotlightTour.tsx`: micro-tour guiado de 3 pasos que orienta al usuario al cambiar a perfil agencia por primera vez.
+    - Cumplimiento estricto WCAG AAA en colores del tema Anthropic (`vars.css`): contraste > 8.5:1 en textos secundarios y badges de plataforma.
+  - **Sprint 4 — Harness de Agencia Desatendida & Closed-Loop**:
+    - Telemetría de leads atribuidos en `AnalyticsAgentService`: `getContentConversionMetrics` y `getTopConvertingFrameworks` para medir conversiones reales por post y marco persuasivo.
+    - Recalibración quincenal cerrada en `StrategistAgentService`: emite evento `StrategyRecalibrated` hacia el Community Manager para priorizar los marcos que generan más prospectos.
+    - Agente de control de calidad `brand-qa.util.ts`: auditoría previa al guardado en bandeja contra políticas publicitarias de redes (ad policies compliance), eliminación de saludos pasivos y validación gráfica.
+    - Medición de tokens y facturación en `LlmUsageDashboardPage.tsx`: selector interactivo de margen de reventa (+0%, +20%, +30%, +50%, +100%), tarjetas KPI de facturación proyectada y límites de gasto por cliente.
+
 ## [0.3.0] — 2026-11-02
 
 ### Added

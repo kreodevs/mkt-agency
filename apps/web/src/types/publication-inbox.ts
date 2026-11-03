@@ -21,12 +21,22 @@ export interface PublicationInboxItem {
   visualSubline?: string | null;
   visualCta?: string | null;
   imageDestination?: string;
+  targetPainPoint?: string | null;
+  strategicAngle?: string | null;
+  persuasionFramework?: 'PAS' | 'BAB' | 'SocialProof' | 'Contrarian' | 'FOMO' | 'DirectOffer' | string | null;
   assets: unknown[];
   publishedAt?: string | null;
   canPublishWithN8n?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type InboxPivotAngle =
+  | 'social_proof'
+  | 'pain_agitation'
+  | 'offer_urgency'
+  | 'contrarian'
+  | 'educational_step';
 
 export interface AgencyNotification {
   id: string;
@@ -84,6 +94,10 @@ export interface CopilotStatus {
   mediaKitImageCount: number;
   mediaKitRecommendedMin: number;
   mediaKitLowWarning: string | null;
+  intelSummary?: {
+    marketGaps: string[];
+    recommendation: string | null;
+  } | null;
   campaignTemplateSuggestions: CampaignTemplateSuggestion[];
 }
 

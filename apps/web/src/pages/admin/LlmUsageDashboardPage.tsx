@@ -9,11 +9,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Coins, Cpu, Layers, Zap } from 'lucide-react';
+import { Coins, Cpu, DollarSign, Layers, ShieldCheck, Zap } from 'lucide-react';
 import { DashboardShell, superadminNavigation } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { InputText } from '@/components/atoms/InputText';
+import { Select } from '@/components/atoms/Select';
 import { DataTable, type DataTableColumn } from '@/components/organisms/DataTable';
 import { getLlmUsageDashboard } from '@/services/superadmin';
 import type { LlmUsageTenantRow } from '@/types/llm-usage';
@@ -47,6 +48,7 @@ function defaultToDate(): string {
 export default function LlmUsageDashboardPage() {
   const [from, setFrom] = useState(defaultFromDate);
   const [to, setTo] = useState(defaultToDate);
+  const [agencyMarkup, setAgencyMarkup] = useState<number>(30);
 
   const usageQuery = useQuery({
     queryKey: ['llm-usage-dashboard', { from, to }],
@@ -57,6 +59,10 @@ export default function LlmUsageDashboardPage() {
   const summary = data?.summary;
   const byTenant = data?.byTenant ?? [];
   const daily = data?.daily ?? [];
+
+  const projectedBillingTotal = summary
+    ? summary.estimatedCostUsd * (1 + agencyMarkup / 100)
+    : 0;
 
   const chartData = useMemo(
     () =>
@@ -72,11 +78,22 @@ export default function LlmUsageDashboardPage() {
   const columns: DataTableColumn[] = [
     {
       field: 'tenantName',
-      header: 'Tenant',
+      header: 'Cliente / Tenant',
       sortable: true,
       body: (row) => {
         const item = row as LlmUsageTenantRow;
-        return item.tenantName ?? (item.tenantId ? item.tenantId.slice(0, 8) : 'Plataforma');
+        return (
+          <div>
+            <p className="font-medium text-[var(--foreground)]">
+              {item.tenantName ?? (item.tenantId ? item.tenantId.slice(0, 8) : 'Plataforma')}
+            </p>
+            {item.tenantId && (
+              <span className="text-[10px] text-[var(--foreground-muted)] font-mono">
+                {item.tenantId.slice(0, 13)}…
+              </span>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -93,9 +110,44 @@ export default function LlmUsageDashboardPage() {
     },
     {
       field: 'estimatedCostUsd',
-      header: 'Costo est.',
+      header: 'Costo API Base',
       sortable: true,
       body: (row) => formatUsd((row as LlmUsageTenantRow).estimatedCostUsd),
+    },
+    {
+      field: 'billedAmountUsd',
+      header: `Facturable (+${agencyMarkup}%)`,
+      sortable: true,
+      body: (row) => {
+        const item = row as LlmUsageTenantRow;
+        const billed = item.estimatedCostUsd * (1 + agencyMarkup / 100);
+        return (
+          <span className="font-semibold text-[var(--success)]">
+            {formatUsd(billed)}
+          </span>
+        );
+      },
+    },
+    {
+      field: 'spendingLimit',
+      header: 'Límite Gasto',
+      body: (row) => {
+        const item = row as LlmUsageTenantRow;
+        const limit = item.spendingLimitUsd ?? 100;
+        const isNearLimit = item.estimatedCostUsd >= limit * 0.8;
+        return (
+          <span
+            className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${
+              isNearLimit
+                ? 'bg-[var(--warning)]/10 text-[var(--warning)]'
+                : 'bg-[var(--success)]/10 text-[var(--success)]'
+            }`}
+          >
+            <ShieldCheck className="h-3 w-3" />
+            Máx {formatUsd(limit)}
+          </span>
+        );
+      },
     },
   ];
 
@@ -108,7 +160,7 @@ export default function LlmUsageDashboardPage() {
           description="Tokens consumidos y costo estimado global y por tenant (OpenRouter)."
         />
 
-        <Card className="grid max-w-xl grid-cols-2 gap-4 p-4">
+        <Card className="grid max-w-2xl grid-cols-1 sm:grid-cols-3 gap-4 p-4">
           <label className="space-y-1 text-sm">
             <span className="text-[var(--foreground-muted)]">Desde</span>
             <InputText
@@ -127,6 +179,20 @@ export default function LlmUsageDashboardPage() {
               className={filterInputClass}
             />
           </label>
+          <label className="space-y-1 text-sm">
+            <span className="text-[var(--foreground-muted)]">Margen Agencia</span>
+            <Select
+              value={String(agencyMarkup)}
+              onChange={(e) => setAgencyMarkup(Number(e.target.value))}
+              options={[
+                { value: '0', label: 'Sin margen (0%)' },
+                { value: '20', label: '+20% margen' },
+                { value: '30', label: '+30% estándar' },
+                { value: '50', label: '+50% premium' },
+                { value: '100', label: '+100% doble' },
+              ]}
+            />
+          </label>
         </Card>
 
         {usageQuery.isLoading ? (
@@ -137,12 +203,18 @@ export default function LlmUsageDashboardPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <KpiCard
                 icon={Coins}
-                label="Costo estimado"
+                label="Costo API Base"
                 value={formatUsd(summary.estimatedCostUsd)}
-                hint="USD según tarifas del catálogo OpenRouter"
+                hint="Gasto neto de la agencia en OpenRouter"
+              />
+              <KpiCard
+                icon={DollarSign}
+                label="Facturable Clientes"
+                value={formatUsd(projectedBillingTotal)}
+                hint={`Con margen comercial de +${agencyMarkup}%`}
               />
               <KpiCard
                 icon={Zap}

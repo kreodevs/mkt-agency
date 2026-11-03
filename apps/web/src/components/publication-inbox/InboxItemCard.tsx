@@ -9,6 +9,7 @@ import { InboxItemVisualPreview } from '@/components/publication-inbox/InboxItem
 import { InboxArtPublishBar } from '@/components/publication-inbox/InboxArtPublishBar';
 import { InboxQuickPublishActions } from '@/components/publication-inbox/InboxQuickPublishActions';
 import { InboxItemMetadata } from '@/components/publication-inbox/InboxItemMetadata';
+import { InboxStrategicCapsule } from '@/components/publication-inbox/InboxStrategicCapsule';
 import { RejectedInboxActions } from '@/components/publication-inbox/RejectedInboxActions';
 import { sanitizePublishableCopy } from '@/lib/sanitize-publishable-copy';
 import type { PublicationInboxItem } from '@/types/publication-inbox';
@@ -94,6 +95,8 @@ export function InboxItemCard({
           <div className="mt-1">
             <InboxItemMetadata item={item} />
           </div>
+
+          <InboxStrategicCapsule item={item} />
 
           <InboxItemVisualPreview item={item} />
           <InboxArtPublishBar item={item} />

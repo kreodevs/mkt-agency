@@ -2,6 +2,7 @@ import type { SocialCopyContext } from './social-copy.adapter.port';
 import { feedbackRequestsMediaKit } from '../domain/feedback-visual-intent.util';
 import { styleDesignCue } from '../domain/visual-palette-expand.util';
 import { styleLabel } from '../domain/visual-brand-kit.util';
+import { sampleViralHooksForPrompt } from './social-copy-hooks.constants';
 
 const PLATFORM_GUIDES: Record<string, string> = {
   instagram: 'Instagram: contenido visual, tono aspiracional, stories + feed, máx 2200 caracteres',
@@ -106,6 +107,24 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     'Varía el ángulo entre posts: dolor→solución, dato→beneficio, objeción→prueba, CTA directo.',
   ].join('\n');
 
+  const sampledHooks = sampleViralHooksForPrompt(6);
+  const viralHooksGuide = [
+    'REGLAS DE COPYWRITING VIRAL & CONVERSIÓN (Detención de pulgar en 3 segundos):',
+    '1. NUNCA inicies con saludos pasivos ni fórmulas aburridas ("¡Hola a todos!", "Hoy queremos hablar de...", "En el mundo actual...").',
+    '2. LÍNEA 1 = SCROLL-STOPPER OBLIGATORIO: El primer renglón del body debe ser un gancho contundente que despierte curiosidad, agite un dolor o derribe un mito.',
+    '3. INSPIRACIÓN DE GANCHOS VIRALES PROBADOS (adopta o adapta uno para el primer renglón):',
+    ...sampledHooks,
+    '4. MARCOS PSICOLÓGICOS (estructura cada post según su persuasionFramework):',
+    '   - PAS (Problema → Agitación → Solución): Expón el dolor -> Muestra el costo de no resolverlo -> Presenta el producto/servicio como la solución definitiva -> CTA.',
+    '   - BAB (Antes → Después → Puente): Describe el estado frustrante previo -> Pinta el escenario ideal deseado -> Posiciona tu producto como el puente directo -> CTA.',
+    '   - SocialProof (Prueba Social & Casos): Cuenta una historia real o resultado tangible -> Derriba la duda -> Valida con cifras o beneficios -> CTA.',
+    '   - Contrarian (Verdad Contraria / Anti-Mito): Cuestiona un mito popular -> Explica por qué falla la forma tradicional -> Demuestra la nueva alternativa -> CTA.',
+    '   - FOMO / DirectOffer: Razón clara para actuar ahora (ventaja temporal o beneficio directo) -> Valor garantizado -> CTA contundente.',
+    '5. OPTIMIZACIÓN ALGORÍTMICA 2026 (SEO Semántico):',
+    '   - Los algoritmos de Instagram, TikTok y LinkedIn indexan las primeras 2 líneas como motor de búsqueda semántica: incluye términos de búsqueda naturales de tu cliente.',
+    '   - MÁXIMO 1 a 3 hashtags hiper-específicos al final (prohibido hashtag stuffing como #viral, #fyp, #trending).',
+  ].join('\n');
+
   const cmCharacterGuide = context.cmCharacterReady && context.cmCharacters?.length
     ? [
         `Biblioteca de CMs virtuales listas (${context.cmCharacters.length}): ${JSON.stringify(context.cmCharacters)}`,
@@ -147,6 +166,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     libraryFoldersGuide,
     cmCharacterGuide,
     creativeDesignGuide,
+    viralHooksGuide,
     `Instrucción: ${countInstruction}`,
     context.cmCharacterReady
       ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels); carruseles educativos→carousel; resto→image.'
@@ -163,6 +183,9 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
         ].join('\n')
       : 'Carrusel (3 slides): slide 1 = hook; slide 2 = feature; slide 3 = CTA.',
     'visualHeadline / visualSubline / visualCta = textos cortos DENTRO del diseño (sin hashtags).',
+    'targetPainPoint = dolor humano o fricción comercial concreta que el post ataca directamente (ej: "Miedo a pagar de más por herramientas lentas").',
+    'strategicAngle = ángulo de diferenciación competitiva frente al mercado o rivales (ej: "Configuración en 3 minutos sin código vs 48 horas de consultoría").',
+    'persuasionFramework = marco de persuasión aplicado (PAS, BAB, SocialProof, Contrarian, FOMO o DirectOffer).',
     'visualIntent = intención visual estructurada (goal, subject, style, preferLayout, scene, carouselStructure).',
     'visualTemplateId=creative-scene para confianza/educación/marca. visualTemplateId=ai-art para infografías.',
     'visualIntent.scene=clinical para salud; hand-phone para stories; workspace para SaaS; abstract-premium para marca.',
@@ -182,9 +205,10 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
 
 function buildSystemPrompt(): string {
   return (
-    'Eres un Community Manager senior experto en marketing digital. ' +
-    'Genera copy para redes sociales que conecte con la audiencia y genere engagement. ' +
-    'Si hay un producto en foco, todos los posts deben vender o dar valor sobre ESE producto únicamente. ' +
+    'Eres un Director Creativo y Copywriter de Respuesta Directa de clase mundial, especializado en marketing viral y conversión en redes sociales (Instagram, LinkedIn, X, TikTok, Facebook). ' +
+    'Generas copy de alta retención que detiene el scroll en los primeros 3 segundos, despierta interés genuino o dolor latente y convierte seguidores en clientes potenciales. ' +
+    'NUNCA inicies con saludos pasivos ni fórmulas genéricas. Optimiza las primeras 2 líneas con términos de búsqueda semántica (SEO). ' +
+    'Si hay un producto en foco, todos los posts deben posicionar y vender exclusivamente ESE producto con ángulos persuasivos y ganchos de alta conversión. ' +
     'Responde SOLO con JSON válido con esta estructura exacta:\n' +
     JSON.stringify({
       summary: 'resumen de la tanda de publicaciones generadas',
@@ -195,6 +219,9 @@ function buildSystemPrompt(): string {
           title: 'título o idea principal del post',
           body: 'texto completo del post con saltos de línea y emojis apropiados',
           hashtags: ['hashtag1', 'hashtag2'],
+          targetPainPoint: 'dolor concreto que ataca el post (ej: Frustración por procesos manuales lentos)',
+          strategicAngle: 'ventaja diferencial vs competencia (ej: Automatización en 1 clic vs semanas de desarrollo)',
+          persuasionFramework: 'PAS | BAB | SocialProof | Contrarian | FOMO | DirectOffer',
           visualDescription: 'escena visual para IA — SIN repetir el body ni hashtags',
           visualTemplateId: 'creative-scene | ai-art | product-hero | tip-card | quote-insight | promo-cta | stat-highlight | story-vertical',
           visualHeadline: 'titular corto para la pieza gráfica (3-8 palabras, sin hashtags)',

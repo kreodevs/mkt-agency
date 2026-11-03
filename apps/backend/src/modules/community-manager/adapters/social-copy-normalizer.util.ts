@@ -164,6 +164,22 @@ export function normalizeSocialCopyBatch(
         post.artRecipeId = artRecipeId;
       }
 
+      const targetPainPoint = pickString(row, ['targetPainPoint', 'target_pain_point', 'painPoint', 'dolor']);
+      if (targetPainPoint) {
+        post.targetPainPoint = targetPainPoint;
+      }
+
+      const strategicAngle = pickString(row, ['strategicAngle', 'strategic_angle', 'angle', 'angulo']);
+      if (strategicAngle) {
+        post.strategicAngle = strategicAngle;
+      }
+
+      const rawFramework = pickString(row, ['persuasionFramework', 'persuasion_framework', 'framework']);
+      const validFrameworks = new Set(['PAS', 'BAB', 'SocialProof', 'Contrarian', 'FOMO', 'DirectOffer']);
+      if (rawFramework && validFrameworks.has(rawFramework)) {
+        post.persuasionFramework = rawFramework as SocialCopyPost['persuasionFramework'];
+      }
+
       return post;
     })
     .filter((post): post is SocialCopyPost => Boolean(post));

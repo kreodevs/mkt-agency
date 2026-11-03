@@ -41,6 +41,9 @@ export class StubSocialCopyAdapter implements SocialCopyAdapterPort {
         targetAudience: 'Dueños de negocio y profesionales de marketing',
         callToAction: 'Comparte tu experiencia en los comentarios',
         tone: 'Educativo y cercano',
+        targetPainPoint: 'Falta de constancia y tiempo para planificar contenidos en redes',
+        strategicAngle: 'Framework práctico paso a paso sin requerir diseñador dedicado',
+        persuasionFramework: 'PAS' as const,
       });
       }
     }

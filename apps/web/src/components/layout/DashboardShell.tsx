@@ -1,8 +1,9 @@
+import { useState, type ReactNode } from 'react';
 import { Layers } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
 import { AppLayout } from '@/components/organisms/AppLayout';
+import { GrowthSpotlightTour } from '@/components/onboarding/GrowthSpotlightTour';
 import { ImpersonationContextBar } from '@/components/layout/ImpersonationContextBar';
 import { ImpersonationSwitcher } from '@/components/admin/ImpersonationSwitcher';
 import { TenantImpersonationSelect } from '@/components/admin/TenantImpersonationSelect';
@@ -40,6 +41,8 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
   const { isGrowth, isPaid, updateProfile } = useOperatingProfile();
   const advancedNav = isGrowth;
 
+  const [showGrowthTour, setShowGrowthTour] = useState(false);
+
   const inboxBadgeQuery = useQuery({
     queryKey: inboxQueryKey(activeProductId),
     queryFn: () => getPublicationInbox(activeProductId ?? undefined),
@@ -56,7 +59,11 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
     }));
 
   const handleNavModeToggle = async () => {
-    await updateProfile({ profile: isGrowth ? 'soho' : 'growth' });
+    const nextProfile = isGrowth ? 'soho' : 'growth';
+    await updateProfile({ profile: nextProfile });
+    if (nextProfile === 'growth' && !localStorage.getItem('mkt_growth_tour_seen')) {
+      setShowGrowthTour(true);
+    }
   };
 
   const forceSohoNav = Boolean(user?.impersonating);
@@ -147,6 +154,10 @@ export function DashboardShell({ children, navigationOverride }: DashboardShellP
       }
     >
       {children}
+      <GrowthSpotlightTour
+        isOpen={showGrowthTour}
+        onClose={() => setShowGrowthTour(false)}
+      />
     </AppLayout>
   );
 }

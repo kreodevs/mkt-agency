@@ -14,6 +14,7 @@ import { InboxPurgeDialog } from '@/components/publication-inbox/InboxPurgeDialo
 import { InboxContentDeleteDialog } from '@/components/publication-inbox/InboxContentDeleteDialog';
 import { TodayPublishPanel } from '@/components/publication-inbox/TodayPublishPanel';
 import { SohoResultsBanner } from '@/components/publication-inbox/SohoResultsBanner';
+import { WeeklyRadarBanner } from '@/components/publication-inbox/WeeklyRadarBanner';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/molecules/Card';
@@ -31,7 +32,7 @@ import { clearNewInboxContentId } from '@/lib/inbox-new-items';
 import { excludeTodayFromPending, getTodayContentIds } from '@/lib/inbox-today.util';
 import { sortInboxItemsNewestFirst } from '@/lib/inbox-sort.util';
 import {
-  bulkApproveInbox, bulkDeleteInboxContents, getPublicationInbox, getSohoSummary,
+  bulkApproveInbox, bulkDeleteInboxContents, getCopilotStatus, getPublicationInbox, getSohoSummary,
   markAllNotificationsRead, markNotificationRead,
 } from '@/services/publication-inbox';
 import { useActiveProductStore } from '@/store/active-product';
@@ -100,6 +101,12 @@ export default function PublicationInboxPage() {
   const sohoSummaryQuery = useQuery({
     queryKey: ['soho-summary', activeProductId],
     queryFn: () => getSohoSummary(activeProductId ?? undefined),
+  });
+
+  const copilotStatusQuery = useQuery({
+    queryKey: ['copilot-status', activeProductId],
+    queryFn: () => getCopilotStatus(activeProductId ?? undefined),
+    enabled: sohoMode,
   });
 
   const bulkApproveMutation = useMutation({
@@ -204,7 +211,7 @@ export default function PublicationInboxPage() {
                 <Trash2 className="h-4 w-4" /> Limpiar contenido
               </Button>
             )}
-            <Link to="/calendario">
+            <Link to="/calendar">
               <Button type="button" variant="outline" size="sm" className="gap-1.5">
                 <CalendarDays className="h-4 w-4" /> Calendario
               </Button>
@@ -242,6 +249,12 @@ export default function PublicationInboxPage() {
       )}
 
       {summary && sohoMode && <SohoResultsBanner leadsToday={summary.leadsToday} leadsThisWeek={summary.leadsThisWeek} attributedLeadsThisWeek={summary.attributedLeadsThisWeek} />}
+
+      {sohoMode && (
+        <div className="mb-[var(--spacing-lg)]">
+          <WeeklyRadarBanner status={copilotStatusQuery.data} />
+        </div>
+      )}
 
       {welcome && (
         <div className="mb-[var(--spacing-lg)] flex items-start gap-[var(--spacing-md)] rounded-[var(--radius-md)] border border-[var(--success)]/30 bg-[var(--success)]/5 p-[var(--spacing-md)]">

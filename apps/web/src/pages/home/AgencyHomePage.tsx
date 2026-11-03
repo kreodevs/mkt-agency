@@ -92,7 +92,7 @@ export default function AgencyHomePage() {
 
   const navLinks = useMemo(
     () => ({
-      calendar: isSoho ? '/calendario' : '/calendar',
+      calendar: '/calendar',
       strategy: isSoho ? '/agency/activity' : '/strategy',
       performance: isSoho ? '/agency/activity' : '/dashboard',
       community: isSoho ? '/' : '/community',

@@ -64,6 +64,7 @@ import {
 } from './generation-context.facade';
 import { CmCharacterService } from './cm-character.service';
 import { VisualOrchestratorService } from './visual-orchestrator.service';
+import { runBrandQaAudit } from './domain/brand-qa.util';
 
 @Injectable()
 export class CommunityManagerService {
@@ -258,6 +259,14 @@ export class CommunityManagerService {
     today: Date,
     index: number,
   ) {
+    const qaResult = runBrandQaAudit(post);
+    if (!qaResult.passed) {
+      this.logger.warn(
+        `Brand QA flagged post "${post.title}": ${qaResult.violations.join(', ')}`,
+      );
+      post.body = qaResult.sanitizedBody;
+    }
+
     const contentDto = new CreateContentDto();
     contentDto.title = post.title;
     contentDto.type = 'social';
@@ -283,6 +292,9 @@ export class CommunityManagerService {
     contentDto.visualSubline = post.visualSubline ?? null;
     contentDto.visualCta = post.visualCta ?? null;
     contentDto.imageDestination = resolveContentImageDestination(post);
+    contentDto.targetPainPoint = post.targetPainPoint ?? null;
+    contentDto.strategicAngle = post.strategicAngle ?? null;
+    contentDto.persuasionFramework = post.persuasionFramework ?? null;
     return this.contentService.create(tenantId, userId, contentDto);
   }
 
@@ -755,6 +767,9 @@ export class CommunityManagerService {
       visualSubline: post.visualSubline ?? null,
       visualCta: post.visualCta ?? null,
       imageDestination: resolveContentImageDestination(post),
+      targetPainPoint: post.targetPainPoint ?? null,
+      strategicAngle: post.strategicAngle ?? null,
+      persuasionFramework: post.persuasionFramework ?? null,
     });
   }
 

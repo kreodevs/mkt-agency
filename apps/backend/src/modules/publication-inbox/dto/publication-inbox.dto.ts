@@ -37,6 +37,9 @@ export class PublicationInboxItemDto {
   visualSubline!: string | null;
   visualCta!: string | null;
   imageDestination!: string;
+  targetPainPoint!: string | null;
+  strategicAngle!: string | null;
+  persuasionFramework!: string | null;
   assets!: unknown[];
   publishedAt!: string | null;
   canPublishWithN8n!: boolean;
@@ -110,6 +113,10 @@ export class CopilotStatusResponseDto {
   mediaKitImageCount!: number;
   mediaKitRecommendedMin!: number;
   mediaKitLowWarning!: string | null;
+  intelSummary?: {
+    marketGaps: string[];
+    recommendation: string | null;
+  } | null;
   campaignTemplateSuggestions!: Array<{
     templateId: string;
     name: string;
@@ -173,6 +180,22 @@ export class RegenerateInboxContentDto {
   @IsString()
   @MaxLength(20)
   visualFormat?: string;
+}
+
+export const INBOX_PIVOT_ANGLES = [
+  'social_proof',
+  'pain_agitation',
+  'offer_urgency',
+  'contrarian',
+  'educational_step',
+] as const;
+
+export type InboxPivotAngle = (typeof INBOX_PIVOT_ANGLES)[number];
+
+export class PivotAngleInboxContentDto {
+  @IsString()
+  @IsIn([...INBOX_PIVOT_ANGLES])
+  angleType!: InboxPivotAngle;
 }
 
 export class DismissInboxContentResponseDto {

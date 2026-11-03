@@ -34,6 +34,12 @@ export interface SocialCopyPost {
   visualIntent?: VisualIntent;
   /** Selected art prompt recipe id (set during visual attach). */
   artRecipeId?: string;
+  /** Punto de dolor humano o comercial concreto que ataca el post (SOHO strategic capsule). */
+  targetPainPoint?: string;
+  /** Ángulo estratégico de diferenciación vs competencia. */
+  strategicAngle?: string;
+  /** Marco psicológico de persuasión aplicado. */
+  persuasionFramework?: 'PAS' | 'BAB' | 'SocialProof' | 'Contrarian' | 'FOMO' | 'DirectOffer';
 }
 
 export interface SocialCopyBatch {

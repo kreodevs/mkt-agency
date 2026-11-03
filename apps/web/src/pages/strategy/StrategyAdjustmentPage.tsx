@@ -10,24 +10,32 @@ import {
   Loader2,
   RotateCcw,
   Sparkles,
+  Target,
   ThumbsDown,
   ThumbsUp,
   TrendingDown,
   TrendingUp,
   XCircle,
 } from 'lucide-react';
-import { DashboardShell, tenantNavigation } from '@/components/layout/DashboardShell';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 import { ProductContextBanner } from '@/components/products/ProductContextBanner';
 import { PageHeader } from '@/components/molecules/PageHeader';
 import { Card } from '@/components/molecules/Card';
 import { StatsCard } from '@/components/molecules/StatsCard';
 import { Button } from '@/components/atoms/Button';
+import { StatusPill } from '@/components/atoms/StatusPill';
 import { HEALTH_UI, type HealthKey } from '@/lib/semantic-ui';
 import { IconButton, ACTION_BUTTON_GROUP_CLASS } from '@/components/atoms/IconButton';
 import { toast } from '@/components/molecules/Sonner';
 import { ApiError } from '@/services/api';
 import { apiFetch } from '@/services/api';
 import { useResolvedProductId } from '@/hooks/useResolvedProductId';
+import { useOperatingProfile } from '@/hooks/useOperatingProfile';
+import {
+  approveAgencyPlan,
+  createAgencyPlan,
+  listAgencyPlans,
+} from '@/services/operating-profile';
 
 interface Suggestion {
   id: string;
@@ -76,6 +84,43 @@ export default function StrategyAdjustmentPage() {
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const resolvedProductId = useResolvedProductId();
+  const { isPaid } = useOperatingProfile();
+  const [activeTab, setActiveTab] = useState<'plans' | 'tactical'>('plans');
+  const [objective, setObjective] = useState('');
+
+  const plansQuery = useQuery({
+    queryKey: ['agency-plans'],
+    queryFn: listAgencyPlans,
+  });
+
+  const createPlanMutation = useMutation({
+    mutationFn: () =>
+      createAgencyPlan({
+        objective,
+        metric: 'leads',
+        productId: resolvedProductId ?? undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-plans'] });
+      setObjective('');
+      toast.success('Plan estratégico generado');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'Error al crear plan');
+    },
+  });
+
+  const approvePlanMutation = useMutation({
+    mutationFn: (planId: string) => approveAgencyPlan(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-events'] });
+      toast.success('Plan aprobado — agentes notificados');
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : 'Error al aprobar plan');
+    },
+  });
 
   const adjustmentsQuery = useQuery({
     queryKey: ['strategy-adjustments'],
@@ -142,26 +187,132 @@ export default function StrategyAdjustmentPage() {
   const latest = adjustmentsQuery.data?.[0];
 
   return (
-    <DashboardShell navigationOverride={tenantNavigation}>
+    <DashboardShell>
       <PageHeader
-        eyebrow="Growth"
-        title="Recomendaciones de estrategia"
-        description="Sugerencias automáticas según tus publicaciones y contactos — aprueba o descarta cada una"
+        eyebrow="Estrategia Canónica"
+        title={activeTab === 'plans' ? 'Estrategia comercial y embudo' : 'Recomendaciones y diagnóstico'}
+        description={
+          activeTab === 'plans'
+            ? 'Objetivos financieros, hipótesis de conversión y planes generados por el Estratega IA'
+            : 'Sugerencias tácticas automáticas según tus publicaciones y contactos — aprueba o descarta cada una'
+        }
         actions={
-          <Button
-            onClick={() => triggerMutation.mutate()}
-            loading={triggerMutation.isPending}
-            className="gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            Analizar rendimiento
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-0.5">
+              <button
+                type="button"
+                onClick={() => setActiveTab('plans')}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  activeTab === 'plans'
+                    ? 'bg-[var(--card)] text-[var(--foreground)] shadow-sm'
+                    : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+                }`}
+              >
+                <Target className="h-3.5 w-3.5" />
+                Planes Comerciales
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('tactical')}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  activeTab === 'tactical'
+                    ? 'bg-[var(--card)] text-[var(--foreground)] shadow-sm'
+                    : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+                }`}
+              >
+                <TrendingUp className="h-3.5 w-3.5" />
+                Diagnóstico & Ajustes
+              </button>
+            </div>
+
+            {activeTab === 'tactical' && (
+              <Button
+                onClick={() => triggerMutation.mutate()}
+                loading={triggerMutation.isPending}
+                size="sm"
+                className="gap-1.5"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Analizar rendimiento
+              </Button>
+            )}
+          </div>
         }
       />
 
       {resolvedProductId && <ProductContextBanner productId={resolvedProductId} />}
 
-      {adjustmentsQuery.isLoading ? (
+      {activeTab === 'plans' ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card title="Nuevo objetivo comercial" subtitle="El agente de estrategia propone canales, hipótesis y embudo">
+            <textarea
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+              placeholder="Ej. Reducir CAC 15% y acelerar conversión de leads este trimestre"
+            />
+            {isPaid && (
+              <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+                Perfil con pauta activa: el plan incluirá distribución de presupuesto por etapa del embudo.
+              </p>
+            )}
+            <Button
+              type="button"
+              className="mt-4"
+              disabled={!objective.trim() || createPlanMutation.isPending}
+              loading={createPlanMutation.isPending}
+              onClick={() => createPlanMutation.mutate()}
+            >
+              Generar plan con IA
+            </Button>
+          </Card>
+
+          <Card title="Planes estratégicos de la agencia" subtitle="Aprueba para activar directrices al equipo creativo">
+            {plansQuery.isLoading && (
+              <p className="text-sm text-[var(--foreground-muted)]">Cargando planes...</p>
+            )}
+            {(!plansQuery.data || plansQuery.data.length === 0) && !plansQuery.isLoading && (
+              <p className="text-sm text-[var(--foreground-muted)]">
+                Aún no has generado planes comerciales. Ingresa un objetivo a la izquierda para comenzar.
+              </p>
+            )}
+            <ul className="space-y-3">
+              {(plansQuery.data ?? []).map((plan) => {
+                const objectiveText =
+                  (plan.strategistOutput?.commercialObjective as { metric?: string })?.metric ??
+                  'Plan estratégico';
+                return (
+                  <li
+                    key={plan.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] p-3"
+                  >
+                    <div>
+                      <StatusPill status={plan.status === 'approved' ? 'success' : 'warning'}>
+                        {plan.status === 'approved' ? 'Aprobado' : 'Borrador'}
+                      </StatusPill>
+                      <p className="mt-1 text-sm font-medium">{objectiveText}</p>
+                      <p className="text-xs text-[var(--foreground-muted)]">
+                        {new Date(plan.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    {plan.status === 'draft' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={approvePlanMutation.isPending}
+                        onClick={() => approvePlanMutation.mutate(plan.id)}
+                      >
+                        Aprobar
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        </div>
+      ) : adjustmentsQuery.isLoading ? (
         <div className="py-20 text-center text-[var(--foreground-muted)]">
           Cargando análisis...
         </div>

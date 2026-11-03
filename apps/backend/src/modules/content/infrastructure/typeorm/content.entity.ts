@@ -72,6 +72,18 @@ export class ContentEntity {
   @Column({ name: 'art_recipe_id', type: 'varchar', length: 80, nullable: true })
   artRecipeId!: string | null;
 
+  /** Punto de dolor humano o comercial que ataca el post (SOHO strategic capsule). */
+  @Column({ name: 'target_pain_point', type: 'varchar', length: 300, nullable: true })
+  targetPainPoint!: string | null;
+
+  /** Ángulo estratégico de diferenciación vs competencia. */
+  @Column({ name: 'strategic_angle', type: 'varchar', length: 300, nullable: true })
+  strategicAngle!: string | null;
+
+  /** Marco de persuasión psicológica aplicado (PAS, BAB, SocialProof, etc.). */
+  @Column({ name: 'persuasion_framework', type: 'varchar', length: 50, nullable: true })
+  persuasionFramework!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

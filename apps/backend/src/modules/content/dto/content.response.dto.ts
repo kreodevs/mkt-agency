@@ -34,6 +34,9 @@ export class ContentResponseDto {
   visualCta!: string | null;
   imageDestination!: string;
   artRecipeId!: string | null;
+  targetPainPoint!: string | null;
+  strategicAngle!: string | null;
+  persuasionFramework!: string | null;
   currentVersion?: ContentVersionResponseDto;
   createdAt!: string;
   updatedAt!: string;

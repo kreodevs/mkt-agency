@@ -96,6 +96,21 @@ export class CreateContentDto {
   @IsString()
   @MaxLength(80)
   artRecipeId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  targetPainPoint?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  strategicAngle?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  persuasionFramework?: string | null;
 }
 
 export class UpdateContentDto {
@@ -174,6 +189,21 @@ export class UpdateContentDto {
   @IsString()
   @MaxLength(80)
   artRecipeId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  targetPainPoint?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  strategicAngle?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  persuasionFramework?: string | null;
 }
 
 export class ListContentsQueryDto {

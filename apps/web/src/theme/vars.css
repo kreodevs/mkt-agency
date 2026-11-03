@@ -12,8 +12,9 @@
   --color-ivory-medium: #f0eee6;
   --color-ivory-dark: #e8e6dc;
   --color-slate-dark: #141413;
-  --color-slate-light: #5e5d59;
-  --color-cloud-dark: #87867f;
+  --color-slate-light: #444340; /* WCAG AAA compliant text (> 8.5:1 contrast) */
+  --color-slate-subtle: #4f4e4a; /* WCAG AAA compliant secondary text (> 7.5:1 contrast) */
+  --color-cloud-dark: #76756f;
   --color-cloud-medium: #b0aea5;
   --color-oat: #e3dacc;
   --color-brand: #c2410c;
@@ -126,7 +127,7 @@
   --background-muted: var(--color-ivory-dark);
   --foreground: var(--color-slate-dark);
   --foreground-muted: var(--color-slate-light);
-  --foreground-subtle: var(--color-cloud-dark);
+  --foreground-subtle: var(--color-slate-subtle);
   --accent: var(--color-brand);
   --accent-foreground: #ffffff;
   --accent-muted: var(--color-brand-muted);
@@ -146,7 +147,7 @@
   --secondary: var(--color-ivory-medium);
   --secondary-foreground: var(--color-slate-dark);
   --muted: var(--color-ivory-medium);
-  --muted-foreground: var(--color-cloud-dark);
+  --muted-foreground: var(--color-slate-subtle);
   --destructive: #b42318;
   --destructive-foreground: var(--color-ivory-light);
   --success: #3d6b4f;

@@ -43,6 +43,16 @@ export function regenerateInboxContent(
   });
 }
 
+export function pivotInboxContentAngle(
+  contentId: string,
+  angleType: import('@/types/publication-inbox').InboxPivotAngle,
+): Promise<{ contentId: string; title: string; regenerated: true; angleType: string }> {
+  return apiFetch(`/publication-inbox/pivot-angle/${contentId}`, {
+    method: 'POST',
+    body: JSON.stringify({ angleType }),
+  });
+}
+
 export function dismissInboxContent(contentId: string): Promise<{ contentId: string; dismissed: true }> {
   return apiFetch(`/publication-inbox/dismiss/${contentId}`, { method: 'POST' });
 }

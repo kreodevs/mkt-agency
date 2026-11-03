@@ -29,6 +29,8 @@ import {
   PublicationInboxResponseDto,
   PurgeInboxDto,
   RegenerateInboxContentDto,
+  PivotAngleInboxContentDto,
+  type InboxPivotAngle,
   BulkDeleteInboxDto,
   RequestInboxChangesDto,
   RequestInboxChangesResponseDto,
@@ -131,6 +133,34 @@ export class PublicationInboxController {
         feedback: body.feedback,
         visualFormat: body.visualFormat,
       },
+    );
+  }
+
+  @Post('pivot-angle/:contentId')
+  pivotAngle(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('contentId') contentId: string,
+    @Body() body: PivotAngleInboxContentDto,
+  ) {
+    const angleFeedbackMap: Record<InboxPivotAngle, string> = {
+      social_proof:
+        'Cambia el enfoque comercial a PRUEBA SOCIAL / CASO DE ÉXITO: Relata el resultado alcanzado por un cliente real, eliminando el escepticismo inicial y demostrando cómo el producto resolvió su problema.',
+      pain_agitation:
+        'Cambia el enfoque comercial a DOLOR Y AGITACIÓN (Framework PAS): Describe vívidamente la frustración de seguir con el problema actual antes de presentar el producto como la única solución definitiva.',
+      offer_urgency:
+        'Cambia el enfoque comercial a OFERTA DIRECTA Y URGENCIA (FOMO): Enfatiza por qué actuar ahora con un llamado a la acción contundente, destacando beneficio inmediato.',
+      contrarian:
+        'Cambia el enfoque comercial a VERDAD CONTRARIA (Derribar mito): Desafía una creencia popular errónea de la industria y explica por qué nuestro método es superior.',
+      educational_step:
+        'Cambia el enfoque comercial a GUÍA / PASO A PASO EDUCATIVO (Framework BAB): Enseña 3 pasos prácticos para resolver la situación, posicionando nuestro producto como el vehículo que lo hace automático.',
+    };
+
+    const feedback = angleFeedbackMap[body.angleType] ?? angleFeedbackMap.social_proof;
+    return this.communityManager.regeneratePostForContent(
+      user.tenantId!,
+      user.id,
+      contentId,
+      { feedback },
     );
   }
 

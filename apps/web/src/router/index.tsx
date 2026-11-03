@@ -46,9 +46,6 @@ const AgencyHomePage = lazy(() => import('@/pages/home/AgencyHomePage'));
 const PublicationInboxPage = lazy(
   () => import('@/pages/publication-inbox/PublicationInboxPage'),
 );
-const PublicationCalendarPage = lazy(
-  () => import('@/pages/publication-inbox/PublicationCalendarPage'),
-);
 const BrandInterviewPage = lazy(() => import('@/pages/agents/BrandInterviewPage'));
 const CompetitorIntelPage = lazy(() => import('@/pages/agents/CompetitorIntelPage'));
 const ImageGeneratorPage = lazy(() => import('@/pages/agents/ImageGeneratorPage'));
@@ -58,7 +55,6 @@ const ImageGeneratorDetailPage = lazy(
 const StrategyAdjustmentPage = lazy(() => import('@/pages/strategy/StrategyAdjustmentPage'));
 const CommunityManagerPage = lazy(() => import('@/pages/community/CommunityManagerPage'));
 const SocialInboxPage = lazy(() => import('@/pages/social/SocialInboxPage'));
-const AgencyStrategyPage = lazy(() => import('@/pages/agency/AgencyStrategyPage'));
 const AgencyActivityPage = lazy(() => import('@/pages/agency/AgencyActivityPage'));
 const AgencyMediaIntentsPage = lazy(() => import('@/pages/agency/AgencyMediaIntentsPage'));
 const AgencyPerformancePage = lazy(() => import('@/pages/agency/AgencyPerformancePage'));
@@ -89,7 +85,8 @@ export function AppRouter() {
 
         <Route element={<AuthGuard />}>
           <Route path="/" element={<PublicationInboxPage />} />
-          <Route path="/calendario" element={<PublicationCalendarPage />} />
+          <Route path="/calendario" element={<Navigate to="/calendar" replace />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/agency-overview" element={<AgencyHomePage />} />
           <Route element={<SuperadminGuard />}>
             <Route path="/tenants" element={<TenantListPage />} />
@@ -118,14 +115,7 @@ export function AppRouter() {
             <Route path="/copilot/competitors" element={<CompetitorIntelPage />} />
             <Route path="/agents/image-generator" element={<ImageGeneratorPage />} />
             <Route path="/agents/image-generator/:id" element={<ImageGeneratorDetailPage />} />
-            <Route
-              path="/strategy"
-              element={
-                <SohoLegacyRedirect>
-                  <StrategyAdjustmentPage />
-                </SohoLegacyRedirect>
-              }
-            />
+            <Route path="/strategy" element={<StrategyAdjustmentPage />} />
             <Route
               path="/community"
               element={
@@ -144,14 +134,7 @@ export function AppRouter() {
             <Route path="/agency/activity" element={<AgencyActivityPage />} />
             <Route path="/agency/performance" element={<AgencyPerformancePage />} />
             <Route path="/social/inbox" element={<SocialInboxPage />} />
-            <Route
-              path="/agency/strategy"
-              element={
-                <SohoLegacyRedirect>
-                  <AgencyStrategyPage />
-                </SohoLegacyRedirect>
-              }
-            />
+            <Route path="/agency/strategy" element={<Navigate to="/strategy" replace />} />
             <Route
               path="/agency/media-intents"
               element={
@@ -203,14 +186,6 @@ export function AppRouter() {
               }
             />
             <Route path="/contents/:id" element={<ContentEditPage />} />
-            <Route
-              path="/calendar"
-              element={
-                <SohoLegacyRedirect>
-                  <CalendarPage />
-                </SohoLegacyRedirect>
-              }
-            />
             <Route path="/forms" element={<FormListPage />} />
             <Route path="/leads" element={<LeadPipelinePage />} />
             <Route path="/libreria" element={<AssetLibraryPage />} />

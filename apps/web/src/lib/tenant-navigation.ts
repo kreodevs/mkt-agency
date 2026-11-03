@@ -59,7 +59,7 @@ export const tenantAdvancedNavigation = [
     title: 'Hoy',
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
-      { label: 'Calendario semanal', href: '/calendario', icon: CalendarDays },
+      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
       { label: 'Librería', href: LIBRARY_ROUTE, icon: FolderOpen },
     ],
   },
@@ -77,11 +77,10 @@ export const tenantAdvancedNavigation = [
     title: 'Crear con IA',
     items: [
       { label: 'Agentes IA', href: '/agents', icon: Bot },
-      { label: 'Estrategia comercial', href: '/agency/strategy', icon: Lightbulb },
+      { label: 'Estrategia comercial', href: '/strategy', icon: Lightbulb },
       { label: 'Pauta (manual)', href: '/agency/media-intents', icon: Coins },
       { label: 'Community Manager', href: '/community', icon: MessageSquare },
       { label: 'Campañas', href: '/campaigns', icon: Megaphone },
-      { label: 'Estrategia', href: '/strategy', icon: Lightbulb },
     ],
   },
   {
@@ -102,7 +101,6 @@ export const tenantAdvancedNavigation = [
       { label: 'Perfil de empresa', href: '/onboarding', icon: ClipboardList },
       { label: 'Competidores', href: '/settings/competitors', icon: Target },
       { label: 'Dominio', href: '/settings/domain', icon: Globe },
-      { label: 'Calendario editorial (avanzado)', href: '/calendar', icon: CalendarDays },
     ],
   },
 ];
@@ -114,7 +112,7 @@ export const tenantSohoNavigation = [
     items: [
       { label: 'Inicio', href: '/', icon: Inbox },
       { label: 'Resumen', href: '/agency-overview', icon: BarChart3 },
-      { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+      { label: 'Calendario', href: '/calendar', icon: CalendarDays },
       { label: 'Actividad agentes', href: '/agency/activity', icon: Activity },
       { label: 'Análisis competidores', href: '/copilot/competitors', icon: Crosshair },
       { label: 'Rendimiento pauta', href: '/agency/performance', icon: BarChart3 },

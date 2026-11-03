@@ -126,6 +126,9 @@ export class ContentService {
           visualCta: dto.visualCta ?? null,
           imageDestination: dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
           artRecipeId: dto.artRecipeId ?? null,
+          targetPainPoint: dto.targetPainPoint ?? null,
+          strategicAngle: dto.strategicAngle ?? null,
+          persuasionFramework: dto.persuasionFramework ?? null,
         }),
       );
 
@@ -197,7 +200,10 @@ export class ContentService {
       dto.visualSubline !== undefined ||
       dto.visualCta !== undefined ||
       dto.imageDestination !== undefined ||
-      dto.artRecipeId !== undefined;
+      dto.artRecipeId !== undefined ||
+      dto.targetPainPoint !== undefined ||
+      dto.strategicAngle !== undefined ||
+      dto.persuasionFramework !== undefined;
     const hasMetadataOnly = hasMetadataFields && !hasVersionFields;
 
     if (!hasVersionFields && !hasMetadataOnly) {
@@ -220,19 +226,7 @@ export class ContentService {
   ): Promise<ContentResponseDto> {
     const content = await this.findOwnedContent(tenantId, id);
 
-    if (dto.scheduledDate !== undefined) content.scheduledDate = dto.scheduledDate ?? null;
-    if (dto.visualFormat !== undefined) content.visualFormat = normalizeContentVisualFormat(dto.visualFormat);
-    if (dto.platform !== undefined) content.platform = dto.platform ?? null;
-    if (dto.visualPrompt !== undefined) content.visualPrompt = dto.visualPrompt ?? null;
-    if (dto.visualTemplateId !== undefined) content.visualTemplateId = dto.visualTemplateId ?? null;
-    if (dto.visualScene !== undefined) content.visualScene = dto.visualScene ?? null;
-    if (dto.visualHeadline !== undefined) content.visualHeadline = dto.visualHeadline ?? null;
-    if (dto.visualSubline !== undefined) content.visualSubline = dto.visualSubline ?? null;
-    if (dto.visualCta !== undefined) content.visualCta = dto.visualCta ?? null;
-    if (dto.imageDestination !== undefined) {
-      content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
-    }
-    if (dto.artRecipeId !== undefined) content.artRecipeId = dto.artRecipeId ?? null;
+    this.applyMetadataFields(content, dto);
 
     const saved = await this.contents.save(content);
     return this.toContentResponse(saved);
@@ -297,6 +291,9 @@ export class ContentService {
       content.imageDestination = dto.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION;
     }
     if (dto.artRecipeId !== undefined) content.artRecipeId = dto.artRecipeId ?? null;
+    if (dto.targetPainPoint !== undefined) content.targetPainPoint = dto.targetPainPoint ?? null;
+    if (dto.strategicAngle !== undefined) content.strategicAngle = dto.strategicAngle ?? null;
+    if (dto.persuasionFramework !== undefined) content.persuasionFramework = dto.persuasionFramework ?? null;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -810,6 +807,9 @@ export class ContentService {
       visualCta: content.visualCta ?? null,
       imageDestination: content.imageDestination ?? DEFAULT_CONTENT_IMAGE_DESTINATION,
       artRecipeId: content.artRecipeId ?? null,
+      targetPainPoint: content.targetPainPoint ?? null,
+      strategicAngle: content.strategicAngle ?? null,
+      persuasionFramework: content.persuasionFramework ?? null,
       createdAt: content.createdAt.toISOString(),
       updatedAt: content.updatedAt.toISOString(),
     };

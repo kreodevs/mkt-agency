@@ -9,7 +9,7 @@ const PLATFORM_ICONS = {
   tiktok: Music2,
 } as const;
 
-const PLATFORM_STYLE = 'text-[var(--foreground-muted)] bg-[var(--secondary)] border-[var(--border)]';
+const PLATFORM_STYLE = 'text-[var(--foreground)] bg-[var(--secondary)] border-[var(--border)]';
 
 type ContentPlatformBadgeProps = {
   platform: string | null | undefined;

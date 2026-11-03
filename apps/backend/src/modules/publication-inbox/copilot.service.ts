@@ -86,6 +86,19 @@ export class CopilotService {
         ? `Sube al menos ${MEDIA_KIT_RECOMMENDED_MIN_IMAGES} fotos reales al media kit (${mediaKitImageCount}/${MEDIA_KIT_RECOMMENDED_MIN_IMAGES}) para diseños menos genéricos.`
         : null;
 
+    const intelAnalysis = latestAnalysis?.analysis as Record<string, unknown> | null;
+    const intelSummary = intelAnalysis
+      ? {
+          marketGaps: Array.isArray(intelAnalysis.marketGaps)
+            ? (intelAnalysis.marketGaps as string[])
+            : [],
+          recommendation:
+            typeof intelAnalysis.recommendation === 'string'
+              ? (intelAnalysis.recommendation as string)
+              : null,
+        }
+      : null;
+
     return {
       productId: product.id,
       productName: product.name,
@@ -109,6 +122,7 @@ export class CopilotService {
       mediaKitImageCount,
       mediaKitRecommendedMin: MEDIA_KIT_RECOMMENDED_MIN_IMAGES,
       mediaKitLowWarning: mediaKitLow,
+      intelSummary,
       campaignTemplateSuggestions: campaignTemplates,
     };
   }

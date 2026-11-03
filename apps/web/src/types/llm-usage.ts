@@ -9,6 +9,9 @@ export interface LlmUsageSummary {
 export interface LlmUsageTenantRow extends LlmUsageSummary {
   tenantId: string | null;
   tenantName: string | null;
+  markupPercent?: number;
+  billedAmountUsd?: number;
+  spendingLimitUsd?: number | null;
 }
 
 export interface LlmUsageDailyRow {

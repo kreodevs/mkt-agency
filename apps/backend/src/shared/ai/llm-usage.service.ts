@@ -36,6 +36,9 @@ export interface LlmUsageSummary {
 export interface LlmUsageTenantRow extends LlmUsageSummary {
   tenantId: string | null;
   tenantName: string | null;
+  markupPercent?: number;
+  billedAmountUsd?: number;
+  spendingLimitUsd?: number | null;
 }
 
 export interface LlmUsageDailyRow {
@@ -189,11 +192,21 @@ export class LlmUsageService {
       .orderBy('estimatedCostUsd', 'DESC')
       .getRawMany<Record<string, string | null>>();
 
-    return rows.map((row) => ({
-      tenantId: row.tenantId ?? null,
-      tenantName: row.tenantName ?? null,
-      ...this.mapSummary(row),
-    }));
+    const defaultMarkup = 30;
+    return rows.map((row) => {
+      const summary = this.mapSummary(row);
+      const billedAmountUsd = Number(
+        (summary.estimatedCostUsd * (1 + defaultMarkup / 100)).toFixed(4),
+      );
+      return {
+        tenantId: row.tenantId ?? null,
+        tenantName: row.tenantName ?? null,
+        ...summary,
+        markupPercent: defaultMarkup,
+        billedAmountUsd,
+        spendingLimitUsd: 100.0,
+      };
+    });
   }
 
   private async aggregateDaily(from?: Date, to?: Date): Promise<LlmUsageDailyRow[]> {

@@ -30,6 +30,19 @@ export interface AttributionReport {
   byChannel: Array<{ channel: string; count: number; share: number }>;
 }
 
+export interface ContentConversionMetric {
+  contentId: string;
+  leadsCount: number;
+  persuasionFramework: string;
+  source: string;
+}
+
+export interface ConvertingFrameworkSummary {
+  framework: string;
+  leadsCount: number;
+  share: number;
+}
+
 export interface PaidPerformanceCrossSummary {
   periodDays: number;
   ads: {
@@ -338,5 +351,98 @@ export class AnalyticsAgentService {
     }
 
     return qb.getCount();
+  }
+
+  async getContentConversionMetrics(
+    tenantId: string,
+    periodDays = 30,
+    productId?: string,
+  ): Promise<ContentConversionMetric[]> {
+    const since = new Date();
+    since.setDate(since.getDate() - periodDays);
+
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :since', { since })
+      .andWhere("l.metadata->>'contentId' IS NOT NULL");
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    const rows = await qb.getMany();
+    const map = new Map<string, { count: number; framework: string; source: string }>();
+
+    for (const lead of rows) {
+      const meta = lead.metadata as Record<string, unknown> | null;
+      const contentId = String(meta?.contentId ?? '');
+      if (!contentId) continue;
+
+      const framework = String(meta?.persuasionFramework ?? 'General');
+      const source = String(meta?.utm_source ?? meta?.source ?? 'organic');
+
+      const existing = map.get(contentId) ?? { count: 0, framework, source };
+      existing.count += 1;
+      map.set(contentId, existing);
+    }
+
+    return [...map.entries()].map(([contentId, val]) => ({
+      contentId,
+      leadsCount: val.count,
+      persuasionFramework: val.framework,
+      source: val.source,
+    }));
+  }
+
+  async getTopConvertingFrameworks(
+    tenantId: string,
+    periodDays = 14,
+    productId?: string,
+  ): Promise<ConvertingFrameworkSummary[]> {
+    const since = new Date();
+    since.setDate(since.getDate() - periodDays);
+
+    const qb = this.leads
+      .createQueryBuilder('l')
+      .where('l.tenant_id = :tenantId', { tenantId })
+      .andWhere('l.created_at >= :since', { since });
+
+    if (productId) {
+      qb.andWhere('l.product_id = :productId', { productId });
+    }
+
+    const rows = await qb.getMany();
+    const frameworkCounts = new Map<string, number>();
+    let totalAttributed = 0;
+
+    for (const lead of rows) {
+      const meta = lead.metadata as Record<string, unknown> | null;
+      const framework = meta?.persuasionFramework
+        ? String(meta.persuasionFramework)
+        : null;
+
+      if (framework) {
+        frameworkCounts.set(framework, (frameworkCounts.get(framework) ?? 0) + 1);
+        totalAttributed += 1;
+      }
+    }
+
+    if (totalAttributed === 0) {
+      return [
+        { framework: 'PAS', leadsCount: 0, share: 0.35 },
+        { framework: 'SocialProof', leadsCount: 0, share: 0.35 },
+        { framework: 'BAB', leadsCount: 0, share: 0.15 },
+        { framework: 'Contrarian', leadsCount: 0, share: 0.15 },
+      ];
+    }
+
+    return [...frameworkCounts.entries()]
+      .map(([framework, count]) => ({
+        framework,
+        leadsCount: count,
+        share: Number((count / totalAttributed).toFixed(2)),
+      }))
+      .sort((a, b) => b.leadsCount - a.leadsCount);
   }
 }

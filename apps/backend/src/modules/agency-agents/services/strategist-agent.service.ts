@@ -249,4 +249,28 @@ export class StrategistAgentService {
       topics: [],
     };
   }
+
+  async recalibrateWeeklyStrategy(
+    tenantId: string,
+    productId?: string,
+    topFrameworks?: Array<{ framework: string; leadsCount: number; share: number }>,
+  ): Promise<{ recommendation: string; topFramework: string }> {
+    const top = topFrameworks?.[0]?.framework ?? 'PAS';
+    const recommendation = `Recalibración quincenal: El marco ${top} lidera la captación en CRM. Instrucción al Community Manager: priorizar publicaciones con estructura ${top} y ángulos de dolor/prueba social en la próxima tanda.`;
+
+    await this.agentEvents.log({
+      tenantId,
+      productId: productId ?? null,
+      sourceAgent: AgentRole.STRATEGIST,
+      targetAgent: AgentRole.COMMUNITY,
+      eventType: 'StrategyRecalibrated',
+      payload: {
+        recommendation,
+        topFramework: top,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    return { recommendation, topFramework: top };
+  }
 }
