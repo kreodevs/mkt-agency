@@ -72,14 +72,7 @@ export function persistDerivedBrandVisualKit(
 }
 
 export function isVisualTemplateId(value: string | null | undefined): value is VisualTemplateId {
-  return (
-    value === 'product-hero' ||
-    value === 'tip-card' ||
-    value === 'quote-insight' ||
-    value === 'promo-cta' ||
-    value === 'stat-highlight' ||
-    value === 'story-vertical'
-  );
+  return value === 'product-hero' || value === 'promo-cta';
 }
 
 export function resolveVisualTemplateId(
@@ -93,24 +86,8 @@ export function resolveVisualTemplateId(
     return CAROUSEL_VISUAL_TEMPLATE;
   }
 
-  if (post.platform === 'tiktok') {
-    return 'story-vertical';
-  }
-
-  if (/\b\d+[%$]|\d+\s*(clientes|ventas|años|usuarios)/i.test(post.body)) {
-    return 'stat-highlight';
-  }
-
-  if (post.platform === 'linkedin' && post.body.length > 280) {
-    return 'quote-insight';
-  }
-
-  if (/\b(nuevo|lanzamiento|oferta|descuento|promo|registro|agenda)\b/i.test(post.body)) {
+  if (/\b(nuevo|lanzamiento|oferta|descuento|promo|registro|agenda|precio|plan|cta)\b/i.test(post.body)) {
     return 'promo-cta';
-  }
-
-  if (post.body.includes('?') || /^tip\b/i.test(post.title)) {
-    return 'tip-card';
   }
 
   return DEFAULT_VISUAL_TEMPLATE;

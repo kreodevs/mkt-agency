@@ -234,10 +234,6 @@ export function resolveVisualLayoutMode(
   const aspect = layoutContext?.aspectRatio ?? 'square';
   const platform = layoutContext?.platform;
 
-  if (!hasPhoto) {
-    return 'gradient-only';
-  }
-
   if (slideCount > 1) {
     if (!hasPhoto) {
       if (slideIndex === 0) {
@@ -258,22 +254,23 @@ export function resolveVisualLayoutMode(
     return 'carousel-step';
   }
 
-  if (hasPhoto) {
-    return 'carousel-cover';
+  if (!hasPhoto) {
+    return 'gradient-only';
   }
 
   switch (templateId) {
     case 'product-hero':
-      if (aspect === 'vertical' || platform === 'instagram' || platform === 'tiktok') {
+      if (aspect === 'vertical' || platform === 'tiktok') {
         return 'device-mockup';
       }
-      if (platform === 'linkedin' || platform === 'twitter') {
-        return 'device-mockup';
+      if (platform === 'instagram' || platform === 'linkedin') {
+        return 'carousel-cover';
       }
       return aspect === 'square' ? 'split-screenshot-top' : 'device-mockup';
     case 'tip-card':
-    case 'promo-cta':
       return 'device-mockup';
+    case 'promo-cta':
+      return 'carousel-cover';
     case 'quote-insight':
       return 'gradient-only';
     case 'stat-highlight':

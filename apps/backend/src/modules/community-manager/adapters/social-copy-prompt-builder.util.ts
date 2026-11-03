@@ -180,7 +180,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
       ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels; body = guion hablado 45-60 palabras, CERO emojis, CERO hashtags, 18-24 s); carruseles educativos→carousel; resto→image.'
       : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
     'visualDescription = brief de arte (ambiente, luz, emoción).',
-    'visualTemplateId: product-hero (mockup con UI real para SaaS/software/apps), promo-cta (oferta directa con mockup), stat-highlight (métrica impactante), tip-card (consejo accionable), quote-insight (autoridad), creative-scene (foto lifestyle/ambiente), ai-art (infografía/concepto IA).',
+    'visualTemplateId: product-hero (mockup de dispositivo con UI real de la app), promo-cta (mockup con oferta directa y botón CTA), creative-scene (foto lifestyle o escena real del nicho), ai-art (imagen conceptual o ilustración IA).',
     revisionWantsMediaKit
       ? [
           'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit.',
@@ -230,7 +230,7 @@ function buildSystemPrompt(): string {
           strategicAngle: 'ventaja diferencial vs competencia (ej: Automatización en 1 clic vs semanas de desarrollo)',
           persuasionFramework: 'PAS | BAB | SocialProof | Contrarian | FOMO | DirectOffer',
           visualDescription: 'escena visual para IA — SIN repetir el body ni hashtags',
-          visualTemplateId: 'creative-scene | ai-art | product-hero | tip-card | quote-insight | promo-cta | stat-highlight | story-vertical',
+          visualTemplateId: 'product-hero | promo-cta | creative-scene | ai-art',
           visualHeadline: 'titular corto para la pieza gráfica (3-8 palabras, sin hashtags)',
           visualSubline: 'subtítulo opcional (máx 14 palabras)',
           visualCta: 'CTA corto para botón visual (2-4 palabras)',

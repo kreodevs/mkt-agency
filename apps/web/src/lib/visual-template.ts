@@ -1,10 +1,6 @@
 export const VISUAL_TEMPLATE_IDS = [
   'product-hero',
-  'tip-card',
-  'quote-insight',
   'promo-cta',
-  'stat-highlight',
-  'story-vertical',
 ] as const;
 
 export type VisualTemplateId = (typeof VISUAL_TEMPLATE_IDS)[number];
@@ -30,23 +26,18 @@ export type VisualDesignPresetId =
   | typeof AI_ART_TEMPLATE_ID
   | '';
 
-export type VisualPresetKind = 'auto' | 'scene' | 'mockup' | 'ai-art' | 'template';
+export type VisualPresetKind = 'auto' | 'scene' | 'mockup' | 'ai-art';
 
 export const VISUAL_PRESET_KIND_LABELS: Record<VisualPresetKind, string> = {
   auto: 'Automática',
   scene: 'Escena CM',
   mockup: 'Mockup con captura',
   'ai-art': 'Arte IA',
-  template: 'Plantilla tipográfica',
 };
 
 export const VISUAL_TEMPLATE_LABELS: Record<VisualTemplateId, string> = {
   'product-hero': 'Producto / funcionalidad',
-  'tip-card': 'Tip educativo',
-  'quote-insight': 'Cita / insight',
   'promo-cta': 'Promo con CTA',
-  'stat-highlight': 'Dato destacado',
-  'story-vertical': 'Story vertical (9:16)',
 };
 
 export const VISUAL_DESIGN_PRESET_LABELS: Record<string, string> = {
@@ -54,6 +45,11 @@ export const VISUAL_DESIGN_PRESET_LABELS: Record<string, string> = {
   [CREATIVE_SCENE_TEMPLATE_ID]: 'Escena CM — foto lifestyle, sin app',
   [AI_ART_TEMPLATE_ID]: 'Arte IA — infografía o ilustración',
   ...VISUAL_TEMPLATE_LABELS,
+  // Fallbacks de lectura para registros legados
+  'tip-card': 'Tip educativo (legado)',
+  'quote-insight': 'Cita / insight (legado)',
+  'stat-highlight': 'Dato destacado (legado)',
+  'story-vertical': 'Story vertical (legado)',
 };
 
 export const VISUAL_DESIGN_PRESET_KINDS: Record<string, VisualPresetKind> = {
@@ -62,26 +58,23 @@ export const VISUAL_DESIGN_PRESET_KINDS: Record<string, VisualPresetKind> = {
   [AI_ART_TEMPLATE_ID]: 'ai-art',
   'product-hero': 'mockup',
   'promo-cta': 'mockup',
-  'tip-card': 'template',
-  'quote-insight': 'template',
-  'stat-highlight': 'template',
-  'story-vertical': 'template',
+  // Legados normalizados a mockup / scene
+  'tip-card': 'mockup',
+  'quote-insight': 'scene',
+  'stat-highlight': 'mockup',
+  'story-vertical': 'mockup',
 };
 
 export const VISUAL_DESIGN_PRESET_HINTS: Partial<Record<string, string>> = {
   '':
-    'El sistema elige entre escena CM, mockup con captura o plantilla según el post, el media kit y la red social. Úsala si no estás seguro.',
+    'El sistema elige automáticamente entre mockup con captura o escena fotográfica según el post, el media kit y la red social.',
   [CREATIVE_SCENE_TEMPLATE_ID]:
-    'Genera una foto realista con la CM en consultorio u oficina. No superpone capturas del producto — ideal para confianza, tips de marca o educación sin mostrar la UI.',
+    'Genera una foto fotorrealista de alto impacto de la presentadora o ambiente del nicho (consultorio, eventos, oficina moderna). Incluye titular y botón CTA.',
   [AI_ART_TEMPLATE_ID]:
-    'Ilustración o infografía 100 % generada por IA. Sin CM en escena, sin mockup de dispositivo y sin marcos tipográficos SVG.',
+    'Ilustración o arte conceptual 100 % generado por IA para conceptos visuales o metáforas visuales.',
   'product-hero':
-    'Fondo creativo + dispositivo (móvil o desktop según la captura) con la screenshot real del media kit. Úsalo cuando el post debe mostrar la app.',
-  'tip-card': 'Marco tipográfico con titular y subtítulo; puede incluir mockup si hay capturas en el kit.',
-  'quote-insight': 'Solo textos sobre fondo editorial — sin personas ni capturas de producto.',
-  'promo-cta': 'Igual que mockup con captura, orientado a promoción y botón de CTA visible.',
-  'stat-highlight': 'Plantilla rígida para un dato numérico grande y contexto breve.',
-  'story-vertical': 'Plantilla vertical 9:16 para stories o Reels estáticos.',
+    'Dispositivo real (MacBook, iPad o iPhone) mostrando la interfaz de la app en un entorno o fondo de marca de alta conversión.',
+  'promo-cta': 'Mockup con captura real, orientado a conversión directa y botón de acción destacado.',
 };
 
 /** Guía rápida para distinguir los tres modos que más se confunden. */
@@ -131,10 +124,6 @@ export const VISUAL_DESIGN_SELECT_OPTION_GROUPS: Array<{
     options: [{ value: '', label: VISUAL_DESIGN_PRESET_LABELS[''] }],
   },
   {
-    label: 'Fotografía CM — sin captura de app',
-    options: [{ value: CREATIVE_SCENE_TEMPLATE_ID, label: VISUAL_DESIGN_PRESET_LABELS[CREATIVE_SCENE_TEMPLATE_ID] }],
-  },
-  {
     label: 'Mockup — captura real del producto',
     options: [
       { value: 'product-hero', label: VISUAL_DESIGN_PRESET_LABELS['product-hero'] },
@@ -142,17 +131,12 @@ export const VISUAL_DESIGN_SELECT_OPTION_GROUPS: Array<{
     ],
   },
   {
-    label: 'Arte IA — sin plantilla SVG',
-    options: [{ value: AI_ART_TEMPLATE_ID, label: VISUAL_DESIGN_PRESET_LABELS[AI_ART_TEMPLATE_ID] }],
+    label: 'Fotografía CM — escena de ambiente',
+    options: [{ value: CREATIVE_SCENE_TEMPLATE_ID, label: VISUAL_DESIGN_PRESET_LABELS[CREATIVE_SCENE_TEMPLATE_ID] }],
   },
   {
-    label: 'Plantilla tipográfica — textos en marco fijo',
-    options: VISUAL_TEMPLATE_IDS
-      .filter((id) => id !== 'product-hero' && id !== 'promo-cta')
-      .map((id) => ({
-        value: id,
-        label: VISUAL_DESIGN_PRESET_LABELS[id],
-      })),
+    label: 'Arte IA — imagen conceptual o ilustración',
+    options: [{ value: AI_ART_TEMPLATE_ID, label: VISUAL_DESIGN_PRESET_LABELS[AI_ART_TEMPLATE_ID] }],
   },
 ];
 
@@ -160,7 +144,7 @@ export function resolveVisualPresetKind(templateId: string | null | undefined): 
   if (!templateId) {
     return 'auto';
   }
-  return VISUAL_DESIGN_PRESET_KINDS[templateId] ?? 'template';
+  return VISUAL_DESIGN_PRESET_KINDS[templateId] ?? 'mockup';
 }
 
 export function isVisualTemplateId(value: string | null | undefined): value is VisualTemplateId {

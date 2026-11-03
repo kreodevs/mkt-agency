@@ -7,27 +7,11 @@ const TEMPLATE_PREVIEW_STYLES: Record<
 > = {
   'product-hero': {
     gradient: 'linear-gradient(135deg, var(--preview-primary), var(--preview-secondary))',
-    layout: 'Split + mockup',
-  },
-  'tip-card': {
-    gradient: 'linear-gradient(160deg, var(--preview-secondary), var(--preview-primary))',
-    layout: 'Mockup centrado',
-  },
-  'quote-insight': {
-    gradient: 'linear-gradient(120deg, var(--preview-primary), var(--preview-accent))',
-    layout: 'Cita editorial',
+    layout: 'Mockup UI real',
   },
   'promo-cta': {
     gradient: 'linear-gradient(180deg, var(--preview-primary), var(--preview-secondary))',
-    layout: 'CTA destacado',
-  },
-  'stat-highlight': {
-    gradient: 'linear-gradient(135deg, var(--preview-accent), var(--preview-secondary))',
-    layout: 'Dato + mini mockup',
-  },
-  'story-vertical': {
-    gradient: 'linear-gradient(180deg, var(--preview-secondary), var(--preview-primary))',
-    layout: 'Story 9:16',
+    layout: 'Mockup con CTA',
   },
 };
 

@@ -1,13 +1,21 @@
 export const VISUAL_TEMPLATE_IDS = [
   'product-hero',
+  'promo-cta',
+] as const;
+
+export type ActiveVisualTemplateId = (typeof VISUAL_TEMPLATE_IDS)[number];
+
+/** Plantillas SVG rígidas retiradas por baja calidad estética. Soportadas solo para migración. */
+export const LEGACY_TEMPLATE_IDS = [
   'tip-card',
   'quote-insight',
-  'promo-cta',
   'stat-highlight',
   'story-vertical',
 ] as const;
 
-export type VisualTemplateId = (typeof VISUAL_TEMPLATE_IDS)[number];
+export type LegacyVisualTemplateId = (typeof LEGACY_TEMPLATE_IDS)[number];
+
+export type VisualTemplateId = ActiveVisualTemplateId | LegacyVisualTemplateId;
 
 /** Pipeline preset stored in contents.visual_template_id — not a Visual Studio SVG template. */
 export const CREATIVE_SCENE_TEMPLATE_ID = 'creative-scene';
@@ -28,11 +36,21 @@ export type VisualSceneId = (typeof VISUAL_SCENE_IDS)[number];
 /** Allowed values for PATCH/POST contents.visualTemplateId (templates + pipeline presets). */
 export const VISUAL_DESIGN_PRESET_IDS = [
   ...VISUAL_TEMPLATE_IDS,
+  ...LEGACY_TEMPLATE_IDS,
   CREATIVE_SCENE_TEMPLATE_ID,
   AI_ART_TEMPLATE_ID,
 ] as const;
 
 export type VisualDesignPresetId = (typeof VISUAL_DESIGN_PRESET_IDS)[number];
+
+export function normalizeVisualTemplateId(
+  value: string | null | undefined,
+): VisualTemplateId {
+  if (value === 'promo-cta') {
+    return 'promo-cta';
+  }
+  return DEFAULT_VISUAL_TEMPLATE;
+}
 
 export function isVisualDesignPresetId(
   value: string | null | undefined,

@@ -25,7 +25,10 @@ import {
   resolveVisualBrandKit,
   resolveVisualTemplateId,
 } from './domain/visual-brand-kit.util';
-import type { VisualTemplateId } from './domain/visual-template.constants';
+import {
+  normalizeVisualTemplateId,
+  type VisualTemplateId,
+} from './domain/visual-template.constants';
 import { CmCharacterService } from './cm-character.service';
 
 export interface VisualTemplateComposeContext {
@@ -86,7 +89,9 @@ export class VisualTemplateComposerService {
         await this.products.save(persisted);
       }
 
-      const templateId = options?.forceTemplateId ?? resolveVisualTemplateId(post);
+      const templateId = normalizeVisualTemplateId(
+        options?.forceTemplateId ?? resolveVisualTemplateId(post),
+      );
       const size = resolveImageSizeForPlatform(
         post.platform,
         options?.imageDestination ?? post.imageDestination,

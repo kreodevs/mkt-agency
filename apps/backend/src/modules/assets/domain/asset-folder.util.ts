@@ -63,10 +63,10 @@ export function inferDeviceHintFromImageSize(width: number, height: number): Ass
     return 'ios';
   }
   const ratio = width / height;
-  if (ratio > 1.12) {
+  if (ratio > 1.45) {
     return 'pc';
   }
-  if (ratio < 0.78) {
+  if (ratio < 0.65) {
     return 'ios';
   }
   return 'ipad';

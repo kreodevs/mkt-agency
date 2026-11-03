@@ -27,7 +27,7 @@ describe('visual-template-text.util', () => {
 
   it('warns about truncation on typographic templates only', () => {
     const warnings = validateVisualTemplateText({
-      templateId: 'tip-card',
+      templateId: 'product-hero',
       headline: LONG_HEADLINE,
     });
 
@@ -55,14 +55,10 @@ describe('visual-template-text.util', () => {
     ]);
   });
 
-  it('validates all typographic template ids consistently', () => {
+  it('validates all active typographic template ids consistently', () => {
     for (const templateId of [
       'product-hero',
-      'tip-card',
-      'quote-insight',
       'promo-cta',
-      'stat-highlight',
-      'story-vertical',
     ]) {
       const warnings = validateVisualTemplateText({
         templateId,

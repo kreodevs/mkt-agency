@@ -71,12 +71,12 @@ function styleMatches(
   if (!style) return 0;
 
   const styleMap: Record<string, string[]> = {
-    minimal: ['tip-card', 'quote-insight', 'brand-vi', 'thought-leadership'],
+    minimal: ['saas-abstract', 'brand-vi', 'thought-leadership'],
     bold: ['promo-cta', 'poster-social', 'tiktok-trend'],
     luxury: ['luxury', 'poster-editorial'],
-    editorial: ['illustration-editorial', 'poster-editorial', 'quote-insight'],
-    technical: ['infographic-technical', 'saas-abstract', 'stat-highlight'],
-    infographic: ['infographic-educational', 'infographic-technical', 'stat-highlight'],
+    editorial: ['illustration-editorial', 'poster-editorial'],
+    technical: ['infographic-technical', 'saas-abstract'],
+    infographic: ['infographic-educational', 'infographic-technical'],
     flatlay: ['flatlay'],
     illustration: ['illustration-editorial', 'playful'],
     photoreal: ['product-hero', 'testimonial', 'flatlay', 'food'],

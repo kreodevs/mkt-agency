@@ -196,17 +196,17 @@ export function InboxQuickPublishActions({
   const visualFormat = normalizeContentVisualFormat(item.visualFormat);
   const hasVisualAssets = extractContentAssetIds(item.assets).length > 0;
   const presetKind = VISUAL_DESIGN_PRESET_KINDS[item.visualTemplateId ?? ''] ?? 'auto';
-  const isTypographicPreset = presetKind === 'template';
+  const isMockupPreset = presetKind === 'mockup';
   const canRecomposeTemplate =
     Boolean(item.productId) &&
     hasVisualAssets &&
     visualFormat !== 'talking-head' &&
-    isTypographicPreset;
+    isMockupPreset;
   const canRegenerateScene =
     Boolean(item.productId) &&
     hasVisualAssets &&
     visualFormat !== 'talking-head' &&
-    !isTypographicPreset;
+    !isMockupPreset;
 
   const regenerateSceneMutation = useMutation({
     mutationFn: () => regenerateImageForContent(item.contentId),
