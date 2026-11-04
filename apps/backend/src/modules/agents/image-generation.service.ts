@@ -69,6 +69,7 @@ import { ProductService } from '../product/product.service';
 import { ImageBrandingService } from './image-branding.service';
 import { compositeVisualTextOverlay } from '../community-manager/domain/visual-text-overlay.util';
 import { resolveVisualBrandKit } from '../community-manager/domain/visual-brand-kit.util';
+import { summarizeHeadline } from '../community-manager/domain/visual-template-render.util';
 import {
   VIDEO_GENERATION_ADAPTER,
   VideoGenerationAdapterPort,
@@ -628,6 +629,34 @@ export class ImageGenerationService implements OnModuleInit {
     let headline = context.visualHeadline?.trim();
     let subline = context.visualSubline?.trim();
     let cta = context.visualCta?.trim();
+
+    if (contentId && (!headline || !subline || !cta)) {
+      try {
+        const content = await this.contentService.findOne(tenantId, contentId);
+        if (!headline) {
+          headline =
+            content.visualHeadline?.trim() ||
+            (content.currentVersion?.title
+              ? summarizeHeadline(content.currentVersion.title, content.currentVersion.body ?? '', 8)
+              : undefined);
+        }
+        if (!subline) {
+          subline = content.visualSubline?.trim();
+          if (!subline && content.currentVersion?.body) {
+            const bodyLines = content.currentVersion.body
+              .split('\n')
+              .map((l) => l.replace(/^[#*`_👉•-]+\s*/, '').trim())
+              .filter((l) => l.length > 10 && !l.startsWith('#') && !l.startsWith('http'));
+            subline = bodyLines.find((l) => l !== headline)?.slice(0, 80);
+          }
+        }
+        if (!cta) {
+          cta = content.visualCta?.trim() || 'Conoce más';
+        }
+      } catch {
+        // Ignore lookup error
+      }
+    }
 
     if (headline && (index === 0 || frameCount === 1)) {
       try {

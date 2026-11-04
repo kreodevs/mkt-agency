@@ -58,6 +58,7 @@ import { resolveContentImageDestination, socialCopyPostFromContent } from './dom
 import { resolveStoredVisualScene } from './domain/visual-scene.util';
 import { isVisualDesignPresetId, isVisualTemplateId } from './domain/visual-brand-kit.util';
 import type { VisualTemplateId } from './domain/visual-template.constants';
+import { summarizeHeadline } from './domain/visual-template-render.util';
 import {
   GenerationContextFacade,
   type GenerationContext,
@@ -288,9 +289,10 @@ export class CommunityManagerService {
       ? post.visualTemplateId
       : null;
     contentDto.visualScene = resolveStoredVisualScene(post);
-    contentDto.visualHeadline = post.visualHeadline ?? null;
-    contentDto.visualSubline = post.visualSubline ?? null;
-    contentDto.visualCta = post.visualCta ?? null;
+    contentDto.visualHeadline =
+      post.visualHeadline?.trim() || summarizeHeadline(post.title, post.body, 8);
+    contentDto.visualSubline = post.visualSubline?.trim() || null;
+    contentDto.visualCta = post.visualCta?.trim() || post.callToAction?.trim() || 'Conoce más';
     contentDto.imageDestination = resolveContentImageDestination(post);
     contentDto.targetPainPoint = post.targetPainPoint ?? null;
     contentDto.strategicAngle = post.strategicAngle ?? null;
@@ -781,9 +783,10 @@ export class CommunityManagerService {
       visualPrompt: sanitizeVisualPromptForArt(post.visualDescription, post.body) || null,
       visualTemplateId: isVisualDesignPresetId(post.visualTemplateId) ? post.visualTemplateId : null,
       visualScene: resolveStoredVisualScene(post),
-      visualHeadline: post.visualHeadline ?? null,
-      visualSubline: post.visualSubline ?? null,
-      visualCta: post.visualCta ?? null,
+      visualHeadline:
+        post.visualHeadline?.trim() || summarizeHeadline(post.title, post.body, 8),
+      visualSubline: post.visualSubline?.trim() || null,
+      visualCta: post.visualCta?.trim() || post.callToAction?.trim() || 'Conoce más',
       imageDestination: resolveContentImageDestination(post),
       targetPainPoint: post.targetPainPoint ?? null,
       strategicAngle: post.strategicAngle ?? null,

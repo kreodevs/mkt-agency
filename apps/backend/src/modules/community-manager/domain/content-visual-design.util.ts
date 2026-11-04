@@ -3,6 +3,7 @@ import { normalizeContentVisualFormat } from '../../content/domain/content-visua
 import { CM_PLATFORMS, type CmPlatform } from './cm-platforms.constants';
 import type { SocialCopyPost } from '../adapters/social-copy.adapter.port';
 import { isVisualSceneId } from './visual-template.constants';
+import { summarizeHeadline } from './visual-template-render.util';
 
 export function resolveContentImageDestination(
   post: {
@@ -62,9 +63,11 @@ export function socialCopyPostFromContent(
       content.visualScene && isVisualSceneId(content.visualScene)
         ? content.visualScene
         : undefined,
-    visualHeadline: content.visualHeadline ?? undefined,
-    visualSubline: content.visualSubline ?? undefined,
-    visualCta: content.visualCta ?? undefined,
+    visualHeadline:
+      content.visualHeadline?.trim() ||
+      summarizeHeadline(version.title, version.body, 8),
+    visualSubline: content.visualSubline?.trim() || undefined,
+    visualCta: content.visualCta?.trim() || 'Conoce más',
     imageDestination: resolveContentImageDestination({
       imageDestination: content.imageDestination,
       visualTemplateId: content.visualTemplateId,
