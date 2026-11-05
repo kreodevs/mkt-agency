@@ -98,12 +98,15 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
       : 'minimal';
 
   const creativeDesignGuide = [
-    'DIRECCIÓN CREATIVA (obligatoria): piensa como diseñador de performance ads, no como wireframe.',
+    'DIRECCIÓN CREATIVA (obligatoria): piensa como Director de Arte y Diseñador de Performance Ads de alto impacto.',
     `Estilo visual de marca: ${styleLabel(brandVisualStyle as 'minimal' | 'bold' | 'luxury')} — ${styleDesignCue(brandVisualStyle as 'minimal' | 'bold' | 'luxury')}.`,
-    'El sistema expande la paleta (degradados, brillos, acentos) a partir de los colores de marca; evita pedir solo bloques planos.',
-    'visualHeadline = gancho emocional (beneficio o dolor), no descripción técnica.',
-    'visualSubline = prueba o contexto concreto (1 frase).',
-    'visualCta = acción de conversión (demo, prueba gratis, descarga).',
+    'CREATIVIDAD PUBLICITARIA INTEGRAL (Ad Posters, Infografías y Mockups en Mano):',
+    '- Diseña la pieza visual como un afiche publicitario comercial de conversión terminada (estilo campañas top en Instagram/LinkedIn/Meta Ads).',
+    '- Para apps, SaaS, plataformas o servicios de eventos (ej. Alebrije MemoriA): integra en primer plano un mockup hiperrealista (mano sosteniendo smartphone con pantalla activa mostrando fotos reales o UI de la app) frente a un entorno cinematográfico concurrido (convención corporativa, salón de bodas/XV años con luces y público interactuando).',
+    '- visualHeadline = titular de gancho comercial contundente en español (3 a 7 palabras) para encabezar el diseño publicitario.',
+    '- visualSubline = bajada o lista de beneficios de valor (ej: "Entrada con QR • Galería en tiempo real • Video resumen automático").',
+    '- visualCta = llamado a la acción directo para botón en píldora (ej: "Pregunta por tu evento →", "Cotiza por persona →", "Ver experiencia").',
+    '- visualDescription = describe la composición publicitaria integral: disposición del cartel, mockup de mano con smartphone, ambiente de fondo, paleta con acento de marca y acabados comerciales premium.',
     'Varía el ángulo entre posts: dolor→solución, dato→beneficio, objeción→prueba, CTA directo.',
   ].join('\n');
 

@@ -20,6 +20,7 @@ export interface ImageGenerationAdapterPort {
       style?: string;
       taskType?: LlmTaskType;
       referenceImage?: ImageGenerationReferenceImage;
+      allowText?: boolean;
     },
   ): Promise<ImageGenerationResult>;
 }

@@ -35,4 +35,20 @@ describe('image-branding.util', () => {
 
     expect(prompt).toContain('incluye el nombre de forma legible');
   });
+
+  it('builds a commercial marketing ad poster prompt when visualHeadline is provided', () => {
+    const prompt = buildBrandedImagePrompt({
+      productName: 'Alebrije MemoriA',
+      visualDescription: 'Auditorio con asistentes alzando teléfonos',
+      hasLogo: false,
+      visualHeadline: 'Tu convención, vista por todos los asistentes',
+      visualSubline: 'Eventos corporativos',
+      visualCta: 'Pregunta por tu evento →',
+    });
+
+    expect(prompt).toContain('COMMERCIAL MARKETING AD POSTER');
+    expect(prompt).toContain('Tu convención, vista por todos los asistentes');
+    expect(prompt).toContain('Pregunta por tu evento →');
+    expect(prompt).not.toContain('ABSOLUTELY ZERO TEXT');
+  });
 });

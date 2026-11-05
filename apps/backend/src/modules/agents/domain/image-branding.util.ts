@@ -16,6 +16,10 @@ export interface BrandedImagePromptInput {
   primaryColor?: string;
   visualStyle?: string;
   competitorAngle?: string | null;
+  visualHeadline?: string | null;
+  visualSubline?: string | null;
+  visualCta?: string | null;
+  allowNativeText?: boolean;
 }
 
 /** Remove renderable brand name tokens when the official logo is composited afterwards. */
@@ -48,6 +52,73 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
     : rawScene;
 
   const parts: string[] = [];
+
+  const headline = input.visualHeadline?.trim();
+  const subline = input.visualSubline?.trim();
+  const cta = input.visualCta?.trim();
+  const isMarketingCreative = Boolean(headline || input.allowNativeText);
+
+  if (isMarketingCreative) {
+    parts.push(
+      'COMMERCIAL MARKETING AD POSTER & HIGH-CONVERTING SOCIAL MEDIA CREATIVE:',
+      `High-converting, editorial marketing poster ad for "${productName}". Professional advertising layout, premium graphic design, perfectly balanced hierarchy.`,
+    );
+
+    if (headline) {
+      parts.push(
+        `HEADLINE TYPOGRAPHY: Prominently feature this bold, high-contrast headline in Spanish at the top in clean modern sans-serif: "${headline}". Perfect Spanish typography, no typos, immaculate letter rendering.`,
+      );
+    }
+
+    if (subline) {
+      parts.push(
+        `SUBTITLE & VALUE PROPOSITION: Secondary typography: "${subline}". Clean, readable, elegant contrast.`,
+      );
+    }
+
+    if (cta) {
+      parts.push(
+        `CALL TO ACTION BUTTON: Eye-catching rounded pill CTA button with text: "${cta}". Placed cleanly in the lower half of the design with high-contrast accent color.`,
+      );
+    }
+
+    if (hasLogo) {
+      parts.push(
+        `Branding de "${productName}": deja un área limpia en la parte inferior o ${LOGO_CORNER_LABEL_ES} para el isotipo de marca.`,
+      );
+    } else {
+      parts.push(
+        `Branding de marca: incluye de forma elegante el nombre "${productName}" y su isotipo en la parte inferior con acabado publicitario profesional.`,
+      );
+    }
+
+    if (scene) {
+      parts.push(`ESCENA Y COMPOSICIÓN: ${scene}`);
+    }
+
+    parts.push(
+      'DIRECTRICES VISUALES Y MOCKUPS: Composición publicitaria de nivel agencia. Si el producto/servicio involucra una app móvil, plataforma o software digital, incluye en primer plano un mockup hiperrealista (por ejemplo, una mano sosteniendo un smartphone moderno mostrando la interfaz real con cuadrícula de fotos o funciones activas) perfectamente integrado con la iluminación ambiental de la escena de fondo. Tipografía nítida en español, iluminación cinematográfica, cero texto basura o caracteres deformes.',
+    );
+
+    if (input.visualFormat === 'carousel') {
+      parts.push('Formato visual: carrusel publicitario de 3 imágenes secuenciales para redes sociales.');
+    }
+
+    if (input.primaryColor?.trim()) {
+      parts.push(`Paleta de marca con acentos en ${input.primaryColor.trim()}.`);
+    }
+
+    if (input.visualStyle?.trim()) {
+      parts.push(`Estética visual: ${input.visualStyle.trim()}.`);
+    }
+
+    if (input.competitorAngle?.trim()) {
+      parts.push(`Ángulo de diferenciación: ${input.competitorAngle.trim()}`);
+    }
+
+    parts.push('Pieza publicitaria lista para publicar, alta conversión visual para feed de Instagram o LinkedIn.');
+    return parts.join(' ');
+  }
 
   parts.push(
     'CRITICAL REQUIREMENT - ABSOLUTELY ZERO TEXT IN IMAGE: ' +

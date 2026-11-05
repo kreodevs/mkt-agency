@@ -19,6 +19,7 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
       style?: string;
       taskType?: LlmTaskType;
       referenceImage?: { buffer: Buffer; mimeType?: string };
+      allowText?: boolean;
     },
   ): Promise<ImageGenerationResult> {
     const taskType = options?.taskType ?? 'image_generation';
@@ -27,9 +28,19 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
     const model = normalizeOpenRouterImageModel(resolved.model);
     const size = normalizeImageGenerationSize(options?.size || '1920x1920');
 
+    const hasTextDirective =
+      /headline|titular|poster|cartel|typography|infographic|texto|letras|words|quote|call to action|cta|button|mockup|COMMERCIAL MARKETING AD/i.test(
+        prompt,
+      );
+    const allowText = options?.allowText ?? hasTextDirective;
+
+    const promptSuffix = allowText
+      ? ''
+      : '. Clean photography, absolutely zero text, no words, no letters, no labels in the image.';
+
     const body: Record<string, unknown> = {
       model,
-      prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}. Clean photography, absolutely zero text, no words, no letters, no labels in the image.`,
+      prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}${promptSuffix}`,
       n: 1,
       size,
       output_format: 'png',

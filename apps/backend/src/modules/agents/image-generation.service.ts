@@ -340,6 +340,11 @@ export class ImageGenerationService implements OnModuleInit {
         effectiveProductId,
         visualFormat,
         options?.artRecipeBasePrompt,
+        {
+          visualHeadline: options?.visualHeadline ?? content.visualHeadline ?? undefined,
+          visualSubline: options?.visualSubline ?? content.visualSubline ?? undefined,
+          visualCta: options?.visualCta ?? content.visualCta ?? undefined,
+        },
       ),
       {
         contentId,
@@ -366,6 +371,9 @@ export class ImageGenerationService implements OnModuleInit {
       visualFormat?: string;
       productId?: string | null;
       artRecipeId?: string | null;
+      visualHeadline?: string | null;
+      visualSubline?: string | null;
+      visualCta?: string | null;
     },
     publishableBody?: string,
     artRecipeBasePrompt?: string,
@@ -382,6 +390,10 @@ export class ImageGenerationService implements OnModuleInit {
       artRecipeBasePrompt,
       hasLogo: !!branding.logoAssetId,
       visualFormat: normalizeContentVisualFormat(content.visualFormat),
+      visualHeadline: content.visualHeadline,
+      visualSubline: content.visualSubline,
+      visualCta: content.visualCta,
+      allowNativeText: Boolean(content.visualHeadline || content.visualPrompt),
     });
   }
 
@@ -391,6 +403,11 @@ export class ImageGenerationService implements OnModuleInit {
     productId?: string,
     visualFormat = 'image',
     artRecipeBasePrompt?: string,
+    options?: {
+      visualHeadline?: string | null;
+      visualSubline?: string | null;
+      visualCta?: string | null;
+    },
   ): Promise<string> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     return buildBrandedImagePrompt({
@@ -399,6 +416,10 @@ export class ImageGenerationService implements OnModuleInit {
       artRecipeBasePrompt,
       hasLogo: !!branding.logoAssetId,
       visualFormat: normalizeContentVisualFormat(visualFormat),
+      visualHeadline: options?.visualHeadline,
+      visualSubline: options?.visualSubline,
+      visualCta: options?.visualCta,
+      allowNativeText: Boolean(options?.visualHeadline || visualDescription),
     });
   }
 
@@ -658,7 +679,10 @@ export class ImageGenerationService implements OnModuleInit {
       }
     }
 
-    if (headline && (index === 0 || frameCount === 1)) {
+    const isNativeCreative =
+      /COMMERCIAL MARKETING AD POSTER|HEADLINE TYPOGRAPHY|CALL TO ACTION/i.test(prompt);
+
+    if (headline && !isNativeCreative && (index === 0 || frameCount === 1)) {
       try {
         const product = productId
           ? await this.productService.findOwnedEntity(tenantId, productId).catch(() => null)
@@ -679,7 +703,7 @@ export class ImageGenerationService implements OnModuleInit {
       }
     }
 
-    if (productId) {
+    if (productId && !isNativeCreative) {
       finalBuffer = await this.applyLogoOverlay(tenantId, productId, finalBuffer);
     }
 
@@ -909,6 +933,9 @@ export class ImageGenerationService implements OnModuleInit {
         visualPrompt: content.visualPrompt,
         visualFormat: content.visualFormat,
         productId: content.productId,
+        visualHeadline: content.visualHeadline,
+        visualSubline: content.visualSubline,
+        visualCta: content.visualCta,
       },
       version.body,
     );
@@ -1004,6 +1031,9 @@ export class ImageGenerationService implements OnModuleInit {
         visualPrompt: content.visualPrompt,
         visualFormat: content.visualFormat,
         productId: content.productId ?? record.productId,
+        visualHeadline: content.visualHeadline,
+        visualSubline: content.visualSubline,
+        visualCta: content.visualCta,
       },
       version.body,
     );

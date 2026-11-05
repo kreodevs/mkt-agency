@@ -20,10 +20,6 @@ export function isVisualPromptContaminatedWithCopy(
     return false;
   }
 
-  if (/#\w+/.test(visual)) {
-    return true;
-  }
-
   const body = normalizeText(stripHashtags(publishableBody ?? ''));
   if (!body) {
     return false;
@@ -49,10 +45,14 @@ export function sanitizeVisualPromptForArt(
   if (!trimmed) {
     return '';
   }
-  if (isVisualPromptContaminatedWithCopy(trimmed, publishableBody)) {
+  const cleanPrompt = stripHashtags(trimmed);
+  if (!cleanPrompt) {
     return '';
   }
-  return trimmed;
+  if (isVisualPromptContaminatedWithCopy(cleanPrompt, publishableBody)) {
+    return '';
+  }
+  return cleanPrompt;
 }
 
 export function buildTitleOnlyVisualFallback(title: string): string {
