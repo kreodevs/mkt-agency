@@ -795,6 +795,7 @@ async function renderCarouselCover(
     height,
     frameType,
     layoutContext.aspectRatio,
+    { hasTextOverlay: true },
   );
   if (hasPresenter) {
     applyPresenterDevicePlacement(placement, width, height);

@@ -157,11 +157,12 @@ async function compositeMockupLayout(
   height: number,
   platform: string,
   device?: AssetDeviceHint | null,
+  options?: { hasTextOverlay?: boolean },
 ): Promise<Buffer> {
   const size = `${width}x${height}` as ImageGenerationSize;
   const aspectRatio = resolveVisualAspectRatio(size);
   const frameType = resolveDeviceFrameType(platform, aspectRatio, device);
-  const placement = resolveHeroDevicePlacement(width, height, frameType, aspectRatio);
+  const placement = resolveHeroDevicePlacement(width, height, frameType, aspectRatio, options);
   const { left, top } = placement;
 
   const deviceFrame = await renderDeviceFrame(photoBuffer, placement);
@@ -260,6 +261,7 @@ export async function compositeKitOnArtBackground(
   device?: AssetDeviceHint | null,
   visualTemplateId?: string | null,
   imageDestination?: SocialCopyPost['imageDestination'] | null,
+  options?: { hasTextOverlay?: boolean },
 ): Promise<Buffer> {
   const captureSize = await readCaptureImageSize(photoBuffer);
   const effectiveDevice = resolveMockupDeviceHint(device, captureSize);
@@ -277,7 +279,7 @@ export async function compositeKitOnArtBackground(
     .toBuffer();
 
   if (effectiveLayout === 'mockup') {
-    return compositeMockupLayout(canvas, photoBuffer, width, height, platform, effectiveDevice);
+    return compositeMockupLayout(canvas, photoBuffer, width, height, platform, effectiveDevice, options);
   }
   if (effectiveLayout === 'center-panel') {
     return compositeCenterPanelLayout(canvas, photoBuffer, width, height);

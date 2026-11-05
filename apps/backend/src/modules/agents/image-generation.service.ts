@@ -268,17 +268,14 @@ export class ImageGenerationService implements OnModuleInit {
       throw new BadRequestException({ error: 'Prompt is required', code: 'VALIDATION_ERROR' });
     }
 
-    const brandedPrompt = await this.buildPromptForProduct(
-      tenantId,
-      trimmed,
-      options.productId,
-      'image',
-    );
+    // Los fondos de arte para composición deben ser 100% limpios de texto, logos y pantallas
+    const cleanBackgroundPrompt = `${trimmed}. Clean background photography or textured artwork, absolutely zero text, no words, no letters, no logos, no brand marks, no phone screens, no devices.`;
 
-    const result = await this.adapter.generateImage(brandedPrompt, {
+    const result = await this.adapter.generateImage(cleanBackgroundPrompt, {
       size: options.size,
       style: options.style,
       referenceImage: options.referenceImage,
+      allowText: false,
     });
 
     const { buffer } = await this.resolveImagePayload(result);
@@ -980,16 +977,22 @@ export class ImageGenerationService implements OnModuleInit {
       return;
     }
 
+    if (
+      content.visualTemplateId === 'ai-art' ||
+      content.visualTemplateId === 'creative-scene' ||
+      !content.visualTemplateId
+    ) {
+      return;
+    }
+
     const kit = await this.mediaKitService.listEntitiesForProduct(tenantId, content.productId);
     if (!kitHasComposeImageRoles(kit)) {
       return;
     }
 
-    throw new BadRequestException({
-      error:
-        'Este producto tiene fotos en el media kit. Usa plantillas con capturas reales en lugar de imagen IA.',
-      code: 'MEDIA_KIT_COMPOSE_REQUIRED',
-    });
+    this.logger.log(
+      `assertAiGenerationAllowedForContent: product ${content.productId} has media kit, generating AI image as requested for ${contentId}`,
+    );
   }
 
   async regenerate(

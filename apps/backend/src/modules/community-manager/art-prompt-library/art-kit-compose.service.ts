@@ -171,6 +171,7 @@ export class ArtKitComposeService {
             { size, style, productId, skipLogoOverlay: true },
           );
 
+          const hasTextOverlay = Boolean(post.visualHeadline?.trim() && (slideIndex === 0 || frameCount === 1));
           let buffer = artBuffer;
           if (useKitOverlay && photoFile?.buffer) {
             buffer = await compositeKitOnArtBackground(
@@ -182,6 +183,7 @@ export class ArtKitComposeService {
               mockupDevice,
               post.visualTemplateId ?? null,
               post.imageDestination ?? null,
+              { hasTextOverlay },
             );
           }
 

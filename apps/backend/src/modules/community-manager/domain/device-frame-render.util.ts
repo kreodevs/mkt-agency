@@ -155,10 +155,13 @@ export function resolveHeroDevicePlacement(
   canvasHeight: number,
   frameType: DeviceFrameType,
   aspectRatio: VisualAspectRatio,
+  options?: { hasTextOverlay?: boolean },
 ): DevicePlacement {
+  const hasText = options?.hasTextOverlay ?? false;
+
   if (frameType === 'iphone') {
-    const maxWidth = Math.round(canvasWidth * 0.74);
-    const maxHeight = Math.round(canvasHeight * 0.9);
+    const maxWidth = hasText ? Math.round(canvasWidth * 0.60) : Math.round(canvasWidth * 0.74);
+    const maxHeight = hasText ? Math.round(canvasHeight * 0.52) : Math.round(canvasHeight * 0.9);
     let frameWidth = maxWidth;
     let frameHeight = Math.round(frameWidth * 2.05);
     if (frameHeight > maxHeight) {
@@ -175,8 +178,8 @@ export function resolveHeroDevicePlacement(
   }
 
   if (frameType === 'ipad') {
-    const maxWidth = Math.round(canvasWidth * 0.8);
-    const maxHeight = Math.round(canvasHeight * 0.88);
+    const maxWidth = hasText ? Math.round(canvasWidth * 0.68) : Math.round(canvasWidth * 0.8);
+    const maxHeight = hasText ? Math.round(canvasHeight * 0.50) : Math.round(canvasHeight * 0.88);
     let frameWidth = maxWidth;
     let frameHeight = Math.round(frameWidth * 1.35);
     if (frameHeight > maxHeight) {
@@ -188,21 +191,23 @@ export function resolveHeroDevicePlacement(
       frameWidth,
       frameHeight,
       left: Math.round((canvasWidth - frameWidth) / 2),
-      top: Math.round(canvasHeight * 0.05),
+      top: Math.round(canvasHeight * 0.04),
     };
   }
 
-  const frameWidth = Math.round(canvasWidth * 0.9);
+  const maxWidth = hasText ? Math.round(canvasWidth * 0.78) : Math.round(canvasWidth * 0.9);
+  const maxHeight = hasText ? Math.round(canvasHeight * 0.48) : Math.round(canvasHeight * 0.82);
+  const frameWidth = maxWidth;
   const frameHeight = Math.min(
     Math.round(frameWidth * 0.58),
-    Math.round(canvasHeight * 0.82),
+    maxHeight,
   );
   return {
     frameType: 'macbook',
     frameWidth,
     frameHeight,
     left: Math.round((canvasWidth - frameWidth) / 2),
-    top: Math.round(canvasHeight * 0.05),
+    top: Math.round(canvasHeight * 0.04),
   };
 }
 
