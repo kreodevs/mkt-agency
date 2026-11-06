@@ -326,10 +326,37 @@ export class LlmClient {
 
       if (!response.ok) {
         const errorBody = await response.text();
+        this.llmUsage.record({
+          tenantId,
+          userId,
+          taskType,
+          providerId: resolved.providerId,
+          model,
+          modality: 'chat',
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+          status: 'error',
+          metadata: { error: errorBody.slice(0, 300), statusCode: response.status },
+        });
         throw new Error(`LLM request failed (${response.status}): ${errorBody}`);
       }
 
       const payload = (await response.json()) as ChatCompletionResponse;
+
+      this.llmUsage.record({
+        tenantId,
+        userId,
+        taskType,
+        providerId: resolved.providerId,
+        model,
+        modality: 'chat',
+        promptTokens: payload.usage?.prompt_tokens ?? 0,
+        completionTokens: payload.usage?.completion_tokens ?? 0,
+        totalTokens: payload.usage?.total_tokens ?? 0,
+        status: 'success',
+      });
+
       const choice = payload.choices?.[0];
       const message = choice?.message as Record<string, unknown> | undefined;
 
@@ -368,19 +395,6 @@ export class LlmClient {
       );
       throw new Error(`LLM returned an empty response for model ${model}`);
     }
-
-    this.llmUsage.record({
-      tenantId,
-      userId,
-      taskType,
-      providerId: resolved.providerId,
-      model,
-      modality: 'chat',
-      promptTokens: payload.usage?.prompt_tokens ?? 0,
-      completionTokens: payload.usage?.completion_tokens ?? 0,
-      totalTokens: payload.usage?.total_tokens ?? 0,
-      status: 'success',
-    });
 
     return this.parseLlmJson<T>(content);
   }

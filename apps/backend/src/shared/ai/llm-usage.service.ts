@@ -158,7 +158,15 @@ export class LlmUsageService {
       qb.andWhere(`${alias}.created_at >= :from`, { from });
     }
     if (to) {
-      qb.andWhere(`${alias}.created_at <= :to`, { to });
+      const endOfDay = new Date(to);
+      if (
+        endOfDay.getUTCHours() === 0 &&
+        endOfDay.getUTCMinutes() === 0 &&
+        endOfDay.getUTCSeconds() === 0
+      ) {
+        endOfDay.setUTCHours(23, 59, 59, 999);
+      }
+      qb.andWhere(`${alias}.created_at <= :to`, { to: endOfDay });
     }
     return qb;
   }

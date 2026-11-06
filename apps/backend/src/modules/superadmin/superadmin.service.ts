@@ -177,10 +177,13 @@ export class SuperadminService {
   }
 
   getLlmUsageDashboard(from?: string, to?: string) {
-    return this.llmUsageService.getDashboard(
-      from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
-    );
+    const parseFrom = from
+      ? new Date(from.length === 10 ? `${from}T00:00:00.000Z` : from)
+      : undefined;
+    const parseTo = to
+      ? new Date(to.length === 10 ? `${to}T23:59:59.999Z` : to)
+      : undefined;
+    return this.llmUsageService.getDashboard(parseFrom, parseTo);
   }
 
   getTavilyIntegration() {
