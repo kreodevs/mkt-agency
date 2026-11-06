@@ -330,7 +330,30 @@ export class LlmClient {
       status: 'success',
     });
 
-    return JSON.parse(content) as T;
+    return this.parseLlmJson<T>(content);
+  }
+
+  private parseLlmJson<T>(content: string): T {
+    const trimmed = content.trim();
+    // Strip markdown code fences if present: ```json ... ``` or ``` ... ```
+    const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const clean = fenceMatch ? fenceMatch[1].trim() : trimmed;
+    try {
+      return JSON.parse(clean) as T;
+    } catch {
+      // If there is conversational preamble or trailing explanation, isolate the JSON structure
+      const firstBrace = clean.indexOf('{');
+      const lastBrace = clean.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        return JSON.parse(clean.slice(firstBrace, lastBrace + 1)) as T;
+      }
+      const firstBracket = clean.indexOf('[');
+      const lastBracket = clean.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket > firstBracket) {
+        return JSON.parse(clean.slice(firstBracket, lastBracket + 1)) as T;
+      }
+      throw new Error(`LLM response could not be parsed as JSON: ${content.slice(0, 160)}...`);
+    }
   }
 
   private async requestChat(params: {

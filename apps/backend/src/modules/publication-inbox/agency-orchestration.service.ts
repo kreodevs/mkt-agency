@@ -19,6 +19,7 @@ export interface WeeklyProductRunResult {
   topicsUsed: string[];
   postsGenerated: number;
   imagesAttached: number;
+  error?: string;
 }
 
 @Injectable()
@@ -120,7 +121,9 @@ export class AgencyOrchestrationService {
         });
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(`CM step failed for product ${product.id}`, error);
+      result.error = message;
     }
 
     return result;

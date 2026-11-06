@@ -6,7 +6,10 @@ import {
   CopilotPrepareWeekWorkerService,
 } from './copilot-prepare-week.worker';
 
-@Processor(QUEUE_COPILOT_PREPARE_WEEK)
+@Processor(QUEUE_COPILOT_PREPARE_WEEK, {
+  lockDuration: 300_000,
+  maxStalledCount: 2,
+})
 export class CopilotPrepareWeekProcessor extends WorkerHost {
   constructor(private readonly prepareWeekWorker: CopilotPrepareWeekWorkerService) {
     super();

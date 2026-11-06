@@ -109,17 +109,28 @@ export async function prepareWeek(
 
   const horizonLabel = horizon === 'day' ? 'día' : 'semana';
 
+  let transientFailures = 0;
   for (let attempt = 0; attempt < PREPARE_WEEK_POLL_MAX_ATTEMPTS; attempt += 1) {
     if (attempt > 0) {
       await sleep(PREPARE_WEEK_POLL_INTERVAL_MS);
     }
 
-    const status = await getPrepareWeekJob(started.jobId);
-    if (status.status === 'completed' && status.result) {
-      return status.result;
-    }
-    if (status.status === 'failed') {
-      throw new ApiError(status.error ?? `No se pudo preparar tu ${horizonLabel}`, 500);
+    try {
+      const status = await getPrepareWeekJob(started.jobId);
+      transientFailures = 0;
+      if (status.status === 'completed' && status.result) {
+        return status.result;
+      }
+      if (status.status === 'failed') {
+        throw new ApiError(status.error ?? `No se pudo preparar tu ${horizonLabel}`, 500);
+      }
+    } catch (err) {
+      // Tolerate up to 3 transient polling errors (e.g. temporary 404 or network blip while job completes)
+      if (err instanceof ApiError && err.status === 404 && attempt > 0 && transientFailures < 3) {
+        transientFailures += 1;
+        continue;
+      }
+      throw err;
     }
   }
 

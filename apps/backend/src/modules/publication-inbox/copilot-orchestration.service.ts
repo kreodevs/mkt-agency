@@ -181,13 +181,19 @@ export class CopilotOrchestrationService {
       }
     }
 
+    if (run.error) {
+      warnings.push(`Error en generación: ${run.error}`);
+    }
+
     return {
       status: run.postsGenerated > 0 ? 'completed' : 'empty',
       horizon,
       message:
         run.postsGenerated > 0
           ? `${run.postsGenerated} publicación(es) lista(s) para revisar.`
-          : 'No se generaron publicaciones nuevas. Revisa configuración LLM o el producto.',
+          : (run.error
+              ? `No se pudieron generar publicaciones: ${run.error}`
+              : 'No se generaron publicaciones nuevas. Revisa configuración LLM o el producto.'),
       productId: product.id,
       productName: product.name,
       postsGenerated: run.postsGenerated,

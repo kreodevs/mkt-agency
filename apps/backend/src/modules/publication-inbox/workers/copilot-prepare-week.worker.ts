@@ -47,8 +47,8 @@ export class CopilotPrepareWeekWorkerService {
       { tenantId, userId, productId, horizon },
       {
         jobId: dedupKey,
-        removeOnComplete: true,
-        removeOnFail: { count: 20, age: 86400 },
+        removeOnComplete: { count: 100, age: 3600 },
+        removeOnFail: { count: 50, age: 86400 },
       },
     );
 

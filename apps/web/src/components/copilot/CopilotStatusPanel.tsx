@@ -137,6 +137,9 @@ export function CopilotStatusPanel({ productId }: CopilotStatusPanelProps) {
           ? error.message
           : `No se pudo preparar tu ${horizonLabel(horizon)}`;
       toast.error(message);
+      void queryClient.invalidateQueries({ queryKey: ['publication-inbox'] });
+      void queryClient.invalidateQueries({ queryKey: ['copilot-status'] });
+      void queryClient.invalidateQueries({ queryKey: ['soho-summary'] });
     },
   });
 
