@@ -17,3 +17,4 @@ export function resolveToolProductId(
   }
   return null;
 }
+

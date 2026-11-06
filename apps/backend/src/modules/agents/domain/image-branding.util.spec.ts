@@ -51,4 +51,19 @@ describe('image-branding.util', () => {
     expect(prompt).toContain('Pregunta por tu evento →');
     expect(prompt).not.toContain('ABSOLUTELY ZERO TEXT');
   });
+
+  it('prohibits AI from inventing logo/mascot in marketing creative when hasLogo is true', () => {
+    const prompt = buildBrandedImagePrompt({
+      productName: 'Alebrije MemoriA',
+      visualDescription: 'Auditorio con asistentes',
+      hasLogo: true,
+      visualHeadline: 'Tu convención, vista por todos los asistentes',
+      visualSubline: 'Eventos corporativos',
+      visualCta: 'Pregunta por tu evento →',
+    });
+
+    expect(prompt).toContain('CRITICAL LOGO REQUIREMENT');
+    expect(prompt).toContain('Do NOT draw, invent, or render any brand emblem, mascot');
+    expect(prompt).toContain('official brand logo will be composited onto the bottom-left by software');
+  });
 });

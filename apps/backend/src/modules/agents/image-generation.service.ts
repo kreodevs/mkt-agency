@@ -443,6 +443,7 @@ export class ImageGenerationService implements OnModuleInit {
     tenantId: string,
     productId: string,
     imageBuffer: Buffer,
+    options?: { placement?: 'top-left' | 'bottom-left' | 'top-right' },
   ): Promise<Buffer> {
     const branding = await this.resolveProductBranding(tenantId, productId);
     if (!branding.logoAssetId) {
@@ -453,7 +454,7 @@ export class ImageGenerationService implements OnModuleInit {
     }
     try {
       return await this.imageBranding.applyProductLogo(
-        tenantId, imageBuffer, branding.logoAssetId,
+        tenantId, imageBuffer, branding.logoAssetId, options,
       );
     } catch (error) {
       this.logger.error(
@@ -700,8 +701,9 @@ export class ImageGenerationService implements OnModuleInit {
       }
     }
 
-    if (productId && !isNativeCreative) {
-      finalBuffer = await this.applyLogoOverlay(tenantId, productId, finalBuffer);
+    if (productId) {
+      const placement = isNativeCreative ? 'bottom-left' : 'top-left';
+      finalBuffer = await this.applyLogoOverlay(tenantId, productId, finalBuffer, { placement });
     }
 
     const extension = contentType.split('/').pop() || 'png';

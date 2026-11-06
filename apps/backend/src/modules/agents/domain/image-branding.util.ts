@@ -83,9 +83,15 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
       );
     }
 
-    parts.push(
-      `BRAND IDENTITY & EDITORIAL FOOTER: At the bottom, render a clean, high-end editorial brand footer: the brand emblem or mascot with the exact wordmark "${productName}", followed by the brand tagline in spaced small-caps, and editorial micro-labels in the corner. Zero fake barcodes, no random model numbers, no watermarks.`,
-    );
+    if (hasLogo) {
+      parts.push(
+        `BRAND IDENTITY & EDITORIAL FOOTER: At the bottom, render a clean, high-end editorial brand footer. On the right side, render the brand tagline in spaced small-caps and editorial micro-labels in the corner. CRITICAL LOGO REQUIREMENT: On the left side of the footer, leave a completely clean, empty space for the official logo. Do NOT draw, invent, or render any brand emblem, mascot, animal head, icon, crest, or fake logo graphic anywhere in the image. The official brand logo will be composited onto the bottom-left by software. Absolutely zero fictional mascots and no hallucinated logos.`,
+      );
+    } else {
+      parts.push(
+        `BRAND IDENTITY & EDITORIAL FOOTER: At the bottom, render a clean, high-end editorial brand footer: the exact wordmark "${productName}" in clean modern typography, followed by the brand tagline in spaced small-caps, and editorial micro-labels in the corner. Zero fake barcodes, no random model numbers, no watermarks, no fictional mascots.`,
+      );
+    }
 
     if (scene) {
       parts.push(`ESCENA Y COMPOSICIÓN: ${scene}`);
@@ -93,7 +99,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
     parts.push(
       'DIRECTRICES VISUALES Y MOCKUPS: Composición publicitaria de nivel agencia y performance marketing. Si el concepto involucra una app móvil o recuerdos digitales, incluye en primer plano un mockup hiperrealista (por ejemplo, una mano sosteniendo un smartphone moderno mostrando la interfaz real con cuadrícula de fotos o funciones activas con branding de "${productName}") perfectamente integrado con la iluminación ambiental de la escena de fondo. Si involucra eventos (bodas, XV años, convenciones, bautizos), muestra a los protagonistas y a los invitados interactuando alegremente capturando fotos con sus teléfonos. Si es un concepto mágico de marca, ilustra al alebrije o símbolo resplandeciente rodeado de fotografías flotantes con destellos dorados.',
-      'CONTROL DE TEXTO Y LIMPIEZA: Los ÚNICOS textos permitidos en la imagen son el HEADLINE especificado, el SUBTITLE/CHECKLIST, el botón CTA y el nombre de la marca. ESTRICTAMENTE PROHIBIDO generar números de serie inventados (como CJ201, códigos de modelo o identificadores aleatorios), sellos falsos, marcas de agua, ni texto ficticio en las esquinas o bordes.',
+      `CONTROL DE TEXTO Y LIMPIEZA: Los ÚNICOS textos permitidos en la imagen son el HEADLINE especificado, el SUBTITLE/CHECKLIST y el botón CTA. ESTRICTAMENTE PROHIBIDO generar números de serie inventados (como CJ201, códigos de modelo o identificadores aleatorios), sellos falsos, marcas de agua, ni texto ficticio en las esquinas o bordes.${hasLogo ? ' PROHIBIDO inventar o dibujar isotipos, emblemas o mascotas gráficas de marca; el logo oficial se superpone automáticamente por software.' : ''}`,
     );
 
     if (input.visualFormat === 'carousel') {

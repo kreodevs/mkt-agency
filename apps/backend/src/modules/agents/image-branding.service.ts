@@ -3,6 +3,10 @@ import type { Sharp } from 'sharp';
 import sharp from '@/shared/media/sharp.util';
 import { AssetService } from '../assets/asset.service';
 
+export interface LogoOverlayOptions {
+  placement?: 'top-left' | 'bottom-left' | 'top-right';
+}
+
 @Injectable()
 export class ImageBrandingService {
   private readonly logger = new Logger(ImageBrandingService.name);
@@ -29,6 +33,7 @@ export class ImageBrandingService {
     tenantId: string,
     imageBuffer: Buffer,
     logoAssetId: string,
+    options?: LogoOverlayOptions,
   ): Promise<Buffer> {
     const logoFile = await this.assets.readFile(tenantId, logoAssetId);
     const normalizedBase = await sharp(imageBuffer).ensureAlpha().png().toBuffer();
@@ -50,6 +55,7 @@ export class ImageBrandingService {
           logoFile.mimeType,
           logoWidth,
           padding,
+          options?.placement ?? 'top-left',
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -75,6 +81,7 @@ export class ImageBrandingService {
     mimeType: string,
     logoWidth: number,
     padding: number,
+    placement: 'top-left' | 'bottom-left' | 'top-right' = 'top-left',
   ): Promise<Buffer> {
     const rasterizedLogo = await this.rasterizeLogo(logoBuffer, mimeType, logoWidth);
     const logoWithShadow = await this.withDropShadow(rasterizedLogo);
@@ -82,8 +89,16 @@ export class ImageBrandingService {
     const logoW = logoMeta.width ?? logoWidth;
     const logoH = logoMeta.height ?? logoWidth;
 
-    const left = padding;
-    const top = padding;
+    let left = padding;
+    let top = padding;
+
+    if (placement === 'bottom-left') {
+      top = Math.max(0, height - logoH - padding);
+      left = padding;
+    } else if (placement === 'top-right') {
+      left = Math.max(0, width - logoW - padding);
+      top = padding;
+    }
 
     if (top + logoH > height || left + logoW > width) {
       throw new Error(
