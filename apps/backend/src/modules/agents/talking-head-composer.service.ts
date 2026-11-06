@@ -59,9 +59,10 @@ export class TalkingHeadComposerService {
       throw new Error('El guion de narración está vacío');
     }
 
-    const [portraitUrl, ttsResult] = await Promise.all([
+    const [portraitUrl, ttsResult, portraitFile] = await Promise.all([
       this.resolveAssetUrl(options.tenantId, options.portraitAssetId, options.accessUser),
       this.tts.synthesize({ text: script, voiceId: options.voiceId }),
+      this.assetService.readFile(options.tenantId, options.portraitAssetId).catch(() => null),
     ]);
 
     const audioAsset = await this.uploadBuffer(
@@ -85,9 +86,26 @@ export class TalkingHeadComposerService {
       audioAsset.id,
       options.accessUser,
     );
+
+    const isLocalOrPrivate = (url: string) =>
+      !url.startsWith('https://') ||
+      url.includes('localhost') ||
+      url.includes('127.0.0.1') ||
+      url.includes('0.0.0.0');
+
+    const effectiveImageUrl =
+      portraitFile?.buffer && isLocalOrPrivate(portraitUrl)
+        ? `data:${portraitFile.mimeType || 'image/png'};base64,${portraitFile.buffer.toString('base64')}`
+        : portraitUrl;
+
+    const effectiveAudioUrl =
+      isLocalOrPrivate(audioUrl)
+        ? `data:${ttsResult.mimeType || 'audio/mp3'};base64,${ttsResult.audioBuffer.toString('base64')}`
+        : audioUrl;
+
     const talkingHead = await this.generateTalkingHead({
-      imageUrl: portraitUrl,
-      audioUrl,
+      imageUrl: effectiveImageUrl,
+      audioUrl: effectiveAudioUrl,
       resolution: '720p',
     });
 

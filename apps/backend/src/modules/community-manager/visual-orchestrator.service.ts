@@ -81,14 +81,15 @@ export class VisualOrchestratorService {
     }
 
     const intent = resolveVisualIntent(post);
-    const skipAiArt = intent.preferLayout === 'ai-art';
+    const hasKit = kitHasComposeImageRoles(kit ?? []);
+    const skipAiArt = intent.preferLayout === 'ai-art' && !hasKit;
 
     const cmPortraitAssetId = productId
       ? await this.cmCharacter.resolveDefaultPortraitAssetId(tenantId, productId).catch(() => null)
       : null;
     const sceneOptions = { postIndex, cmPortraitReady: Boolean(cmPortraitAssetId) };
 
-    if (productId && wantsProductScreenShowcase(post) && shouldUseArtKitCompose(post, kit, sceneOptions)) {
+    if (productId && hasKit && (wantsProductScreenShowcase(post) || shouldUseArtKitCompose(post, kit, sceneOptions))) {
       const result = await this.artKitCompose.tryCompose(
         tenantId, userId, contentId, post, productId, kit, postIndex,
         { resolvedProfile: ctx.resolvedProfile, competitorIntelBrief: ctx.competitorIntelBrief },
@@ -113,7 +114,6 @@ export class VisualOrchestratorService {
     }
 
     const skipCreative = shouldSkipTemplateForCreativeScene(post, kit, sceneOptions);
-    const hasKit = kitHasComposeImageRoles(kit ?? []);
 
     if (productId && hasKit && !skipAiArt && !skipCreative) {
       const templated = await this.templateComposer.tryComposeFromTemplate(

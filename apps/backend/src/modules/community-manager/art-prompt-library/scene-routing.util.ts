@@ -43,10 +43,6 @@ export function wantsProductScreenShowcase(post: SocialCopyPost): boolean {
     return false;
   }
 
-  if (isAiArtTemplateId(post.visualTemplateId)) {
-    return false;
-  }
-
   if (post.visualTemplateId === 'product-hero' || post.visualTemplateId === 'promo-cta') {
     return true;
   }
@@ -73,7 +69,7 @@ export function wantsProductScreenShowcase(post: SocialCopyPost): boolean {
     .join(' ')
     .toLowerCase();
 
-  return /\b(captura|screenshot|interfaz|pantalla de la app|demo de la app|mockup|ui del producto|funcionalidad|dashboard|agenda semanal|vista de administrador)\b/.test(
+  return /\b(captura|screenshot|interfaz|pantalla|app|mockup|ui del producto|funcionalidad|dashboard|agenda|consultorio|software|sistema|dispositivo|celular|smartphone|teléfono)\b/.test(
     text,
   );
 }

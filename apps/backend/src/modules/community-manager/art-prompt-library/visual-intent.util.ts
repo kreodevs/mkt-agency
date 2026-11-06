@@ -183,10 +183,6 @@ export function shouldUseArtKitCompose(
     return false;
   }
 
-  if (isAiArtTemplateId(post.visualTemplateId)) {
-    return false;
-  }
-
   if (!kitHasComposeImageRoles(kit ?? [])) {
     return false;
   }
