@@ -236,7 +236,11 @@ async function renderIphoneFrame(
   const bodyRadius = Math.round(frameWidth * 0.13);
   const screenRadius = Math.round(bodyRadius * 0.72);
 
-  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
+  // La captura siempre debe llenar la pantalla del dispositivo (fit: cover, top) para evitar huecos negros o fondos vacíos
+  let screen = await sharp(photoBuffer)
+    .resize(screenW, screenH, { fit: 'cover', position: 'top' })
+    .png()
+    .toBuffer();
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const bodySvg = Buffer.from(
@@ -291,7 +295,11 @@ async function renderMacbookFrame(
   const lidRadius = Math.round(frameWidth * 0.022);
   const screenRadius = Math.round(lidRadius * 0.65);
 
-  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
+  // La captura siempre debe llenar la pantalla del dispositivo (fit: cover, top) para evitar huecos negros o fondos vacíos
+  let screen = await sharp(photoBuffer)
+    .resize(screenW, screenH, { fit: 'cover', position: 'top' })
+    .png()
+    .toBuffer();
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const lidSvg = Buffer.from(
@@ -355,7 +363,11 @@ async function renderIpadFrame(
   const bodyRadius = Math.round(frameWidth * 0.06);
   const screenRadius = Math.round(bodyRadius * 0.55);
 
-  let screen = await resizeScreenshotContain(photoBuffer, screenW, screenH, DEVICE_SCREEN_BACKGROUND);
+  // La captura siempre debe llenar la pantalla del dispositivo (fit: cover, top) para evitar huecos negros o fondos vacíos
+  let screen = await sharp(photoBuffer)
+    .resize(screenW, screenH, { fit: 'cover', position: 'top' })
+    .png()
+    .toBuffer();
   screen = await applyRoundedCorners(screen, screenW, screenH, screenRadius);
 
   const bodySvg = Buffer.from(

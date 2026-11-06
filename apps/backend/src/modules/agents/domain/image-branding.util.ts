@@ -88,7 +88,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
       );
     } else {
       parts.push(
-        `Branding de marca: incluye de forma elegante el nombre "${productName}" y su isotipo en la parte inferior con acabado publicitario profesional.`,
+        `Branding de marca: escribe únicamente el nombre "${productName}" de forma sutil y elegante en la parte inferior. PROHIBIDO inventar códigos, números de serie, siglas aleatorias, marcas de agua extrañas ni símbolos no solicitados.`,
       );
     }
 
@@ -98,6 +98,7 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
     parts.push(
       'DIRECTRICES VISUALES Y MOCKUPS: Composición publicitaria de nivel agencia. Si el producto/servicio involucra una app móvil, plataforma o software digital, incluye en primer plano un mockup hiperrealista (por ejemplo, una mano sosteniendo un smartphone moderno mostrando la interfaz real con cuadrícula de fotos o funciones activas) perfectamente integrado con la iluminación ambiental de la escena de fondo. Tipografía nítida en español, iluminación cinematográfica, cero texto basura o caracteres deformes.',
+      'CONTROL DE TEXTO Y LIMPIEZA: Los ÚNICOS textos permitidos en la imagen son el HEADLINE especificado, el SUBTITLE opcional, el botón CTA y el nombre de la marca. ESTRICTAMENTE PROHIBIDO generar números de serie inventados (como CJ201, códigos de modelo o identificadores aleatorios), sellos falsos, marcas de agua, ni texto ficticio en las esquinas o bordes.',
     );
 
     if (input.visualFormat === 'carousel') {

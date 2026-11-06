@@ -78,8 +78,8 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
         'Evita escenas con ejecutivos anónimos, tablets con gráficas de negocio genéricas, u oficinas stock.',
         'Carrusel: body con 3 bullets (una idea por slide); cada frame usará una captura distinta del kit en mockup grande tipo anuncio (no miniaturas).',
         'visualHeadline solo en slide 1; slide 2 = beneficio concreto del bullet 2; slide 3 = CTA corto (2-4 palabras).',
-        'Para software, SaaS, apps o herramientas digitales con kit de medios: OBLIGATORIO visualTemplateId=product-hero o promo-cta con dispositivo mockup (MacBook/iPad/iPhone) mostrando la UI real. Los compradores de software necesitan VER el software funcionando, no una foto de stock de alguien sonriendo.',
-        'Usa visualTemplateId=creative-scene únicamente para servicios físicos/presenciales o momentos lifestyle donde la UI no sea relevante.',
+        'PRIORIDAD VISUAL DE CONVERSIÓN: Escoge MAYORITARIAMENTE visualTemplateId="ai-art" (Arte IA: afiches publicitarios de alto impacto comercial con personas, entorno profesional/evento, mockup integrado de smartphone en mano con la interfaz activa y tipografía publicitaria integrada).',
+        'Usa visualTemplateId="product-hero" o "promo-cta" únicamente para publicaciones técnicas secundarias donde se requiera expresamente una captura de pantalla 1:1 del kit de medios.',
       ].join('\n')
     : '';
 
@@ -183,7 +183,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
       ? 'visualFormat: ≥1 talking-head (TikTok o Instagram Reels; body = guion hablado 45-60 palabras, CERO emojis, CERO hashtags, 18-24 s); carruseles educativos→carousel; resto→image.'
       : 'visualFormat: carruseles educativos→carousel; resto→image (TikTok incluido: imagen vertical).',
     'visualDescription = brief de arte para fotografía o escena IA (ambiente, iluminación cinematográfica, personas reales, emoción auténtica, detalles del nicho). Piensa en un anuncio publicitario de alta gama (editorial / Vogue / Apple / documental), NUNCA en stock genérico, wireframes ni fondos planos vacíos.',
-    'visualTemplateId: si hay capturas en el kit y es software → product-hero o promo-cta; para eventos, bodas, servicios presenciales, lifestyle o productos sin kit → creative-scene o ai-art.',
+    'visualTemplateId: MAYORITARIAMENTE "ai-art" (Arte IA: afiches publicitarios de alta conversión con personas en su entorno, mockup integrado y tipografía comercial). Reserva "product-hero" o "promo-cta" solo para posts técnicos puntuales.',
     revisionWantsMediaKit
       ? [
           'Carrusel con MEDIA KIT (3 slides): cada frame lleva una captura REAL distinta del kit.',
@@ -198,7 +198,7 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
     'strategicAngle = ángulo de diferenciación competitiva frente al mercado o rivales (ej: "Configuración en 3 minutos sin código vs 48 horas de consultoría").',
     'persuasionFramework = marco de persuasión aplicado (PAS, BAB, SocialProof, Contrarian, FOMO o DirectOffer).',
     'visualIntent = intención visual estructurada (goal, subject, style, preferLayout, scene, carouselStructure).',
-    'Para software, SaaS o plataformas digitales con capturas en el kit: prioriza visualTemplateId=product-hero o promo-cta. Si NO hay capturas en el kit o es un servicio/evento/lifestyle: USA visualTemplateId=creative-scene o ai-art.',
+    'ESTRATEGIA VISUAL AL PREPARAR DÍA O SEMANA: Asigna visualTemplateId="ai-art" y visualIntent.preferLayout="ai-art" a la mayoría de las publicaciones (mínimo 70-80% de la tanda) para generar creativos publicitarios integrales de alto impacto. En visualDescription incluye siempre la composición del afiche, el contexto humano y la interacción con el producto.',
     'visualIntent.scene=clinical para salud; workspace para oficina/SaaS; hand-phone para stories; abstract-premium para arte de marca; y para eventos/bodas/lifestyle describe el entorno real en visualDescription.',
     'Si usas creative-scene, rellena visualIntent.scene según industria/plataforma.',
     'body = copy publicable listo, sin marcadores de tiempo ni direcciones de escena.',
