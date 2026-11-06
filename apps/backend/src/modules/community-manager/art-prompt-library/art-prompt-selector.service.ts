@@ -383,7 +383,7 @@ export class ArtPromptSelectorService {
       const result = await this.llm.chatJson<{ recipeId?: string }>(systemPrompt, userPrompt, {
         taskType: 'social_copy',
         temperature: 0.2,
-        maxTokens: 512,
+        maxTokens: 2048,
       });
 
       const recipeId = result.recipeId?.trim();

@@ -27,7 +27,7 @@ export class SocialCopyToolOrchestratorService {
 
     const firstResponse = await this.llm.chat(systemPrompt, userPrompt, {
       taskType: taskType as never,
-      maxTokens: 1024,
+      maxTokens: 4096,
       temperature: 0.3,
       tools: toolDefinitions,
       toolChoice: 'auto',

@@ -8,6 +8,7 @@ import { ProfileSectionSyncService } from '../../company-profile/services/profil
 import { Injectable } from '@nestjs/common';
 import { resolveVisualBrandKit } from '../domain/visual-brand-kit.util';
 import { expandVisualPalette, styleDesignCue } from '../domain/visual-palette-expand.util';
+import { resolveToolProductId } from './resolve-tool-product-id.util';
 
 export interface ExpandedPaletteResult {
   primary: string;
@@ -34,7 +35,7 @@ export class BrandPaletteExpandTool implements AgentTool {
       properties: {
         productId: {
           type: 'string',
-          description: 'ID del producto. Si se omite, usa el producto activo del tenant.',
+          description: 'UUID del producto. Omitir este parámetro para usar automáticamente el producto activo.',
         },
       },
     },
@@ -52,9 +53,9 @@ export class BrandPaletteExpandTool implements AgentTool {
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolExecutionResult> {
     try {
-      const productId = (input.productId as string) ?? ctx.productId;
+      const productId = resolveToolProductId(input.productId, ctx.productId);
       if (!productId) {
-        return { success: false, result: null, error: 'No productId provided' };
+        return { success: false, result: null, error: 'No valid product UUID provided or active in context' };
       }
 
       const product = await this.products.findOne({ where: { id: productId, tenantId: ctx.tenantId } });

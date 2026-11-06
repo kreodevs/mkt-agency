@@ -359,19 +359,9 @@ export class LlmClient {
 
       const choice = payload.choices?.[0];
       const message = choice?.message as Record<string, unknown> | undefined;
-
       const choiceRecord = choice as Record<string, unknown> | undefined;
-      const rawText = typeof choiceRecord?.text === 'string' ? choiceRecord.text.trim() : null;
 
-      const content =
-        (typeof message?.content === 'string' && message.content.trim() ? message.content : null) ??
-        (rawText || null) ??
-        (typeof message?.reasoning === 'string' && message.reasoning.trim()
-          ? (message.reasoning as string)
-          : null) ??
-        (typeof message?.reasoning_content === 'string' && message.reasoning_content.trim()
-          ? (message.reasoning_content as string)
-          : null);
+      const content = this.extractTextContent(message, choiceRecord);
 
       return { payload, content };
     };
@@ -568,11 +558,26 @@ export class LlmClient {
 
     if (!response.ok) {
       const errorBody = await response.text();
+      this.llmUsage.record({
+        tenantId,
+        userId,
+        taskType,
+        providerId: resolved.providerId,
+        model,
+        modality: 'chat',
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        status: 'error',
+        metadata: { error: errorBody.slice(0, 300), statusCode: response.status },
+      });
       throw new Error(`LLM request failed (${response.status}): ${errorBody}`);
     }
 
     const payload = (await response.json()) as ChatCompletionResponse;
-    const message = payload.choices?.[0]?.message;
+    const choice = payload.choices?.[0];
+    const message = choice?.message as Record<string, unknown> | undefined;
+    const choiceRecord = choice as Record<string, unknown> | undefined;
 
     this.llmUsage.record({
       tenantId,
@@ -587,14 +592,62 @@ export class LlmClient {
       status: 'success',
     });
 
-    const content = message?.content ?? null;
+    const content = this.extractTextContent(message, choiceRecord);
+    const rawToolCalls = (message?.tool_calls as Array<{
+      function: { name: string; arguments: string };
+      id: string;
+    }>) ?? [];
     const toolCalls: Array<{ name: string; args: Record<string, unknown>; id: string }> =
-      message?.tool_calls?.map((tc) => ({
+      rawToolCalls.map((tc) => ({
         name: tc.function.name,
         args: this.safeParseToolArgs(tc.function.arguments),
         id: tc.id,
-      })) ?? [];
+      }));
 
     return { content, toolCalls };
+  }
+
+  private extractTextContent(
+    message: Record<string, unknown> | undefined,
+    choice: Record<string, unknown> | undefined,
+  ): string | null {
+    if (!message && !choice) return null;
+
+    if (typeof message?.content === 'string' && message.content.trim()) {
+      return message.content;
+    }
+
+    if (Array.isArray(message?.content)) {
+      const textParts = (message.content as unknown[])
+        .map((part) => {
+          if (typeof part === 'string') return part;
+          if (part && typeof part === 'object') {
+            const p = part as Record<string, unknown>;
+            if (typeof p.text === 'string') return p.text;
+            if (typeof p.content === 'string') return p.content;
+            if (typeof p.thinking === 'string') return p.thinking;
+          }
+          return '';
+        })
+        .filter(Boolean);
+      if (textParts.length > 0) {
+        return textParts.join('\n');
+      }
+    }
+
+    if (typeof choice?.text === 'string' && choice.text.trim()) {
+      return choice.text.trim();
+    }
+    if (typeof message?.reasoning === 'string' && message.reasoning.trim()) {
+      return message.reasoning as string;
+    }
+    if (typeof message?.reasoning_content === 'string' && message.reasoning_content.trim()) {
+      return message.reasoning_content as string;
+    }
+    if (typeof message?.text === 'string' && message.text.trim()) {
+      return message.text as string;
+    }
+
+    return null;
   }
 }

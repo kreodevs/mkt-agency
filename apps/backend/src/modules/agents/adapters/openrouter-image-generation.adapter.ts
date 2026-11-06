@@ -26,7 +26,11 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
     const resolved = await this.llmConfig.resolve(taskType);
 
     const model = normalizeOpenRouterImageModel(resolved.model);
-    const size = normalizeImageGenerationSize(options?.size || '1920x1920');
+    const size = normalizeImageGenerationSize(options?.size || '1920x1920', model);
+
+    const modelLower = model.toLowerCase();
+    const isGoogle = modelLower.includes('google') || modelLower.includes('imagen');
+    const isFlux = modelLower.includes('flux');
 
     const hasTextDirective =
       /headline|titular|poster|cartel|typography|infographic|texto|letras|words|quote|call to action|cta|button|mockup|COMMERCIAL MARKETING AD/i.test(
@@ -43,8 +47,21 @@ export class OpenRouterImageGenerationAdapter implements ImageGenerationAdapterP
       prompt: `${options?.style ? `Style: ${options.style}. ` : ''}${prompt}${promptSuffix}`,
       n: 1,
       size,
-      output_format: 'png',
     };
+
+    if (isFlux) {
+      body.output_format = 'png';
+    }
+
+    if (isGoogle) {
+      if (size === '1024x1792') {
+        body.aspect_ratio = '9:16';
+      } else if (size === '1792x1024') {
+        body.aspect_ratio = '16:9';
+      } else {
+        body.aspect_ratio = '1:1';
+      }
+    }
 
     if (options?.referenceImage?.buffer) {
       const mime = options.referenceImage.mimeType ?? 'image/png';
