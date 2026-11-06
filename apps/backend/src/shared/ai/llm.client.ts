@@ -248,6 +248,17 @@ export class LlmClient {
   }
 
   private shouldRetryWithFallback(error: Error): boolean {
+    const message = error.message.toLowerCase();
+    if (
+      message.includes('empty response') ||
+      message.includes('could not be parsed as json') ||
+      message.includes('fetch failed') ||
+      message.includes('network') ||
+      message.includes('timeout')
+    ) {
+      return true;
+    }
+
     const match = error.message.match(/^LLM request failed \((\d+)\):([\s\S]*)$/);
     if (!match) {
       return false;
@@ -283,38 +294,76 @@ export class LlmClient {
     const effectiveSystemPrompt =
       resolved.systemPromptTemplate?.trim() || systemPrompt;
 
-    const body: Record<string, unknown> = {
-      model,
-      messages: [
-        { role: 'system', content: effectiveSystemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      response_format: { type: 'json_object' },
-      temperature,
+    const executeCall = async (withResponseFormat: boolean) => {
+      const body: Record<string, unknown> = {
+        model,
+        messages: [
+          { role: 'system', content: effectiveSystemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature,
+      };
+
+      if (withResponseFormat) {
+        body.response_format = { type: 'json_object' };
+      }
+
+      if (maxTokens) {
+        body.max_tokens = maxTokens;
+      }
+
+      const response = await fetch(`${resolved.apiUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resolved.apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`LLM request failed (${response.status}): ${errorBody}`);
+      }
+
+      const payload = (await response.json()) as ChatCompletionResponse;
+      const choice = payload.choices?.[0];
+      const message = choice?.message as Record<string, unknown> | undefined;
+
+      const choiceRecord = choice as Record<string, unknown> | undefined;
+      const rawText = typeof choiceRecord?.text === 'string' ? choiceRecord.text.trim() : null;
+
+      const content =
+        (typeof message?.content === 'string' && message.content.trim() ? message.content : null) ??
+        (rawText || null) ??
+        (typeof message?.reasoning === 'string' && message.reasoning.trim()
+          ? (message.reasoning as string)
+          : null) ??
+        (typeof message?.reasoning_content === 'string' && message.reasoning_content.trim()
+          ? (message.reasoning_content as string)
+          : null);
+
+      return { payload, content };
     };
 
-    if (maxTokens) {
-      body.max_tokens = maxTokens;
-    }
+    let { payload, content } = await executeCall(true);
 
-    const response = await fetch(`${resolved.apiUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${resolved.apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`LLM request failed (${response.status}): ${errorBody}`);
-    }
-
-    const payload = (await response.json()) as ChatCompletionResponse;
-    const content = payload.choices?.[0]?.message?.content;
+    // If response_format returned empty content (common on OpenRouter when provider rejects json_object),
+    // retry immediately without response_format since prompt already enforces JSON output.
     if (!content) {
-      throw new Error('LLM returned an empty response');
+      this.logger.warn(
+        `LLM model ${model} returned empty content with response_format; retrying without response_format...`,
+      );
+      const secondAttempt = await executeCall(false);
+      payload = secondAttempt.payload;
+      content = secondAttempt.content;
+    }
+
+    if (!content) {
+      this.logger.warn(
+        `LLM model ${model} returned empty response. Finish reason: ${payload.choices?.[0]?.finish_reason}. Raw: ${JSON.stringify(payload).slice(0, 300)}`,
+      );
+      throw new Error(`LLM returned an empty response for model ${model}`);
     }
 
     this.llmUsage.record({

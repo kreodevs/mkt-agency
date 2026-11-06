@@ -27,9 +27,17 @@ export function isLlmRetryableWithFallback(status: number, errorBody: string): b
     return true;
   }
 
-  if (status === 503 || status === 502) {
+  // Server errors, timeouts, bad gateway, and unsupported model parameter errors (400)
+  if ([400, 404, 408, 429, 500, 502, 503, 504].includes(status)) {
     return true;
   }
 
-  return false;
+  const normalized = errorBody.toLowerCase();
+  return (
+    normalized.includes('not supported') ||
+    normalized.includes('unsupported') ||
+    normalized.includes('context length') ||
+    normalized.includes('model') ||
+    normalized.includes('empty')
+  );
 }
