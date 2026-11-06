@@ -158,7 +158,11 @@ export class VisualOrchestratorService {
       let artRecipeBasePrompt: string | undefined;
       let artRecipeId: string | undefined;
 
-      if (shouldUseArtPromptLibrary(post, kit)) {
+      const isAiArt = isAiArtTemplateId(post.visualTemplateId);
+
+      // Si es ai-art y el post ya tiene una visualDescription rica generada por el LLM,
+      // preservamos esa escena directamente sin sobreescribirla con una receta genérica.
+      if (!isAiArt && shouldUseArtPromptLibrary(post, kit)) {
         const brandKit = productId
           ? resolveVisualBrandKit(
               await this.productService.findOwnedEntity(tenantId, productId),
@@ -182,7 +186,7 @@ export class VisualOrchestratorService {
         }
       } else if (visualDescription) {
         visualDescription = await this.buildEnrichedVisualDescription(
-          tenantId, visualDescription, productId ?? undefined, ctx,
+          tenantId, visualDescription, productId ?? undefined, ctx, { allowNativeText: isAiArt },
         );
       }
 
@@ -301,8 +305,9 @@ export class VisualOrchestratorService {
         return;
       }
 
+      const isAiArt = isAiArtTemplateId(post.visualTemplateId);
       const enriched = await this.buildEnrichedVisualDescription(
-        tenantId, post.visualDescription, productId ?? undefined, ctx,
+        tenantId, post.visualDescription, productId ?? undefined, ctx, { allowNativeText: isAiArt },
       );
       await this.imageGeneration.attachVisualToContent(
         tenantId, userId, contentId, enriched, productId ?? undefined,
@@ -315,11 +320,12 @@ export class VisualOrchestratorService {
   async buildEnrichedVisualDescription(
     tenantId: string, visualDescription: string,
     productId: string | undefined, ctx: GenerationContext,
+    options?: { allowNativeText?: boolean },
   ): Promise<string> {
     if (!productId) return visualDescription;
     const product = await this.productService.findOwnedEntity(tenantId, productId);
     const brandKit = resolveVisualBrandKit(product, ctx.resolvedProfile);
-    return enrichVisualDescriptionForAi(visualDescription, brandKit, ctx.competitorIntelBrief);
+    return enrichVisualDescriptionForAi(visualDescription, brandKit, ctx.competitorIntelBrief, options);
   }
 
   buildComposeOptions(

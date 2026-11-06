@@ -43,20 +43,20 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
   const productName = input.productName.trim() || 'la marca';
   const hasLogo = input.hasLogo;
 
-  const rawScene =
-    input.artRecipeBasePrompt?.trim() ||
-    input.visualDescription?.trim() ||
-    (input.title?.trim() ? `Concepto visual fotográfico para ${input.title.trim()}` : '');
-  const scene = hasLogo
-    ? sanitizeVisualPromptForLogoOverlay(rawScene, productName)
-    : rawScene;
-
-  const parts: string[] = [];
-
   const headline = input.visualHeadline?.trim();
   const subline = input.visualSubline?.trim();
   const cta = input.visualCta?.trim();
   const isMarketingCreative = Boolean(headline || input.allowNativeText);
+
+  const rawScene =
+    input.artRecipeBasePrompt?.trim() ||
+    input.visualDescription?.trim() ||
+    (input.title?.trim() ? `Concepto visual fotográfico para ${input.title.trim()}` : '');
+  const scene = hasLogo && !isMarketingCreative
+    ? sanitizeVisualPromptForLogoOverlay(rawScene, productName)
+    : rawScene;
+
+  const parts: string[] = [];
 
   if (isMarketingCreative) {
     parts.push(
@@ -72,33 +72,28 @@ export function buildBrandedImagePrompt(input: BrandedImagePromptInput): string 
 
     if (subline) {
       parts.push(
-        `SUBTITLE & VALUE PROPOSITION: Secondary typography: "${subline}". Clean, readable, elegant contrast.`,
+        `CATEGORY & FEATURE CHECKLIST: Prominently render the secondary category text and feature highlights in Spanish: "${subline}". Render the category title in vibrant brand accent color (e.g. pink / magenta) and format each benefit item with a distinct circular checkmark icon "✓".`,
       );
     }
 
     if (cta) {
+      const ctaWithArrow = cta.includes('→') || cta.includes('>') ? cta : `${cta} →`;
       parts.push(
-        `CALL TO ACTION BUTTON: Eye-catching rounded pill CTA button with text: "${cta}". Placed cleanly in the lower half of the design with high-contrast accent color.`,
+        `CALL TO ACTION BUTTON: Eye-catching rounded pill CTA button with text: "${ctaWithArrow}". Placed cleanly in the lower half of the design in high-contrast vibrant accent color (e.g. vibrant fuchsia / pink or brand accent) with crisp readable text.`,
       );
     }
 
-    if (hasLogo) {
-      parts.push(
-        `Branding de "${productName}": deja un área limpia en la parte inferior o ${LOGO_CORNER_LABEL_ES} para el isotipo de marca.`,
-      );
-    } else {
-      parts.push(
-        `Branding de marca: escribe únicamente el nombre "${productName}" de forma sutil y elegante en la parte inferior. PROHIBIDO inventar códigos, números de serie, siglas aleatorias, marcas de agua extrañas ni símbolos no solicitados.`,
-      );
-    }
+    parts.push(
+      `BRAND IDENTITY & EDITORIAL FOOTER: At the bottom, render a clean, high-end editorial brand footer: the brand emblem or mascot with the exact wordmark "${productName}", followed by the brand tagline in spaced small-caps, and editorial micro-labels in the corner. Zero fake barcodes, no random model numbers, no watermarks.`,
+    );
 
     if (scene) {
       parts.push(`ESCENA Y COMPOSICIÓN: ${scene}`);
     }
 
     parts.push(
-      'DIRECTRICES VISUALES Y MOCKUPS: Composición publicitaria de nivel agencia. Si el producto/servicio involucra una app móvil, plataforma o software digital, incluye en primer plano un mockup hiperrealista (por ejemplo, una mano sosteniendo un smartphone moderno mostrando la interfaz real con cuadrícula de fotos o funciones activas) perfectamente integrado con la iluminación ambiental de la escena de fondo. Tipografía nítida en español, iluminación cinematográfica, cero texto basura o caracteres deformes.',
-      'CONTROL DE TEXTO Y LIMPIEZA: Los ÚNICOS textos permitidos en la imagen son el HEADLINE especificado, el SUBTITLE opcional, el botón CTA y el nombre de la marca. ESTRICTAMENTE PROHIBIDO generar números de serie inventados (como CJ201, códigos de modelo o identificadores aleatorios), sellos falsos, marcas de agua, ni texto ficticio en las esquinas o bordes.',
+      'DIRECTRICES VISUALES Y MOCKUPS: Composición publicitaria de nivel agencia y performance marketing. Si el concepto involucra una app móvil o recuerdos digitales, incluye en primer plano un mockup hiperrealista (por ejemplo, una mano sosteniendo un smartphone moderno mostrando la interfaz real con cuadrícula de fotos o funciones activas con branding de "${productName}") perfectamente integrado con la iluminación ambiental de la escena de fondo. Si involucra eventos (bodas, XV años, convenciones, bautizos), muestra a los protagonistas y a los invitados interactuando alegremente capturando fotos con sus teléfonos. Si es un concepto mágico de marca, ilustra al alebrije o símbolo resplandeciente rodeado de fotografías flotantes con destellos dorados.',
+      'CONTROL DE TEXTO Y LIMPIEZA: Los ÚNICOS textos permitidos en la imagen son el HEADLINE especificado, el SUBTITLE/CHECKLIST, el botón CTA y el nombre de la marca. ESTRICTAMENTE PROHIBIDO generar números de serie inventados (como CJ201, códigos de modelo o identificadores aleatorios), sellos falsos, marcas de agua, ni texto ficticio en las esquinas o bordes.',
     );
 
     if (input.visualFormat === 'carousel') {

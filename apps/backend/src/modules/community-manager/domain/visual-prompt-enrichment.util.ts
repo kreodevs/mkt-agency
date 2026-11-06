@@ -8,21 +8,26 @@ export function enrichVisualDescriptionForAi(
     'style' | 'primaryColor' | 'secondaryColor' | 'productName' | 'logoAssetId'
   >,
   competitorIntelBrief?: Record<string, unknown> | null,
-  options?: { hasLogo?: boolean },
+  options?: { hasLogo?: boolean; allowNativeText?: boolean },
 ): string {
   const parts = [visualDescription.trim()];
   const primary = normalizeHexColor(brandKit.primaryColor, DEFAULT_PRIMARY);
   const hasLogo = options?.hasLogo ?? Boolean(brandKit.logoAssetId);
+  const allowNativeText = options?.allowNativeText ?? false;
 
   parts.push(
     `Paleta de marca: primario ${primary}, secundario ${brandKit.secondaryColor}.`,
     `Estilo visual: ${styleLabel(brandKit.style)}.`,
   );
 
-  if (hasLogo) {
+  if (allowNativeText) {
+    parts.push(
+      `Marca y producto: "${brandKit.productName}". El diseño debe integrar tipografía comercial nítida en español, isotipo/nombre de "${brandKit.productName}", titulares y botones de llamada a la acción en perfecta coherencia estética con la marca.`,
+    );
+  } else if (hasLogo) {
     parts.push(
       'Identidad de marca solo mediante logo superpuesto después — NO escribas el nombre de la marca ni wordmarks en la escena.',
-    'CERO TEXTO DENTRO DE LA FOTOGRAFÍA: La imagen debe ser 100% limpia sin ninguna palabra, título, frase, letra ni texto en ningún idioma (sin texto en inglés, italiano ni español). Toda la tipografía se superpone después mediante software. Genera únicamente la escena fotográfica.',
+      'CERO TEXTO DENTRO DE LA FOTOGRAFÍA: La imagen debe ser 100% limpia sin ninguna palabra, título, frase, letra ni texto en ningún idioma (sin texto en inglés, italiano ni español). Toda la tipografía se superpone después mediante software. Genera únicamente la escena fotográfica.',
     );
   } else {
     parts.push(

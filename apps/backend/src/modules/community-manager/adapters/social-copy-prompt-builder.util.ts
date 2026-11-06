@@ -98,16 +98,19 @@ export function buildPrompts(context: SocialCopyContext): BuiltPrompts {
       : 'minimal';
 
   const creativeDesignGuide = [
-    'DIRECCIÓN CREATIVA (obligatoria): piensa como Director de Arte y Diseñador de Performance Ads de alto impacto.',
+    'DIRECCIÓN CREATIVA DE ALTO RENDIMIENTO (obligatoria): piensa como Director de Arte y Diseñador de Performance Ads de clase mundial (estilo campañas virales y afiches premium de conversión).',
     `Estilo visual de marca: ${styleLabel(brandVisualStyle as 'minimal' | 'bold' | 'luxury')} — ${styleDesignCue(brandVisualStyle as 'minimal' | 'bold' | 'luxury')}.`,
-    'CREATIVIDAD PUBLICITARIA INTEGRAL (Ad Posters, Infografías y Mockups en Mano):',
-    '- Diseña la pieza visual como un afiche publicitario comercial de conversión terminada (estilo campañas top en Instagram/LinkedIn/Meta Ads).',
-    '- Para apps, SaaS, plataformas o servicios de eventos (ej. Alebrije MemoriA): integra en primer plano un mockup hiperrealista (mano sosteniendo smartphone con pantalla activa mostrando fotos reales o UI de la app) frente a un entorno cinematográfico concurrido (convención corporativa, salón de bodas/XV años con luces y público interactuando).',
-    '- visualHeadline = titular de gancho comercial contundente en español (3 a 7 palabras) para encabezar el diseño publicitario.',
-    '- visualSubline = bajada o lista de beneficios de valor (ej: "Entrada con QR • Galería en tiempo real • Video resumen automático").',
-    '- visualCta = llamado a la acción directo para botón en píldora (ej: "Pregunta por tu evento →", "Cotiza por persona →", "Ver experiencia").',
-    '- visualDescription = describe la composición publicitaria integral: disposición del cartel, mockup de mano con smartphone, ambiente de fondo, paleta con acento de marca y acabados comerciales premium.',
-    'Varía el ángulo entre posts: dolor→solución, dato→beneficio, objeción→prueba, CTA directo.',
+    'ESTRUCTURA CANÓNICA DE AFICHE PUBLICITARIO (Ad Poster de 6 capas):',
+    '1. HEADLINE SUPERIOR (visualHeadline): Titular de gancho comercial contundente en español (3 a 7 palabras) en blanco/alto contraste.',
+    '2. CATEGORÍA & BENEFICIOS (visualSubline): Categoría de nicho en color acento seguida de 2 a 3 beneficios clave (ej: "Eventos corporativos • Entrada con un QR • Galería en tiempo real • Video resumen automático" o "Eventos familiares • Entrada con un link o QR • Galería del evento • Álbum listo para imprimir").',
+    '3. ESCENA Y COMPOSICIÓN (visualDescription): ROTA ENTRE ESTOS 4 ARQUETIPOS DE ÉXITO:',
+    '   - ARQUETIPO A (Mockup en Mano en Evento Concurrido): En primer plano, mano sosteniendo smartphone con pantalla activa mostrando la app (header con marca, título del evento y cuadrícula 2x3 de fotos reales). Fondo: salón concurrido de convención, congreso o fiesta con iluminación escénica y público interactuando.',
+    '   - ARQUETIPO B (Escena Emotiva Inmersiva con Teléfonos): Protagonista feliz en el centro (ej. quinceañera con vestido rosa esponjado girando radiante, o familia celebrando bautizo/boda) rodeado en plano medio de invitados sonrientes apuntando con sus smartphones para capturar el instante.',
+    '   - ARQUETIPO C (Key Visual Mágico / Símbolo de Marca): Mascota o símbolo de marca iluminado (ej. Alebrije místico resplandeciente con alas coloridas) rodeado por una espiral flotante de fotos Polaroid de momentos felices con chispas doradas mágicas en atmósfera nocturna cálida.',
+    '   - ARQUETIPO D (Infografía One-Pager / Proceso & Pricing): Afiche estructurado con foto testimonial arriba, diagrama de 3 pasos ("1. Compras -> 2. Invitas con QR -> 3. Viven la experiencia") y tarjetas de planes con precios y checks de beneficios.',
+    '4. BOTÓN CTA EN PÍLDORA (visualCta): Botón redondeado de alta conversión con flecha (ej: "Pregunta por tu evento →", "Pregunta por tu fiesta >", "Escríbeme y te cuento →", "Cotiza por persona →").',
+    '5. FOOTER EDITORIAL DE MARCA: Nombre exacto de la marca ("Alebrije MemoriA"), tagline en mayúsculas ("CADA HISTORIA CUENTA" o "TUS MOMENTOS, SIEMPRE CONTIGO") y micro-lema editorial en la esquina.',
+    '6. CERO TEXTO BASURA: Prohibido inventar números de serie, códigos aleatorios como CJ201 o marcas de agua.',
   ].join('\n');
 
   const sampledHooks = sampleViralHooksForPrompt(6);

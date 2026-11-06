@@ -57,7 +57,7 @@ import { sanitizeVisualPromptForArt } from '../content/domain/visual-prompt.util
 import { resolveContentImageDestination, socialCopyPostFromContent } from './domain/content-visual-design.util';
 import { resolveStoredVisualScene } from './domain/visual-scene.util';
 import { isVisualDesignPresetId, isVisualTemplateId } from './domain/visual-brand-kit.util';
-import type { VisualTemplateId } from './domain/visual-template.constants';
+import { isAiArtTemplateId, type VisualTemplateId } from './domain/visual-template.constants';
 import { summarizeHeadline } from './domain/visual-template-render.util';
 import {
   GenerationContextFacade,
@@ -893,8 +893,9 @@ export class CommunityManagerService {
       return;
     }
 
+    const isAiArt = isAiArtTemplateId(post.visualTemplateId);
     const enriched = await this.visualOrchestrator.buildEnrichedVisualDescription(
-      tenantId, post.visualDescription, productId ?? undefined, ctx,
+      tenantId, post.visualDescription, productId ?? undefined, ctx, { allowNativeText: isAiArt },
     );
     await this.imageGeneration.attachVisualToContent(
       tenantId, userId, contentId, enriched, productId,
@@ -915,9 +916,10 @@ export class CommunityManagerService {
   private async buildEnrichedVisualDescription(
     tenantId: string, visualDescription: string,
     productId: string | undefined, ctx: GenerationContext,
+    options?: { allowNativeText?: boolean },
   ): Promise<string> {
     return this.visualOrchestrator.buildEnrichedVisualDescription(
-      tenantId, visualDescription, productId, ctx,
+      tenantId, visualDescription, productId, ctx, options,
     );
   }
 }
