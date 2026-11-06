@@ -252,6 +252,9 @@ export class LlmClient {
     if (
       message.includes('empty response') ||
       message.includes('could not be parsed as json') ||
+      message.includes('unexpected') ||
+      message.includes('syntaxerror') ||
+      message.includes('json') ||
       message.includes('fetch failed') ||
       message.includes('network') ||
       message.includes('timeout')
@@ -387,21 +390,100 @@ export class LlmClient {
     // Strip markdown code fences if present: ```json ... ``` or ``` ... ```
     const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
     const clean = fenceMatch ? fenceMatch[1].trim() : trimmed;
+
+    // First attempt: direct parse
     try {
       return JSON.parse(clean) as T;
     } catch {
-      // If there is conversational preamble or trailing explanation, isolate the JSON structure
-      const firstBrace = clean.indexOf('{');
-      const lastBrace = clean.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace > firstBrace) {
-        return JSON.parse(clean.slice(firstBrace, lastBrace + 1)) as T;
+      // Ignored, proceed to balanced extraction
+    }
+
+    // Second attempt: extract balanced JSON block (discards trailing commentary & secondary objects)
+    try {
+      const balanced = this.extractBalancedJson(clean);
+      return JSON.parse(balanced) as T;
+    } catch {
+      // Ignored, proceed to sanitize common syntax faults
+    }
+
+    // Third attempt: sanitize trailing commas before closing braces/brackets
+    try {
+      const balanced = this.extractBalancedJson(clean);
+      const sanitized = balanced.replace(/,\s*([}\]])/g, '$1');
+      return JSON.parse(sanitized) as T;
+    } catch (finalError) {
+      const reason = finalError instanceof Error ? finalError.message : String(finalError);
+      throw new Error(`LLM response could not be parsed as JSON: ${reason}`);
+    }
+  }
+
+  private extractBalancedJson(text: string): string {
+    const trimmed = text.trim();
+    const firstBrace = trimmed.indexOf('{');
+    const firstBracket = trimmed.indexOf('[');
+
+    let startChar: '{' | '[';
+    let endChar: '}' | ']';
+    let startIndex = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+      startChar = '{';
+      endChar = '}';
+      startIndex = firstBrace;
+    } else if (firstBracket !== -1) {
+      startChar = '[';
+      endChar = ']';
+      startIndex = firstBracket;
+    } else {
+      return trimmed;
+    }
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = startIndex; i < trimmed.length; i++) {
+      const char = trimmed[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (char === '\\') {
+          escaped = true;
+        } else if (char === '"') {
+          inString = false;
+        }
+        continue;
       }
-      const firstBracket = clean.indexOf('[');
-      const lastBracket = clean.lastIndexOf(']');
-      if (firstBracket !== -1 && lastBracket > firstBracket) {
-        return JSON.parse(clean.slice(firstBracket, lastBracket + 1)) as T;
+
+      if (char === '"') {
+        inString = true;
+        continue;
       }
-      throw new Error(`LLM response could not be parsed as JSON: ${content.slice(0, 160)}...`);
+
+      if (char === startChar) {
+        depth++;
+      } else if (char === endChar) {
+        depth--;
+        if (depth === 0) {
+          return trimmed.slice(startIndex, i + 1);
+        }
+      }
+    }
+
+    return trimmed.slice(startIndex);
+  }
+
+  private safeParseToolArgs(raw: string): Record<string, unknown> {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      try {
+        const balanced = this.extractBalancedJson(raw);
+        return JSON.parse(balanced) as Record<string, unknown>;
+      } catch {
+        return {};
+      }
     }
   }
 
@@ -495,7 +577,7 @@ export class LlmClient {
     const toolCalls: Array<{ name: string; args: Record<string, unknown>; id: string }> =
       message?.tool_calls?.map((tc) => ({
         name: tc.function.name,
-        args: JSON.parse(tc.function.arguments) as Record<string, unknown>,
+        args: this.safeParseToolArgs(tc.function.arguments),
         id: tc.id,
       })) ?? [];
 
